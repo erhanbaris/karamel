@@ -1,23 +1,31 @@
+use std::str;
+
 use crate::types::CharTraits;
 use crate::types::{BramaOperatorType, OperatorToken, Tokinizer};
 
 pub struct Parser;
 
 impl Parser {
-    /*fn get_symbol(&mut self, tokinizer: &mut Tokinizer) {
-        let ch: char;
+    fn get_symbol(&mut self, tokinizer: &mut Tokinizer) {
+        let mut ch: char;
+        let mut chars: Vec<char> = Vec::new();
         while !tokinizer.is_end() {
             ch = tokinizer.get_char();
 
-            if (!isSymbol(ch) && !isInteger(ch))
-            break;
+            if !ch.is_symbol() && !ch.is_integer() {
+                break;
+            }
 
-            if (isWhitespace(ch) || ch == '\'' || ch == '"')
-            break;
+            if ch.is_whitespace() || ch == '\'' || ch == '"' {
+                break;
+            }
 
-            string_stream_add_char(stream, ch);
-            increase(tokinizer);
+            chars.push(ch);
+            tokinizer.increase_index();
         }
+
+        let s: String = chars.iter().collect();
+        /*
 
         char_ptr data       = NULL;
         string_stream_get(stream, &data);
@@ -54,8 +62,8 @@ impl Parser {
             vec_push(tokinizer->tokens, token);
         }
 
-        return BRAMA_OK;
-    }*/
+        return BRAMA_OK;*/
+    }
 
     pub fn parse(&mut self, data: &'static str) {
         let mut tokinizer =  Tokinizer {
@@ -113,6 +121,7 @@ impl Parser {
                 continue;
             }
             else if ch.is_symbol() {
+                self.get_symbol(&mut tokinizer);
                 /*let state = getSymbol(context, tokinizer);
                  RESULT_CHECK(state);
                  continue;*/

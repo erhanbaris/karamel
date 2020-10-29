@@ -1,56 +1,52 @@
+use std::collections::HashSet;
+
 #[derive(Clone, Copy)]
 #[allow(dead_code)]
 pub enum BramaKeywordType {
     None=0,
-    Do,
-    If,
-    In,
-    For,
-    Let,
-    New,
-    Try,
-    Var,
+    Auto,
+    Break,
     Case,
+    Char,
+    Const,
+    Continue,
+    Default,
+    Do,
+    Double,
     Else,
     Enum,
-    Eval,
-    Null,
-    This,
-    True,
-    Void,
-    With,
-    Break,
-    Catch,
-    Class,
-    Const,
-    False,
-    Super,
-    Throw,
-    While,
-    Yield,
-    Delete,
-    Export,
-    Import,
-    Public,
+    Extern,
+    Float,
+    For,
+    Goto,
+    If,
+    Int,
+    Long,
+    Register,
     Return,
+    Short,
+    Signed,
+    Sizeof,
     Static,
+    Struct,
     Switch,
-    Typeof,
-    Default,
-    Extends,
-    Finally,
-    Package,
-    Private,
-    Continue,
-    Debugger,
-    Function,
-    Arguments,
-    Interface,
-    Protected,
-    Implements,
-    Instanceof,
-    Undefined
+    Typedef,
+    Union,
+    Unsigned,
+    Void,
+    Volatile,
+    While,
 }
+
+static keywords: [(&str, BramaKeywordType); 7] = [
+    ("for", BramaKeywordType::For),
+    ("if", BramaKeywordType::If),
+    ("Auto", BramaKeywordType::Auto),
+    ("Case", BramaKeywordType::Case),
+    ("Break", BramaKeywordType::Break),
+    ("Char", BramaKeywordType::Char),
+    ("Const", BramaKeywordType::Const)
+];
 
 #[derive(Clone, Copy)]
 #[allow(dead_code)]
@@ -200,6 +196,7 @@ pub trait CharTraits {
     fn is_new_line(&self) -> bool;
     fn is_whitespace(&self) -> bool;
     fn is_symbol(&self) -> bool;
+    fn is_integer(&self) -> bool;
 }
 
 impl CharTraits for char {
@@ -208,13 +205,27 @@ impl CharTraits for char {
     }
 
     fn is_whitespace(&self) -> bool {
-        *self == ' ' || *self == '\r' || *self == '\t'
+        match *self {
+            ' ' => true,
+            '\r' => true,
+            '\t' => true,
+            _ => false
+        }
     }
 
     fn is_symbol(&self) -> bool {
-        (*self >= 'a' && *self <= 'z')     ||
-            (*self >= 'A' && *self <= 'Z') ||
-            *self == '_'                   ||
-            *self == '$'
+        match *self {
+            'a'..='z' => true,
+            'A'..='Z' => true,
+            '_' => true,
+            _ => false,
+        }
+    }
+
+    fn is_integer(&self) -> bool {
+        match *self {
+            '0'..='9' => true,
+            _ => false,
+        }
     }
 }
