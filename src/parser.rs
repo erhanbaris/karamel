@@ -1,11 +1,28 @@
 use std::str;
 
+use std::collections::HashMap;
 use crate::types::CharTraits;
-use crate::types::{BramaOperatorType, OperatorToken, Tokinizer};
+use crate::types::*;
 
-pub struct Parser;
+pub struct Parser {
+    keywords: HashMap<&'static str, BramaKeywordType>
+}
 
 impl Parser {
+    pub fn new() -> Parser {
+        let mut parser = Parser {
+            keywords: HashMap::new()
+        };
+        parser.init_parser();
+        return parser;
+    }
+    
+    fn init_parser(&mut self) {
+        for (keyword, operator) in &KEYWORDS {
+            self.keywords.insert(keyword, *operator);
+        }
+    }
+
     fn get_symbol(&mut self, tokinizer: &mut Tokinizer) {
         let mut ch: char;
         let mut chars: Vec<char> = Vec::new();
@@ -24,7 +41,23 @@ impl Parser {
             tokinizer.increase_index();
         }
 
-        let s: String = chars.iter().collect();
+        let symbol: String = chars.iter().collect();
+        let symbol = &symbol[..];
+        if self.keywords.contains_key(&symbol) {
+            let keyword = match self.keywords.get(&symbol) {
+                Some(keyword) => keyword,
+                None => &BramaKeywordType::None
+            };
+
+            let token = KeywordToken {
+                line: tokinizer.line,
+                column: tokinizer.column,
+                keyword: *keyword
+            };
+
+            tokinizer.add_token(Box::new(token));
+        }
+        
         /*
 
         char_ptr data       = NULL;

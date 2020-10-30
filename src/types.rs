@@ -1,5 +1,3 @@
-use std::collections::HashSet;
-
 #[derive(Clone, Copy)]
 #[allow(dead_code)]
 pub enum BramaKeywordType {
@@ -38,14 +36,15 @@ pub enum BramaKeywordType {
     While,
 }
 
-static keywords: [(&str, BramaKeywordType); 7] = [
+#[warn(dead_code)]
+pub static KEYWORDS: [(&str, BramaKeywordType); 7] = [
     ("for", BramaKeywordType::For),
     ("if", BramaKeywordType::If),
-    ("Auto", BramaKeywordType::Auto),
-    ("Case", BramaKeywordType::Case),
-    ("Break", BramaKeywordType::Break),
-    ("Char", BramaKeywordType::Char),
-    ("Const", BramaKeywordType::Const)
+    ("auto", BramaKeywordType::Auto),
+    ("case", BramaKeywordType::Case),
+    ("break", BramaKeywordType::Break),
+    ("char", BramaKeywordType::Char),
+    ("const", BramaKeywordType::Const)
 ];
 
 #[derive(Clone, Copy)]
@@ -123,7 +122,10 @@ pub trait TokenTrait {
     fn get_type(&self) -> BramaTokenType;
 }
 
-#[warn(dead_code)]
+pub struct SymbolToken {
+    
+}
+
 pub struct OperatorToken {
     pub line      : i32,
     pub column    : i32,
@@ -141,6 +143,26 @@ impl TokenTrait for OperatorToken {
 
     fn get_type(&self) -> BramaTokenType {
         BramaTokenType::Operator
+    }
+}
+
+pub struct KeywordToken {
+    pub line      : i32,
+    pub column    : i32,
+    pub keyword   : BramaKeywordType
+}
+
+impl TokenTrait for KeywordToken {
+    fn get_line(&self) -> i32 {
+        self.line
+    }
+
+    fn get_column(&self) -> i32 {
+        self.column
+    }
+
+    fn get_type(&self) -> BramaTokenType {
+        BramaTokenType::Keyword
     }
 }
 
