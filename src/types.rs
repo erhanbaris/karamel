@@ -1,5 +1,8 @@
+use std::default::Default;
+
 #[derive(Clone, Copy)]
-#[allow(dead_code)]
+#[derive(Debug)]
+#[derive(PartialEq, Eq)]
 pub enum BramaKeywordType {
     None=0,
     Auto,
@@ -36,19 +39,44 @@ pub enum BramaKeywordType {
     While,
 }
 
-#[warn(dead_code)]
-pub static KEYWORDS: [(&str, BramaKeywordType); 7] = [
-    ("for", BramaKeywordType::For),
-    ("if", BramaKeywordType::If),
+pub static KEYWORDS: [(&str, BramaKeywordType); 32] = [
     ("auto", BramaKeywordType::Auto),
-    ("case", BramaKeywordType::Case),
     ("break", BramaKeywordType::Break),
+    ("case", BramaKeywordType::Case),
     ("char", BramaKeywordType::Char),
-    ("const", BramaKeywordType::Const)
+    ("const", BramaKeywordType::Const),
+    ("continue", BramaKeywordType::Continue),
+    ("default", BramaKeywordType::Default),
+    ("do", BramaKeywordType::Do),
+    ("double", BramaKeywordType::Double),
+    ("else", BramaKeywordType::Else),
+    ("enum", BramaKeywordType::Enum),
+    ("extern", BramaKeywordType::Extern),
+    ("float", BramaKeywordType::Float),
+    ("for", BramaKeywordType::For),
+    ("goto", BramaKeywordType::Goto),
+    ("if", BramaKeywordType::If),
+    ("int", BramaKeywordType::Int),
+    ("long", BramaKeywordType::Long),
+    ("register", BramaKeywordType::Register),
+    ("return", BramaKeywordType::Return),
+    ("short", BramaKeywordType::Short),
+    ("signed", BramaKeywordType::Signed),
+    ("sizeof", BramaKeywordType::Sizeof),
+    ("static", BramaKeywordType::Static),
+    ("struct", BramaKeywordType::Struct),
+    ("switch", BramaKeywordType::Switch),
+    ("typedef", BramaKeywordType::Typedef),
+    ("union", BramaKeywordType::Union),
+    ("unsigned", BramaKeywordType::Unsigned),
+    ("void", BramaKeywordType::Void),
+    ("volatile", BramaKeywordType::Volatile),
+    ("while", BramaKeywordType::While)
 ];
 
 #[derive(Clone, Copy)]
-#[allow(dead_code)]
+#[derive(Debug)]
+#[derive(PartialEq)]
 pub enum BramaOperatorType {
     None,
     Addition,
@@ -98,104 +126,61 @@ pub enum BramaOperatorType {
     CommentMultilineStart,
     CommentMultilineEnd,
     CurveBracketStart,
-    CurveBracketEnd,
-    NewLine
+    CurveBracketEnd
 }
 
 #[repr(C)]
-#[derive(Clone, Copy)]
-#[allow(dead_code)]
+#[derive(Clone)]
+#[derive(Debug)]
+#[derive(PartialEq)]
 pub enum BramaTokenType {
-    None=0,
+    None,
     Integer,
     Double,
-    Symbol,
-    Operator,
-    Text,
-    Keyword,
-    EndOfFile
+    Symbol(String),
+    Operator(BramaOperatorType),
+    Text(String),
+    Keyword(BramaKeywordType),
+    EndOfFile,
+    NewLine
 }
 
-pub trait TokenTrait {
-    fn get_line(&self) -> i32;
-    fn get_column(&self) -> i32;
-    fn get_type(&self) -> BramaTokenType;
-}
-
-pub struct SymbolToken {
-    
-}
-
-pub struct OperatorToken {
+pub struct Token {
     pub line      : i32,
     pub column    : i32,
-    pub operator  : BramaOperatorType
+    pub token_type: BramaTokenType
 }
 
-impl TokenTrait for OperatorToken {
-    fn get_line(&self) -> i32 {
-        self.line
-    }
-
-    fn get_column(&self) -> i32 {
-        self.column
-    }
-
-    fn get_type(&self) -> BramaTokenType {
-        BramaTokenType::Operator
-    }
-}
-
-pub struct KeywordToken {
-    pub line      : i32,
-    pub column    : i32,
-    pub keyword   : BramaKeywordType
-}
-
-impl TokenTrait for KeywordToken {
-    fn get_line(&self) -> i32 {
-        self.line
-    }
-
-    fn get_column(&self) -> i32 {
-        self.column
-    }
-
-    fn get_type(&self) -> BramaTokenType {
-        BramaTokenType::Keyword
-    }
-}
-
-#[warn(dead_code)]
-pub struct Tokinizer {
-    pub data  : &'static str,
+#[derive(Default)]
+pub struct Tokinizer<'a> {
+    pub data  : &'a str,
     pub length: i32,
     pub line  : i32,
     pub column: i32,
     pub index : i32,
-    pub tokens: Vec<Box<dyn TokenTrait>>
+    pub tokens: Vec<Token>
 }
 
-impl Tokinizer {
+impl<'a> Tokinizer<'a> {
     pub fn is_end(&self) -> bool {
         self.length <= self.index
     }
 
     pub fn get_char(&self) -> char {
         if !self.is_end() {
-            return self.data.chars().nth(self.index as usize).unwrap();
+            return self.data.chars().nth(self.index as usize).unwrap_or('\0');
         }
         return '\0';
     }
 
     pub fn get_next_char(&self) -> char {
         if self.length > self.index + 1 {
-            return self.data.chars().nth((self.index + 1) as usize).unwrap();
+            return self.data.chars().nth((self.index + 1) as usize).unwrap_or('\0');
         }
         return '\0';
     }
 
-    pub fn add_token(&mut self, token: Box<dyn TokenTrait>) {
+    pub fn add_token(&mut self, token: Token) {
         self.column = 0;
         self.tokens.push(token);
     }
@@ -228,18 +213,14 @@ impl CharTraits for char {
 
     fn is_whitespace(&self) -> bool {
         match *self {
-            ' ' => true,
-            '\r' => true,
-            '\t' => true,
+            ' ' | '\r' | '\t' => true,
             _ => false
         }
     }
 
     fn is_symbol(&self) -> bool {
         match *self {
-            'a'..='z' => true,
-            'A'..='Z' => true,
-            '_' => true,
+            'a'..='z' | 'A'..='Z' | '_' => true,
             _ => false,
         }
     }
@@ -249,5 +230,44 @@ impl CharTraits for char {
             '0'..='9' => true,
             _ => false,
         }
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn is_new_line() {
+        assert_eq!(true, '\n'.is_new_line());
+        assert_eq!(false, ' '.is_new_line());
+    }
+
+    #[test]
+    fn is_integer() {
+        for ch in '0'..'9' {
+            assert_eq!(true, ch.is_integer());
+        }
+        assert_eq!(false, 'a'.is_integer());
+    }
+
+    #[test]
+    fn is_symbol() {
+        assert_eq!(true, '_'.is_symbol());
+        for ch in 'a'..'z' {
+            assert_eq!(true, ch.is_symbol());
+        }
+        for ch in 'A'..'Z' {
+            assert_eq!(true, ch.is_symbol());
+        }
+    }
+
+    #[test]
+    fn is_whitespace() {
+        assert_eq!(true, ' '.is_whitespace());
+        assert_eq!(true, '\r'.is_whitespace());
+        assert_eq!(true, '\t'.is_whitespace());
+        assert_eq!(false, '2'.is_whitespace());
     }
 }
