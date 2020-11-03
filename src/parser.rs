@@ -28,7 +28,169 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn get_text(&mut self) -> bool {
+    fn get_number(&mut self) -> BramaStatus {
+        let mut index             = 0;
+        let mut isMinus             = false;
+        let mut dotPlace             = 0;
+        let mut beforeTheComma    = 0.0;
+        let mut afterTheComma     = 0.0;
+        let mut start             = tokinizer->column;
+        let mut isDouble            = false;
+        brama_number_system type = NUMBER_SYSTEM_DECIMAL;
+        let mut e_used              = false;
+        let mut e_after              = 0;
+        let mut plus_used           = false;
+        let mut ch                  = self.tokinizer.get_char();
+        let mut chNext              = self.tokinizer.get_next_char();
+        let mut ch                  = self.tokinizer.get_char();
+        let mut chNext              = self.tokinizer.get_next_char();
+
+        while !self.tokinizer.is_end() {
+            if (ch == '-') {
+                if ((is_minus || (beforeTheComma > 0 || afterTheComma > 0)) && !e_used)
+                break;
+
+                isMinus = true;
+            }
+        }
+        /*
+        size_t index             = 0;
+    bool isMinus             = false;
+    int dotPlace             = 0;
+    double beforeTheComma    = 0;
+    double afterTheComma     = 0;
+    size_t start             = tokinizer->column;
+    bool isDouble            = false;
+    char ch                  = getChar(tokinizer);
+    char chNext              = getNextChar(tokinizer);
+    brama_number_system type = NUMBER_SYSTEM_DECIMAL;
+    bool e_used              = false;
+    int e_after              = 0;
+    bool plus_used           = false;
+
+    while (!isEnd(tokinizer)) {
+        if (ch == '-') {
+            if ((isMinus || (beforeTheComma > 0 || afterTheComma > 0)) && !e_used)
+                break;
+
+            isMinus = true;
+        }
+
+        else if (ch == '+') {
+            if ((plus_used || (beforeTheComma > 0 || afterTheComma > 0)) && !e_used)
+                break;
+
+            plus_used = true;
+        }
+
+        else if (index == 0 && ch == '0' && chNext == 'x') { // HEX
+            type = NUMBER_SYSTEM_HEXADECIMAL;
+            increase(tokinizer);
+        }
+
+        else if (index != 0 && (ch == 'e' || ch == 'E')) {
+            e_used = true;
+        }
+
+        else if (index == 0 && ch == '0' && (chNext >= '0' && chNext <= '9')) { // OCT
+            type = NUMBER_SYSTEM_OCTAL;
+        }
+
+        else if (ch == '.') {
+            /*if (chNext == '.')
+                break;*/
+
+            if (isDouble) {
+                return BRAMA_MULTIPLE_DOT_ON_DOUBLE;
+            }
+
+            isDouble = true;
+        }
+
+        else if (!e_used && type == NUMBER_SYSTEM_DECIMAL && (ch >= '0' && ch <= '9')) {
+            if (isDouble) {
+                ++dotPlace;
+
+                afterTheComma *= (int)pow(10, 1);
+                afterTheComma += ch - '0';
+            }
+            else {
+                beforeTheComma *= (int)pow(10, 1);
+                beforeTheComma += ch - '0';
+            }
+        }
+
+        else if (!e_used && type == NUMBER_SYSTEM_HEXADECIMAL && ((ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'f') || (ch >= 'A' && ch <= 'F'))) {
+            ch = (ch <= '9') ? ch - '0' : (ch & 0x7) + 9;
+
+            beforeTheComma = (uint64_t)beforeTheComma << 4;
+            beforeTheComma += (int)ch;
+        }
+
+        else if (!e_used && type == NUMBER_SYSTEM_OCTAL && ((ch >= '0' && ch <= '7'))) {
+            int num = ch - '0';
+            int dec_value = 0;
+
+            int base = 1;
+            int temp = num;
+            while (temp) {
+                int last_digit = temp % 10;
+                temp = temp / 10;
+                dec_value += last_digit * base;
+                base = base * 8;
+            }
+
+            beforeTheComma = (uint64_t)beforeTheComma << 3;
+            beforeTheComma += (int)dec_value;
+        }
+
+        else if (e_used && (ch >= '0' && ch <= '9')) {
+            e_after *= (int)pow(10, 1);
+            e_after += ch - '0';
+        }
+        else
+            break;
+
+        increase(tokinizer);
+        ch     = getChar(tokinizer);
+        chNext = getNextChar(tokinizer);
+        ++index;
+    }
+
+    t_token_ptr token = (t_token_ptr)BRAMA_MALLOC(sizeof (t_token));
+    if (NULL == token) {
+        context->status = out_of_memory_error(context);
+        return 0;
+    }
+
+    if (!isDouble) {
+        token->type = TOKEN_INTEGER;
+        token->double_ = beforeTheComma;
+    } else {
+        token->type    = TOKEN_DOUBLE;
+        token->double_ = (beforeTheComma + (afterTheComma * pow(10, -1 * dotPlace)));
+    }
+
+    if (e_used) {
+        if (isMinus) {
+            token->double_ = token->double_ / (double)pow((double)10, (double)e_after);
+        } else {
+            token->double_ = token->double_ * (double)pow((double)10, (double)e_after);
+        }
+    }
+
+    token->current = start;
+    token->line    = tokinizer->line;
+
+    if (isMinus && !e_used)
+        token->double_ *= -1;
+
+    vec_push(tokinizer->tokens, token);
+    return BRAMA_OK;
+    */
+    }
+
+    fn get_text(&mut self) -> BramaStatus {
         let mut ch: char      = '\0';
         let mut ch_next: char;
         let mut symbol        = String::new();
@@ -55,7 +217,7 @@ impl<'a> Parser<'a> {
         }
 
         if ch != '"' {
-            return false;
+            return BramaStatus::MissingStringDemininator(self.tokinizer.line, self.tokinizer.column);
         }
 
         let token = Token {
@@ -65,10 +227,10 @@ impl<'a> Parser<'a> {
         };
 
         self.tokinizer.add_token(token);
-        true
+        BramaStatus::Ok
     }
 
-    fn get_symbol(&mut self) -> bool {
+    fn get_symbol(&mut self) -> BramaStatus {
         let mut ch: char;
         let mut symbol = String::new();
 
@@ -109,7 +271,7 @@ impl<'a> Parser<'a> {
 
             self.tokinizer.add_token(token);
         }
-        true
+        return BramaStatus::Ok
     }
 
     pub fn parse(&mut self, data: &'static str) {
@@ -123,8 +285,10 @@ impl<'a> Parser<'a> {
         };
         let mut ch;
         let mut ch_next;
+        let mut status = BramaStatus::Ok;
 
         while self.tokinizer.is_end() == false {
+            status  = BramaStatus::Ok;
             ch      = self.tokinizer.get_char() as char;
             ch_next = self.tokinizer.get_next_char();
 
@@ -167,11 +331,15 @@ impl<'a> Parser<'a> {
                 continue;
             }
             else if ch.is_symbol() {
-                self.get_symbol();
+                status = self.get_symbol();
             }
             else if ch == '"' {
-                self.get_text();
+                status = self.get_text();
             }
+        }
+
+        if status != BramaStatus::Ok {
+
         }
     }
 }

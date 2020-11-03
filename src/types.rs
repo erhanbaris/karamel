@@ -145,6 +145,23 @@ pub enum BramaTokenType {
     NewLine
 }
 
+pub enum BramaNumberSystem {
+    None        = 0,
+    Binary      = 1,
+    Octal       = 2,
+    Decimal     = 3,
+    Hexadecimal = 4
+}
+
+#[repr(C)]
+#[derive(Clone)]
+#[derive(Debug)]
+#[derive(PartialEq)]
+pub enum BramaStatus {
+    Ok,
+    MissingStringDemininator(i32, i32)
+}
+
 pub struct Token {
     pub line      : i32,
     pub column    : i32,
