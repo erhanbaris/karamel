@@ -515,6 +515,24 @@ mod tests {
             BramaTokenType::Symbol(symbol) => assert_eq!("_test_", symbol),
             _ => assert_eq!(true, false)
         }
+
+        let mut parser = Parser::new();
+        parser.parse("$");
+
+        assert_eq!(1, parser.tokinizer.tokens.len());
+        match &parser.tokinizer.tokens[0].token_type {
+            BramaTokenType::Symbol(symbol) => assert_eq!("$", symbol),
+            _ => assert_eq!(true, false)
+        }
+
+        let mut parser = Parser::new();
+        parser.parse("$$erhan$$");
+
+        assert_eq!(1, parser.tokinizer.tokens.len());
+        match &parser.tokinizer.tokens[0].token_type {
+            BramaTokenType::Symbol(symbol) => assert_eq!("$$erhan$$", symbol),
+            _ => assert_eq!(true, false)
+        }
     }
 
     #[test]

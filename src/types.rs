@@ -251,6 +251,7 @@ impl CharTraits for char {
     fn is_symbol(&self) -> bool {
         match *self {
             'a'..='z' | 'A'..='Z' | '_' => true,
+            '$' => true,
             _ => false,
         }
     }
@@ -291,6 +292,9 @@ mod tests {
         for ch in 'A'..'Z' {
             assert_eq!(true, ch.is_symbol());
         }
+
+        assert_eq!(true, '$'.is_symbol());
+
     }
 
     #[test]
