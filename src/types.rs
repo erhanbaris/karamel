@@ -164,7 +164,8 @@ pub enum BramaNumberSystem {
 pub enum BramaStatus {
     Ok,
     MissingStringDemininator(i32, i32),
-    MultipleDotOnDouble(i32, i32)
+    MultipleDotOnDouble(i32, i32),
+    CharNotValid(i32, i32)
 }
 
 pub struct Token {
@@ -198,6 +199,13 @@ impl<'a> Tokinizer<'a> {
     pub fn get_next_char(&self) -> char {
         if self.length > self.index + 1 {
             return self.data.chars().nth((self.index + 1) as usize).unwrap_or('\0');
+        }
+        return '\0';
+    }
+
+    pub fn get_third_char(&self) -> char {
+        if self.length > self.index + 2 {
+            return self.data.chars().nth((self.index + 2) as usize).unwrap_or('\0');
         }
         return '\0';
     }

@@ -28,6 +28,94 @@ impl<'a> Parser<'a> {
         }
     }
 
+    fn get_operator(&mut self) -> BramaStatus {
+        let ch       = self.tokinizer.get_char();
+        let ch_next  = self.tokinizer.get_next_char();
+        let ch_third = self.tokinizer.get_third_char();
+
+        self.tokinizer.increase_index();
+
+        let mut operator_type = match (ch, ch_next, ch_third) {
+            ('=', '=', '=') => BramaOperatorType::EqualValue,
+            ('!', '=', '=') => BramaOperatorType::NotEqualValue,
+            _ =>  BramaOperatorType::None
+        };
+
+        if operator_type != BramaOperatorType::None {
+            self.tokinizer.increase_index();
+            self.tokinizer.increase_index();
+        }
+        else {
+            operator_type = match (ch, ch_next) {
+                ('!', '=') => BramaOperatorType::NotEqual,
+                ('/', '=') => BramaOperatorType::AssignDivision,
+                ('/', '/') => BramaOperatorType::CommentLine,
+                ('/', '*') => BramaOperatorType::CommentMultilineStart,
+                ('+', '+') => BramaOperatorType::Increment,
+                ('+', '=') => BramaOperatorType::AssignAddition,
+                ('-', '-') => BramaOperatorType::Deccrement,
+                ('-', '=') => BramaOperatorType::AssignSubtraction,
+                ('<', '=') => BramaOperatorType::LessEqualThan,
+                ('<', '<') => BramaOperatorType::BitwiseLeftShift,
+                ('&', '&') => BramaOperatorType::And,
+                ('&', '=') => BramaOperatorType::BitwiseAndAssign,
+                ('|', '|') => BramaOperatorType::Or,
+                ('|', '=') => BramaOperatorType::BitwiseOrAssign,
+                ('*', '=') => BramaOperatorType::AssignMultiplication,
+                ('*', '/') => BramaOperatorType::CommentMultilineEnd,
+                ('=', '=') => BramaOperatorType::Equal,
+                ('%', '=') => BramaOperatorType::AssignModulus,
+                ('^', '=') => BramaOperatorType::BitwiseXorAssign,
+                _ =>  BramaOperatorType::None
+            };
+
+            if operator_type != BramaOperatorType::None {
+                self.tokinizer.increase_index();
+            }
+            else {
+                operator_type = match ch {
+                    '^' => BramaOperatorType::BitwiseXor,
+                    '%' => BramaOperatorType::Modulo,
+                    '!' => BramaOperatorType::Not,
+                    '=' => BramaOperatorType::Assign,
+                    '*' => BramaOperatorType::Multiplication,
+                    '|' => BramaOperatorType::BitwiseOr,
+                    '&' => BramaOperatorType::BitwiseAnd,
+                    '<' => BramaOperatorType::LessThan,
+                    '-' => BramaOperatorType::Subtraction,
+                    '+' => BramaOperatorType::Addition,
+                    '/' => BramaOperatorType::Division,
+                    '?' => BramaOperatorType::QuestionMark,
+                    ':' => BramaOperatorType::ColonMark,
+                    '~' => BramaOperatorType::BitwiseNot,
+                    '(' => BramaOperatorType::LeftParentheses,
+                    ')' => BramaOperatorType::RightParentheses,
+                    '[' => BramaOperatorType::SquareBracketStart,
+                    ']' => BramaOperatorType::SquareBracketEnd,
+                    '{' => BramaOperatorType::CurveBracketStart,
+                    '}' => BramaOperatorType::CurveBracketEnd,
+                    ',' => BramaOperatorType::Comma,
+                    ';' => BramaOperatorType::Semicolon,
+                    '.' => BramaOperatorType::Dot,
+                    _ => BramaOperatorType::None
+                };
+            }
+        }
+
+        if operator_type == BramaOperatorType::None {
+            return BramaStatus::CharNotValid(self.tokinizer.line, self.tokinizer.column);
+        }
+
+        let token = Token {
+            line: self.tokinizer.line,
+            column: self.tokinizer.column,
+            token_type: BramaTokenType::Operator(operator_type)
+        };
+
+        self.tokinizer.add_token(token);
+        BramaStatus::Ok
+    }
+
     fn get_number(&mut self) -> BramaStatus {
         let mut index               = 0;
         let mut is_minus            = false;
@@ -176,41 +264,9 @@ impl<'a> Parser<'a> {
 
         self.tokinizer.add_token(token);
         BramaStatus::Ok
-        /*
-    t_token_ptr token = (t_token_ptr)BRAMA_MALLOC(sizeof (t_token));
-    if (NULL == token) {
-        context->status = out_of_memory_error(context);
-        return 0;
     }
 
-    if (!isDouble) {
-        token->type = TOKEN_INTEGER;
-        token->double_ = beforeTheComma;
-    } else {
-        token->type    = TOKEN_DOUBLE;
-        token->double_ = (beforeTheComma + (afterTheComma * pow(10, -1 * dotPlace)));
-    }
-
-    if (e_used) {
-        if (isMinus) {
-            token->double_ = token->double_ / (double)pow((double)10, (double)e_after);
-        } else {
-            token->double_ = token->double_ * (double)pow((double)10, (double)e_after);
-        }
-    }
-
-    token->current = start;
-    token->line    = tokinizer->line;
-
-    if (isMinus && !e_used)
-        token->double_ *= -1;
-
-    vec_push(tokinizer->tokens, token);
-    return BRAMA_OK;
-    */
-    }
-
-    fn get_text(&mut self) -> BramaStatus {
+    fn get_text(&mut self, tag: char) -> BramaStatus {
         let mut ch: char      = '\0';
         let mut ch_next: char;
         let mut symbol        = String::new();
@@ -221,11 +277,11 @@ impl<'a> Parser<'a> {
             ch      = self.tokinizer.get_char();
             ch_next = self.tokinizer.get_next_char();
 
-            if ch == '\\' && ch_next == '"' {
+            if ch == '\\' && ch_next == tag {
                 symbol.push(ch);
                 self.tokinizer.increase_index();
             }
-            else if ch == '"' {
+            else if ch == tag {
                 self.tokinizer.increase_index();
                 break;
             }
@@ -236,7 +292,7 @@ impl<'a> Parser<'a> {
             self.tokinizer.increase_index();
         }
 
-        if ch != '"' {
+        if ch != tag {
             return BramaStatus::MissingStringDemininator(self.tokinizer.line, self.tokinizer.column);
         }
 
@@ -354,10 +410,16 @@ impl<'a> Parser<'a> {
                 status = self.get_symbol();
             }
             else if ch == '"' {
-                status = self.get_text();
+                status = self.get_text('"');
+            }
+            else if ch == '\'' {
+                status = self.get_text('\'');
             }
             else if ch == '.' || (ch >= '0' && ch <= '9') {
                 status = self.get_number();
+            }
+            else {
+                status = self.get_operator();
             }
         }
 
@@ -406,6 +468,21 @@ mod tests {
     fn get_text_2() {
         let mut parser = Parser::new();
         parser.parse("\"erhan barış\"\"\"");
+        assert_eq!(2, parser.tokinizer.tokens.len());
+        match &parser.tokinizer.tokens[0].token_type {
+            BramaTokenType::Text(text) => assert_eq!(text, "erhan barış"),
+            _ => assert_eq!(true, false)
+        }
+        match &parser.tokinizer.tokens[1].token_type {
+            BramaTokenType::Text(text) => assert_eq!(text, ""),
+            _ => assert_eq!(true, false)
+        }
+    }
+
+    #[test]
+    fn get_text_3() {
+        let mut parser = Parser::new();
+        parser.parse("'erhan barış'\"\"");
         assert_eq!(2, parser.tokinizer.tokens.len());
         match &parser.tokinizer.tokens[0].token_type {
             BramaTokenType::Text(text) => assert_eq!(text, "erhan barış"),
