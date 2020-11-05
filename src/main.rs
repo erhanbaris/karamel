@@ -6,5 +6,5 @@ fn parse(data: &'static str) {
 }
 
 fn main() {
-    parse("\"erhan barış\"");
+    parse(" .1024000 ");
 }

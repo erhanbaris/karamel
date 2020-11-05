@@ -135,8 +135,8 @@ pub enum BramaOperatorType {
 #[derive(PartialEq)]
 pub enum BramaTokenType {
     None,
-    Integer,
-    Double,
+    Integer(i64),
+    Double(f64),
     Symbol(String),
     Operator(BramaOperatorType),
     Text(String),
@@ -145,6 +145,10 @@ pub enum BramaTokenType {
     NewLine
 }
 
+#[repr(C)]
+#[derive(Clone)]
+#[derive(Debug)]
+#[derive(PartialEq)]
 pub enum BramaNumberSystem {
     None        = 0,
     Binary      = 1,
@@ -159,7 +163,8 @@ pub enum BramaNumberSystem {
 #[derive(PartialEq)]
 pub enum BramaStatus {
     Ok,
-    MissingStringDemininator(i32, i32)
+    MissingStringDemininator(i32, i32),
+    MultipleDotOnDouble(i32, i32)
 }
 
 pub struct Token {
