@@ -1,6 +1,6 @@
-##TASLAK
+# TASLAK
 
-TPD dili ikili, sekizli, onlu ve onaltili sayi sistemlerini desteklemektedir.
+**Türkçe Programlama Dili** kısa adıyla **TPD**; ikilik, sekizlik, onluk ve onaltılık sayı tabanlarını desteklemektedir.
 
 *Sozdizimi:*  
 &emsp;&emsp;*Sayi ::*  
