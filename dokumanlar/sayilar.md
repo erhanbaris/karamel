@@ -1,9 +1,9 @@
 # TASLAK
 
-**Türkçe Programlama Dili** kısa adıyla **TPD**; ikilik, sekizlik, onluk ve onaltılık sayı tabanlarını desteklemektedir.
+**Türkçe Programlama Dili** kısa adıyla **TPD**; 0<sub>2</sub>: ikilik, 0<sub>8</sub>: sekizlik, 0<sub>10</sub>: onluk ve 0<sub>16</sub> onaltılık sayı tabanlarını desteklemektedir.
 
-*Sozdizimi:*  
-&emsp;&emsp;*Sayi ::*  
+*Söz Dizimi:*  
+&emsp;&emsp;*Sayı ::*  
 &emsp;&emsp;&emsp;&emsp;*2lik*  
 &emsp;&emsp;&emsp;&emsp;*8lik*  
 &emsp;&emsp;&emsp;&emsp;*10luk*  
