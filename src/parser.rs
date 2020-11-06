@@ -579,5 +579,6 @@ mod tests {
         }
     }
     test_number!(double_3, Double, "099999.9", 99999.9);
+    test_number!(double_4, Double, "123.4e+4", 1234000.0);
     
 }

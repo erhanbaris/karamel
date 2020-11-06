@@ -6,5 +6,5 @@ fn parse(data: &'static str) {
 }
 
 fn main() {
-    parse("!==");
+    parse("123.4e+4");
 }
