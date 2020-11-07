@@ -189,6 +189,9 @@ mod tests {
     test_number!(integer_3, Integer, "123", 123);
     test_number!(integer_4, Integer, "9223372036854775807", 9223372036854775807);
     test_number!(integer_5, Integer, "0999999", 999999);
+    test_number!(integer_6, Integer, "1_234_567", 1234567);
+    test_number!(integer_7, Integer, "1_234_5_6_7", 1234567);
+    test_number!(integer_8, Integer, "1_234_5_6_7_", 1234567);
 
     test_number!(hex_1, Integer, "0x12", 18);
     test_number!(hex_2, Integer, "0xffffff", 16777215);
@@ -218,4 +221,7 @@ mod tests {
     }
     test_number!(double_3, Double, "099999.9", 99999.9);
     test_number!(double_4, Double, "123.4e+4", 1234000.0);
+    test_number!(double_5, Double, "1_23.4e+4", 1234000.0);
+    test_number!(double_6, Double, "1_23.4_e+4_", 1234000.0);
+    test_number!(double_7, Double, "09__9_999._9_", 99999.9);
 }

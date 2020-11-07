@@ -47,8 +47,4 @@ impl TokenParser for SymbolParser {
         }
         return Ok(BramaTokenType::Symbol(symbol.to_owned()));
     }
-
-    fn validate(&self, tokinizer: &mut Tokinizer<'_>) -> BramaStatus {
-        BramaStatus::Ok
-    }
 }

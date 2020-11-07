@@ -88,8 +88,4 @@ impl TokenParser for OperatorParser {
 
         return Ok(BramaTokenType::Operator(operator_type));
     }
-
-    fn validate(&self, tokinizer: &mut Tokinizer<'_>) -> BramaStatus {
-        BramaStatus::Ok
-    }
 }

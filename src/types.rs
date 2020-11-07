@@ -230,7 +230,6 @@ impl<'a> Tokinizer<'a> {
 pub trait TokenParser {
     fn check(&self, tokinizer: &Tokinizer<'_>) -> bool;
     fn parse(&self, tokinizer: &mut Tokinizer<'_>) -> Result<BramaTokenType, (String, u32, u32)>;
-    fn validate(&self, tokinizer: &mut Tokinizer<'_>) -> BramaStatus;
 }
 
 pub trait CharTraits {

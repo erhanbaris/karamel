@@ -9,15 +9,21 @@ impl NumberParser {
     }
 
     fn get_digits(&self, tokinizer: &mut Tokinizer<'_>) -> (u8, u64) {
-        let mut number: u64   = 0;
-        let mut num_count: u8 = 0;
-        let mut ch :char      = tokinizer.get_char();
+        let mut number: u64    = 0;
+        let mut num_count: u8  = 0;
+        let mut ch :char       = tokinizer.get_char();
+        let mut seperator_used = false;
 
-        while !tokinizer.is_end() && ch.is_ascii_digit() {
-            num_count += 1;
+        while !tokinizer.is_end() && (ch.is_ascii_digit() || ch == '_') {
+            if ch == '_' {
+                seperator_used = true;
+            }
+            else {
+                num_count += 1;
 
-            number *= u64::pow(10, 1);
-            number += ch as u64 - '0' as u64;
+                number *= u64::pow(10, 1);
+                number += ch as u64 - '0' as u64;
+            }
 
             ch = self.increase(tokinizer);
         }
@@ -182,9 +188,5 @@ impl TokenParser for NumberParser {
             BramaNumberSystem::Hexadecimal => Ok(self.parse_hex(tokinizer)),
             _ => Err((String::from("Number not parsed"), tokinizer.line, tokinizer.column))
         };
-    }
-
-    fn validate(&self, tokinizer: &mut Tokinizer<'_>) -> BramaStatus {
-        BramaStatus::Ok
     }
 }

@@ -42,8 +42,4 @@ impl TokenParser for TextParser {
 
         return Ok(BramaTokenType::Text(symbol.to_owned()));
     }
-
-    fn validate(&self, tokinizer: &mut Tokinizer<'_>) -> BramaStatus {
-        BramaStatus::Ok
-    }
 }
