@@ -25,6 +25,25 @@ mod tests {
     }
 
     #[warn(unused_macros)]
+    macro_rules! test_keyword {
+        ($name:ident, $text:expr, $result:expr) => {
+            // The macro will expand into the contents of this block.
+            #[test]
+            fn $name () {
+                let mut parser = Parser::new();
+                parser.parse($text);
+                let tokens = parser.tokens();
+
+                assert_eq!(1, tokens.len());
+                match &tokens[0].token_type {
+                    BramaTokenType::Keyword(keyword) => assert_eq!(*keyword, $result),
+                    _ => assert_eq!(true, false)
+                }
+            }
+        };
+    }
+
+    #[warn(unused_macros)]
     macro_rules! test_comment {
         ($name:ident, $text:expr) => {
             // The macro will expand into the contents of this block.
@@ -34,6 +53,21 @@ mod tests {
                 parser.parse($text);
                 let tokens = parser.tokens();
                 assert_eq!(0, tokens.len());
+            }
+        };
+    }
+
+    #[warn(unused_macros)]
+    macro_rules! parse_failed {
+        ($name:ident, $text:expr) => {
+            // The macro will expand into the contents of this block.
+            #[test]
+            fn $name () {
+                let mut parser = Parser::new();
+                match parser.parse($text) {
+                    BramaStatus::Error(_, _, _) => assert_eq!(true, true),
+                    BramaStatus::Ok => assert_eq!(false, true)
+                }
             }
         };
     }
@@ -178,11 +212,18 @@ mod tests {
         }
     }
 
+
+    parse_failed!(text_1, "'merhaba dünya");
+    parse_failed!(text_2, "\"merhaba dünya");
+
     test_comment!(comment_1, "//");
     test_comment!(comment_2, "// merhaba dünya");
     test_comment!(comment_3, "/**/");
     test_comment!(comment_4, "/* merhaba dünya */");
     test_comment!(comment_5, "/* // */");
+    parse_failed!(comment_6, "/*");
+
+    parse_failed!(operator_1, "#");
 
     test_number!(integer_1, Integer, "1024", 1024);
     test_number!(integer_2, Integer, "1024000", 1024000);
@@ -224,4 +265,9 @@ mod tests {
     test_number!(double_5, Double, "1_23.4e+4", 1234000.0);
     test_number!(double_6, Double, "1_23.4_e+4_", 1234000.0);
     test_number!(double_7, Double, "09__9_999._9_", 99999.9);
+
+    test_keyword!(keyword_1, "true", BramaKeywordType::True);
+    test_keyword!(keyword_2, "doğru", BramaKeywordType::True);
+    test_keyword!(keyword_3, "false", BramaKeywordType::False);
+    test_keyword!(keyword_4, "yanlış", BramaKeywordType::False);
 }

@@ -5,73 +5,15 @@ use std::default::Default;
 #[derive(PartialEq, Eq)]
 pub enum BramaKeywordType {
     None=0,
-    Auto,
-    Break,
-    Case,
-    Char,
-    Const,
-    Continue,
-    Default,
-    Do,
-    Double,
-    Else,
-    Enum,
-    Extern,
-    Float,
-    For,
-    Goto,
-    If,
-    Int,
-    Long,
-    Register,
-    Return,
-    Short,
-    Signed,
-    Sizeof,
-    Static,
-    Struct,
-    Switch,
-    Typedef,
-    Union,
-    Unsigned,
-    Void,
-    Volatile,
-    While,
+    True,
+    False
 }
 
-pub static KEYWORDS: [(&str, BramaKeywordType); 32] = [
-    ("auto", BramaKeywordType::Auto),
-    ("break", BramaKeywordType::Break),
-    ("case", BramaKeywordType::Case),
-    ("char", BramaKeywordType::Char),
-    ("const", BramaKeywordType::Const),
-    ("continue", BramaKeywordType::Continue),
-    ("default", BramaKeywordType::Default),
-    ("do", BramaKeywordType::Do),
-    ("double", BramaKeywordType::Double),
-    ("else", BramaKeywordType::Else),
-    ("enum", BramaKeywordType::Enum),
-    ("extern", BramaKeywordType::Extern),
-    ("float", BramaKeywordType::Float),
-    ("for", BramaKeywordType::For),
-    ("goto", BramaKeywordType::Goto),
-    ("if", BramaKeywordType::If),
-    ("int", BramaKeywordType::Int),
-    ("long", BramaKeywordType::Long),
-    ("register", BramaKeywordType::Register),
-    ("return", BramaKeywordType::Return),
-    ("short", BramaKeywordType::Short),
-    ("signed", BramaKeywordType::Signed),
-    ("sizeof", BramaKeywordType::Sizeof),
-    ("static", BramaKeywordType::Static),
-    ("struct", BramaKeywordType::Struct),
-    ("switch", BramaKeywordType::Switch),
-    ("typedef", BramaKeywordType::Typedef),
-    ("union", BramaKeywordType::Union),
-    ("unsigned", BramaKeywordType::Unsigned),
-    ("void", BramaKeywordType::Void),
-    ("volatile", BramaKeywordType::Volatile),
-    ("while", BramaKeywordType::While)
+pub static KEYWORDS: [(&str, BramaKeywordType); 4] = [
+    ("true", BramaKeywordType::True),
+    ("false", BramaKeywordType::False),
+    ("doğru", BramaKeywordType::True),
+    ("yanlış", BramaKeywordType::False),
 ];
 
 #[derive(Clone, Copy)]
@@ -141,7 +83,6 @@ pub enum BramaTokenType {
     Operator(BramaOperatorType),
     Text(String),
     Keyword(BramaKeywordType),
-    EndOfFile,
     WhiteSpace(u8),
     NewLine(u8)
 }
@@ -252,11 +193,7 @@ impl CharTraits for char {
     }
 
     fn is_symbol(&self) -> bool {
-        match *self {
-            'a'..='z' | 'A'..='Z' | '_' => true,
-            '$' => true,
-            _ => false,
-        }
+        return self.is_alphabetic() || *self == '_' ||  *self == '$';
     }
 
     fn is_integer(&self) -> bool {
