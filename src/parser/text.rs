@@ -1,11 +1,16 @@
 use crate::types::*;
 
 pub struct TextParser {
-    tag: char
+    pub tag: char
 }
 
 impl TokenParser for TextParser {
-    fn parse(&mut self, tokinizer: &mut Tokinizer<'_>) -> Result<BramaTokenType, (String, u32, u32)> {
+    fn check(&self, tokinizer: &Tokinizer<'_>) -> bool {
+        let ch = tokinizer.get_char();
+        return ch == self.tag;
+    }
+
+    fn parse(&self, tokinizer: &mut Tokinizer<'_>) -> Result<BramaTokenType, (String, u32, u32)> {
         let mut ch: char      = '\0';
         let mut ch_next: char;
         let mut symbol        = String::new();
@@ -38,7 +43,7 @@ impl TokenParser for TextParser {
         return Ok(BramaTokenType::Text(symbol.to_owned()));
     }
 
-    fn validate(&mut self, tokinizer: &mut Tokinizer<'_>) -> BramaStatus {
+    fn validate(&self, tokinizer: &mut Tokinizer<'_>) -> BramaStatus {
         BramaStatus::Ok
     }
 }

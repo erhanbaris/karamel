@@ -142,8 +142,8 @@ pub enum BramaTokenType {
     Text(String),
     Keyword(BramaKeywordType),
     EndOfFile,
-    WhiteSpace,
-    NewLine
+    WhiteSpace(u8),
+    NewLine(u8)
 }
 
 #[repr(C)]
@@ -228,8 +228,9 @@ impl<'a> Tokinizer<'a> {
 }
 
 pub trait TokenParser {
-    fn parse(&mut self, tokinizer: &mut Tokinizer<'_>) -> Result<BramaTokenType, (String, u32, u32)>;
-    fn validate(&mut self, tokinizer: &mut Tokinizer<'_>) -> BramaStatus;
+    fn check(&self, tokinizer: &Tokinizer<'_>) -> bool;
+    fn parse(&self, tokinizer: &mut Tokinizer<'_>) -> Result<BramaTokenType, (String, u32, u32)>;
+    fn validate(&self, tokinizer: &mut Tokinizer<'_>) -> BramaStatus;
 }
 
 pub trait CharTraits {

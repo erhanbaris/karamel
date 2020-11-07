@@ -3,12 +3,12 @@ use crate::types::*;
 pub struct NumberParser;
 
 impl NumberParser {
-    fn increase(&mut self, tokinizer: &mut Tokinizer<'_>) -> char {
+    fn increase(&self, tokinizer: &mut Tokinizer<'_>) -> char {
         tokinizer.increase_index();
         return tokinizer.get_char();
     }
 
-    fn get_digits(&mut self, tokinizer: &mut Tokinizer<'_>) -> (u8, u64) {
+    fn get_digits(&self, tokinizer: &mut Tokinizer<'_>) -> (u8, u64) {
         let mut number: u64   = 0;
         let mut num_count: u8 = 0;
         let mut ch :char      = tokinizer.get_char();
@@ -25,7 +25,7 @@ impl NumberParser {
         return (num_count, number);
     }
 
-    fn detect_number_system(&mut self, tokinizer: &mut Tokinizer<'_>) -> BramaNumberSystem {
+    fn detect_number_system(&self, tokinizer: &mut Tokinizer<'_>) -> BramaNumberSystem {
         if tokinizer.get_char() == '0' {
             return match tokinizer.get_next_char() {
                 'b' | 'B' => {
@@ -49,7 +49,7 @@ impl NumberParser {
         return BramaNumberSystem::Decimal;
     }
 
-    fn parse_hex(&mut self, tokinizer: &mut Tokinizer<'_>) -> BramaTokenType {
+    fn parse_hex(&self, tokinizer: &mut Tokinizer<'_>) -> BramaTokenType {
         let mut number :u64 = 0;
         let mut ch :char    = tokinizer.get_char();
 
@@ -67,7 +67,7 @@ impl NumberParser {
         return BramaTokenType::Integer(number as i64);
     }
 
-    fn parse_octal(&mut self, tokinizer: &mut Tokinizer<'_>) -> BramaTokenType {
+    fn parse_octal(&self, tokinizer: &mut Tokinizer<'_>) -> BramaTokenType {
         let mut number :u64 = 0;
         let mut ch :char    = tokinizer.get_char();
 
@@ -85,7 +85,7 @@ impl NumberParser {
         return BramaTokenType::Integer(number as i64);
     }
 
-    fn parse_binary(&mut self, tokinizer: &mut Tokinizer<'_>) -> BramaTokenType {
+    fn parse_binary(&self, tokinizer: &mut Tokinizer<'_>) -> BramaTokenType {
         let mut number :u64 = 0;
         let mut ch :char    = tokinizer.get_char();
 
@@ -103,7 +103,7 @@ impl NumberParser {
         return BramaTokenType::Integer(number as i64);
     }
 
-    fn parse_decimal(&mut self, tokinizer: &mut Tokinizer<'_>) -> BramaTokenType {
+    fn parse_decimal(&self, tokinizer: &mut Tokinizer<'_>) -> BramaTokenType {
         /*
         [NUMBER](.[NUMBER](E(-+)[NUMBER]))
         */
@@ -167,7 +167,12 @@ impl NumberParser {
 }
 
 impl TokenParser for NumberParser {
-    fn parse(&mut self, tokinizer: &mut Tokinizer<'_>) -> Result<BramaTokenType, (String, u32, u32)> {
+    fn check(&self, tokinizer: &Tokinizer<'_>) -> bool {
+        let ch = tokinizer.get_char();
+        return ch == '.' || (ch >= '0' && ch <= '9');
+    }
+
+    fn parse(&self, tokinizer: &mut Tokinizer<'_>) -> Result<BramaTokenType, (String, u32, u32)> {
         let number_system = self.detect_number_system(tokinizer);
 
         return match number_system {
@@ -179,7 +184,7 @@ impl TokenParser for NumberParser {
         };
     }
 
-    fn validate(&mut self, tokinizer: &mut Tokinizer<'_>) -> BramaStatus {
+    fn validate(&self, tokinizer: &mut Tokinizer<'_>) -> BramaStatus {
         BramaStatus::Ok
     }
 }

@@ -24,6 +24,20 @@ mod tests {
         };
     }
 
+    #[warn(unused_macros)]
+    macro_rules! test_comment {
+        ($name:ident, $text:expr) => {
+            // The macro will expand into the contents of this block.
+            #[test]
+            fn $name () {
+                let mut parser = Parser::new();
+                parser.parse($text);
+                let tokens = parser.tokens();
+                assert_eq!(0, tokens.len());
+            }
+        };
+    }
+
     #[test]
     fn get_text_1() {
         let mut parser = Parser::new();
@@ -116,20 +130,62 @@ mod tests {
     }
 
     #[test]
-    fn new_line() {
+    fn new_line_1() {
         let mut parser = Parser::new();
         parser.parse("\n");
         let tokens = parser.tokens();
 
         assert_eq!(1, tokens.len());
         match &tokens[0].token_type {
-            BramaTokenType::NewLine => assert_eq!(true, true),
+            BramaTokenType::NewLine(count) => assert_eq!(*count == 0, true),
             _ => assert_eq!(true, false)
         }
     }
 
+    #[test]
+    fn new_line_2() {
+        let mut parser = Parser::new();
+        parser.parse("\n     \n    \n   ");
+        let tokens = parser.tokens();
+
+        assert_eq!(3, tokens.len());
+        match &tokens[0].token_type {
+            BramaTokenType::NewLine(count) => assert_eq!(*count == 5, true),
+            _ => assert_eq!(true, false)
+        }
+
+        match &tokens[1].token_type {
+            BramaTokenType::NewLine(count) => assert_eq!(*count == 4, true),
+            _ => assert_eq!(true, false)
+        }
+
+        match &tokens[2].token_type {
+            BramaTokenType::NewLine(count) => assert_eq!(*count == 3, true),
+            _ => assert_eq!(true, false)
+        }
+    }
+
+    #[test]
+    fn whitespace() {
+        let mut parser = Parser::new();
+        parser.parse("     ");
+        let tokens = parser.tokens();
+
+        assert_eq!(1, tokens.len());
+        match &tokens[0].token_type {
+            BramaTokenType::WhiteSpace(count) => assert_eq!(*count == 5, true),
+            _ => assert_eq!(true, false)
+        }
+    }
+
+    test_comment!(comment_1, "//");
+    test_comment!(comment_2, "// merhaba dünya");
+    test_comment!(comment_3, "/**/");
+    test_comment!(comment_4, "/* merhaba dünya */");
+    test_comment!(comment_5, "/* // */");
+
     test_number!(integer_1, Integer, "1024", 1024);
-    test_number!(integer_2, Integer, " 1024000 ", 1024000);
+    test_number!(integer_2, Integer, "1024000", 1024000);
     test_number!(integer_3, Integer, "123", 123);
     test_number!(integer_4, Integer, "9223372036854775807", 9223372036854775807);
     test_number!(integer_5, Integer, "0999999", 999999);
@@ -154,13 +210,12 @@ mod tests {
         parser.parse(" .1024000 ");
         let tokens = parser.tokens();
 
-        assert_eq!(1, tokens.len());
-        match &tokens[0].token_type {
+        assert_eq!(3, tokens.len());
+        match &tokens[1].token_type {
             BramaTokenType::Double(num) => assert_eq!(0.1024 - *num < 1e-10, true),
             _ => assert_eq!(true, false)
         }
     }
     test_number!(double_3, Double, "099999.9", 99999.9);
     test_number!(double_4, Double, "123.4e+4", 1234000.0);
-
 }
