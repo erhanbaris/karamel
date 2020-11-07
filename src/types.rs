@@ -1,4 +1,5 @@
 use std::default::Default;
+use std::vec::Vec;
 
 #[derive(Clone, Copy)]
 #[derive(Debug)]
@@ -6,14 +7,30 @@ use std::default::Default;
 pub enum BramaKeywordType {
     None=0,
     True,
-    False
+    False,
+    Use,
+    Until,
+    Loop,
+    If,
+    Else
 }
 
-pub static KEYWORDS: [(&str, BramaKeywordType); 4] = [
-    ("true", BramaKeywordType::True),
+pub static KEYWORDS: [(&str, BramaKeywordType); 14] = [
+    ("true",  BramaKeywordType::True),
     ("false", BramaKeywordType::False),
-    ("doğru", BramaKeywordType::True),
+    ("use",   BramaKeywordType::Use),
+    ("until", BramaKeywordType::Until),
+    ("loop",  BramaKeywordType::Loop),
+    ("if",    BramaKeywordType::If),
+    ("else",  BramaKeywordType::Else),
+
+    ("doğru",  BramaKeywordType::True),
     ("yanlış", BramaKeywordType::False),
+    ("kullan", BramaKeywordType::Use),
+    ("kadar",  BramaKeywordType::Until),
+    ("döngü",  BramaKeywordType::Loop),
+    ("eğer",   BramaKeywordType::If),
+    ("yada",   BramaKeywordType::Else)
 ];
 
 #[derive(Clone, Copy)]
@@ -124,6 +141,42 @@ pub struct Tokinizer<'a> {
     pub tokens: Vec<Token>
 }
 
+
+#[repr(C)]
+#[derive(Clone)]
+#[derive(Debug)]
+#[derive(PartialEq)]
+pub enum BramaPrimative {
+    None,
+    Integer(i64),
+    Double(f64),
+    Bool(bool),
+    List(Vec<i32>),
+    Atom(String),
+    String(String)
+}
+
+#[repr(C)]
+#[derive(Clone)]
+#[derive(Debug)]
+#[derive(PartialEq)]
+pub enum BramaAstType {
+    None,
+    Primative(BramaPrimative),
+    Binary,
+    Control,
+    Unary,
+    Assign,
+    Loop,
+    IfStatement,
+    Symbol
+}
+
+
+pub struct BramaAst {
+    ast_type: BramaAstType
+}
+
 impl<'a> Tokinizer<'a> {
     pub fn is_end(&self) -> bool {
         self.length <= self.index
@@ -201,5 +254,23 @@ impl CharTraits for char {
             '0'..='9' => true,
             _ => false,
         }
+    }
+}
+
+impl Token {
+    pub fn is_primative(&self) -> bool {
+        return match &self.token_type {
+            BramaTokenType::Integer(num) => true,
+            BramaTokenType::Double(num) => true,
+            BramaTokenType::Text(s) => true,
+            BramaTokenType::Keyword(keyword) => {
+                *keyword == BramaKeywordType::True || *keyword == BramaKeywordType::False
+            },
+            BramaTokenType::WhiteSpace(c) => false,
+            BramaTokenType::NewLine(c) => false,
+            BramaTokenType::Symbol(sym) => false,
+            BramaTokenType::Operator(opt) => false,
+            BramaTokenType::None => false
+        };
     }
 }
