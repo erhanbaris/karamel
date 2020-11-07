@@ -142,6 +142,7 @@ pub enum BramaTokenType {
     Text(String),
     Keyword(BramaKeywordType),
     EndOfFile,
+    WhiteSpace,
     NewLine
 }
 
@@ -163,24 +164,22 @@ pub enum BramaNumberSystem {
 #[derive(PartialEq)]
 pub enum BramaStatus {
     Ok,
-    MissingStringDemininator(i32, i32),
-    MultipleDotOnDouble(i32, i32),
-    CharNotValid(i32, i32)
+    Error(String, u32, u32),
 }
 
 pub struct Token {
-    pub line      : i32,
-    pub column    : i32,
+    pub line      : u32,
+    pub column    : u32,
     pub token_type: BramaTokenType
 }
 
 #[derive(Default)]
 pub struct Tokinizer<'a> {
     pub data  : &'a str,
-    pub length: i32,
-    pub line  : i32,
-    pub column: i32,
-    pub index : i32,
+    pub length: u32,
+    pub line  : u32,
+    pub column: u32,
+    pub index : u32,
     pub tokens: Vec<Token>
 }
 
@@ -228,6 +227,10 @@ impl<'a> Tokinizer<'a> {
     }
 }
 
+pub trait TokenParser {
+    fn parse(&mut self, tokinizer: &mut Tokinizer<'_>) -> Result<BramaTokenType, (String, u32, u32)>;
+    fn validate(&mut self, tokinizer: &mut Tokinizer<'_>) -> BramaStatus;
+}
 
 pub trait CharTraits {
     fn is_new_line(&self) -> bool;
@@ -261,47 +264,5 @@ impl CharTraits for char {
             '0'..='9' => true,
             _ => false,
         }
-    }
-}
-
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn is_new_line() {
-        assert_eq!(true, '\n'.is_new_line());
-        assert_eq!(false, ' '.is_new_line());
-    }
-
-    #[test]
-    fn is_integer() {
-        for ch in '0'..'9' {
-            assert_eq!(true, ch.is_integer());
-        }
-        assert_eq!(false, 'a'.is_integer());
-    }
-
-    #[test]
-    fn is_symbol() {
-        assert_eq!(true, '_'.is_symbol());
-        for ch in 'a'..'z' {
-            assert_eq!(true, ch.is_symbol());
-        }
-        for ch in 'A'..'Z' {
-            assert_eq!(true, ch.is_symbol());
-        }
-
-        assert_eq!(true, '$'.is_symbol());
-
-    }
-
-    #[test]
-    fn is_whitespace() {
-        assert_eq!(true, ' '.is_whitespace());
-        assert_eq!(true, '\r'.is_whitespace());
-        assert_eq!(true, '\t'.is_whitespace());
-        assert_eq!(false, '2'.is_whitespace());
     }
 }

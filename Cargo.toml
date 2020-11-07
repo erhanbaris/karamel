@@ -1,5 +1,5 @@
 [package]
-name = "jparser"
+name = "TPD"
 version = "0.1.0"
 authors = ["Erhan BARIS <erhanbaris@gmail.com>"]
 edition = "2018"
