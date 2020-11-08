@@ -7,8 +7,9 @@ fn parse(data: &'static str) {
     parser.parse();
 
     let mut syntax = syntax::SyntaxParser::new(parser.tokens());
+    println!("{:?}", syntax.primary_expr());
 }
 
 fn main() {
-    parse("1024");
+    parse(":sağlık_sıhhat");
 }

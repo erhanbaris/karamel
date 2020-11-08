@@ -2,6 +2,12 @@ use std::default::Default;
 use std::vec::{Vec, IntoIter};
 use std::str::Chars;
 use std::iter::Peekable;
+use std::result::Result;
+use std::string::String;
+
+pub type BramaAstError      = (String, u32, u32);
+pub type AstResult          = Result<BramaAstType, (String, u32, u32)>;
+pub type BramaTokinizeError = (String, u32, u32);
 
 
 #[derive(Clone, Copy)]
@@ -186,7 +192,7 @@ pub struct BramaAst {
 impl Tokinizer {
     pub fn is_end(&mut self) -> bool {
         return match self.iter.peek() {
-            Some(&c) => false,
+            Some(_) => false,
             None => true
         };
     }
@@ -265,23 +271,5 @@ impl CharTraits for char {
             '0'..='9' => true,
             _ => false,
         }
-    }
-}
-
-impl Token {
-    pub fn is_primative(&self) -> bool {
-        return match &self.token_type {
-            BramaTokenType::Integer(num) => true,
-            BramaTokenType::Double(num) => true,
-            BramaTokenType::Text(s) => true,
-            BramaTokenType::Keyword(keyword) => {
-                *keyword == BramaKeywordType::True || *keyword == BramaKeywordType::False
-            },
-            BramaTokenType::WhiteSpace(c) => false,
-            BramaTokenType::NewLine(c) => false,
-            BramaTokenType::Symbol(sym) => false,
-            BramaTokenType::Operator(opt) => false,
-            BramaTokenType::None => false
-        };
     }
 }
