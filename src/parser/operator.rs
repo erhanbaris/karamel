@@ -3,7 +3,7 @@ use crate::types::*;
 pub struct OperatorParser;
 
 impl TokenParser for OperatorParser {
-    fn check(&self, tokinizer: &Tokinizer) -> bool {
+    fn check(&self, tokinizer: &mut Tokinizer) -> bool {
         true
     }
 

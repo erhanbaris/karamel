@@ -11,8 +11,8 @@ mod tests {
             // The macro will expand into the contents of this block.
             #[test]
             fn $name () {
-                let mut parser = Parser::new();
-                parser.parse($text);
+                let mut parser = Parser::new($text);
+                parser.parse();
                 let tokens = parser.tokens();
 
                 assert_eq!(1, tokens.len());
@@ -30,8 +30,8 @@ mod tests {
             // The macro will expand into the contents of this block.
             #[test]
             fn $name () {
-                let mut parser = Parser::new();
-                parser.parse($text);
+                let mut parser = Parser::new($text);
+                parser.parse();
                 let tokens = parser.tokens();
 
                 assert_eq!(1, tokens.len());
@@ -49,8 +49,8 @@ mod tests {
             // The macro will expand into the contents of this block.
             #[test]
             fn $name () {
-                let mut parser = Parser::new();
-                parser.parse($text);
+                let mut parser = Parser::new($text);
+                parser.parse();
                 let tokens = parser.tokens();
                 assert_eq!(0, tokens.len());
             }
@@ -63,8 +63,8 @@ mod tests {
             // The macro will expand into the contents of this block.
             #[test]
             fn $name () {
-                let mut parser = Parser::new();
-                match parser.parse($text) {
+                let mut parser = Parser::new($text);
+                match parser.parse() {
                     BramaStatus::Error(_, _, _) => assert_eq!(true, true),
                     BramaStatus::Ok => assert_eq!(false, true)
                 }
@@ -74,8 +74,8 @@ mod tests {
 
     #[test]
     fn get_text_1() {
-        let mut parser = Parser::new();
-        parser.parse("\"erhan barış\"");
+        let mut parser = Parser::new("\"erhan barış\"");
+        parser.parse();
         let tokens = parser.tokens();
         assert_eq!(1, tokens.len());
         for item in tokens.iter() {
@@ -88,8 +88,8 @@ mod tests {
 
     #[test]
     fn get_text_2() {
-        let mut parser = Parser::new();
-        parser.parse("\"erhan barış\"\"\"");
+        let mut parser = Parser::new("\"erhan barış\"\"\"");
+        parser.parse();
         let tokens = parser.tokens();
         assert_eq!(2, tokens.len());
         match &tokens[0].token_type {
@@ -104,8 +104,8 @@ mod tests {
 
     #[test]
     fn get_text_3() {
-        let mut parser = Parser::new();
-        parser.parse("'erhan barış'\"\"");
+        let mut parser = Parser::new("'erhan barış'\"\"");
+        parser.parse();
         let tokens = parser.tokens();
         assert_eq!(2, tokens.len());
         match &tokens[0].token_type {
@@ -121,8 +121,8 @@ mod tests {
     #[test]
     fn keywords() {
         for (keyword, keyword_enum) in &KEYWORDS {
-            let mut parser = Parser::new();
-            parser.parse(&keyword);
+            let mut parser = Parser::new(&keyword);
+            parser.parse();
             let tokens = parser.tokens();
 
             assert_eq!(1, tokens.len());
@@ -132,8 +132,8 @@ mod tests {
             }
         }
 
-        let mut parser = Parser::new();
-        parser.parse("_test_");
+        let mut parser = Parser::new("_test_");
+        parser.parse();
         let tokens = parser.tokens();
 
         assert_eq!(1, tokens.len());
@@ -142,8 +142,8 @@ mod tests {
             _ => assert_eq!(true, false)
         }
 
-        let mut parser = Parser::new();
-        parser.parse("$");
+        let mut parser = Parser::new("$");
+        parser.parse();
         let tokens = parser.tokens();
 
         assert_eq!(1, tokens.len());
@@ -152,8 +152,8 @@ mod tests {
             _ => assert_eq!(true, false)
         }
 
-        let mut parser = Parser::new();
-        parser.parse("$$erhan$$");
+        let mut parser = Parser::new("$$erhan$$");
+        parser.parse();
         let tokens = parser.tokens();
 
         assert_eq!(1, tokens.len());
@@ -165,8 +165,8 @@ mod tests {
 
     #[test]
     fn new_line_1() {
-        let mut parser = Parser::new();
-        parser.parse("\n");
+        let mut parser = Parser::new("\n");
+        parser.parse();
         let tokens = parser.tokens();
 
         assert_eq!(1, tokens.len());
@@ -178,8 +178,8 @@ mod tests {
 
     #[test]
     fn new_line_2() {
-        let mut parser = Parser::new();
-        parser.parse("\n     \n    \n   ");
+        let mut parser = Parser::new("\n     \n    \n   ");
+        parser.parse();
         let tokens = parser.tokens();
 
         assert_eq!(3, tokens.len());
@@ -201,8 +201,8 @@ mod tests {
 
     #[test]
     fn whitespace() {
-        let mut parser = Parser::new();
-        parser.parse("     ");
+        let mut parser = Parser::new("     ");
+        parser.parse();
         let tokens = parser.tokens();
 
         assert_eq!(1, tokens.len());
@@ -250,8 +250,8 @@ mod tests {
     test_number!(double_1, Double, "1024.0", 1024.0);
     #[test]
     fn double_2() {
-        let mut parser = Parser::new();
-        parser.parse(" .1024000 ");
+        let mut parser = Parser::new(" .1024000 ");
+        parser.parse();
         let tokens = parser.tokens();
 
         assert_eq!(3, tokens.len());

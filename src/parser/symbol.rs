@@ -14,7 +14,7 @@ impl SymbolParser {
 }
 
 impl TokenParser for SymbolParser {
-    fn check(&self, tokinizer: &Tokinizer) -> bool {
+    fn check(&self, tokinizer: &mut Tokinizer) -> bool {
         let ch = tokinizer.get_char();
         return ch.is_symbol();
     }

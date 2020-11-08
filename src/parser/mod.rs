@@ -24,10 +24,21 @@ pub struct Parser {
 }
 
 impl<'a> Parser {
-    pub fn new() -> Parser {
-        let parser = Parser {
-            tokinizer: Default::default()
+    pub fn new(data: &'static str) -> Parser {
+        let mut parser = Parser {
+            tokinizer: Tokinizer {
+                column: 0,
+                line: 0,
+                tokens: Vec::new(),
+                iter: data.chars().peekable(),
+                iter_second: data.chars().peekable(),
+                iter_third: data.chars().peekable()
+            }
         };
+
+        parser.tokinizer.iter_second.next();
+        parser.tokinizer.iter_third.next();
+        parser.tokinizer.iter_third.next();
         return parser;
     }
 
@@ -35,15 +46,7 @@ impl<'a> Parser {
         return &self.tokinizer.tokens;
     }
 
-    pub fn parse(&mut self, data: &'static str) -> BramaStatus {
-        self.tokinizer =  Tokinizer {
-            column: 0,
-            index: 0,
-            length: data.chars().count() as u32,
-            line: 0,
-            tokens: Vec::new(),
-            data: data
-        };
+    pub fn parse(&mut self) -> BramaStatus {
         let mut ch;
         let mut ch_next;
 
@@ -65,25 +68,25 @@ impl<'a> Parser {
             ch      = self.tokinizer.get_char() as char;
             ch_next = self.tokinizer.get_next_char();
 
-            if line_parser.check(&self.tokinizer) {
+            if line_parser.check(&mut self.tokinizer) {
                 status = line_parser.parse(&mut self.tokinizer);
             }
-            else if whitespace_parser.check(&self.tokinizer) {
+            else if whitespace_parser.check(&mut self.tokinizer) {
                 status = whitespace_parser.parse(&mut self.tokinizer);
             }
-            else if comment_parser.check(&self.tokinizer) {
+            else if comment_parser.check(&mut self.tokinizer) {
                 status = comment_parser.parse(&mut self.tokinizer);
             }
-            else if symbol_parser.check(&self.tokinizer) {
+            else if symbol_parser.check(&mut self.tokinizer) {
                 status = symbol_parser.parse(&mut self.tokinizer);
             }
-            else if text_parser_single.check(&self.tokinizer) {
+            else if text_parser_single.check(&mut self.tokinizer) {
                 status = text_parser_single.parse(&mut self.tokinizer);
             }
-            else if text_parser_double.check(&self.tokinizer) {
+            else if text_parser_double.check(&mut self.tokinizer) {
                 status = text_parser_double.parse(&mut self.tokinizer);
             }
-            else if number_parser.check(&self.tokinizer) {
+            else if number_parser.check(&mut self.tokinizer) {
                 status = number_parser.parse(&mut self.tokinizer);
             }
             else {

@@ -173,7 +173,7 @@ impl NumberParser {
 }
 
 impl TokenParser for NumberParser {
-    fn check(&self, tokinizer: &Tokinizer) -> bool {
+    fn check(&self, tokinizer: &mut Tokinizer) -> bool {
         let ch = tokinizer.get_char();
         return ch == '.' || (ch >= '0' && ch <= '9');
     }

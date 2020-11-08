@@ -3,7 +3,7 @@ use crate::types::*;
 pub struct CommentParser;
 
 impl TokenParser for CommentParser {
-    fn check(&self, tokinizer: &Tokinizer) -> bool {
+    fn check(&self, tokinizer: &mut Tokinizer) -> bool {
         let ch      = tokinizer.get_char();
         let ch_next = tokinizer.get_next_char();
         return (ch == '/' && ch_next == '*') || (ch == '/' && ch_next == '/');

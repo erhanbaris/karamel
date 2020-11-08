@@ -3,7 +3,7 @@ use crate::types::*;
 pub struct WhitespaceParser;
 
 impl TokenParser for WhitespaceParser {
-    fn check(&self, tokinizer: &Tokinizer) -> bool {
+    fn check(&self, tokinizer: &mut Tokinizer) -> bool {
         let ch = tokinizer.get_char();
         return ch == ' ';
     }

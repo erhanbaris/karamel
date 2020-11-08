@@ -1,5 +1,8 @@
 use std::default::Default;
-use std::vec::Vec;
+use std::vec::{Vec, IntoIter};
+use std::str::Chars;
+use std::iter::Peekable;
+
 
 #[derive(Clone, Copy)]
 #[derive(Debug)]
@@ -135,14 +138,13 @@ pub struct Token {
     pub token_type: BramaTokenType
 }
 
-#[derive(Default)]
 pub struct Tokinizer {
-    pub data  : &'static str,
-    pub length: u32,
     pub line  : u32,
     pub column: u32,
-    pub index : u32,
-    pub tokens: Vec<Token>
+    pub tokens: Vec<Token>,
+    pub iter: Peekable<Chars<'static>>,
+    pub iter_second: Peekable<Chars<'static>>,
+    pub iter_third: Peekable<Chars<'static>>,
 }
 
 
@@ -182,29 +184,32 @@ pub struct BramaAst {
 }
 
 impl Tokinizer {
-    pub fn is_end(&self) -> bool {
-        self.length <= self.index
+    pub fn is_end(&mut self) -> bool {
+        return match self.iter.peek() {
+            Some(&c) => false,
+            None => true
+        };
     }
 
-    pub fn get_char(&self) -> char {
-        if !self.is_end() {
-            return self.data.chars().nth(self.index as usize).unwrap_or('\0');
-        }
-        return '\0';
+    pub fn get_char(&mut self) -> char {
+        return match self.iter.peek() {
+            Some(&c) => c,
+            None => '\0'
+        };
     }
 
-    pub fn get_next_char(&self) -> char {
-        if self.length > self.index + 1 {
-            return self.data.chars().nth((self.index + 1) as usize).unwrap_or('\0');
-        }
-        return '\0';
+    pub fn get_next_char(&mut self) -> char {
+        return match self.iter_second.peek() {
+            Some(&c) => c,
+            None => '\0'
+        };
     }
 
-    pub fn get_third_char(&self) -> char {
-        if self.length > self.index + 2 {
-            return self.data.chars().nth((self.index + 2) as usize).unwrap_or('\0');
-        }
-        return '\0';
+    pub fn get_third_char(&mut self) -> char {
+        return match self.iter_third.peek() {
+            Some(&c) => c,
+            None => '\0'
+        };
     }
 
     pub fn add_token(&mut self, token: Token) {
@@ -213,7 +218,9 @@ impl Tokinizer {
     }
 
     pub fn increase_index(&mut self) {
-        self.index += 1;
+        self.iter.next();
+        self.iter_second.next();
+        self.iter_third.next();
     }
 
     pub fn increate_line(& mut self) {
@@ -226,7 +233,7 @@ impl Tokinizer {
 }
 
 pub trait TokenParser {
-    fn check(&self, tokinizer: &Tokinizer) -> bool;
+    fn check(&self, tokinizer: &mut Tokinizer) -> bool;
     fn parse(&self, tokinizer: &mut Tokinizer) -> Result<BramaTokenType, (String, u32, u32)>;
 }
 

@@ -5,7 +5,7 @@ pub struct TextParser {
 }
 
 impl TokenParser for TextParser {
-    fn check(&self, tokinizer: &Tokinizer) -> bool {
+    fn check(&self, tokinizer: &mut Tokinizer) -> bool {
         let ch = tokinizer.get_char();
         return ch == self.tag;
     }
