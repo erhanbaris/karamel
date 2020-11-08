@@ -12,10 +12,12 @@ pub enum BramaKeywordType {
     Until,
     Loop,
     If,
-    Else
+    Else,
+    And,
+    Or
 }
 
-pub static KEYWORDS: [(&str, BramaKeywordType); 14] = [
+pub static KEYWORDS: [(&str, BramaKeywordType); 18] = [
     ("true",  BramaKeywordType::True),
     ("false", BramaKeywordType::False),
     ("use",   BramaKeywordType::Use),
@@ -23,6 +25,8 @@ pub static KEYWORDS: [(&str, BramaKeywordType); 14] = [
     ("loop",  BramaKeywordType::Loop),
     ("if",    BramaKeywordType::If),
     ("else",  BramaKeywordType::Else),
+    ("and",   BramaKeywordType::And),
+    ("or",    BramaKeywordType::Or),
 
     ("doğru",  BramaKeywordType::True),
     ("yanlış", BramaKeywordType::False),
@@ -30,7 +34,9 @@ pub static KEYWORDS: [(&str, BramaKeywordType); 14] = [
     ("kadar",  BramaKeywordType::Until),
     ("döngü",  BramaKeywordType::Loop),
     ("eğer",   BramaKeywordType::If),
-    ("yada",   BramaKeywordType::Else)
+    ("yada",   BramaKeywordType::Else),
+    ("ve",     BramaKeywordType::And),
+    ("veya",   BramaKeywordType::Or)
 ];
 
 #[derive(Clone, Copy)]
@@ -56,8 +62,6 @@ pub enum BramaOperatorType {
     NotEqual,
     NotEqualValue,
     Not,
-    And,
-    Or,
     BitwiseAnd,
     BitwiseOr,
     BitwiseNot,
@@ -132,8 +136,8 @@ pub struct Token {
 }
 
 #[derive(Default)]
-pub struct Tokinizer<'a> {
-    pub data  : &'a str,
+pub struct Tokinizer {
+    pub data  : &'static str,
     pub length: u32,
     pub line  : u32,
     pub column: u32,
@@ -177,7 +181,7 @@ pub struct BramaAst {
     ast_type: BramaAstType
 }
 
-impl<'a> Tokinizer<'a> {
+impl Tokinizer {
     pub fn is_end(&self) -> bool {
         self.length <= self.index
     }
@@ -222,8 +226,8 @@ impl<'a> Tokinizer<'a> {
 }
 
 pub trait TokenParser {
-    fn check(&self, tokinizer: &Tokinizer<'_>) -> bool;
-    fn parse(&self, tokinizer: &mut Tokinizer<'_>) -> Result<BramaTokenType, (String, u32, u32)>;
+    fn check(&self, tokinizer: &Tokinizer) -> bool;
+    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<BramaTokenType, (String, u32, u32)>;
 }
 
 pub trait CharTraits {

@@ -3,13 +3,13 @@ use crate::types::*;
 pub struct CommentParser;
 
 impl TokenParser for CommentParser {
-    fn check(&self, tokinizer: &Tokinizer<'_>) -> bool {
+    fn check(&self, tokinizer: &Tokinizer) -> bool {
         let ch      = tokinizer.get_char();
         let ch_next = tokinizer.get_next_char();
         return (ch == '/' && ch_next == '*') || (ch == '/' && ch_next == '/');
     }
 
-    fn parse(&self, tokinizer: &mut Tokinizer<'_>) -> Result<BramaTokenType, (String, u32, u32)> {
+    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<BramaTokenType, (String, u32, u32)> {
         let mut ch                   = tokinizer.get_char();
         let mut ch_next              = tokinizer.get_next_char();
 

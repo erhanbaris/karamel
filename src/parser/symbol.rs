@@ -14,12 +14,12 @@ impl SymbolParser {
 }
 
 impl TokenParser for SymbolParser {
-    fn check(&self, tokinizer: &Tokinizer<'_>) -> bool {
+    fn check(&self, tokinizer: &Tokinizer) -> bool {
         let ch = tokinizer.get_char();
         return ch.is_symbol();
     }
 
-    fn parse(&self, tokinizer: &mut Tokinizer<'_>) -> Result<BramaTokenType, (String, u32, u32)> {
+    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<BramaTokenType, (String, u32, u32)> {
         let mut ch: char;
         let mut symbol = String::new();
 

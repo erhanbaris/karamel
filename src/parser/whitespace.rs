@@ -3,12 +3,12 @@ use crate::types::*;
 pub struct WhitespaceParser;
 
 impl TokenParser for WhitespaceParser {
-    fn check(&self, tokinizer: &Tokinizer<'_>) -> bool {
+    fn check(&self, tokinizer: &Tokinizer) -> bool {
         let ch = tokinizer.get_char();
         return ch == ' ';
     }
 
-    fn parse(&self, tokinizer: &mut Tokinizer<'_>) -> Result<BramaTokenType, (String, u32, u32)> {
+    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<BramaTokenType, (String, u32, u32)> {
         let mut whitespace_count: u8 = 0;
         let mut ch                   = tokinizer.get_char();
 

@@ -5,12 +5,12 @@ pub struct TextParser {
 }
 
 impl TokenParser for TextParser {
-    fn check(&self, tokinizer: &Tokinizer<'_>) -> bool {
+    fn check(&self, tokinizer: &Tokinizer) -> bool {
         let ch = tokinizer.get_char();
         return ch == self.tag;
     }
 
-    fn parse(&self, tokinizer: &mut Tokinizer<'_>) -> Result<BramaTokenType, (String, u32, u32)> {
+    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<BramaTokenType, (String, u32, u32)> {
         let mut ch: char      = '\0';
         let mut ch_next: char;
         let mut symbol        = String::new();

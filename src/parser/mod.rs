@@ -19,12 +19,12 @@ use self::line::LineParser;
 use self::whitespace::WhitespaceParser;
 use self::comment::CommentParser;
 
-pub struct Parser<'a> {
-    tokinizer: Tokinizer<'a>
+pub struct Parser {
+    tokinizer: Tokinizer
 }
 
-impl<'a> Parser<'a> {
-    pub fn new() -> Parser<'a> {
+impl<'a> Parser {
+    pub fn new() -> Parser {
         let parser = Parser {
             tokinizer: Default::default()
         };

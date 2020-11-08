@@ -1,14 +1,13 @@
-use std::collections::HashMap;
 use crate::types::*;
 
 pub struct OperatorParser;
 
 impl TokenParser for OperatorParser {
-    fn check(&self, tokinizer: &Tokinizer<'_>) -> bool {
+    fn check(&self, tokinizer: &Tokinizer) -> bool {
         true
     }
 
-    fn parse(&self, tokinizer: &mut Tokinizer<'_>) -> Result<BramaTokenType, (String, u32, u32)> {
+    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<BramaTokenType, (String, u32, u32)> {
         let ch       = tokinizer.get_char();
         let ch_next  = tokinizer.get_next_char();
         let ch_third = tokinizer.get_third_char();
@@ -37,9 +36,7 @@ impl TokenParser for OperatorParser {
                 ('-', '=') => BramaOperatorType::AssignSubtraction,
                 ('<', '=') => BramaOperatorType::LessEqualThan,
                 ('<', '<') => BramaOperatorType::BitwiseLeftShift,
-                ('&', '&') => BramaOperatorType::And,
                 ('&', '=') => BramaOperatorType::BitwiseAndAssign,
-                ('|', '|') => BramaOperatorType::Or,
                 ('|', '=') => BramaOperatorType::BitwiseOrAssign,
                 ('*', '=') => BramaOperatorType::AssignMultiplication,
                 ('*', '/') => BramaOperatorType::CommentMultilineEnd,

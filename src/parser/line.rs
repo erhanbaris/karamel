@@ -3,12 +3,12 @@ use crate::types::*;
 pub struct LineParser;
 
 impl TokenParser for LineParser {
-    fn check(&self, tokinizer: &Tokinizer<'_>) -> bool {
+    fn check(&self, tokinizer: &Tokinizer) -> bool {
         let ch = tokinizer.get_char();
         return ch.is_new_line();
     }
 
-    fn parse(&self, tokinizer: &mut Tokinizer<'_>) -> Result<BramaTokenType, (String, u32, u32)> {
+    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<BramaTokenType, (String, u32, u32)> {
         tokinizer.increase_index();
 
         let mut whitespace_count: u8 = 0;
