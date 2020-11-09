@@ -6,7 +6,7 @@ use std::result::Result;
 use std::string::String;
 
 pub type BramaAstError      = (String, u32, u32);
-pub type AstResult          = Result<BramaAstType, (String, u32, u32)>;
+pub type AstResult          = Result<BramaAstType, (&'static str, u32, u32)>;
 pub type BramaTokinizeError = (String, u32, u32);
 
 
@@ -141,6 +141,7 @@ pub enum BramaStatus {
     Error(String, u32, u32),
 }
 
+#[derive(Debug)]
 pub struct Token {
     pub line      : u32,
     pub column    : u32,
@@ -166,7 +167,7 @@ pub enum BramaPrimative {
     Integer(i64),
     Double(f64),
     Bool(bool),
-    List(Vec<i32>),
+    List(Vec<Box<BramaAstType>>),
     Atom(String),
     String(String)
 }
@@ -180,7 +181,8 @@ pub enum BramaAstType {
     Primative(BramaPrimative),
     Binary,
     Control,
-    Unary,
+    PrefixUnary(Box<BramaAstType>),
+    SuffixUnary(Box<BramaAstType>),
     Assign,
     Loop,
     IfStatement,
@@ -273,6 +275,120 @@ impl CharTraits for char {
         match *self {
             '0'..='9' => true,
             _ => false,
+        }
+    }
+}
+
+impl BramaTokenType {
+    pub fn is_integer(&self) -> bool {
+        return match self {
+            BramaTokenType::Integer(_) => true,
+            _ => false
+        }
+    }
+
+    pub fn is_double(&self) -> bool {
+        return match self {
+            BramaTokenType::Double(_) => true,
+            _ => false
+        }
+    }
+
+    pub fn is_operator(&self) -> bool {
+        return match self {
+            BramaTokenType::Operator(_) => true,
+            _ => false
+        }
+    }
+
+    pub fn is_symbol(&self) -> bool {
+        return match self {
+            BramaTokenType::Symbol(_) => true,
+            _ => false
+        }
+    }
+
+    pub fn is_keyword(&self) -> bool {
+        return match self {
+            BramaTokenType::Keyword(_) => true,
+            _ => false
+        }
+    }
+
+    pub fn is_text(&self) -> bool {
+        return match self {
+            BramaTokenType::Text(_) => true,
+            _ => false
+        }
+    }
+
+    pub fn is_whitespace(&self) -> bool {
+        return match self {
+            BramaTokenType::WhiteSpace(_) => true,
+            _ => false
+        }
+    }
+
+    pub fn is_newline(&self) -> bool {
+        return match self {
+            BramaTokenType::NewLine(_) => true,
+            _ => false
+        }
+    }
+
+    pub fn get_integer(&self) -> i64 {
+        return match self {
+            BramaTokenType::Integer(integer) => *integer,
+            _ => 0
+        }
+    }
+
+    pub fn get_double(&self) -> f64 {
+        return match self {
+            BramaTokenType::Double(double) => *double,
+            _ => 0.0
+        }
+    }
+
+    pub fn get_operator(&self) -> BramaOperatorType {
+        return match self {
+            BramaTokenType::Operator(operator) => *operator,
+            _ => BramaOperatorType::None
+        }
+    }
+
+    pub fn get_symbol(&self) -> &str {
+        return match self {
+            BramaTokenType::Symbol(string) => string,
+            _ => ""
+        }
+    }
+
+    pub fn get_keyword(&self) -> BramaKeywordType {
+        return match self {
+            BramaTokenType::Keyword(keyword) => *keyword,
+            _ => BramaKeywordType::None
+        }
+    }
+
+    pub fn get_text(&self) -> &str {
+        return match self {
+            BramaTokenType::Text(string) => string,
+            _ => ""
+        }
+    }
+
+    pub fn get_whitespace(&self) -> u8 {
+        return match self {
+            BramaTokenType::WhiteSpace(count) => *count,
+            _ => 0
+        }
+    }
+
+    pub fn get_newline(&self) -> u8 {
+        return match self {
+            BramaTokenType::NewLine(count) => *count,
+            _ => 0
         }
     }
 }

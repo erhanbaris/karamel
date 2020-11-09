@@ -85,12 +85,38 @@ impl<'a> SyntaxParser<'a> {
 
     pub fn primary_expr(&self) -> AstResult {
         if self.is_primative() {
-            if let Some(token) = self.peek_token() {
-                return self.create_primative_ast(token);
+            return match self.peek_token() {
+                Some(token) => self.create_primative_ast(token),
+                None => Err(("", 0, 0))
             }
         }
 
-        Err((String::from("not implemented"), 0, 0))
+        if self.match_operator(&[BramaOperatorType::SquareBracketStart]).is_some() {
+            let mut ast_vec   = Vec::new();
+            if self.match_operator(&[BramaOperatorType::SquareBracketEnd]).is_none() {
+
+                loop {
+                    if let Ok(ast) = self.create_primative_ast(self.peek_token().unwrap()) {
+                        ast_vec.push(Box::new(ast));
+                        self.consume_token();
+                    }
+
+                    if self.match_operator(&[BramaOperatorType::Comma]).is_some()  {
+                        continue;
+                    }
+                    else if self.check_operator(&BramaOperatorType::SquareBracketEnd) {
+                        break;
+                    }
+                    else {
+                        return Err(("Array not valid", 0, 0));
+                    }
+                }
+            }
+
+            return Ok(BramaAstType::Primative(BramaPrimative::List(ast_vec)));
+        }
+
+        Err(("not implemented", 0, 0))
     }
 
     fn create_primative_ast(&self, token :&Token) -> AstResult {
@@ -114,7 +140,7 @@ impl<'a> SyntaxParser<'a> {
                                 return Ok(BramaAstType::Primative(BramaPrimative::Atom(symbol.to_string())));
                             },
                             _ => {
-                                return Err((String::from("Token not recognized"), token.line, token.column));
+                                return Err(("Token not recognized", token.line, token.column));
                             }
                         }
 
@@ -127,7 +153,7 @@ impl<'a> SyntaxParser<'a> {
         };
 
         if ast == BramaAstType::None {
-            return Err((String::from("Token not recognized"), token.line, token.column));
+            return Err(("Token not recognized", token.line, token.column));
         }
 
         return Ok(ast);
@@ -167,15 +193,32 @@ impl<'a> SyntaxParser<'a> {
             BramaOperatorType::Not, 
             BramaOperatorType::BitwiseNot]) {
 
-                match operator {
-                    /* +1024 -1024 */
-                    BramaOperatorType::Addition | BramaOperatorType::Subtraction => {
+            let mut unary_ast = BramaAstType::None;
+            let token         = &self.peek_token().unwrap();
 
+            match operator {
+                /* +1024 -1024 */
+                BramaOperatorType::Addition | BramaOperatorType::Subtraction => {
+                    if token.token_type.is_integer() || token.token_type.is_double() {
+                        if let Ok(ast) = self.create_primative_ast(&token) {
+                            unary_ast = ast;
+                        }
                     }
-                }
+                },
 
+                /* ! */
+                BramaOperatorType::Not => {
+                    if token.token_type.is_operator() || token.token_type.is_double() {
+                        if let Ok(ast) = self.create_primative_ast(&token) {
+                            unary_ast = ast;
+                        }
+                    }
+                },
+                _ => ()
+            }
+            return Ok(BramaAstType::PrefixUnary(Box::new(unary_ast)));
         }
 
-        return Ok(BramaAstType::Loop);
+        return Err(("Invalid unary operation", 0, 0))
     }
 }
