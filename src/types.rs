@@ -23,10 +23,11 @@ pub enum BramaKeywordType {
     If,
     Else,
     And,
-    Or
+    Or,
+    NoneKeyword
 }
 
-pub static KEYWORDS: [(&str, BramaKeywordType); 18] = [
+pub static KEYWORDS: [(&str, BramaKeywordType); 20] = [
     ("true",  BramaKeywordType::True),
     ("false", BramaKeywordType::False),
     ("use",   BramaKeywordType::Use),
@@ -36,6 +37,7 @@ pub static KEYWORDS: [(&str, BramaKeywordType); 18] = [
     ("else",  BramaKeywordType::Else),
     ("and",   BramaKeywordType::And),
     ("or",    BramaKeywordType::Or),
+    ("none",  BramaKeywordType::NoneKeyword),
 
     ("doğru",  BramaKeywordType::True),
     ("yanlış", BramaKeywordType::False),
@@ -45,7 +47,8 @@ pub static KEYWORDS: [(&str, BramaKeywordType); 18] = [
     ("eğer",   BramaKeywordType::If),
     ("yada",   BramaKeywordType::Else),
     ("ve",     BramaKeywordType::And),
-    ("veya",   BramaKeywordType::Or)
+    ("veya",   BramaKeywordType::Or),
+    ("yok",   BramaKeywordType::NoneKeyword)
 ];
 
 #[derive(Clone, Copy)]

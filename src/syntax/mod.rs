@@ -25,7 +25,7 @@ impl<'a> SyntaxParser<'a> {
     }
 
     pub fn is_primative(&self) -> bool {
-        return match self.peek_ast() {
+        return match self.peek_token() {
             None => false,
             Some(token) => {
                 match &token.token_type {
@@ -62,11 +62,11 @@ impl<'a> SyntaxParser<'a> {
         };
     }
 
-    fn peek_ast(&self) -> Option<&Token> {
+    fn peek_token(&self) -> Option<&Token> {
         self.tokens.get(self.index.get())
     }
 
-    fn previous_ast(&self) -> Option<&Token> {
+    fn previous_token(&self) -> Option<&Token> {
         self.tokens.get(self.index.get() - 1)
     }
 
@@ -78,14 +78,14 @@ impl<'a> SyntaxParser<'a> {
         self.index.set(self.index.get() + 1);
     }
 
-    fn consume_ast(&self) -> Option<&Token> {
+    fn consume_token(&self) -> Option<&Token> {
         self.index.set(self.index.get() + 1);
         self.tokens.get(self.index.get())
     }
 
     pub fn primary_expr(&self) -> AstResult {
         if self.is_primative() {
-            if let Some(token) = self.peek_ast() {
+            if let Some(token) = self.peek_token() {
                 return self.create_primative_ast(token);
             }
         }
@@ -110,7 +110,7 @@ impl<'a> SyntaxParser<'a> {
                     if let Some(next_token) = self.next_ast() {
                         match &next_token.token_type {
                             BramaTokenType::Symbol(symbol) => {
-                                self.consume_ast();
+                                self.consume_token();
                                 return Ok(BramaAstType::Primative(BramaPrimative::Atom(symbol.to_string())));
                             },
                             _ => {
@@ -131,5 +131,51 @@ impl<'a> SyntaxParser<'a> {
         }
 
         return Ok(ast);
+    }
+
+    fn check_operator(&self, operator: &BramaOperatorType) -> bool {
+        let token = self.peek_token();
+        if token.is_none() { return false; }
+        return match token.unwrap().token_type {
+            BramaTokenType::Operator(token_operator) => *operator == token_operator,
+            _ => false
+        }
+    }
+
+    fn match_operator(&self, operators: &[BramaOperatorType]) -> Option<BramaOperatorType> {
+        for operator in operators {
+            if self.check_operator(operator) {
+                self.consume_token();
+                return Some(*operator);
+            }
+        }
+
+        return None;
+    }
+
+    fn get_operator(&self, token: &Token) -> BramaOperatorType {
+        return match token.token_type {
+            BramaTokenType::Operator(operator) => operator,
+            _ => BramaOperatorType::None
+        };
+    }
+
+    pub fn create_unary(&self) -> AstResult {
+        if let Some(operator) = self.match_operator(&[BramaOperatorType::Addition,
+            BramaOperatorType::Subtraction, 
+            BramaOperatorType::Deccrement, 
+            BramaOperatorType::Not, 
+            BramaOperatorType::BitwiseNot]) {
+
+                match operator {
+                    /* +1024 -1024 */
+                    BramaOperatorType::Addition | BramaOperatorType::Subtraction => {
+
+                    }
+                }
+
+        }
+
+        return Ok(BramaAstType::Loop);
     }
 }

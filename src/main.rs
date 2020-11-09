@@ -7,9 +7,10 @@ fn parse(data: &'static str) {
     parser.parse();
 
     let mut syntax = syntax::SyntaxParser::new(parser.tokens());
-    println!("{:?}", syntax.primary_expr());
+    //println!("{:?}", syntax.primary_expr());
+    syntax.create_unary();
 }
 
 fn main() {
-    parse(":sağlık_sıhhat");
+    parse("-1024");
 }
