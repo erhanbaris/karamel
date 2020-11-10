@@ -1,11 +1,9 @@
-use std::default::Default;
-use std::vec::{Vec, IntoIter};
+use std::vec::{Vec};
 use std::str::Chars;
 use std::iter::Peekable;
 use std::result::Result;
 use std::string::String;
 
-pub type BramaAstError      = (String, u32, u32);
 pub type AstResult          = Result<BramaAstType, (&'static str, u32, u32)>;
 pub type BramaTokinizeError = (String, u32, u32);
 
@@ -141,7 +139,7 @@ pub enum BramaStatus {
     Error(String, u32, u32),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Token {
     pub line      : u32,
     pub column    : u32,
@@ -246,6 +244,12 @@ impl Tokinizer {
 pub trait TokenParser {
     fn check(&self, tokinizer: &mut Tokinizer) -> bool;
     fn parse(&self, tokinizer: &mut Tokinizer) -> Result<BramaTokenType, (String, u32, u32)>;
+}
+
+pub trait SyntaxParserTrait {
+    type Item;
+    type In;
+    fn parse(parser: &Self::In) -> AstResult;
 }
 
 pub trait CharTraits {

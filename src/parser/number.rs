@@ -12,13 +12,9 @@ impl NumberParser {
         let mut number: u64    = 0;
         let mut num_count: u8  = 0;
         let mut ch :char       = tokinizer.get_char();
-        let mut seperator_used = false;
 
         while !tokinizer.is_end() && (ch.is_ascii_digit() || ch == '_') {
-            if ch == '_' {
-                seperator_used = true;
-            }
-            else {
+            if ch != '_' {
                 num_count += 1;
 
                 number *= u64::pow(10, 1);

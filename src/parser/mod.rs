@@ -7,7 +7,6 @@ mod whitespace;
 mod comment;
 
 use std::str;
-use std::default::Default;
 use std::collections::HashMap;
 
 use crate::types::*;
@@ -47,8 +46,6 @@ impl<'a> Parser {
     }
 
     pub fn parse(&mut self) -> BramaStatus {
-        let mut ch;
-        let mut ch_next;
 
         let line_parser         = LineParser       {};
         let comment_parser      = CommentParser    {};
@@ -65,8 +62,6 @@ impl<'a> Parser {
 
         while self.tokinizer.is_end() == false {
             let status: Result<BramaTokenType, (String, u32, u32)>;
-            ch      = self.tokinizer.get_char() as char;
-            ch_next = self.tokinizer.get_next_char();
 
             if line_parser.check(&mut self.tokinizer) {
                 status = line_parser.parse(&mut self.tokinizer);

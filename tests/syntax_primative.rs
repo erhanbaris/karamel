@@ -14,8 +14,8 @@ mod tests {
                 let mut parser = Parser::new($text);
                 parser.parse();
                 let tokens = parser.tokens();
-                let mut syntax = SyntaxParser::new(parser.tokens());
-                assert_eq!(syntax.is_primative(), true);
+                let mut syntax = SyntaxParser::new(Box::new(parser.tokens().to_vec()));
+                assert_eq!(primative::PrimativeParser::parse(&syntax).is_ok(), true);
             }
         };
     }
@@ -54,5 +54,12 @@ mod tests {
     test_is_primative!(atom_2, ":dünya");
     test_is_primative!(atom_3, ":_");
     test_is_primative!(atom_4, ":__1__");
+
+    test_is_primative!(list_1, "[]");
+    test_is_primative!(list_2, "[1]");
+    test_is_primative!(list_3, "[doğru]");
+    test_is_primative!(list_4, "[ ]");
+    test_is_primative!(list_5, "[123,doğru,:erhan_barış,'merhaba dünya',1.3]");
+    test_is_primative!(list_6, "[[]]");
 
 }
