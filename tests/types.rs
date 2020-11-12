@@ -1,8 +1,8 @@
-extern crate TPD;
+extern crate tpd;
 
 #[cfg(test)]
 mod tests {
-    use crate::TPD::types::CharTraits;
+    use crate::tpd::types::CharTraits;
 
     #[test]
     fn is_new_line() {

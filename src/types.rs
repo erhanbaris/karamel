@@ -5,7 +5,6 @@ use std::result::Result;
 use std::string::String;
 
 pub type AstResult          = Result<BramaAstType, (&'static str, u32, u32)>;
-pub type BramaTokinizeError = (String, u32, u32);
 
 
 #[derive(Clone, Copy)]
@@ -78,7 +77,6 @@ pub enum BramaOperatorType {
     BitwiseXor,
     BitwiseLeftShift,
     BitwiseRightShift,
-    BitwiseUnsignedRightShift,
     GreaterThan,
     LessThan,
     GreaterEqualThan,
@@ -123,11 +121,10 @@ pub enum BramaTokenType {
 #[derive(Debug)]
 #[derive(PartialEq)]
 pub enum BramaNumberSystem {
-    None        = 0,
-    Binary      = 1,
-    Octal       = 2,
-    Decimal     = 3,
-    Hexadecimal = 4
+    Binary      = 0,
+    Octal       = 1,
+    Decimal     = 2,
+    Hexadecimal = 3
 }
 
 #[repr(C)]
@@ -161,7 +158,6 @@ pub struct Tokinizer {
 #[derive(Debug)]
 #[derive(PartialEq)]
 pub enum BramaPrimative {
-    None,
     Integer(i64),
     Double(f64),
     Bool(bool),
@@ -177,19 +173,14 @@ pub enum BramaPrimative {
 pub enum BramaAstType {
     None,
     Primative(BramaPrimative),
-    Binary,
-    Control,
-    PrefixUnary(Box<BramaAstType>),
-    SuffixUnary(Box<BramaAstType>),
+    /*Binary,
+    Control,*/
+    PrefixUnary(BramaOperatorType, Box<BramaAstType>),
+    /*SuffixUnary(BramaOperatorType, Box<BramaAstType>),
     Assign,
     Loop,
-    IfStatement,
-    Symbol
-}
-
-
-pub struct BramaAst {
-    ast_type: BramaAstType
+    IfStatement,*/
+    Symbol(String)
 }
 
 impl Tokinizer {
@@ -298,11 +289,23 @@ impl BramaTokenType {
         }
     }
 
+    #[allow(dead_code)]
     pub fn is_operator(&self) -> bool {
         return match self {
             BramaTokenType::Operator(_) => true,
             _ => false
         }
+    }
+
+    pub fn is_bool(&self) -> bool {
+        if self.is_keyword() {
+            return match self {
+                BramaTokenType::Keyword(BramaKeywordType::True) => true,
+                BramaTokenType::Keyword(BramaKeywordType::False) => true,
+                _ => false
+            }
+        }
+        return false;        
     }
 
     pub fn is_symbol(&self) -> bool {
@@ -319,6 +322,7 @@ impl BramaTokenType {
         }
     }
 
+    #[allow(dead_code)]
     pub fn is_text(&self) -> bool {
         return match self {
             BramaTokenType::Text(_) => true,
@@ -326,6 +330,7 @@ impl BramaTokenType {
         }
     }
 
+    #[allow(dead_code)]
     pub fn is_whitespace(&self) -> bool {
         return match self {
             BramaTokenType::WhiteSpace(_) => true,
@@ -333,6 +338,7 @@ impl BramaTokenType {
         }
     }
 
+    #[allow(dead_code)]
     pub fn is_newline(&self) -> bool {
         return match self {
             BramaTokenType::NewLine(_) => true,
@@ -340,6 +346,7 @@ impl BramaTokenType {
         }
     }
 
+    #[allow(dead_code)]
     pub fn get_integer(&self) -> i64 {
         return match self {
             BramaTokenType::Integer(integer) => *integer,
@@ -347,6 +354,7 @@ impl BramaTokenType {
         }
     }
 
+    #[allow(dead_code)]
     pub fn get_double(&self) -> f64 {
         return match self {
             BramaTokenType::Double(double) => *double,
@@ -354,6 +362,7 @@ impl BramaTokenType {
         }
     }
 
+    #[allow(dead_code)]
     pub fn get_operator(&self) -> BramaOperatorType {
         return match self {
             BramaTokenType::Operator(operator) => *operator,
@@ -368,6 +377,7 @@ impl BramaTokenType {
         }
     }
 
+    #[allow(dead_code)]
     pub fn get_keyword(&self) -> BramaKeywordType {
         return match self {
             BramaTokenType::Keyword(keyword) => *keyword,
@@ -375,6 +385,7 @@ impl BramaTokenType {
         }
     }
 
+    #[allow(dead_code)]
     pub fn get_text(&self) -> &str {
         return match self {
             BramaTokenType::Text(string) => string,
@@ -382,6 +393,7 @@ impl BramaTokenType {
         }
     }
 
+    #[allow(dead_code)]
     pub fn get_whitespace(&self) -> u8 {
         return match self {
             BramaTokenType::WhiteSpace(count) => *count,
@@ -389,10 +401,23 @@ impl BramaTokenType {
         }
     }
 
+    #[allow(dead_code)]
     pub fn get_newline(&self) -> u8 {
         return match self {
             BramaTokenType::NewLine(count) => *count,
             _ => 0
         }
+    }
+
+    #[allow(dead_code)]
+    pub fn get_bool(&self) -> bool {
+        if self.is_keyword() {
+            return match self {
+                BramaTokenType::Keyword(BramaKeywordType::True) => true,
+                BramaTokenType::Keyword(BramaKeywordType::False) => false,
+                _ => false
+            }
+        }
+        return false; 
     }
 }

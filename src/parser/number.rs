@@ -109,30 +109,22 @@ impl NumberParser {
         /*
         [NUMBER](.[NUMBER](E(-+)[NUMBER]))
         */
-        let mut before_comma: u64 = 0;
-        let mut is_double         = false;
-        let mut ch :char          = tokinizer.get_char();
 
-        let (_, digits) = self.get_digits(tokinizer);
-        before_comma    = digits;
-        ch              = tokinizer.get_char();
+        let (_, digits)  = self.get_digits(tokinizer);
+        let before_comma = digits;
+        let mut ch       = tokinizer.get_char();
 
         /* Double number */
         if !tokinizer.is_end() && ch == '.' {
-            let mut after_comma   = 0;
-            let mut dot_place: u8 = 0;
-            is_double             = true;
-
-            ch = self.increase(tokinizer);
+            self.increase(tokinizer);
 
             let (digit_num, digits) = self.get_digits(tokinizer);
-            after_comma = digits;
-            dot_place   = digit_num;
+            let after_comma = digits;
+            let dot_place   = digit_num;
             ch          = tokinizer.get_char();
 
             if !tokinizer.is_end() && (ch == 'e' || ch == 'E') {
                 let mut is_minus      = false;
-                let mut e_after: u64  = 0;
 
                 ch = self.increase(tokinizer);
 
@@ -140,17 +132,17 @@ impl NumberParser {
                     match ch {
                         '-' => {
                             is_minus = true;
-                            ch = self.increase(tokinizer);
+                            self.increase(tokinizer);
                         },
 
-                        '+' => ch = self.increase(tokinizer),
+                        '+' => { self.increase(tokinizer); },
                         _ => {}
                     }
                 }
 
                 let (_, digits) = self.get_digits(tokinizer);
-                e_after    = digits;
-                ch = self.increase(tokinizer);
+                let e_after    = digits;
+                self.increase(tokinizer);
 
                 let num = before_comma as f64 + (after_comma as f64 * f64::powi(10.0, -1 * dot_place as i32));
 
@@ -181,8 +173,7 @@ impl TokenParser for NumberParser {
             BramaNumberSystem::Binary      => Ok(self.parse_binary(tokinizer)),
             BramaNumberSystem::Octal       => Ok(self.parse_octal(tokinizer)),
             BramaNumberSystem::Decimal     => Ok(self.parse_decimal(tokinizer)),
-            BramaNumberSystem::Hexadecimal => Ok(self.parse_hex(tokinizer)),
-            _ => Err((String::from("Number not parsed"), tokinizer.line, tokinizer.column))
+            BramaNumberSystem::Hexadecimal => Ok(self.parse_hex(tokinizer))
         };
     }
 }

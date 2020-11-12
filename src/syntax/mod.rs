@@ -1,10 +1,11 @@
 pub mod primative;
+pub mod unary;
 
 use std::vec::{Vec};
 use std::cell::Cell;
 
 use crate::types::*;
-use self::primative::PrimativeParser;
+use self::unary::UnaryParser;
 
 pub struct SyntaxParser  {
     tokens: Box<Vec<Token>>,
@@ -19,7 +20,8 @@ impl SyntaxParser {
         }
     }
 
-    pub fn parse(&self) {
+    pub fn parse(&self) -> AstResult {
+        return UnaryParser::parse(&self);
     }
 
     fn peek_token(&self) -> Result<&Token, ()> {
@@ -29,6 +31,7 @@ impl SyntaxParser {
         }
     }
 
+    #[allow(dead_code)]
     fn previous_token(&self) -> Result<&Token, ()> {
         match self.tokens.get(self.index.get() - 1) {
             Some(token) => Ok(token),
@@ -42,7 +45,8 @@ impl SyntaxParser {
             None => Err(())
         }
     }
-
+    
+    #[allow(dead_code)]
     fn increase(&self) {
         self.index.set(self.index.get() + 1);
     }
@@ -93,6 +97,7 @@ impl SyntaxParser {
         }
     }
 
+    #[allow(dead_code)]
     fn get_operator(&self, token: &Token) -> BramaOperatorType {
         return match token.token_type {
             BramaTokenType::Operator(operator) => operator,

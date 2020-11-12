@@ -1,10 +1,10 @@
-extern crate TPD;
+extern crate tpd;
 
 #[cfg(test)]
 mod tests {
-    use crate::TPD::parser::*;
-    use crate::TPD::syntax::*;
-    use crate::TPD::types::*;
+    use crate::tpd::parser::*;
+    use crate::tpd::syntax::*;
+    use crate::tpd::types::*;
 
     #[warn(unused_macros)]
     macro_rules! test_success {
@@ -13,9 +13,8 @@ mod tests {
             fn $name () {
                 let mut parser = Parser::new($text);
                 parser.parse();
-                let tokens = parser.tokens();
-                let mut syntax = SyntaxParser::new(Box::new(parser.tokens().to_vec()));
-                assert_eq!(primative::PrimativeParser::parse(&syntax).is_ok(), true);
+                let syntax = SyntaxParser::new(Box::new(parser.tokens().to_vec()));
+                assert_eq!(syntax.parse().is_ok(), true);
             }
         };
     }
@@ -27,8 +26,7 @@ mod tests {
             fn $name () {
                 let mut parser = Parser::new($text);
                 parser.parse();
-                let tokens = parser.tokens();
-                let mut syntax = SyntaxParser::new(Box::new(parser.tokens().to_vec()));
+                let syntax = SyntaxParser::new(Box::new(parser.tokens().to_vec()));
                 assert_eq!(primative::PrimativeParser::parse(&syntax).is_ok(), false);
             }
         };

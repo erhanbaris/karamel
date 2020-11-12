@@ -3,7 +3,7 @@ use crate::types::*;
 pub struct OperatorParser;
 
 impl TokenParser for OperatorParser {
-    fn check(&self, tokinizer: &mut Tokinizer) -> bool {
+    fn check(&self, _tokinizer: &mut Tokinizer) -> bool {
         true
     }
 
@@ -36,6 +36,8 @@ impl TokenParser for OperatorParser {
                 ('-', '=') => BramaOperatorType::AssignSubtraction,
                 ('<', '=') => BramaOperatorType::LessEqualThan,
                 ('<', '<') => BramaOperatorType::BitwiseLeftShift,
+                ('>', '=') => BramaOperatorType::GreaterEqualThan,
+                ('>', '>') => BramaOperatorType::BitwiseRightShift,
                 ('&', '=') => BramaOperatorType::BitwiseAndAssign,
                 ('|', '=') => BramaOperatorType::BitwiseOrAssign,
                 ('*', '=') => BramaOperatorType::AssignMultiplication,
@@ -59,6 +61,7 @@ impl TokenParser for OperatorParser {
                     '|' => BramaOperatorType::BitwiseOr,
                     '&' => BramaOperatorType::BitwiseAnd,
                     '<' => BramaOperatorType::LessThan,
+                    '>' => BramaOperatorType::GreaterThan,
                     '-' => BramaOperatorType::Subtraction,
                     '+' => BramaOperatorType::Addition,
                     '/' => BramaOperatorType::Division,
