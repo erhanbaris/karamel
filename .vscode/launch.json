@@ -7,15 +7,15 @@
                 {
                         "type": "lldb",
                         "request": "launch",
-                        "name": "Debug executable 'TPD'",
+                        "name": "Debug executable 'tpd'",
                         "cargo": {
                                 "args": [
                                         "build",
-                                        "--bin=TPD",
-                                        "--package=TPD"
+                                        "--bin=tpd",
+                                        "--package=tpd"
                                 ],
                                 "filter": {
-                                        "name": "TPD",
+                                        "name": "tpd",
                                         "kind": "bin"
                                 }
                         },
@@ -25,16 +25,16 @@
                 {
                         "type": "lldb",
                         "request": "launch",
-                        "name": "Debug unit tests in executable 'TPD'",
+                        "name": "Debug unit tests in executable 'tpd'",
                         "cargo": {
                                 "args": [
                                         "test",
                                         "--no-run",
-                                        "--bin=TPD",
-                                        "--package=TPD"
+                                        "--bin=tpd",
+                                        "--package=tpd"
                                 ],
                                 "filter": {
-                                        "name": "TPD",
+                                        "name": "tpd",
                                         "kind": "bin"
                                 }
                         },
