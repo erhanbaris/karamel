@@ -166,7 +166,7 @@ impl TokenParser for NumberParser {
         return ch == '.' || (ch >= '0' && ch <= '9');
     }
 
-    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<BramaTokenType, (String, u32, u32)> {
+    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<BramaTokenType, (&'static str, u32, u32)> {
         let number_system = self.detect_number_system(tokinizer);
 
         return match number_system {

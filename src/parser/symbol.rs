@@ -19,7 +19,7 @@ impl TokenParser for SymbolParser {
         return ch.is_symbol();
     }
 
-    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<BramaTokenType, (String, u32, u32)> {
+    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<BramaTokenType, (&'static str, u32, u32)> {
         let mut ch: char;
         let mut symbol = String::new();
 

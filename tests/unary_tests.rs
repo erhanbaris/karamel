@@ -12,7 +12,11 @@ mod tests {
             #[test]
             fn $name () {
                 let mut parser = Parser::new($text);
-                parser.parse();
+                match parser.parse() {
+                    Err(_) => assert_eq!(true, false),
+                    _ => ()
+                };
+
                 let syntax = SyntaxParser::new(Box::new(parser.tokens().to_vec()));
                 assert_eq!(syntax.parse(), $result);
             }
@@ -36,4 +40,6 @@ mod tests {
     test_compare!(unary_13, "++data", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Increment, Box::new(BramaAstType::Symbol(String::from("data"))))));
     test_compare!(unary_14, "--data", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Deccrement, Box::new(BramaAstType::Symbol(String::from("data"))))));
     test_compare!(unary_15, "--data", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Deccrement, Box::new(BramaAstType::Symbol(String::from("data"))))));
+    test_compare!(unary_16, "data--", Ok(BramaAstType::SuffixUnary(BramaOperatorType::Deccrement, Box::new(BramaAstType::Symbol(String::from("data"))))));
+    test_compare!(unary_17, "data++", Ok(BramaAstType::SuffixUnary(BramaOperatorType::Increment, Box::new(BramaAstType::Symbol(String::from("data"))))));
 }

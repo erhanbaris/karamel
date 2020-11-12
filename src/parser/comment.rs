@@ -9,7 +9,7 @@ impl TokenParser for CommentParser {
         return (ch == '/' && ch_next == '*') || (ch == '/' && ch_next == '/');
     }
 
-    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<BramaTokenType, (String, u32, u32)> {
+    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<BramaTokenType, (&'static str, u32, u32)> {
         let mut ch                   = tokinizer.get_char();
         let mut ch_next              = tokinizer.get_next_char();
 
@@ -35,7 +35,7 @@ impl TokenParser for CommentParser {
             }
 
             if !comment_end {
-                return Err((String::from("Comment not finished"), tokinizer.line, tokinizer.column));
+                return Err(("Comment not finished", tokinizer.line, tokinizer.column));
             }
         }
         else {

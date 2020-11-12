@@ -45,7 +45,7 @@ impl<'a> Parser {
         return &self.tokinizer.tokens;
     }
 
-    pub fn parse(&mut self) -> BramaStatus {
+    pub fn parse(&mut self) -> ParseResult {
 
         let line_parser         = LineParser       {};
         let comment_parser      = CommentParser    {};
@@ -61,7 +61,7 @@ impl<'a> Parser {
         symbol_parser.init_parser();
 
         while self.tokinizer.is_end() == false {
-            let status: Result<BramaTokenType, (String, u32, u32)>;
+            let status: Result<BramaTokenType, (&'static str, u32, u32)>;
 
             if line_parser.check(&mut self.tokinizer) {
                 status = line_parser.parse(&mut self.tokinizer);
@@ -102,10 +102,10 @@ impl<'a> Parser {
             }
             else {
                 let (err_message, line, column) = status.err().unwrap();
-                return BramaStatus::Error(err_message, line, column)
+                return Err((err_message, line, column))
             }
         }
 
-        BramaStatus::Ok
+        Ok(())
     }
 }

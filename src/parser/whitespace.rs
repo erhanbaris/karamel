@@ -8,7 +8,7 @@ impl TokenParser for WhitespaceParser {
         return ch == ' ';
     }
 
-    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<BramaTokenType, (String, u32, u32)> {
+    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<BramaTokenType, (&'static str, u32, u32)> {
         let mut whitespace_count: u8 = 0;
         let mut ch                   = tokinizer.get_char();
 

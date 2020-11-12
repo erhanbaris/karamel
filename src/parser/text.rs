@@ -10,7 +10,7 @@ impl TokenParser for TextParser {
         return ch == self.tag;
     }
 
-    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<BramaTokenType, (String, u32, u32)> {
+    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<BramaTokenType, (&'static str, u32, u32)> {
         let mut ch: char      = '\0';
         let mut ch_next: char;
         let mut symbol        = String::new();
@@ -37,7 +37,7 @@ impl TokenParser for TextParser {
         }
 
         if ch != self.tag {
-            return Err((String::from("Missing string deliminator"), tokinizer.line, tokinizer.column));
+            return Err(("Missing string deliminator", tokinizer.line, tokinizer.column));
         }
 
         return Ok(BramaTokenType::Text(symbol.to_owned()));

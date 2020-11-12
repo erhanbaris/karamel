@@ -4,8 +4,8 @@ use std::iter::Peekable;
 use std::result::Result;
 use std::string::String;
 
+pub type ParseResult        = Result<(), (&'static str, u32, u32)>;
 pub type AstResult          = Result<BramaAstType, (&'static str, u32, u32)>;
-
 
 #[derive(Clone, Copy)]
 #[derive(Debug)]
@@ -127,15 +127,6 @@ pub enum BramaNumberSystem {
     Hexadecimal = 3
 }
 
-#[repr(C)]
-#[derive(Clone)]
-#[derive(Debug)]
-#[derive(PartialEq)]
-pub enum BramaStatus {
-    Ok,
-    Error(String, u32, u32),
-}
-
 #[derive(Debug, Clone)]
 pub struct Token {
     pub line      : u32,
@@ -176,7 +167,8 @@ pub enum BramaAstType {
     /*Binary,
     Control,*/
     PrefixUnary(BramaOperatorType, Box<BramaAstType>),
-    /*SuffixUnary(BramaOperatorType, Box<BramaAstType>),
+    SuffixUnary(BramaOperatorType, Box<BramaAstType>),
+    /*
     Assign,
     Loop,
     IfStatement,*/
@@ -234,7 +226,7 @@ impl Tokinizer {
 
 pub trait TokenParser {
     fn check(&self, tokinizer: &mut Tokinizer) -> bool;
-    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<BramaTokenType, (String, u32, u32)>;
+    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<BramaTokenType, (&'static str, u32, u32)>;
 }
 
 pub trait SyntaxParserTrait {

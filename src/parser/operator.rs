@@ -7,7 +7,7 @@ impl TokenParser for OperatorParser {
         true
     }
 
-    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<BramaTokenType, (String, u32, u32)> {
+    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<BramaTokenType, (&'static str, u32, u32)> {
         let ch       = tokinizer.get_char();
         let ch_next  = tokinizer.get_next_char();
         let ch_third = tokinizer.get_third_char();
@@ -83,7 +83,7 @@ impl TokenParser for OperatorParser {
         }
 
         if operator_type == BramaOperatorType::None {
-            return Err((String::from("Char not valid"), tokinizer.line, tokinizer.column));
+            return Err(("Char not valid", tokinizer.line, tokinizer.column));
         }
 
         return Ok(BramaTokenType::Operator(operator_type));

@@ -4,7 +4,10 @@ mod syntax;
 
 fn parse(data: &'static str) {
     let mut parser = parser::Parser::new(&data);
-    parser.parse();
+    match parser.parse() {
+        Err(_) => (),
+        _ => ()
+    };
 
     let syntax = syntax::SyntaxParser::new(Box::new(parser.tokens().to_vec()));
     println!("{:?}", syntax.parse());
@@ -15,5 +18,5 @@ fn parse(data: &'static str) {
 }
 
 fn main() {
-    parse("--100");
+    parse("data++");
 }
