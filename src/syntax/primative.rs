@@ -38,9 +38,11 @@ impl PrimativeParser {
             _ => Ok(BramaAstType::None)
         };
 
-        if result.is_ok() {
-            parser.consume_token();
-        }
+        match result {
+            Ok(BramaAstType::None) => (),
+            Ok(_) => {parser.consume_token();},
+            _ => () 
+        };
         result
     }
 }
