@@ -1,11 +1,13 @@
 use std::vec::{Vec};
 use std::str::Chars;
 use std::iter::Peekable;
+use std::cell::Cell;
 use std::result::Result;
 use std::string::String;
 
 pub type ParseResult        = Result<(), (&'static str, u32, u32)>;
 pub type AstResult          = Result<BramaAstType, (&'static str, u32, u32)>;
+pub type ParseType          = fn(parser: &SyntaxParser) -> AstResult;
 
 #[derive(Clone, Copy)]
 #[derive(Debug)]
@@ -143,6 +145,10 @@ pub struct Tokinizer {
     pub iter_third: Peekable<Chars<'static>>,
 }
 
+pub struct SyntaxParser {
+    pub tokens: Box<Vec<Token>>,
+    pub index: Cell<usize>,
+}
 
 #[repr(C)]
 #[derive(Clone)]
@@ -164,8 +170,12 @@ pub enum BramaPrimative {
 pub enum BramaAstType {
     None,
     Primative(BramaPrimative),
-    /*Binary,
-    Control,*/
+    Binary {
+        left: Box<BramaAstType>, 
+        operator: BramaOperatorType, 
+        right: Box<BramaAstType>
+    },
+    /*Control,*/
     PrefixUnary(BramaOperatorType, Box<BramaAstType>),
     SuffixUnary(BramaOperatorType, Box<BramaAstType>),
     /*
@@ -231,8 +241,7 @@ pub trait TokenParser {
 
 pub trait SyntaxParserTrait {
     type Item;
-    type In;
-    fn parse(parser: &Self::In) -> AstResult;
+    fn parse(parser: &SyntaxParser) -> AstResult;
 }
 
 pub trait CharTraits {

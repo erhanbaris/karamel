@@ -1,16 +1,14 @@
 pub mod primative;
 pub mod unary;
+pub mod util;
+pub mod binary;
 
 use std::vec::{Vec};
 use std::cell::Cell;
 
 use crate::types::*;
-use self::unary::UnaryParser;
-
-pub struct SyntaxParser  {
-    tokens: Box<Vec<Token>>,
-    index: Cell<usize>,
-}
+use crate::types::SyntaxParser;
+use self::binary::AddSubtractParser;
 
 impl SyntaxParser {
     pub fn new(tokens: Box<Vec<Token>>) -> SyntaxParser {
@@ -21,7 +19,7 @@ impl SyntaxParser {
     }
 
     pub fn parse(&self) -> AstResult {
-        return UnaryParser::parse(&self);
+        return AddSubtractParser::parse(&self);
     }
 
     fn peek_token(&self) -> Result<&Token, ()> {

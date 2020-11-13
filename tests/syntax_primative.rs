@@ -3,7 +3,6 @@ extern crate tpd;
 #[cfg(test)]
 mod tests {
     use crate::tpd::parser::*;
-    use crate::tpd::syntax::*;
     use crate::tpd::types::*;
 
     #[warn(unused_macros)]

@@ -1,4 +1,5 @@
 use crate::types::*;
+use crate::syntax::util::*;
 use crate::syntax::SyntaxParser;
 
 pub struct PrimativeParser;
@@ -7,7 +8,7 @@ impl PrimativeParser {
     fn parse_basic_primatives(parser: &SyntaxParser) -> AstResult {
         let token = parser.peek_token();
         if token.is_err() {
-            return Err(("No more token", 0, 0))
+            return Err(("Syntax error", 0, 0));
         }
 
         let result = match &token.unwrap().token_type {
@@ -39,27 +40,20 @@ impl PrimativeParser {
         };
 
         match result {
-            Ok(BramaAstType::None) => (),
-            Ok(_) => {parser.consume_token();},
-            _ => () 
-        };
-        result
+            Ok(BramaAstType::None) => Err(("Syntax error", token.unwrap().line, token.unwrap().column)),
+            Ok(ast) => {
+                parser.consume_token();
+                Ok(ast)
+            },
+            Err((message, line, column)) => Err((message, line, column))
+        }
     }
-}
 
-impl SyntaxParserTrait for PrimativeParser {
-    type Item = BramaAstType;
-    type In = SyntaxParser;
-
-    fn parse(parser: &Self::In) -> AstResult {
-        match Self::parse_basic_primatives(parser) {
-            Ok(BramaAstType::None) => (),
-            Ok(ast) => return Ok(ast),
-            Err(data) => return Err(data)
-        };
-
+    fn parse_list(parser: &SyntaxParser) -> AstResult {
         if parser.match_operator(&[BramaOperatorType::SquareBracketStart]).is_some() {
             let mut ast_vec   = Vec::new();
+            parser.clear_whitespaces();
+
             loop {
                 if parser.check_operator(&BramaOperatorType::SquareBracketEnd) {
                     break;
@@ -67,9 +61,12 @@ impl SyntaxParserTrait for PrimativeParser {
 
                 parser.clear_whitespaces();
 
-                if let Ok(ast) = Self::parse(parser) {
-                    ast_vec.push(Box::new(ast));
+                let ast = Self::parse(parser);
+                if is_ast_empty(&ast) {
+                    return err_or_message(&ast, "Invalid list item");
                 }
+                
+                ast_vec.push(Box::new(ast.unwrap()));
 
                 parser.clear_whitespaces();
                 if parser.match_operator(&[BramaOperatorType::Comma]).is_none()  {
@@ -84,6 +81,14 @@ impl SyntaxParserTrait for PrimativeParser {
             return Ok(BramaAstType::Primative(BramaPrimative::List(ast_vec)));
         }
 
-        Err(("not implemented", 0, 0))
+        return Ok(BramaAstType::None);
+    }
+}
+
+impl SyntaxParserTrait for PrimativeParser {
+    type Item = PrimativeParser;
+
+    fn parse(parser: &SyntaxParser) -> AstResult {
+        return map_parser(parser, &[Self::parse_list, Self::parse_basic_primatives]);
     }
 }

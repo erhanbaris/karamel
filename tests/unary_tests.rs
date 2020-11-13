@@ -3,7 +3,6 @@ extern crate tpd;
 #[cfg(test)]
 mod tests {
     use crate::tpd::parser::*;
-    use crate::tpd::syntax::*;
     use crate::tpd::types::*;
 
     #[warn(unused_macros)]
@@ -42,4 +41,6 @@ mod tests {
     test_compare!(unary_15, "--data", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Deccrement, Box::new(BramaAstType::Symbol(String::from("data"))))));
     test_compare!(unary_16, "data--", Ok(BramaAstType::SuffixUnary(BramaOperatorType::Deccrement, Box::new(BramaAstType::Symbol(String::from("data"))))));
     test_compare!(unary_17, "data++", Ok(BramaAstType::SuffixUnary(BramaOperatorType::Increment, Box::new(BramaAstType::Symbol(String::from("data"))))));
+
+    test_compare!(unary_18, "+ 1024", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Addition, Box::new(BramaAstType::Primative(BramaPrimative::Integer(1024))))));
 }

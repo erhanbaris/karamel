@@ -1,29 +1,14 @@
 use crate::types::*;
 use crate::syntax::SyntaxParser;
+use crate::syntax::util::map_parser;
 use crate::syntax::primative::PrimativeParser;
 
 pub struct UnaryParser;
 
-// https://github.com/rust-lang/rust/issues/75429
-type ParseType = fn(parser: &SyntaxParser) -> AstResult;
-
-fn map_parser(parser: &SyntaxParser, parser_funcs: &[ParseType]) -> AstResult {
-    for parser_func in parser_funcs {
-        match parser_func(parser) {
-            Ok(BramaAstType::None) => (),
-            Ok(ast) => return Ok(ast),
-            Err(err) => return Err(err)
-        }
-    }
-
-    Ok(BramaAstType::None)
-}
-
 impl SyntaxParserTrait for UnaryParser {
-    type Item = BramaAstType;
-    type In = SyntaxParser;
+    type Item = UnaryParser;
 
-    fn parse(parser: &Self::In) -> AstResult {
+    fn parse(parser: &SyntaxParser) -> AstResult {
         return map_parser(parser, &[Self::parse_prefix_unary, Self::parse_suffix_unary, PrimativeParser::parse]);
     }
 }
@@ -35,6 +20,7 @@ impl UnaryParser {
                 if token.token_type.is_symbol() {
                     let index = parser.index.get();
                     parser.consume_token();
+                    parser.clear_whitespaces();
 
                     if let Some(operator) = parser.match_operator(&[
                         BramaOperatorType::Increment,
@@ -60,6 +46,7 @@ impl UnaryParser {
             BramaOperatorType::Deccrement,
             BramaOperatorType::Not,
             BramaOperatorType::BitwiseNot]) {
+            parser.clear_whitespaces();
 
             let mut unary_ast = BramaAstType::None;
             let token         = &parser.peek_token().unwrap();
