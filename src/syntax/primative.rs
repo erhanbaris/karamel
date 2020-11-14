@@ -1,6 +1,7 @@
 use crate::types::*;
 use crate::syntax::util::*;
 use crate::syntax::SyntaxParser;
+use crate::syntax::control::AndParser;
 
 pub struct PrimativeParser;
 
@@ -14,11 +15,12 @@ impl PrimativeParser {
         let result = match &token.unwrap().token_type {
             BramaTokenType::Integer(int)      => Ok(BramaAstType::Primative(BramaPrimative::Integer(*int))),
             BramaTokenType::Double(double)    => Ok(BramaAstType::Primative(BramaPrimative::Double(*double))),
-            BramaTokenType::Text(text)        => Ok(BramaAstType::Primative(BramaPrimative::String(text.to_string()))),
+            BramaTokenType::Text(text)        => Ok(BramaAstType::Primative(BramaPrimative::Text(text.to_string()))),
             BramaTokenType::Keyword(keyword)  => {
                 match keyword {
                     BramaKeywordType::True  => Ok(BramaAstType::Primative(BramaPrimative::Bool(true))),
                     BramaKeywordType::False => Ok(BramaAstType::Primative(BramaPrimative::Bool(false))),
+                    BramaKeywordType::Empty => Ok(BramaAstType::Primative(BramaPrimative::Empty)),
                     _ => Ok(BramaAstType::None)
                 }
             },
@@ -61,7 +63,7 @@ impl PrimativeParser {
 
                 parser.clear_whitespaces();
 
-                let ast = Self::parse(parser);
+                let ast = AndParser::parse(parser);
                 if is_ast_empty(&ast) {
                     return err_or_message(&ast, "Invalid list item");
                 }
@@ -83,12 +85,26 @@ impl PrimativeParser {
 
         return Ok(BramaAstType::None);
     }
+
+    fn parse_symbol(parser: &SyntaxParser) -> AstResult {
+        parser.clear_whitespaces();
+        let token = parser.peek_token();
+        if token.is_err() {
+            return Err(("Syntax error", 0, 0));
+        }
+
+        if let BramaTokenType::Symbol(symbol) = &token.unwrap().token_type {
+            parser.consume_token();
+            return Ok(BramaAstType::Symbol(symbol.to_string()));
+        }
+        return Ok(BramaAstType::None);
+    }
 }
 
 impl SyntaxParserTrait for PrimativeParser {
     type Item = PrimativeParser;
 
     fn parse(parser: &SyntaxParser) -> AstResult {
-        return map_parser(parser, &[Self::parse_list, Self::parse_basic_primatives]);
+        return map_parser(parser, &[Self::parse_list, Self::parse_symbol, Self::parse_basic_primatives]);
     }
 }

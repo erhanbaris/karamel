@@ -14,72 +14,48 @@ impl TokenParser for OperatorParser {
 
         tokinizer.increase_index();
 
-        let mut operator_type = match (ch, ch_next, ch_third) {
-            ('=', '=', '=') => BramaOperatorType::EqualValue,
-            ('!', '=', '=') => BramaOperatorType::NotEqualValue,
+        let mut operator_type = match (ch, ch_next) {
+            ('!', '=') => BramaOperatorType::NotEqual,
+            ('/', '=') => BramaOperatorType::AssignDivision,
+            ('/', '/') => BramaOperatorType::CommentLine,
+            ('/', '*') => BramaOperatorType::CommentMultilineStart,
+            ('+', '+') => BramaOperatorType::Increment,
+            ('+', '=') => BramaOperatorType::AssignAddition,
+            ('-', '-') => BramaOperatorType::Deccrement,
+            ('-', '=') => BramaOperatorType::AssignSubtraction,
+            ('<', '=') => BramaOperatorType::LessEqualThan,
+            ('>', '=') => BramaOperatorType::GreaterEqualThan,
+            ('*', '=') => BramaOperatorType::AssignMultiplication,
+            ('*', '/') => BramaOperatorType::CommentMultilineEnd,
+            ('=', '=') => BramaOperatorType::Equal,
             _ =>  BramaOperatorType::None
         };
 
         if operator_type != BramaOperatorType::None {
             tokinizer.increase_index();
-            tokinizer.increase_index();
         }
         else {
-            operator_type = match (ch, ch_next) {
-                ('!', '=') => BramaOperatorType::NotEqual,
-                ('/', '=') => BramaOperatorType::AssignDivision,
-                ('/', '/') => BramaOperatorType::CommentLine,
-                ('/', '*') => BramaOperatorType::CommentMultilineStart,
-                ('+', '+') => BramaOperatorType::Increment,
-                ('+', '=') => BramaOperatorType::AssignAddition,
-                ('-', '-') => BramaOperatorType::Deccrement,
-                ('-', '=') => BramaOperatorType::AssignSubtraction,
-                ('<', '=') => BramaOperatorType::LessEqualThan,
-                ('<', '<') => BramaOperatorType::BitwiseLeftShift,
-                ('>', '=') => BramaOperatorType::GreaterEqualThan,
-                ('>', '>') => BramaOperatorType::BitwiseRightShift,
-                ('&', '=') => BramaOperatorType::BitwiseAndAssign,
-                ('|', '=') => BramaOperatorType::BitwiseOrAssign,
-                ('*', '=') => BramaOperatorType::AssignMultiplication,
-                ('*', '/') => BramaOperatorType::CommentMultilineEnd,
-                ('=', '=') => BramaOperatorType::Equal,
-                ('%', '=') => BramaOperatorType::AssignModulus,
-                ('^', '=') => BramaOperatorType::BitwiseXorAssign,
-                _ =>  BramaOperatorType::None
+            operator_type = match ch {
+                '=' => BramaOperatorType::Assign,
+                '*' => BramaOperatorType::Multiplication,
+                '<' => BramaOperatorType::LessThan,
+                '>' => BramaOperatorType::GreaterThan,
+                '-' => BramaOperatorType::Subtraction,
+                '+' => BramaOperatorType::Addition,
+                '/' => BramaOperatorType::Division,
+                '?' => BramaOperatorType::QuestionMark,
+                ':' => BramaOperatorType::ColonMark,
+                '(' => BramaOperatorType::LeftParentheses,
+                ')' => BramaOperatorType::RightParentheses,
+                '[' => BramaOperatorType::SquareBracketStart,
+                ']' => BramaOperatorType::SquareBracketEnd,
+                '{' => BramaOperatorType::CurveBracketStart,
+                '}' => BramaOperatorType::CurveBracketEnd,
+                ',' => BramaOperatorType::Comma,
+                ';' => BramaOperatorType::Semicolon,
+                '.' => BramaOperatorType::Dot,
+                _ => BramaOperatorType::None
             };
-
-            if operator_type != BramaOperatorType::None {
-                tokinizer.increase_index();
-            }
-            else {
-                operator_type = match ch {
-                    '^' => BramaOperatorType::BitwiseXor,
-                    '%' => BramaOperatorType::Modulo,
-                    '!' => BramaOperatorType::Not,
-                    '=' => BramaOperatorType::Assign,
-                    '*' => BramaOperatorType::Multiplication,
-                    '|' => BramaOperatorType::BitwiseOr,
-                    '&' => BramaOperatorType::BitwiseAnd,
-                    '<' => BramaOperatorType::LessThan,
-                    '>' => BramaOperatorType::GreaterThan,
-                    '-' => BramaOperatorType::Subtraction,
-                    '+' => BramaOperatorType::Addition,
-                    '/' => BramaOperatorType::Division,
-                    '?' => BramaOperatorType::QuestionMark,
-                    ':' => BramaOperatorType::ColonMark,
-                    '~' => BramaOperatorType::BitwiseNot,
-                    '(' => BramaOperatorType::LeftParentheses,
-                    ')' => BramaOperatorType::RightParentheses,
-                    '[' => BramaOperatorType::SquareBracketStart,
-                    ']' => BramaOperatorType::SquareBracketEnd,
-                    '{' => BramaOperatorType::CurveBracketStart,
-                    '}' => BramaOperatorType::CurveBracketEnd,
-                    ',' => BramaOperatorType::Comma,
-                    ';' => BramaOperatorType::Semicolon,
-                    '.' => BramaOperatorType::Dot,
-                    _ => BramaOperatorType::None
-                };
-            }
         }
 
         if operator_type == BramaOperatorType::None {

@@ -2,13 +2,14 @@ pub mod primative;
 pub mod unary;
 pub mod util;
 pub mod binary;
+pub mod control;
 
 use std::vec::{Vec};
 use std::cell::Cell;
 
 use crate::types::*;
 use crate::types::SyntaxParser;
-use self::binary::AddSubtractParser;
+use self::control::OrParser;
 
 impl SyntaxParser {
     pub fn new(tokens: Box<Vec<Token>>) -> SyntaxParser {
@@ -19,7 +20,7 @@ impl SyntaxParser {
     }
 
     pub fn parse(&self) -> AstResult {
-        return AddSubtractParser::parse(&self);
+        return OrParser::parse(&self);
     }
 
     fn peek_token(&self) -> Result<&Token, ()> {
@@ -68,6 +69,26 @@ impl SyntaxParser {
             if self.check_operator(operator) {
                 self.consume_token();
                 return Some(*operator);
+            }
+        }
+
+        return None;
+    }
+
+    fn check_keyword(&self, keyword: &BramaKeywordType) -> bool {
+        let token = self.peek_token();
+        if token.is_err() { return false; }
+        return match token.unwrap().token_type {
+            BramaTokenType::Keyword(token_keyword) => *keyword == token_keyword,
+            _ => false
+        }
+    }
+
+    fn match_keyword(&self, keywords: &[BramaKeywordType]) -> Option<BramaKeywordType> {
+        for keyword in keywords {
+            if self.check_keyword(keyword) {
+                self.consume_token();
+                return Some(*keyword);
             }
         }
 

@@ -26,10 +26,10 @@ mod tests {
     test_compare!(unary_2, "-1024", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Subtraction, Box::new(BramaAstType::Primative(BramaPrimative::Integer(1024))))));
     test_compare!(unary_3, "+1024.0", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Addition, Box::new(BramaAstType::Primative(BramaPrimative::Double(1024.0))))));
     test_compare!(unary_4, "-1024.0", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Subtraction, Box::new(BramaAstType::Primative(BramaPrimative::Double(1024.0))))));
-    test_compare!(unary_5, "!true", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Not, Box::new(BramaAstType::Primative(BramaPrimative::Bool(true))))));
-    test_compare!(unary_6, "!false", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Not, Box::new(BramaAstType::Primative(BramaPrimative::Bool(false))))));
-    test_compare!(unary_7, "!doğru", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Not, Box::new(BramaAstType::Primative(BramaPrimative::Bool(true))))));
-    test_compare!(unary_8, "!yanlış", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Not, Box::new(BramaAstType::Primative(BramaPrimative::Bool(false))))));
+    test_compare!(unary_5, "değil true", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Not, Box::new(BramaAstType::Primative(BramaPrimative::Bool(true))))));
+    test_compare!(unary_6, "değil false", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Not, Box::new(BramaAstType::Primative(BramaPrimative::Bool(false))))));
+    test_compare!(unary_7, "not doğru", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Not, Box::new(BramaAstType::Primative(BramaPrimative::Bool(true))))));
+    test_compare!(unary_8, "not yanlış", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Not, Box::new(BramaAstType::Primative(BramaPrimative::Bool(false))))));
     
     test_compare!(unary_9, "+[]", Err(("Invalid unary operation", 0, 0)));
     test_compare!(unary_10, "++100", Err(("Invalid unary operation", 0, 0)));

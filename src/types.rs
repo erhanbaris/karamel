@@ -23,20 +23,35 @@ pub enum BramaKeywordType {
     Else,
     And,
     Or,
-    NoneKeyword
+    Empty,
+    Modulo,
+    Not
 }
 
-pub static KEYWORDS: [(&str, BramaKeywordType); 20] = [
-    ("true",  BramaKeywordType::True),
-    ("false", BramaKeywordType::False),
-    ("use",   BramaKeywordType::Use),
-    ("until", BramaKeywordType::Until),
-    ("loop",  BramaKeywordType::Loop),
-    ("if",    BramaKeywordType::If),
-    ("else",  BramaKeywordType::Else),
-    ("and",   BramaKeywordType::And),
-    ("or",    BramaKeywordType::Or),
-    ("none",  BramaKeywordType::NoneKeyword),
+impl BramaKeywordType {
+    pub fn to_operator(&self) -> BramaOperatorType {
+        match &self {
+            BramaKeywordType::And => BramaOperatorType::And,
+            BramaKeywordType::Or => BramaOperatorType::Or,
+            BramaKeywordType::Modulo => BramaOperatorType::Modulo,
+            BramaKeywordType::Not => BramaOperatorType::Not,
+            _ => BramaOperatorType::None
+        }
+    }
+}
+
+pub static KEYWORDS: [(&str, BramaKeywordType); 23] = [
+    ("true",   BramaKeywordType::True),
+    ("false",  BramaKeywordType::False),
+    ("use",    BramaKeywordType::Use),
+    ("until",  BramaKeywordType::Until),
+    ("loop",   BramaKeywordType::Loop),
+    ("if",     BramaKeywordType::If),
+    ("else",   BramaKeywordType::Else),
+    ("and",    BramaKeywordType::And),
+    ("or",     BramaKeywordType::Or),
+    ("empty",  BramaKeywordType::Empty),
+    ("not",    BramaKeywordType::Not),
 
     ("doğru",  BramaKeywordType::True),
     ("yanlış", BramaKeywordType::False),
@@ -47,7 +62,9 @@ pub static KEYWORDS: [(&str, BramaKeywordType); 20] = [
     ("yada",   BramaKeywordType::Else),
     ("ve",     BramaKeywordType::And),
     ("veya",   BramaKeywordType::Or),
-    ("yok",   BramaKeywordType::NoneKeyword)
+    ("yok",    BramaKeywordType::Empty),
+    ("mod",    BramaKeywordType::Modulo),
+    ("değil",  BramaKeywordType::Not)
 ];
 
 #[derive(Clone, Copy)]
@@ -67,27 +84,17 @@ pub enum BramaOperatorType {
     AssignSubtraction,
     AssignMultiplication,
     AssignDivision,
-    AssignModulus,
     Equal,
-    EqualValue,
     NotEqual,
-    NotEqualValue,
     Not,
-    BitwiseAnd,
-    BitwiseOr,
-    BitwiseNot,
-    BitwiseXor,
-    BitwiseLeftShift,
-    BitwiseRightShift,
+    And,
+    Or,
     GreaterThan,
     LessThan,
     GreaterEqualThan,
     LessEqualThan,
     QuestionMark,
     ColonMark,
-    BitwiseAndAssign,
-    BitwiseOrAssign,
-    BitwiseXorAssign,
     LeftParentheses,
     RightParentheses,
     SquareBracketStart,
@@ -155,12 +162,13 @@ pub struct SyntaxParser {
 #[derive(Debug)]
 #[derive(PartialEq)]
 pub enum BramaPrimative {
+    Empty,
     Integer(i64),
     Double(f64),
     Bool(bool),
     List(Vec<Box<BramaAstType>>),
     Atom(String),
-    String(String)
+    Text(String)
 }
 
 #[repr(C)]
@@ -171,6 +179,11 @@ pub enum BramaAstType {
     None,
     Primative(BramaPrimative),
     Binary {
+        left: Box<BramaAstType>, 
+        operator: BramaOperatorType, 
+        right: Box<BramaAstType>
+    },
+    Control {
         left: Box<BramaAstType>, 
         operator: BramaOperatorType, 
         right: Box<BramaAstType>
