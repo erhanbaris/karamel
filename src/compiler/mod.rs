@@ -7,15 +7,6 @@ use std::cmp;
 
 use crate::types::*;
 
-impl VmObject {
-    pub fn new(data: VmObjectType) -> VmObject {
-        VmObject {
-            marked: false,
-            data: data
-        }
-    }
-}
-
 impl BramaCompilerOption {
     pub fn new() -> BramaCompilerOption {
         BramaCompilerOption {
@@ -149,43 +140,24 @@ impl InterpreterCompiler {
         }
     }
 
-    fn add_ast(&self, ast: &BramaAstType, upper_ast: &BramaAstType, options: &mut BramaCompilerOption, storage_index: usize) -> u16 {
-        let mut temp_count = 0;
-
-        match ast {
+    fn add_ast(&self, ast: &BramaAstType, _: &BramaAstType, options: &mut BramaCompilerOption, storage_index: usize) -> u16 {
+        let temp_count = match ast {
             BramaAstType::Binary {
                 left, 
                 operator: _, 
                 right
-            } => {
-                let left_temp_count  = self.add_ast(left, ast, options, storage_index);
-                let right_temp_count = self.add_ast(right, ast, options, storage_index);
-
-                temp_count = match &upper_ast {
-                    BramaAstType::None => left_temp_count + right_temp_count + 1,
-                    _ => cmp::max(left_temp_count, right_temp_count)
-                };
-            },
+            } => self.add_ast(left, ast, options, storage_index) + self.add_ast(right, ast, options, storage_index) + 1,
             BramaAstType::Control {
                 left, 
                 operator: _, 
                 right
-            } => {
-                let left_temp_count  = self.add_ast(left, ast, options, storage_index);
-                let right_temp_count = self.add_ast(right, ast, options, storage_index);
-
-                temp_count = match &upper_ast {
-                    BramaAstType::None => left_temp_count + right_temp_count + 1,
-                    _ => cmp::max(left_temp_count, right_temp_count)
-                };
+            } => self.add_ast(left, ast, options, storage_index) + self.add_ast(right, ast, options, storage_index) + 1,
+            BramaAstType::PrefixUnary(_, inner_ast) => self.add_ast(inner_ast, ast, options, storage_index),
+            BramaAstType::SuffixUnary(_, inner_ast) => self.add_ast(inner_ast, ast, options, storage_index),
+            BramaAstType::Symbol(string) => {
+                options.storages.get_mut(storage_index).unwrap().add_symbol(string);
+                0
             },
-            BramaAstType::PrefixUnary(_, inner_ast) => {
-                temp_count = cmp::max(temp_count, self.add_ast(inner_ast, ast, options, storage_index));
-            },
-            BramaAstType::SuffixUnary(_, inner_ast) => {
-                temp_count = cmp::max(temp_count, self.add_ast(inner_ast, ast, options, storage_index));
-            },
-            BramaAstType::Symbol(string) => options.storages.get_mut(storage_index).unwrap().add_symbol(string),
             BramaAstType::Primative(primative) => {
                 match primative {
                     BramaPrimative::Empty => options.storages.get_mut(storage_index).unwrap().add_empty(),
@@ -200,14 +172,11 @@ impl InterpreterCompiler {
                         for array_item in list {
                             list_temp_count = cmp::max(self.add_ast(array_item, ast, options, storage_index), list_temp_count);
                         }
-                        temp_count = list_temp_count;
-                    },
-                    _ => {
-                        println!("{:?}", primative);
                     }
-                }
+                };
+                0
             }
-            _ => ()
+            _ => 0
         };
 
         return temp_count;
@@ -252,12 +221,19 @@ impl InterpreterCompiler {
         let target = options.storages[storage_index].get_temp_variable_index();
 
         let opcode = match operator {
-            BramaOperatorType::Or => BramaVmOpCode::Or { target, left, right },
-            BramaOperatorType::And => BramaVmOpCode::And { target, left, right },
+            BramaOperatorType::Or               => BramaVmOpCode::Or               { target, left, right },
+            BramaOperatorType::And              => BramaVmOpCode::And              { target, left, right },
+            BramaOperatorType::Equal            => BramaVmOpCode::Equal            { target, left, right },
+            BramaOperatorType::NotEqual         => BramaVmOpCode::NotEqual         { target, left, right },
+            BramaOperatorType::GreaterThan      => BramaVmOpCode::GreaterThan      { target, left, right },
+            BramaOperatorType::LessThan         => BramaVmOpCode::LessThan         { target, left, right },
+            BramaOperatorType::GreaterEqualThan => BramaVmOpCode::GreaterEqualThan { target, left, right },
+            BramaOperatorType::LessEqualThan    => BramaVmOpCode::LessEqualThan    { target, left, right },
             _ => BramaVmOpCode::None
         };
 
         options.opcodes.push(opcode);
+        compiler_info.index = target;
 
         Ok(())
     }
@@ -275,12 +251,15 @@ impl InterpreterCompiler {
         let target = options.storages[storage_index].get_temp_variable_index();
 
         let opcode = match operator {
-            BramaOperatorType::Addition => BramaVmOpCode::Addition { target, left, right },
-            BramaOperatorType::Subtraction => BramaVmOpCode::Subraction { target, left, right },
+            BramaOperatorType::Addition       => BramaVmOpCode::Addition { target, left, right },
+            BramaOperatorType::Subtraction    => BramaVmOpCode::Subraction { target, left, right },
+            BramaOperatorType::Multiplication => BramaVmOpCode::Multiply { target, left, right },
+            BramaOperatorType::Division       => BramaVmOpCode::Division { target, left, right },
             _ => BramaVmOpCode::None
         };
 
         options.opcodes.push(opcode);
+        compiler_info.index = target;
 
         Ok(())
     }

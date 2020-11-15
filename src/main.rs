@@ -1,13 +1,9 @@
-use std::mem;
-use std::ptr;
-
 mod types;
 mod parser;
 mod syntax;
 mod vm;
 mod compiler;
 
-use std::vec::Vec;
 use types::*;
 use compiler::*;
 
@@ -22,13 +18,14 @@ fn parse(data: &'static str) {
     let syntax_result = syntax.parse();
 
     if let Ok(ast) = syntax_result {
-        println!("{:#?}", ast);
-        let mut opcode_compiler = compiler::InterpreterCompiler {};
+        let opcode_compiler      = compiler::InterpreterCompiler {};
         let mut compiler_options = BramaCompilerOption::new();
 
         opcode_compiler.prepare_variable_store(&ast, &mut compiler_options);
-        opcode_compiler.compile(&ast, &mut compiler_options);
-        vm::vm::run_vm(&mut compiler_options);
+        
+        if let Ok(_) = opcode_compiler.compile(&ast, &mut compiler_options) {
+            vm::vm::run_vm(&mut compiler_options);
+        }
     }
 
     //info!("{:?}", syntax.primary_expr());
@@ -69,5 +66,5 @@ fn main() {
     }
 */
     //vm::vm::run_vm(&opcodes);
-    parse("11 + 12 + 13");
+    parse("'erhan' * 2 == 'erhanbaris'");
 }

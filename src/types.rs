@@ -222,13 +222,6 @@ impl Tokinizer {
         };
     }
 
-    pub fn get_third_char(&mut self) -> char {
-        return match self.iter_third.peek() {
-            Some(&c) => c,
-            None => '\0'
-        };
-    }
-
     pub fn add_token(&mut self, token: Token) {
         self.column = 0;
         self.tokens.push(token);
@@ -449,25 +442,23 @@ pub enum VmObjectType {
     List(Vec<Box<BramaAstType>>)
 }
 
-#[derive(PartialEq, Debug)]
-pub struct VmObject {
-    pub marked: bool,
-    pub data  : VmObjectType
-}
-
 #[repr(C)]
 #[derive(Debug)]
 #[derive(PartialEq)]
 pub enum BramaVmOpCode {
     None,
-    Halt,
-    Addition   {target: i16, left: i16, right: i16},
-    Subraction {target: i16, left: i16, right: i16},
-    Multiply   {target: i16, left: i16, right: i16},
-    Divition   {target: i16, left: i16, right: i16},
-    Modulo     {target: i16, left: i16, right: i16},
-    And        {target: i16, left: i16, right: i16},
-    Or         {target: i16, left: i16, right: i16}
+    Addition         {target: i16, left: i16, right: i16},
+    Subraction       {target: i16, left: i16, right: i16},
+    Multiply         {target: i16, left: i16, right: i16},
+    Division         {target: i16, left: i16, right: i16},
+    And              {target: i16, left: i16, right: i16},
+    Or               {target: i16, left: i16, right: i16},
+    Equal            {target: i16, left: i16, right: i16},
+    NotEqual         {target: i16, left: i16, right: i16},
+    GreaterThan      {target: i16, left: i16, right: i16},
+    LessThan         {target: i16, left: i16, right: i16},
+    GreaterEqualThan {target: i16, left: i16, right: i16},
+    LessEqualThan    {target: i16, left: i16, right: i16}
 }
 
 #[derive(PartialEq, Debug)]

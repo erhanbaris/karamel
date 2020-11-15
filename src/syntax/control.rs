@@ -52,58 +52,68 @@ impl SyntaxParserTrait for ControlParser {
 }
 
 pub fn parse_control<T: SyntaxParserTrait>(parser: &SyntaxParser, operators: &[BramaOperatorType]) -> AstResult {
-    let left_expr = T::parse(parser);
+    let mut left_expr = T::parse(parser);
     match left_expr {
         Ok(BramaAstType::None) => return left_expr,
         Ok(_) => (),
         Err(_) => return left_expr
     };
     
-    parser.clear_whitespaces();
-    if let Some(operator) = parser.match_operator(operators) {
+    loop {
         parser.clear_whitespaces();
-        
-        let right_expr = T::parse(parser);
-        match right_expr {
-            Ok(BramaAstType::None) => return Err(("Right side of expression not found", 0, 0)),
-            Ok(_) => (),
-            Err(_) => return right_expr
-        };
+        if let Some(operator) = parser.match_operator(operators) {
+            parser.clear_whitespaces();
+            
+            let right_expr = T::parse(parser);
+            match right_expr {
+                Ok(BramaAstType::None) => return Err(("Right side of expression not found", 0, 0)),
+                Ok(_) => (),
+                Err(_) => return right_expr
+            };
 
-        return Ok(BramaAstType::Control {
-            left: Box::new(left_expr.unwrap()),
-            operator: operator,
-            right: Box::new(right_expr.unwrap())
-        });
+            left_expr = Ok(BramaAstType::Control {
+                left: Box::new(left_expr.unwrap()),
+                operator: operator,
+                right: Box::new(right_expr.unwrap())
+            });
+        }        
+        else {
+            break;
+        }
     }
 
     return left_expr;
 }
 
 pub fn parse_control_keyword<T: SyntaxParserTrait>(parser: &SyntaxParser, keywords: &[BramaKeywordType]) -> AstResult {
-    let left_expr = T::parse(parser);
+    let mut left_expr = T::parse(parser);
     match left_expr {
         Ok(BramaAstType::None) => return left_expr,
         Ok(_) => (),
         Err(_) => return left_expr
     };
     
-    parser.clear_whitespaces();
-    if let Some(keyword) = parser.match_keyword(keywords) {
+    loop {
         parser.clear_whitespaces();
-        
-        let right_expr = T::parse(parser);
-        match right_expr {
-            Ok(BramaAstType::None) => return Err(("Right side of expression not found", 0, 0)),
-            Ok(_) => (),
-            Err(_) => return right_expr
-        };
+        if let Some(keyword) = parser.match_keyword(keywords) {
+            parser.clear_whitespaces();
+            
+            let right_expr = T::parse(parser);
+            match right_expr {
+                Ok(BramaAstType::None) => return Err(("Right side of expression not found", 0, 0)),
+                Ok(_) => (),
+                Err(_) => return right_expr
+            };
 
-        return Ok(BramaAstType::Control {
-            left: Box::new(left_expr.unwrap()),
-            operator: keyword.to_operator(),
-            right: Box::new(right_expr.unwrap())
-        });
+            left_expr = Ok(BramaAstType::Control {
+                left: Box::new(left_expr.unwrap()),
+                operator: keyword.to_operator(),
+                right: Box::new(right_expr.unwrap())
+            });
+        }
+        else {
+            break;
+        }
     }
 
     return left_expr;

@@ -62,10 +62,14 @@ mod tests {
         })
     }));
 
-    test_compare!(add_subtract_1, "11 + 12 + 13", Ok(BramaAstType::Binary {
-        left: Box::new(BramaAstType::Primative(BramaPrimative::Integer(10))), 
+    test_compare!(add_subtract_5, "11 + 12 + 13", Ok(BramaAstType::Binary {
+        left: Box::new(BramaAstType::Binary {
+            left: Box::new(BramaAstType::Primative(BramaPrimative::Integer(11))), 
+            operator: BramaOperatorType::Addition, 
+            right: Box::new(BramaAstType::Primative(BramaPrimative::Integer(12)))
+        }), 
         operator: BramaOperatorType::Addition, 
-        right: Box::new(BramaAstType::Primative(BramaPrimative::Integer(10)))
+        right: Box::new(BramaAstType::Primative(BramaPrimative::Integer(13)))
     }));
 
     test_compare!(multiply_divide_1, "10*10", Ok(BramaAstType::Binary {
