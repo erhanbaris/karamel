@@ -72,6 +72,7 @@ pub fn run_vm(options: &mut BramaCompilerOption)
             },
             BramaVmOpCode::Equal { target, left, right } => {
                 memory[*target as usize] = match (&memory[*left as usize], &memory[*right as usize]) {
+                    (VmObjectType::Atom(l_atom),       VmObjectType::Atom(r_atom))       => VmObjectType::Bool(*l_atom == *r_atom),
                     (VmObjectType::Bool(l_bool),       VmObjectType::Bool(r_bool))       => VmObjectType::Bool(*l_bool == *r_bool),
                     (VmObjectType::Integer(l_integer), VmObjectType::Integer(r_integer)) => VmObjectType::Bool(*l_integer == *r_integer),
                     (VmObjectType::Double (l_double),  VmObjectType::Double(r_double))   => VmObjectType::Bool(*l_double == *r_double),
@@ -83,6 +84,7 @@ pub fn run_vm(options: &mut BramaCompilerOption)
             },
             BramaVmOpCode::NotEqual { target, left, right } => {
                 memory[*target as usize] = match (&memory[*left as usize], &memory[*right as usize]) {
+                    (VmObjectType::Atom(l_atom),       VmObjectType::Atom(r_atom))       => VmObjectType::Bool(*l_atom != *r_atom),
                     (VmObjectType::Bool(l_bool),       VmObjectType::Bool(r_bool))       => VmObjectType::Bool(*l_bool != *r_bool),
                     (VmObjectType::Integer(l_integer), VmObjectType::Integer(r_integer)) => VmObjectType::Bool(*l_integer != *r_integer),
                     (VmObjectType::Double (l_double),  VmObjectType::Double(r_double))   => VmObjectType::Bool(*l_double != *r_double),
