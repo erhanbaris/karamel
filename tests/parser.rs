@@ -137,21 +137,6 @@ mod tests {
 
     #[test]
     fn keywords() {
-        for (keyword, keyword_enum) in &KEYWORDS {
-            let mut parser = Parser::new(&keyword);
-            match parser.parse() {
-                Err(_) => assert_eq!(true, false),
-                _ => ()
-            };
-            let tokens = parser.tokens();
-
-            assert_eq!(1, tokens.len());
-            match &tokens[0].token_type {
-                BramaTokenType::Keyword(keyword) => assert_eq!(keyword_enum, keyword),
-                _ => assert_eq!(true, false)
-            }
-        }
-
         let mut parser = Parser::new("_test_");
         match parser.parse() {
             Err(_) => assert_eq!(true, false),

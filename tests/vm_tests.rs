@@ -81,4 +81,5 @@ mod tests {
     test_last_memory!(vm_41, "10/2", VmObjectType::Double(5.0));
     test_last_memory!(vm_42, "9/2", VmObjectType::Double(4.5));
     test_last_memory!(vm_43, "0/0", VmObjectType::Empty);
+    test_last_memory!(vm_44, "10 küçüktür 100 ve 'erhan' eşitdeğildir 'barış' eşittir doğru", VmObjectType::Bool(true));
 }

@@ -20,7 +20,7 @@ impl SyntaxParserTrait for OrParser {
     type Item = OrParser;
 
     fn parse(parser: &SyntaxParser) -> AstResult {
-        return parse_control_keyword::<AndParser>(parser, &[BramaKeywordType::Or]);
+        return parse_control::<AndParser>(parser, &[BramaOperatorType::Or]);
     }
 }
 
@@ -28,7 +28,7 @@ impl SyntaxParserTrait for AndParser {
     type Item = AndParser;
 
     fn parse(parser: &SyntaxParser) -> AstResult {
-        return parse_control_keyword::<EqualityParser>(parser, &[BramaKeywordType::And]);
+        return parse_control::<EqualityParser>(parser, &[BramaOperatorType::And]);
     }
 }
 
@@ -77,40 +77,6 @@ pub fn parse_control<T: SyntaxParserTrait>(parser: &SyntaxParser, operators: &[B
                 right: Box::new(right_expr.unwrap())
             });
         }        
-        else {
-            break;
-        }
-    }
-
-    return left_expr;
-}
-
-pub fn parse_control_keyword<T: SyntaxParserTrait>(parser: &SyntaxParser, keywords: &[BramaKeywordType]) -> AstResult {
-    let mut left_expr = T::parse(parser);
-    match left_expr {
-        Ok(BramaAstType::None) => return left_expr,
-        Ok(_) => (),
-        Err(_) => return left_expr
-    };
-    
-    loop {
-        parser.clear_whitespaces();
-        if let Some(keyword) = parser.match_keyword(keywords) {
-            parser.clear_whitespaces();
-            
-            let right_expr = T::parse(parser);
-            match right_expr {
-                Ok(BramaAstType::None) => return Err(("Right side of expression not found", 0, 0)),
-                Ok(_) => (),
-                Err(_) => return right_expr
-            };
-
-            left_expr = Ok(BramaAstType::Control {
-                left: Box::new(left_expr.unwrap()),
-                operator: keyword.to_operator(),
-                right: Box::new(right_expr.unwrap())
-            });
-        }
         else {
             break;
         }

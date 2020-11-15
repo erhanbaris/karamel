@@ -7,7 +7,7 @@ pub struct SymbolParser {
 
 impl SymbolParser {
     pub fn init_parser(&mut self) {
-        for (keyword, keyword_enum) in &KEYWORDS {
+        for (keyword, keyword_enum) in KEYWORDS.iter() {
             self.keywords.insert(keyword, *keyword_enum);
         }
     }
@@ -43,7 +43,10 @@ impl TokenParser for SymbolParser {
                 None => &BramaKeywordType::None
             };
 
-            return Ok(BramaTokenType::Keyword(*keyword));
+            return match keyword.to_operator() {
+                BramaOperatorType::None => Ok(BramaTokenType::Keyword(*keyword)),
+                _                       => Ok(BramaTokenType::Operator(keyword.to_operator()))
+            }
         }
         return Ok(BramaTokenType::Symbol(symbol.to_owned()));
     }

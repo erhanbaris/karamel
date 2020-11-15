@@ -75,26 +75,6 @@ impl SyntaxParser {
         return None;
     }
 
-    fn check_keyword(&self, keyword: &BramaKeywordType) -> bool {
-        let token = self.peek_token();
-        if token.is_err() { return false; }
-        return match token.unwrap().token_type {
-            BramaTokenType::Keyword(token_keyword) => *keyword == token_keyword,
-            _ => false
-        }
-    }
-
-    fn match_keyword(&self, keywords: &[BramaKeywordType]) -> Option<BramaKeywordType> {
-        for keyword in keywords {
-            if self.check_keyword(keyword) {
-                self.consume_token();
-                return Some(*keyword);
-            }
-        }
-
-        return None;
-    }
-
     fn clear_whitespaces(&self) {
         loop {
             if let Ok(current_token) = self.peek_token() {

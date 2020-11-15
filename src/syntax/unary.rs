@@ -43,7 +43,8 @@ impl UnaryParser {
         if let Some(operator) = parser.match_operator(&[BramaOperatorType::Addition,
             BramaOperatorType::Subtraction,
             BramaOperatorType::Increment,
-            BramaOperatorType::Deccrement]) {
+            BramaOperatorType::Deccrement,
+            BramaOperatorType::Not]) {
             parser.clear_whitespaces();
 
             let mut unary_ast = BramaAstType::None;
@@ -67,23 +68,8 @@ impl UnaryParser {
                         unary_ast = BramaAstType::Symbol(token.token_type.get_symbol().to_string());
                     }
                 },
-                _ => return Err(("Invalid unary operation", 0, 0))
-            }
-
-            return match unary_ast {
-                BramaAstType::None => Err(("Invalid unary operation", 0, 0)),
-                _ => Ok(BramaAstType::PrefixUnary(operator, Box::new(unary_ast)))
-            };
-        }
-        else if let Some(keyword) = parser.match_keyword(&[
-            BramaKeywordType::Not]) {
-            parser.clear_whitespaces();
-
-            let mut unary_ast = BramaAstType::None;
-            let token         = &parser.peek_token().unwrap();
-
-            match keyword {
-                BramaKeywordType::Not => {
+                
+                BramaOperatorType::Not => {
                     if token.token_type.is_integer() || token.token_type.is_double() || token.token_type.is_bool() {
                         if let Ok(ast) = PrimativeParser::parse(parser) {
                             unary_ast = ast;
@@ -95,7 +81,7 @@ impl UnaryParser {
 
             return match unary_ast {
                 BramaAstType::None => Err(("Invalid unary operation", 0, 0)),
-                _ => Ok(BramaAstType::PrefixUnary(keyword.to_operator(), Box::new(unary_ast)))
+                _ => Ok(BramaAstType::PrefixUnary(operator, Box::new(unary_ast)))
             };
         }
 

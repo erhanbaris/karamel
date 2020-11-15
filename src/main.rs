@@ -66,5 +66,5 @@ fn main() {
     }
 */
     //vm::vm::run_vm(&opcodes);
-    parse("'erhan' * 2 == 'erhanbaris'");
+    parse("değil true");
 }

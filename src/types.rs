@@ -27,22 +27,34 @@ pub enum BramaKeywordType {
     Or,
     Empty,
     Modulo,
-    Not
+    Not,
+    GreaterThan,
+    LessThan,
+    GreaterEqualThan,
+    LessEqualThan,
+    Equal,
+    NotEqual
 }
 
 impl BramaKeywordType {
     pub fn to_operator(&self) -> BramaOperatorType {
         match &self {
-            BramaKeywordType::And => BramaOperatorType::And,
-            BramaKeywordType::Or => BramaOperatorType::Or,
-            BramaKeywordType::Modulo => BramaOperatorType::Modulo,
-            BramaKeywordType::Not => BramaOperatorType::Not,
-            _ => BramaOperatorType::None
+            BramaKeywordType::And              => BramaOperatorType::And,
+            BramaKeywordType::Or               => BramaOperatorType::Or,
+            BramaKeywordType::Modulo           => BramaOperatorType::Modulo,
+            BramaKeywordType::Not              => BramaOperatorType::Not,
+            BramaKeywordType::Equal            => BramaOperatorType::Equal,
+            BramaKeywordType::NotEqual         => BramaOperatorType::NotEqual,
+            BramaKeywordType::GreaterThan      => BramaOperatorType::GreaterThan,
+            BramaKeywordType::GreaterEqualThan => BramaOperatorType::GreaterEqualThan,
+            BramaKeywordType::LessThan         => BramaOperatorType::LessThan,
+            BramaKeywordType::LessEqualThan    => BramaOperatorType::LessEqualThan,
+            _                                  => BramaOperatorType::None
         }
     }
 }
 
-pub static KEYWORDS: [(&str, BramaKeywordType); 23] = [
+pub static KEYWORDS: &'static [(&str, BramaKeywordType)] = &[
     ("true",   BramaKeywordType::True),
     ("false",  BramaKeywordType::False),
     ("use",    BramaKeywordType::Use),
@@ -54,6 +66,12 @@ pub static KEYWORDS: [(&str, BramaKeywordType); 23] = [
     ("or",     BramaKeywordType::Or),
     ("empty",  BramaKeywordType::Empty),
     ("not",    BramaKeywordType::Not),
+    ("equal",       BramaKeywordType::Equal),
+    ("notequal",  BramaKeywordType::NotEqual),
+    ("greater",      BramaKeywordType::GreaterThan),
+    ("greaterequal",  BramaKeywordType::GreaterEqualThan),
+    ("less",      BramaKeywordType::LessThan),
+    ("lessequal",  BramaKeywordType::LessEqualThan),
 
     ("doğru",  BramaKeywordType::True),
     ("yanlış", BramaKeywordType::False),
@@ -66,7 +84,13 @@ pub static KEYWORDS: [(&str, BramaKeywordType); 23] = [
     ("veya",   BramaKeywordType::Or),
     ("yok",    BramaKeywordType::Empty),
     ("mod",    BramaKeywordType::Modulo),
-    ("değil",  BramaKeywordType::Not)
+    ("eşittir",       BramaKeywordType::Equal),
+    ("eşitdeğildir",  BramaKeywordType::NotEqual),
+    ("büyüktür",      BramaKeywordType::GreaterThan),
+    ("büyükeşittir",  BramaKeywordType::GreaterEqualThan),
+    ("küçüktür",      BramaKeywordType::LessThan),
+    ("küçükeşittir",  BramaKeywordType::LessEqualThan),
+    ("değil",         BramaKeywordType::Not)
 ];
 
 #[derive(Clone, Copy)]
