@@ -9,7 +9,7 @@ use std::cell::Cell;
 
 use crate::types::*;
 use crate::types::SyntaxParser;
-use self::control::OrParser;
+use self::control::ExpressionParser;
 
 impl SyntaxParser {
     pub fn new(tokens: Box<Vec<Token>>) -> SyntaxParser {
@@ -20,7 +20,7 @@ impl SyntaxParser {
     }
 
     pub fn parse(&self) -> AstResult {
-        return OrParser::parse(&self);
+        return ExpressionParser::parse(&self);
     }
 
     fn peek_token(&self) -> Result<&Token, ()> {

@@ -10,8 +10,7 @@ impl TokenParser for OperatorParser {
     fn parse(&self, tokinizer: &mut Tokinizer) -> Result<BramaTokenType, (&'static str, u32, u32)> {
         let ch       = tokinizer.get_char();
         let ch_next  = tokinizer.get_next_char();
-        let ch_third = tokinizer.get_third_char();
-
+        
         tokinizer.increase_index();
 
         let mut operator_type = match (ch, ch_next) {

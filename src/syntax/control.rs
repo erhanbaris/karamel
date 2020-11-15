@@ -2,10 +2,19 @@ use crate::types::*;
 use crate::syntax::SyntaxParser;
 use crate::syntax::binary::AddSubtractParser;
 
+pub struct ExpressionParser;
 pub struct OrParser;
 pub struct AndParser;
 pub struct EqualityParser;
 pub struct ControlParser;
+
+impl SyntaxParserTrait for ExpressionParser {
+    type Item = ExpressionParser;
+
+    fn parse(parser: &SyntaxParser) -> AstResult {
+        return OrParser::parse(parser);
+    }
+}
 
 impl SyntaxParserTrait for OrParser {
     type Item = OrParser;

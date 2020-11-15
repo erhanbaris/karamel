@@ -1,7 +1,7 @@
 use crate::types::*;
 use crate::syntax::util::*;
 use crate::syntax::SyntaxParser;
-use crate::syntax::control::AndParser;
+use crate::syntax::control::ExpressionParser;
 
 pub struct PrimativeParser;
 
@@ -63,7 +63,7 @@ impl PrimativeParser {
 
                 parser.clear_whitespaces();
 
-                let ast = AndParser::parse(parser);
+                let ast = ExpressionParser::parse(parser);
                 if is_ast_empty(&ast) {
                     return err_or_message(&ast, "Invalid list item");
                 }
@@ -99,12 +99,30 @@ impl PrimativeParser {
         }
         return Ok(BramaAstType::None);
     }
+
+    fn parse_parenthesis(parser: &SyntaxParser) -> AstResult {
+        if parser.match_operator(&[BramaOperatorType::LeftParentheses]).is_some() {
+            
+            let ast = ExpressionParser::parse(parser);
+            if is_ast_empty(&ast) {
+                return err_or_message(&ast, "Invalid expression");
+            }
+
+            if parser.match_operator(&[BramaOperatorType::RightParentheses]).is_none() {
+                return Err(("Parentheses not closed", 0, 0));
+            }
+
+            return Ok(ast.unwrap());
+        }
+
+        return Ok(BramaAstType::None);
+    }
 }
 
 impl SyntaxParserTrait for PrimativeParser {
     type Item = PrimativeParser;
 
     fn parse(parser: &SyntaxParser) -> AstResult {
-        return map_parser(parser, &[Self::parse_list, Self::parse_symbol, Self::parse_basic_primatives]);
+        return map_parser(parser, &[Self::parse_list, Self::parse_parenthesis, Self::parse_symbol, Self::parse_basic_primatives]);
     }
 }

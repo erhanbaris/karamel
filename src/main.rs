@@ -8,6 +8,8 @@ mod vm;
 mod compiler;
 
 use std::vec::Vec;
+use types::*;
+use compiler::*;
 
 fn parse(data: &'static str) {
     let mut parser = parser::Parser::new(&data);
@@ -19,13 +21,14 @@ fn parse(data: &'static str) {
     let syntax = types::SyntaxParser::new(Box::new(parser.tokens().to_vec()));
     let syntax_result = syntax.parse();
 
-    println!("{:#?}", syntax_result);
-    println!("");
-
     if let Ok(ast) = syntax_result {
-        let mut storage = compiler::InnerStrorage::new();
-        compiler::StorageFeeder::add_ast(&ast, &types::BramaAstType::None, &mut storage);
-        println!("{:#?}", storage);
+        println!("{:#?}", ast);
+        let mut opcode_compiler = compiler::InterpreterCompiler {};
+        let mut compiler_options = BramaCompilerOption::new();
+
+        opcode_compiler.prepare_variable_store(&ast, &mut compiler_options);
+        opcode_compiler.compile(&ast, &mut compiler_options);
+        vm::vm::run_vm(&mut compiler_options);
     }
 
     //info!("{:?}", syntax.primary_expr());
@@ -43,7 +46,7 @@ fn main() {
        
         ptr = &object as *const _ as u64;
     }
-    let data = unsafe { Box::from_raw(ptr as *mut compiler::VmObject) };*/
+    let data = unsafe { Box::from_raw(ptr as *mut compiler::VmObject) };
     let abc = [
         vm::vm::BramaVmOpCode::Addition(1, 1, 1),
         vm::vm::BramaVmOpCode::Divition(1, 1, 1),
@@ -64,7 +67,7 @@ fn main() {
         }
         println!("{:?}", ptr_2);
     }
-
+*/
     //vm::vm::run_vm(&opcodes);
-    parse("[data2]");
+    parse("11 + 12 + 13");
 }

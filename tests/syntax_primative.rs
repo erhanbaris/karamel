@@ -79,4 +79,19 @@ mod tests {
 
     test_success!(symbol_1, "data", Ok(BramaAstType::Symbol("data".to_string())));
     test_success!(symbol_2, "data_test", Ok(BramaAstType::Symbol("data_test".to_string())));
+
+    test_success!(parenthesis_1, "(10*10)", Ok(BramaAstType::Binary {
+        left: Box::new(BramaAstType::Primative(BramaPrimative::Integer(10))), 
+        operator: BramaOperatorType::Multiplication, 
+        right: Box::new(BramaAstType::Primative(BramaPrimative::Integer(10)))
+    }));
+    test_success!(parenthesis_2, "(10+10)-10", Ok(BramaAstType::Binary {
+        left: Box::new(BramaAstType::Binary {
+            left: Box::new(BramaAstType::Primative(BramaPrimative::Integer(10))), 
+            operator: BramaOperatorType::Addition, 
+            right: Box::new(BramaAstType::Primative(BramaPrimative::Integer(10)))
+        }), 
+        operator: BramaOperatorType::Subtraction, 
+        right: Box::new(BramaAstType::Primative(BramaPrimative::Integer(10)))
+    }));
 }

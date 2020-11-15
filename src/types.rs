@@ -4,9 +4,11 @@ use std::iter::Peekable;
 use std::cell::Cell;
 use std::result::Result;
 use std::string::String;
+use std::collections::HashMap;
 
 pub type ParseResult        = Result<(), (&'static str, u32, u32)>;
 pub type AstResult          = Result<BramaAstType, (&'static str, u32, u32)>;
+pub type CompilerResult     = Result<(), (&'static str, u32, u32)>;
 pub type ParseType          = fn(parser: &SyntaxParser) -> AstResult;
 
 #[derive(Clone, Copy)]
@@ -434,4 +436,53 @@ impl BramaTokenType {
         }
         return false; 
     }
+}
+
+#[derive(PartialEq, Debug)]
+pub enum VmObjectType {
+    Empty,
+    Atom(u64),
+    Integer(i64),
+    Double(f64),
+    Text(String),
+    Bool(bool),
+    List(Vec<Box<BramaAstType>>)
+}
+
+#[derive(PartialEq, Debug)]
+pub struct VmObject {
+    pub marked: bool,
+    pub data  : VmObjectType
+}
+
+#[repr(C)]
+#[derive(Debug)]
+#[derive(PartialEq)]
+pub enum BramaVmOpCode {
+    None,
+    Halt,
+    Addition   {target: i16, left: i16, right: i16},
+    Subraction {target: i16, left: i16, right: i16},
+    Multiply   {target: i16, left: i16, right: i16},
+    Divition   {target: i16, left: i16, right: i16},
+    Modulo     {target: i16, left: i16, right: i16},
+    And        {target: i16, left: i16, right: i16},
+    Or         {target: i16, left: i16, right: i16}
+}
+
+#[derive(PartialEq, Debug)]
+pub struct InnerStrorage {
+    pub return_back_address   : u32,
+    pub return_back_variable  : u32,
+    pub const_variables       : Vec<VmObjectType>,
+    pub temporary_variables   : u16,
+    pub variables             : HashMap<String, VmObjectType>,
+    pub memory                : Vec<VmObjectType>,
+    pub temp_counter          : i16,
+    pub total_const_variables : i16
+}
+
+pub struct BramaCompilerOption {
+    pub opcodes : Vec<BramaVmOpCode>,
+    pub storages: Vec<InnerStrorage>
 }
