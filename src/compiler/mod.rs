@@ -11,32 +11,64 @@ impl BramaCompilerOption {
     pub fn new() -> BramaCompilerOption {
         BramaCompilerOption {
             opcodes: Vec::new(),
-            storages: vec![InnerStrorage::new()]
+            storages: vec![InnerStorage::new()]
         }
     }
 }
 
-impl InnerStrorage {
-    fn new() -> InnerStrorage {
-        InnerStrorage {
-            return_back_address: 0,
-            return_back_variable: 0,
-            const_variables: Vec::new(),
-            temporary_variables: 0,
-            total_const_variables: 0,
-            temp_counter: 0,
-            memory: Vec::new(),
-            variables: HashMap::new()
+impl Storage for InnerStorage {
+    fn build(&mut self) {
+        self.memory.reserve((self.get_constant_size() + self.get_temp_size()).into());
+        self.total_const_variables = self.get_constant_size() as i16;
+        self.memory.append(&mut self.constants);
+
+        for _ in 0..self.get_temp_size() {
+            self.memory.push(VmObjectType::Empty);
         }
     }
 
-    pub fn build(&mut self) {
-        self.memory.reserve(self.const_variables.len() + self.temporary_variables as usize);
-        self.total_const_variables = self.const_variables.len() as i16;
-        self.memory.append(&mut self.const_variables);
+    fn get_memory(&self) -> &Vec<VmObjectType> { &self.memory }
+    fn get_constant_size(&self) -> u16 { self.constants.len() as u16 }
+    fn get_variable_size(&self) -> u16 { self.variables.len() as u16 }
+    fn get_temp_size(&self) -> u16     { self.temp_size }
+    fn inc_temp_size(&mut self)        { self.temp_size += 1; }
+    fn get_free_temp_slot(&mut self) -> u16 { 
+        let index = self.temp_counter;
+        self.temp_counter += 1;
+        return self.get_variable_size() + index;
+    }
 
-        for _ in 0..self.temporary_variables {
-            self.memory.push(VmObjectType::Empty);
+    fn get_temp_counter(&self) -> u16 { self.temp_counter }
+    fn inc_temp_counter(&mut self)    { self.temp_counter += 1; }
+    fn reset_temp_counter(&mut self)  { self.temp_counter = 0; }
+
+    fn add_variable        (&mut self, name: &str, variable: &VmObjectType);
+    fn add_constant_atom   (&mut self, atom: &String);
+    fn add_constant_empty  (&mut self);
+    fn add_constant_double (&mut self, value: f64);
+    fn add_constant_integer(&mut self, value: i64);
+    fn add_constant_text   (&mut self, value: String);
+    fn add_constant_list   (&mut self);
+    fn add_constant_bool   (&mut self, value: bool);
+    
+    fn get_total_const_variables(&self) -> i16 { self.total_const_variables }
+
+    fn get_temp_counter(&self) -> i16 { self.temp_counter }
+    fn inc_temp_counter(&mut self) { self.temp_counter += 1; }
+    fn reset_temp_counter(&mut self) { self.temp_counter = 0; }
+
+    fn set_temp_variable_size(&mut self, size: u16) { self.temporary_variables = size; }
+    fn add_variable(&mut self, name: &str, variable: &VmObjectType) { ; }
+}
+
+impl InnerStorage {
+    fn new() -> InnerStorage {
+        InnerStorage {
+            constants: Vec::new(),
+            temp_size: 0,
+            temp_counter: 0,
+            memory: Vec::new(),
+            variables: HashMap::new()
         }
     }
 
@@ -51,7 +83,7 @@ impl InnerStrorage {
     }
 
     pub fn add_list(&mut self) {
-        self.const_variables.push(VmObjectType::List(Vec::new()));
+        self.constants.push(VmObjectType::List(Vec::new()));
     }
 
     pub fn add_text(&mut self, value: String) {
@@ -85,7 +117,7 @@ impl InnerStrorage {
     }
 
     fn add_const_variable(&mut self, obj: VmObjectType) {
-        let position = self.const_variables.iter().position(|x| {
+        let position = self.constants.iter().position(|x| {
             return *x == obj;
         });
         
@@ -183,7 +215,7 @@ impl InterpreterCompiler {
     }
 
     fn primative(&self, primative: &BramaPrimative, compiler_info: &mut CompileInfo, options: &mut BramaCompilerOption, storage_index: usize) -> CompilerResult {
-        let storage :&InnerStrorage = &options.storages[storage_index];
+        let storage :&InnerStorage = &options.storages[storage_index];
 
         let result = match primative {
             BramaPrimative::Bool(boolean) => storage.find_const_variable(VmObjectType::Bool(*boolean)),

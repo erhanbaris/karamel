@@ -386,18 +386,40 @@ pub enum BramaVmOpCode {
 }
 
 #[derive(PartialEq, Debug)]
-pub struct InnerStrorage {
-    pub return_back_address   : u32,
-    pub return_back_variable  : u32,
-    pub const_variables       : Vec<VmObjectType>,
-    pub temporary_variables   : u16,
+pub struct InnerStorage {
+    pub constants       : Vec<VmObjectType>,
+    pub temp_size             : u16,
+    pub temp_counter          : u16,
     pub variables             : HashMap<String, VmObjectType>,
     pub memory                : Vec<VmObjectType>,
-    pub temp_counter          : i16,
     pub total_const_variables : i16
+}
+
+pub trait Storage {
+    /// Build memory block with temporary, constant and variable definitions
+    fn build(&mut self);
+    fn get_memory(&self) -> &Vec<VmObjectType>;
+    fn get_constant_size(&self) -> u16;
+    fn get_variable_size(&self) -> u16;
+    fn get_temp_size(&self) -> u16;
+    fn get_free_temp_slot(&mut self) -> u16;
+    fn inc_temp_size(&mut self);
+
+    fn get_temp_counter(&self) -> u16;
+    fn inc_temp_counter(&mut self);
+    fn reset_temp_counter(&mut self);
+
+    fn add_variable        (&mut self, name: &str, variable: &VmObjectType);
+    fn add_constant_atom   (&mut self, atom: &String);
+    fn add_constant_empty  (&mut self);
+    fn add_constant_double (&mut self, value: f64);
+    fn add_constant_integer(&mut self, value: i64);
+    fn add_constant_text   (&mut self, value: String);
+    fn add_constant_list   (&mut self);
+    fn add_constant_bool   (&mut self, value: bool);
 }
 
 pub struct BramaCompilerOption {
     pub opcodes : Vec<BramaVmOpCode>,
-    pub storages: Vec<InnerStrorage>
+    pub storages: Vec<InnerStorage>
 }
