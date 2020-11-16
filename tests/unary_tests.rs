@@ -22,10 +22,10 @@ mod tests {
         };
     }
 
-    test_compare!(unary_1, "+1024", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Addition, Box::new(BramaAstType::Primative(BramaPrimative::Integer(1024))))));
-    test_compare!(unary_2, "-1024", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Subtraction, Box::new(BramaAstType::Primative(BramaPrimative::Integer(1024))))));
-    test_compare!(unary_3, "+1024.0", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Addition, Box::new(BramaAstType::Primative(BramaPrimative::Double(1024.0))))));
-    test_compare!(unary_4, "-1024.0", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Subtraction, Box::new(BramaAstType::Primative(BramaPrimative::Double(1024.0))))));
+    test_compare!(unary_1, "+1024", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Addition, Box::new(BramaAstType::Primative(BramaPrimative::Number(1024.0))))));
+    test_compare!(unary_2, "-1024", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Subtraction, Box::new(BramaAstType::Primative(BramaPrimative::Number(1024.0))))));
+    test_compare!(unary_3, "+1024.0", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Addition, Box::new(BramaAstType::Primative(BramaPrimative::Number(1024.0))))));
+    test_compare!(unary_4, "-1024.0", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Subtraction, Box::new(BramaAstType::Primative(BramaPrimative::Number(1024.0))))));
     test_compare!(unary_5, "değil true", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Not, Box::new(BramaAstType::Primative(BramaPrimative::Bool(true))))));
     test_compare!(unary_6, "değil false", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Not, Box::new(BramaAstType::Primative(BramaPrimative::Bool(false))))));
     test_compare!(unary_7, "not doğru", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Not, Box::new(BramaAstType::Primative(BramaPrimative::Bool(true))))));
@@ -36,12 +36,12 @@ mod tests {
     test_compare!(unary_11, "--100", Err(("Invalid unary operation", 0, 0)));
     test_compare!(unary_12, "--true", Err(("Invalid unary operation", 0, 0)));
 
-    test_compare!(unary_13, "++data", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Increment, Box::new(BramaAstType::Symbol(String::from("data"))))));
-    test_compare!(unary_14, "--data", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Deccrement, Box::new(BramaAstType::Symbol(String::from("data"))))));
-    test_compare!(unary_15, "--data", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Deccrement, Box::new(BramaAstType::Symbol(String::from("data"))))));
-    test_compare!(unary_16, "data--", Ok(BramaAstType::SuffixUnary(BramaOperatorType::Deccrement, Box::new(BramaAstType::Symbol(String::from("data"))))));
-    test_compare!(unary_17, "data++", Ok(BramaAstType::SuffixUnary(BramaOperatorType::Increment, Box::new(BramaAstType::Symbol(String::from("data"))))));
+    test_compare!(unary_13, "++data", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Increment, Box::new(BramaAstType::Symbol("data")))));
+    test_compare!(unary_14, "--data", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Deccrement, Box::new(BramaAstType::Symbol("data")))));
+    test_compare!(unary_15, "--data", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Deccrement, Box::new(BramaAstType::Symbol("data")))));
+    test_compare!(unary_16, "data--", Ok(BramaAstType::SuffixUnary(BramaOperatorType::Deccrement, Box::new(BramaAstType::Symbol("data")))));
+    test_compare!(unary_17, "data++", Ok(BramaAstType::SuffixUnary(BramaOperatorType::Increment, Box::new(BramaAstType::Symbol("data")))));
 
-    test_compare!(unary_18, "+ 1024", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Addition, Box::new(BramaAstType::Primative(BramaPrimative::Integer(1024))))));
+    test_compare!(unary_18, "+ 1024", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Addition, Box::new(BramaAstType::Primative(BramaPrimative::Number(1024.0))))));
     //test_compare!(unary_19, "doğru değil", Ok(BramaAstType::SuffixUnary(BramaOperatorType::Not, Box::new(BramaAstType::Primative(BramaPrimative::Bool(true))))));
 }

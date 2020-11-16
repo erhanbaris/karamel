@@ -13,7 +13,8 @@ impl TokenParser for TextParser {
     fn parse(&self, tokinizer: &mut Tokinizer) -> Result<BramaTokenType, (&'static str, u32, u32)> {
         let mut ch: char      = '\0';
         let mut ch_next: char;
-        let mut symbol        = String::new();
+        let start             = tokinizer.index as usize;
+        let mut end           = start;
 
         tokinizer.increase_index();
 
@@ -22,7 +23,7 @@ impl TokenParser for TextParser {
             ch_next = tokinizer.get_next_char();
 
             if ch == '\\' && ch_next == self.tag {
-                symbol.push(ch);
+                end += 1;
                 tokinizer.increase_index();
             }
             else if ch == self.tag {
@@ -30,7 +31,7 @@ impl TokenParser for TextParser {
                 break;
             }
             else {
-                symbol.push(ch);
+                end += 1;
             }
 
             tokinizer.increase_index();
@@ -40,6 +41,7 @@ impl TokenParser for TextParser {
             return Err(("Missing string deliminator", tokinizer.line, tokinizer.column));
         }
 
-        return Ok(BramaTokenType::Text(symbol.to_owned()));
+        let end = tokinizer.data.char_indices().map(|(i, _)| i).nth(end).unwrap();
+        return Ok(BramaTokenType::Text(&tokinizer.data[start..end]));
     }
 }

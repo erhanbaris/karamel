@@ -31,7 +31,9 @@ impl<'a> Parser {
                 tokens: Vec::new(),
                 iter: data.chars().peekable(),
                 iter_second: data.chars().peekable(),
-                iter_third: data.chars().peekable()
+                iter_third: data.chars().peekable(),
+                data: data,
+                index: 0
             }
         };
 

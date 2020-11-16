@@ -21,7 +21,8 @@ impl TokenParser for SymbolParser {
 
     fn parse(&self, tokinizer: &mut Tokinizer) -> Result<BramaTokenType, (&'static str, u32, u32)> {
         let mut ch: char;
-        let mut symbol = String::new();
+        let start             = tokinizer.index as usize;
+        let mut end           = start;
 
         while !tokinizer.is_end() {
             ch = tokinizer.get_char();
@@ -33,12 +34,12 @@ impl TokenParser for SymbolParser {
             if ch.is_whitespace() || ch == '\'' || ch == '"' {
                 break;
             }
-            symbol.push(ch);
+            end += 1;
             tokinizer.increase_index();
         }
 
-        if self.keywords.contains_key(symbol.as_ref() as &str) {
-            let keyword = match self.keywords.get(symbol.as_ref() as &str) {
+        if self.keywords.contains_key(&tokinizer.data[start..end]) {
+            let keyword = match self.keywords.get(&tokinizer.data[start..end]) {
                 Some(keyword) => keyword,
                 None => &BramaKeywordType::None
             };
@@ -48,6 +49,8 @@ impl TokenParser for SymbolParser {
                 _                       => Ok(BramaTokenType::Operator(keyword.to_operator()))
             }
         }
-        return Ok(BramaTokenType::Symbol(symbol.to_owned()));
+
+        let end = tokinizer.data.char_indices().map(|(i, _)| i).nth(end).unwrap();
+        return Ok(BramaTokenType::Symbol(&tokinizer.data[start..end]));
     }
 }

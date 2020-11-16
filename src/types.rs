@@ -3,13 +3,35 @@ use std::str::Chars;
 use std::iter::Peekable;
 use std::cell::Cell;
 use std::result::Result;
-use std::string::String;
 use std::collections::HashMap;
+use std::hash::{Hash, Hasher};
+use std::collections::hash_map::DefaultHasher;
 
 pub type ParseResult        = Result<(), (&'static str, u32, u32)>;
 pub type AstResult          = Result<BramaAstType, (&'static str, u32, u32)>;
 pub type CompilerResult     = Result<(), (&'static str, u32, u32)>;
 pub type ParseType          = fn(parser: &SyntaxParser) -> AstResult;
+
+const TAG_NULL        : u64 = 0;
+const TAG_FALSE       : u64 = 1;
+const TAG_TRUE        : u64 = 2;
+
+const QNAN:         u64 = 0x7ffc_0000_0000_0000;
+const POINTER_FLAG: u64 = 0x8000_0000_0000_0000;
+const POINTER_MASK: u64 = 0x0000_FFFF_FFFF_FFFF;
+const FALSE_FLAG:   u64 = QNAN | TAG_FALSE;
+const TRUE_FLAG:    u64 = QNAN | TAG_TRUE;
+const EMPTY_FLAG:   u64 = QNAN | TAG_NULL;
+
+#[derive(PartialEq, Debug)]
+pub struct VmObject(u64);
+
+#[derive(PartialEq, Debug)]
+pub enum VmPointer {
+    Text(&'static str),
+    List(Vec<Box<BramaAstType>>),
+    Atom(u64)
+}
 
 #[derive(Clone, Copy)]
 #[derive(Debug)]
@@ -143,9 +165,9 @@ pub enum BramaTokenType {
     None,
     Integer(i64),
     Double(f64),
-    Symbol(String),
+    Symbol(&'static str),
     Operator(BramaOperatorType),
-    Text(String),
+    Text(&'static str),
     Keyword(BramaKeywordType),
     WhiteSpace(u8),
     NewLine(u8)
@@ -176,6 +198,8 @@ pub struct Tokinizer {
     pub iter: Peekable<Chars<'static>>,
     pub iter_second: Peekable<Chars<'static>>,
     pub iter_third: Peekable<Chars<'static>>,
+    pub data: &'static str,
+    pub index: u32
 }
 
 pub struct SyntaxParser {
@@ -189,12 +213,56 @@ pub struct SyntaxParser {
 #[derive(PartialEq)]
 pub enum BramaPrimative {
     Empty,
-    Integer(i64),
-    Double(f64),
+    Number(f64),
     Bool(bool),
     List(Vec<Box<BramaAstType>>),
-    Atom(String),
-    Text(String)
+    Atom(u64),
+    Text(&'static str)
+}
+
+impl BramaPrimative {
+    pub fn convert(&self) -> VmObject {
+        match self {
+            BramaPrimative::Empty            => VmObject(QNAN | EMPTY_FLAG),
+            BramaPrimative::Number(number)   => VmObject(number.to_bits()),
+            BramaPrimative::Bool(boolean)    => VmObject(QNAN | if *boolean { TRUE_FLAG } else { FALSE_FLAG }),
+            BramaPrimative::Text(text)       => VmObject(QNAN | POINTER_FLAG | (
+                POINTER_MASK & (Box::into_raw(Box::new(VmPointer::Text(*text)))) as u64
+            )),
+            BramaPrimative::Atom(atom)       => {
+                let mut hasher = DefaultHasher::new();
+                atom.hash(&mut hasher);
+                VmObject(QNAN | POINTER_FLAG | (
+                    POINTER_MASK & (Box::into_raw(Box::new(VmPointer::Atom(hasher.finish())))) as u64
+                ))
+            },
+            BramaPrimative::List(list)       => VmObject(QNAN | POINTER_FLAG | (
+                POINTER_MASK & (Box::into_raw(Box::new(VmPointer::List(list.to_vec())))) as u64
+            ))
+        }
+    }
+}
+
+impl VmObject {
+    pub fn convert(&self) -> BramaPrimative {
+        let VmObject(bits) = self;
+
+        match *bits {
+            n if (n & QNAN) != QNAN       => BramaPrimative::Number(f64::from_bits(n)),
+            e if e == (QNAN | EMPTY_FLAG) => BramaPrimative::Empty,
+            f if f == (QNAN | FALSE_FLAG) => BramaPrimative::Bool(false),
+            t if t == (QNAN | TRUE_FLAG)  => BramaPrimative::Bool(true),
+            p if (p & POINTER_FLAG) == POINTER_FLAG => {
+                let pointer = (bits & POINTER_MASK) as *mut &VmPointer;
+                match unsafe { *Box::from_raw(pointer) } {
+                    VmPointer::Atom(atom) => BramaPrimative::Atom(*atom),
+                    VmPointer::List(list) => BramaPrimative::List(list.to_vec()),
+                    VmPointer::Text(text) => BramaPrimative::Text(text)
+                }
+            },
+            _ => unreachable!("Corrupt tag data"),
+        }
+    }
 }
 
 #[repr(C)]
@@ -221,7 +289,7 @@ pub enum BramaAstType {
     Assign,
     Loop,
     IfStatement,*/
-    Symbol(String)
+    Symbol(&'static str)
 }
 
 impl Tokinizer {
@@ -255,6 +323,7 @@ impl Tokinizer {
         self.iter.next();
         self.iter_second.next();
         self.iter_third.next();
+        self.index += 1;
     }
 
     pub fn increate_line(& mut self) {
@@ -347,23 +416,12 @@ impl BramaTokenType {
         }
     }
 
-    pub fn get_symbol(&self) -> &str {
+    pub fn get_symbol(&self) -> &'static str {
         return match self {
             BramaTokenType::Symbol(string) => string,
             _ => ""
         }
     }
-}
-
-#[derive(PartialEq, Debug)]
-pub enum VmObjectType {
-    Empty,
-    Atom(u64),
-    Integer(i64),
-    Double(f64),
-    Text(String),
-    Bool(bool),
-    List(Vec<Box<BramaAstType>>)
 }
 
 #[repr(C)]
@@ -387,39 +445,45 @@ pub enum BramaVmOpCode {
 
 #[derive(PartialEq, Debug)]
 pub struct InnerStorage {
-    pub constants       : Vec<VmObjectType>,
+    pub constants             : Vec<VmObject>,
     pub temp_size             : u16,
     pub temp_counter          : u16,
-    pub variables             : HashMap<String, VmObjectType>,
-    pub memory                : Vec<VmObjectType>,
-    pub total_const_variables : i16
+    pub variables             : HashMap<&'static str, VmObject>,
+    pub memory                : Vec<VmObject>,
+    pub total_const_variables : u16
 }
 
 pub trait Storage {
     /// Build memory block with temporary, constant and variable definitions
     fn build(&mut self);
-    fn get_memory(&self) -> &Vec<VmObjectType>;
+    fn get_memory(&self) -> &Vec<VmObject>;
     fn get_constant_size(&self) -> u16;
     fn get_variable_size(&self) -> u16;
     fn get_temp_size(&self) -> u16;
     fn get_free_temp_slot(&mut self) -> u16;
-    fn inc_temp_size(&mut self);
+    fn set_temp_size(&mut self, value: u16);
 
     fn get_temp_counter(&self) -> u16;
     fn inc_temp_counter(&mut self);
     fn reset_temp_counter(&mut self);
 
-    fn add_variable        (&mut self, name: &str, variable: &VmObjectType);
-    fn add_constant_atom   (&mut self, atom: &String);
-    fn add_constant_empty  (&mut self);
-    fn add_constant_double (&mut self, value: f64);
-    fn add_constant_integer(&mut self, value: i64);
-    fn add_constant_text   (&mut self, value: String);
-    fn add_constant_list   (&mut self);
-    fn add_constant_bool   (&mut self, value: bool);
+    fn add_variable(&mut self, name: &'static str, object: VmObject);
+    fn add_constant(&mut self, object: VmObject);
 }
 
 pub struct BramaCompilerOption {
     pub opcodes : Vec<BramaVmOpCode>,
     pub storages: Vec<InnerStorage>
+}
+
+pub trait StrTrait {
+    fn atom(&self) -> u64;
+}
+
+impl StrTrait for str {
+    fn atom(&self) -> u64 {
+        let mut hasher = DefaultHasher::new();
+        self.hash(&mut hasher);
+        return hasher.finish();
+    }
 }

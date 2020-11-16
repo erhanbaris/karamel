@@ -25,7 +25,7 @@ impl UnaryParser {
                     if let Some(operator) = parser.match_operator(&[
                         BramaOperatorType::Increment,
                         BramaOperatorType::Deccrement]) {
-                        return Ok(BramaAstType::SuffixUnary(operator, Box::new(BramaAstType::Symbol(token.token_type.get_symbol().to_string()))));
+                        return Ok(BramaAstType::SuffixUnary(operator, Box::new(BramaAstType::Symbol(token.token_type.get_symbol()))));
                     }
                     else
                     {
@@ -65,10 +65,10 @@ impl UnaryParser {
                 /* ++variable, --variable*/
                 BramaOperatorType::Increment | BramaOperatorType::Deccrement => {
                     if token.token_type.is_symbol() {
-                        unary_ast = BramaAstType::Symbol(token.token_type.get_symbol().to_string());
+                        unary_ast = BramaAstType::Symbol(token.token_type.get_symbol());
                     }
                 },
-                
+
                 BramaOperatorType::Not => {
                     if token.token_type.is_integer() || token.token_type.is_double() || token.token_type.is_bool() {
                         if let Ok(ast) = PrimativeParser::parse(parser) {

@@ -1,3 +1,6 @@
+use std::hash::{Hash, Hasher};
+use std::collections::hash_map::DefaultHasher;
+
 use crate::types::*;
 use crate::syntax::util::*;
 use crate::syntax::SyntaxParser;
@@ -13,9 +16,9 @@ impl PrimativeParser {
         }
 
         let result = match &token.unwrap().token_type {
-            BramaTokenType::Integer(int)      => Ok(BramaAstType::Primative(BramaPrimative::Integer(*int))),
-            BramaTokenType::Double(double)    => Ok(BramaAstType::Primative(BramaPrimative::Double(*double))),
-            BramaTokenType::Text(text)        => Ok(BramaAstType::Primative(BramaPrimative::Text(text.to_string()))),
+            BramaTokenType::Integer(int)      => Ok(BramaAstType::Primative(BramaPrimative::Number(*int as f64))),
+            BramaTokenType::Double(double)    => Ok(BramaAstType::Primative(BramaPrimative::Number(*double))),
+            BramaTokenType::Text(text)        => Ok(BramaAstType::Primative(BramaPrimative::Text(text))),
             BramaTokenType::Keyword(keyword)  => {
                 match keyword {
                     BramaKeywordType::True  => Ok(BramaAstType::Primative(BramaPrimative::Bool(true))),
@@ -33,7 +36,11 @@ impl PrimativeParser {
                 match &next_token.unwrap().token_type {
                     BramaTokenType::Symbol(symbol) => {
                         parser.consume_token();
-                        Ok(BramaAstType::Primative(BramaPrimative::Atom(symbol.to_string())))
+
+                        let mut hasher = DefaultHasher::new();
+                        symbol.hash(&mut hasher);
+
+                        Ok(BramaAstType::Primative(BramaPrimative::Atom(hasher.finish())))
                     },
                     _ => Ok(BramaAstType::None)
                 }
@@ -95,7 +102,7 @@ impl PrimativeParser {
 
         if let BramaTokenType::Symbol(symbol) = &token.unwrap().token_type {
             parser.consume_token();
-            return Ok(BramaAstType::Symbol(symbol.to_string()));
+            return Ok(BramaAstType::Symbol(symbol));
         }
         return Ok(BramaAstType::None);
     }

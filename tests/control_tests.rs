@@ -22,47 +22,47 @@ mod tests {
         };
     }
 
-    test_compare!(auqality_1, "10 == 10", Ok(BramaAstType::Control {
-        left: Box::new(BramaAstType::Primative(BramaPrimative::Integer(10))), 
+    test_compare!(equality_1, "10 == 10", Ok(BramaAstType::Control {
+        left: Box::new(BramaAstType::Primative(BramaPrimative::Number(10.0))), 
         operator: BramaOperatorType::Equal, 
-        right: Box::new(BramaAstType::Primative(BramaPrimative::Integer(10)))
+        right: Box::new(BramaAstType::Primative(BramaPrimative::Number(10.0)))
     }));
 
-    test_compare!(auqality_2, "10 != 10", Ok(BramaAstType::Control {
-        left: Box::new(BramaAstType::Primative(BramaPrimative::Integer(10))), 
+    test_compare!(equality_2, "10 != 10", Ok(BramaAstType::Control {
+        left: Box::new(BramaAstType::Primative(BramaPrimative::Number(10.0))), 
         operator: BramaOperatorType::NotEqual, 
-        right: Box::new(BramaAstType::Primative(BramaPrimative::Integer(10)))
+        right: Box::new(BramaAstType::Primative(BramaPrimative::Number(10.0)))
     }));
 
-    test_compare!(auqality_3, "10+2 eşitdeğildir 10", Ok(BramaAstType::Control {
+    test_compare!(equality_3, "10+2 eşitdeğildir 10", Ok(BramaAstType::Control {
         left: Box::new(BramaAstType::Binary {
-            left: Box::new(BramaAstType::Primative(BramaPrimative::Integer(10))), 
+            left: Box::new(BramaAstType::Primative(BramaPrimative::Number(10.0))), 
             operator: BramaOperatorType::Addition, 
-            right: Box::new(BramaAstType::Primative(BramaPrimative::Integer(2)))
+            right: Box::new(BramaAstType::Primative(BramaPrimative::Number(2.0)))
         }), 
         operator: BramaOperatorType::NotEqual, 
-        right: Box::new(BramaAstType::Primative(BramaPrimative::Integer(10)))
+        right: Box::new(BramaAstType::Primative(BramaPrimative::Number(10.0)))
     }));
 
-    test_compare!(auqality_4, "10 eşittir 10+2", Ok(BramaAstType::Control {
-        left: Box::new(BramaAstType::Primative(BramaPrimative::Integer(10))),
+    test_compare!(equality_4, "10 eşittir 10+2", Ok(BramaAstType::Control {
+        left: Box::new(BramaAstType::Primative(BramaPrimative::Number(10.0))),
         operator: BramaOperatorType::Equal,
         right: Box::new(BramaAstType::Binary {
-            left: Box::new(BramaAstType::Primative(BramaPrimative::Integer(10))), 
+            left: Box::new(BramaAstType::Primative(BramaPrimative::Number(10.0))), 
             operator: BramaOperatorType::Addition, 
-            right: Box::new(BramaAstType::Primative(BramaPrimative::Integer(2)))
+            right: Box::new(BramaAstType::Primative(BramaPrimative::Number(2.0)))
         })
     }));
     
     test_compare!(and_1, "10 and 10", Ok(BramaAstType::Control {
-        left: Box::new(BramaAstType::Primative(BramaPrimative::Integer(10))), 
+        left: Box::new(BramaAstType::Primative(BramaPrimative::Number(10.0))), 
         operator: BramaOperatorType::And, 
-        right: Box::new(BramaAstType::Primative(BramaPrimative::Integer(10)))
+        right: Box::new(BramaAstType::Primative(BramaPrimative::Number(10.0)))
     }));
     
     test_compare!(or_1, "10 or 10", Ok(BramaAstType::Control {
-        left: Box::new(BramaAstType::Primative(BramaPrimative::Integer(10))), 
+        left: Box::new(BramaAstType::Primative(BramaPrimative::Number(10.0))), 
         operator: BramaOperatorType::Or, 
-        right: Box::new(BramaAstType::Primative(BramaPrimative::Integer(10)))
+        right: Box::new(BramaAstType::Primative(BramaPrimative::Number(10.0)))
     }));
 }

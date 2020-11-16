@@ -34,11 +34,11 @@ mod tests {
         };
     }
 
-    test_first_memory!(memory_1, "10 + 10", vec![VmObjectType::Integer(10), VmObjectType::Empty]);
-    test_first_memory!(memory_2, "10 + 123", vec![VmObjectType::Integer(10), VmObjectType::Integer(123), VmObjectType::Empty]);
-    test_first_memory!(memory_3, "11 + 12 + 13", vec![VmObjectType::Integer(11), VmObjectType::Integer(12), VmObjectType::Integer(13), VmObjectType::Empty, VmObjectType::Empty]);
-    test_first_memory!(memory_4, "11 + 12 + 13 + 14", vec![VmObjectType::Integer(11), VmObjectType::Integer(12), VmObjectType::Integer(13), VmObjectType::Integer(14), VmObjectType::Empty, VmObjectType::Empty, VmObjectType::Empty]);
-    test_first_memory!(memory_5, "'erhan' + 'barış'", vec![VmObjectType::Text("erhan".to_string()), VmObjectType::Text("barış".to_string()), VmObjectType::Empty]);
-    test_first_memory!(memory_6, "'erhan' + '-' + 'barış'", vec![VmObjectType::Text("erhan".to_string()),VmObjectType::Text("-".to_string()), VmObjectType::Text("barış".to_string()), VmObjectType::Empty, VmObjectType::Empty]);
-    test_first_memory!(memory_7, "doğru == yanlış", vec![VmObjectType::Bool(true), VmObjectType::Bool(false), VmObjectType::Empty]);
+    test_first_memory!(memory_1, "10 + 10", vec![BramaPrimative::Number(10.0).convert(), BramaPrimative::Empty.convert()]);
+    test_first_memory!(memory_2, "10 + 123", vec![BramaPrimative::Number(10.0).convert(), BramaPrimative::Number(123.0).convert(), BramaPrimative::Empty.convert()]);
+    test_first_memory!(memory_3, "11 + 12 + 13", vec![BramaPrimative::Number(11.0).convert(), BramaPrimative::Number(12.0).convert(), BramaPrimative::Number(13.0).convert(), BramaPrimative::Empty.convert(), BramaPrimative::Empty.convert()]);
+    test_first_memory!(memory_4, "11 + 12 + 13 + 14", vec![BramaPrimative::Number(11.0).convert(), BramaPrimative::Number(12.0).convert(), BramaPrimative::Number(13.0).convert(), BramaPrimative::Number(14.0).convert(), BramaPrimative::Empty.convert(), BramaPrimative::Empty.convert(), BramaPrimative::Empty.convert()]);
+    test_first_memory!(memory_5, "'erhan' + 'barış'", vec![BramaPrimative::Text("erhan").convert(), BramaPrimative::Text("barış").convert(), BramaPrimative::Empty.convert()]);
+    test_first_memory!(memory_6, "'erhan' + '-' + 'barış'", vec![BramaPrimative::Text("erhan").convert(), BramaPrimative::Text("-").convert(), BramaPrimative::Text("barış").convert(), BramaPrimative::Empty.convert(), BramaPrimative::Empty.convert()]);
+    test_first_memory!(memory_7, "doğru == yanlış", vec![BramaPrimative::Bool(true).convert(), BramaPrimative::Bool(false).convert(), BramaPrimative::Empty.convert()]);
 }

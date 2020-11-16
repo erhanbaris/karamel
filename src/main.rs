@@ -7,6 +7,7 @@ mod compiler;
 use types::*;
 use compiler::*;
 
+
 fn parse(data: &'static str) {
     let mut parser = parser::Parser::new(&data);
     match parser.parse() {
@@ -66,5 +67,5 @@ fn main() {
     }
 */
     //vm::vm::run_vm(&opcodes);
-    parse("10 mod 10");
+    parse("10 == 10");
 }
