@@ -66,5 +66,5 @@ fn main() {
     }
 */
     //vm::vm::run_vm(&opcodes);
-    parse("değil true");
+    parse("10 mod 10");
 }

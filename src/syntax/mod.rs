@@ -30,14 +30,6 @@ impl SyntaxParser {
         }
     }
 
-    #[allow(dead_code)]
-    fn previous_token(&self) -> Result<&Token, ()> {
-        match self.tokens.get(self.index.get() - 1) {
-            Some(token) => Ok(token),
-            None => Err(())
-        }
-    }
-
     fn next_token(&self) -> Result<&Token, ()> {
         match self.tokens.get(self.index.get() + 1) {
             Some(token) => Ok(token),
@@ -45,11 +37,6 @@ impl SyntaxParser {
         }
     }
     
-    #[allow(dead_code)]
-    fn increase(&self) {
-        self.index.set(self.index.get() + 1);
-    }
-
     fn consume_token(&self) -> Option<&Token> {
         self.index.set(self.index.get() + 1);
         self.tokens.get(self.index.get())
@@ -94,13 +81,5 @@ impl SyntaxParser {
                 break;
             }
         }
-    }
-
-    #[allow(dead_code)]
-    fn get_operator(&self, token: &Token) -> BramaOperatorType {
-        return match token.token_type {
-            BramaTokenType::Operator(operator) => operator,
-            _ => BramaOperatorType::None
-        };
     }
 }

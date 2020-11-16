@@ -256,6 +256,7 @@ mod tests {
     test_number!(integer_6, Integer, "1_234_567", 1234567);
     test_number!(integer_7, Integer, "1_234_5_6_7", 1234567);
     test_number!(integer_8, Integer, "1_234_5_6_7_", 1234567);
+    parse_failed!(integer_9, "1024erhan");
 
     test_number!(hex_1, Integer, "0x12", 18);
     test_number!(hex_2, Integer, "0xffffff", 16777215);

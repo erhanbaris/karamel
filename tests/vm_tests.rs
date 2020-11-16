@@ -86,5 +86,11 @@ mod tests {
     test_last_memory!(vm_46, ":erhan eşitdeğildir :erhan", VmObjectType::Bool(false));
     test_last_memory!(vm_47, ":erhan eşittir :barış", VmObjectType::Bool(false));
     test_last_memory!(vm_48, ":erhan eşitdeğildir :barış", VmObjectType::Bool(true));
+    test_last_memory!(vm_49, "1_024 * 1_024 == 1_048_576", VmObjectType::Bool(true));
+    test_last_memory!(vm_50, "empty == empty", VmObjectType::Bool(true));
+    test_last_memory!(vm_51, "empty != empty", VmObjectType::Bool(false));
+    test_last_memory!(vm_52, "yok == yok", VmObjectType::Bool(true));
+    test_last_memory!(vm_53, "yok != yok", VmObjectType::Bool(false));
+    test_last_memory!(vm_54, ":ok - 1 == yok", VmObjectType::Bool(true));
 
 }

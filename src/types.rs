@@ -322,14 +322,6 @@ impl BramaTokenType {
         }
     }
 
-    #[allow(dead_code)]
-    pub fn is_operator(&self) -> bool {
-        return match self {
-            BramaTokenType::Operator(_) => true,
-            _ => false
-        }
-    }
-
     pub fn is_bool(&self) -> bool {
         if self.is_keyword() {
             return match self {
@@ -355,103 +347,11 @@ impl BramaTokenType {
         }
     }
 
-    #[allow(dead_code)]
-    pub fn is_text(&self) -> bool {
-        return match self {
-            BramaTokenType::Text(_) => true,
-            _ => false
-        }
-    }
-
-    #[allow(dead_code)]
-    pub fn is_whitespace(&self) -> bool {
-        return match self {
-            BramaTokenType::WhiteSpace(_) => true,
-            _ => false
-        }
-    }
-
-    #[allow(dead_code)]
-    pub fn is_newline(&self) -> bool {
-        return match self {
-            BramaTokenType::NewLine(_) => true,
-            _ => false
-        }
-    }
-
-    #[allow(dead_code)]
-    pub fn get_integer(&self) -> i64 {
-        return match self {
-            BramaTokenType::Integer(integer) => *integer,
-            _ => 0
-        }
-    }
-
-    #[allow(dead_code)]
-    pub fn get_double(&self) -> f64 {
-        return match self {
-            BramaTokenType::Double(double) => *double,
-            _ => 0.0
-        }
-    }
-
-    #[allow(dead_code)]
-    pub fn get_operator(&self) -> BramaOperatorType {
-        return match self {
-            BramaTokenType::Operator(operator) => *operator,
-            _ => BramaOperatorType::None
-        }
-    }
-
     pub fn get_symbol(&self) -> &str {
         return match self {
             BramaTokenType::Symbol(string) => string,
             _ => ""
         }
-    }
-
-    #[allow(dead_code)]
-    pub fn get_keyword(&self) -> BramaKeywordType {
-        return match self {
-            BramaTokenType::Keyword(keyword) => *keyword,
-            _ => BramaKeywordType::None
-        }
-    }
-
-    #[allow(dead_code)]
-    pub fn get_text(&self) -> &str {
-        return match self {
-            BramaTokenType::Text(string) => string,
-            _ => ""
-        }
-    }
-
-    #[allow(dead_code)]
-    pub fn get_whitespace(&self) -> u8 {
-        return match self {
-            BramaTokenType::WhiteSpace(count) => *count,
-            _ => 0
-        }
-    }
-
-    #[allow(dead_code)]
-    pub fn get_newline(&self) -> u8 {
-        return match self {
-            BramaTokenType::NewLine(count) => *count,
-            _ => 0
-        }
-    }
-
-    #[allow(dead_code)]
-    pub fn get_bool(&self) -> bool {
-        if self.is_keyword() {
-            return match self {
-                BramaTokenType::Keyword(BramaKeywordType::True) => true,
-                BramaTokenType::Keyword(BramaKeywordType::False) => false,
-                _ => false
-            }
-        }
-        return false; 
     }
 }
 

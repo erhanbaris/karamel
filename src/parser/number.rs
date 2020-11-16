@@ -169,11 +169,16 @@ impl TokenParser for NumberParser {
     fn parse(&self, tokinizer: &mut Tokinizer) -> Result<BramaTokenType, (&'static str, u32, u32)> {
         let number_system = self.detect_number_system(tokinizer);
 
-        return match number_system {
+        let result = match number_system {
             BramaNumberSystem::Binary      => Ok(self.parse_binary(tokinizer)),
             BramaNumberSystem::Octal       => Ok(self.parse_octal(tokinizer)),
             BramaNumberSystem::Decimal     => Ok(self.parse_decimal(tokinizer)),
             BramaNumberSystem::Hexadecimal => Ok(self.parse_hex(tokinizer))
         };
+        
+        if tokinizer.get_char().is_alphabetic() && !tokinizer.get_char().is_whitespace() {
+            return Err(("Number parser error", tokinizer.line, tokinizer.column));
+        }
+        return result;
     }
 }
