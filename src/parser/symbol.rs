@@ -34,10 +34,9 @@ impl TokenParser for SymbolParser {
             if ch.is_whitespace() || ch == '\'' || ch == '"' {
                 break;
             }
-            end += 1;
+            end += ch.len_utf8();
             tokinizer.increase_index();
         }
-
         if self.keywords.contains_key(&tokinizer.data[start..end]) {
             let keyword = match self.keywords.get(&tokinizer.data[start..end]) {
                 Some(keyword) => keyword,
@@ -50,7 +49,6 @@ impl TokenParser for SymbolParser {
             }
         }
 
-        let end = tokinizer.data.char_indices().map(|(i, _)| i).nth(end).unwrap();
         return Ok(BramaTokenType::Symbol(&tokinizer.data[start..end]));
     }
 }

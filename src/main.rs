@@ -6,6 +6,7 @@ mod compiler;
 
 use types::*;
 use compiler::*;
+use parser::*;
 
 
 fn parse(data: &'static str) {
@@ -67,5 +68,34 @@ fn main() {
     }
 */
     //vm::vm::run_vm(&opcodes);
-    parse("10 == 10");
+    parse("10 + 10");
+}
+
+#[warn(dead_code)]
+fn memory_5_1 () {
+    //text : &'static str, result : Vec<BramaPrimative>
+    let mut converted_memory = Vec::new();
+    let text   = "doğru == yanlış";
+    let result = vec![BramaPrimative::Bool(true), BramaPrimative::Bool(false), BramaPrimative::Bool(false)];
+    let mut parser = Parser::new(text);
+    match parser.parse() {
+        Err(_) => assert_eq!(true, false),
+        _ => ()
+    };
+
+    let syntax = SyntaxParser::new(Box::new(parser.tokens().to_vec()));
+    let syntax_result = syntax.parse();
+    match syntax_result {
+        Err(_) => assert_eq!(true, false),
+        _ => ()
+    };
+
+    let opcode_compiler  = InterpreterCompiler {};
+    let mut compiler_options = BramaCompilerOption::new();
+
+    opcode_compiler.prepare_variable_store(&syntax_result.unwrap(), &mut compiler_options);
+    for object in &compiler_options.storages[0].memory {
+        converted_memory.push(object.convert().unwrap());
+    }    
+    assert_eq!(converted_memory, result);
 }

@@ -32,7 +32,7 @@ mod tests {
                 opcode_compiler.prepare_variable_store(ast, &mut compiler_options);
                 if let Ok(_) = opcode_compiler.compile(ast, &mut compiler_options) {
                     vm::run_vm(&mut compiler_options);
-                    assert_eq!(*compiler_options.storages[0].memory.last().unwrap(), $result.convert());
+                    assert_eq!(compiler_options.storages[0].memory.last().unwrap().convert().unwrap(), $result);
                 }
             }
         };
@@ -92,5 +92,6 @@ mod tests {
     test_last_memory!(vm_52, "yok == yok", BramaPrimative::Bool(true));
     test_last_memory!(vm_53, "yok != yok", BramaPrimative::Bool(false));
     test_last_memory!(vm_54, ":ok - 1 == yok", BramaPrimative::Bool(true));
+    test_last_memory!(vm_55, "test_1 == test_2", BramaPrimative::Bool(true));
 
 }

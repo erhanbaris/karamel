@@ -16,23 +16,37 @@ impl BramaCompilerOption {
 
 impl Storage for InnerStorage {
     fn build(&mut self) {
-        self.memory.reserve((self.get_constant_size() + self.get_temp_size()).into());
+        self.constant_size = self.constants.len() as u16;
+
+        /* Allocate memory */
+        self.memory.reserve((self.get_constant_size() + self.get_variable_size() + self.get_temp_size()).into());
+
+        /* Move all constants informations to memory location */
         self.memory.append(&mut self.constants);
 
-        for _ in 0..self.get_temp_size() {
+        /*  Allocate variable memory and update referances */
+        let mut index = self.get_constant_size();
+        for (_, value) in self.variables.iter_mut() {
+            self.memory.push(BramaPrimative::Empty.convert());
+            *value = index;
+            index += 1;
+        }
+
+        let start_index = self.get_temp_size();
+        for _ in 0..start_index {
             self.memory.push(BramaPrimative::Empty.convert());
         }
     }
 
     fn get_memory(&self) -> &Vec<VmObject> { &self.memory }
-    fn get_constant_size(&self) -> u16 { self.constants.len() as u16 }
+    fn get_constant_size(&self) -> u16 { self.constant_size }
     fn get_variable_size(&self) -> u16 { self.variables.len() as u16 }
     fn get_temp_size(&self) -> u16     { self.temp_size }
-    fn set_temp_size(&mut self, value: u16)        { self.temp_size = value; }
+    fn set_temp_size(&mut self, value: u16) { self.temp_size = value; }
     fn get_free_temp_slot(&mut self) -> u16 { 
         let index = self.temp_counter;
         self.temp_counter += 1;
-        return self.get_variable_size() + index;
+        return self.get_constant_size() + self.get_variable_size() + index;
     }
 
     fn get_temp_counter(&self) -> u16 { self.temp_counter }
@@ -50,17 +64,58 @@ impl Storage for InnerStorage {
         };
     }
 
-    fn add_variable(&mut self, name: &'static str, variable: VmObject) { 
+    fn add_variable(&mut self, name: &'static str) { 
         if !self.variables.contains_key(&name[..]) {
-            self.variables.insert(name, variable);
+            self.variables.insert(name, 0);
         }
-     }
+    }
+
+    fn set_variable_value(&mut self, name: &'static str, object: VmObject) {
+        match self.get_variable_location(name) {
+            Some(location) => {
+                self.memory[location as usize] = object;
+            },
+            _ => ()
+        };
+    }
+
+    fn get_variable_location(&mut self, name: &'static str) -> Option<u16> {
+        if self.variables.contains_key(name) {
+            return Some(*self.variables.get(name).unwrap());
+        }
+        return None;
+    }
+
+    fn get_constant_location(&mut self, object: VmObject) -> Option<u16> {
+        return match self.memory.iter().position(|x| { return *x == object; }) {
+            Some(number) => Some(number as u16),
+            _ => None
+        };
+    }
+
+    fn dump(&self) {
+        println!("-------------------------------");
+        println!("        MEMORY DUMP");
+        println!("-------------------------------");
+        for (index, item) in self.memory.iter().enumerate() {
+            println!("| {:?} | {:?}", index, item.convert());
+        }
+        println!("-------------------------------");
+        println!("-------------------------------");
+        println!("        VARIABLE DUMP");
+        println!("-------------------------------");
+        for (variable, value) in &self.variables {
+            println!("| {:?}  [{:?}]", variable, value);
+        }
+        println!("-------------------------------");
+    }
 }
 
 impl InnerStorage {
     fn new() -> InnerStorage {
         InnerStorage {
             constants: Vec::new(),
+            constant_size: 0,
             temp_size: 0,
             temp_counter: 0,
             total_const_variables: 0,
@@ -101,9 +156,11 @@ impl Compiler for InterpreterCompiler {
         Ok(())
     }
 }
+
 impl InterpreterCompiler {
     fn inner_compile(&self, ast: &BramaAstType, upper_ast: &BramaAstType, compiler_info: &mut CompileInfo, options: &mut BramaCompilerOption, storage_index: usize) -> CompilerResult {
         match ast {
+            BramaAstType::Symbol(variable) => self.symbol(variable, upper_ast, compiler_info, options, storage_index),
             BramaAstType::Control { left, operator, right } => self.control(left, operator, right, upper_ast, compiler_info, options, storage_index),
             BramaAstType::Binary { left, operator, right } => self.binary(left, operator, right, upper_ast, compiler_info, options, storage_index),
             BramaAstType::Primative(primative) => self.primative(primative, compiler_info, options, storage_index),
@@ -129,7 +186,7 @@ impl InterpreterCompiler {
             BramaAstType::PrefixUnary(_, inner_ast) => self.add_ast(inner_ast, ast, options, storage_index),
             BramaAstType::SuffixUnary(_, inner_ast) => self.add_ast(inner_ast, ast, options, storage_index),
             BramaAstType::Symbol(string) => {
-                options.storages.get_mut(storage_index).unwrap().add_variable(string, BramaPrimative::Empty.convert());
+                options.storages.get_mut(storage_index).unwrap().add_variable(string);
                 0
             },
             BramaAstType::Primative(primative) => {
@@ -144,7 +201,7 @@ impl InterpreterCompiler {
             }
             _ => 0
         };
-
+        println!("temp_count {:?}", temp_count);
         return temp_count;
     }
 
@@ -159,6 +216,15 @@ impl InterpreterCompiler {
             },
             _ => Err(("Value not found in storage", 0, 0))
         }
+    }
+
+    fn symbol(&self, variable: &'static str, _: &BramaAstType, compiler_info: &mut CompileInfo, options: &mut BramaCompilerOption, storage_index: usize) -> CompilerResult {
+        compiler_info.index = match options.storages.get_mut(storage_index).unwrap().get_variable_location(variable) {
+            Some(location) => location as i16,
+            _ => return Err(("Variable not found in storage", 0, 0))
+        };
+
+        Ok(())
     }
 
     fn control(&self, left_ast: &BramaAstType, operator: &BramaOperatorType, right_ast: &BramaAstType, _: &BramaAstType, compiler_info: &mut CompileInfo, options: &mut BramaCompilerOption, storage_index: usize) -> CompilerResult {
