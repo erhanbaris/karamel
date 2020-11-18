@@ -213,14 +213,20 @@ pub enum BramaPrimative {
     Text(String)
 }
 
+/*impl Drop for BramaPrimative {
+    fn drop(&mut self) {
+        println!("Dropping BramaPrimative!");
+    }
+}*/
+
 impl VmObject {
-    pub fn convert(primative: Rc<BramaPrimative>) -> VmObject {
-        match &*primative {
+    pub fn convert(primative: BramaPrimative) -> VmObject {
+        match primative {
             BramaPrimative::Empty            => VmObject(QNAN | EMPTY_FLAG),
             BramaPrimative::Number(number)   => VmObject(number.to_bits()),
-            BramaPrimative::Bool(boolean)    => VmObject(QNAN | if *boolean { TRUE_FLAG } else { FALSE_FLAG }),
+            BramaPrimative::Bool(boolean)    => VmObject(QNAN | if boolean { TRUE_FLAG } else { FALSE_FLAG }),
             _                                => VmObject(QNAN | POINTER_FLAG | (
-                POINTER_MASK & (Rc::into_raw(primative)) as u64
+                POINTER_MASK & (Box::into_raw(Box::new(primative))) as u64
             ))
         }
     }
@@ -233,7 +239,7 @@ impl VmObject {
             t if t == (QNAN | TRUE_FLAG)  => BramaPrimative::Bool(true),
             p if (p & POINTER_FLAG) == POINTER_FLAG => {
                 let pointer = (self.0 & POINTER_MASK) as *mut BramaPrimative;
-                (*unsafe { Rc::from_raw(pointer) }).clone()
+                Box::leak(unsafe { Box::from_raw(pointer) }).clone()
             },
             _ => BramaPrimative::Empty
         }
@@ -445,7 +451,7 @@ pub trait Storage {
 
     fn add_variable(&mut self, name: &'static str);
     fn set_variable_value(&mut self, name: &'static str, object: VmObject);
-    fn add_constant(&mut self, object: &BramaPrimative);
+    fn add_constant(&mut self, object: BramaPrimative);
 
     fn get_variable_location(&mut self, name: &'static str) -> Option<u16>;
     fn get_constant_location(&mut self, object: &BramaPrimative) -> Option<u16>;
