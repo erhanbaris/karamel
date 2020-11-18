@@ -1,6 +1,7 @@
 use std::vec::Vec;
 use std::collections::HashMap;
 use std::cmp;
+use std::rc::{Rc, Weak};
 
 
 use crate::types::*;
@@ -27,14 +28,14 @@ impl Storage for InnerStorage {
         /*  Allocate variable memory and update referances */
         let mut index = self.get_constant_size();
         for (_, value) in self.variables.iter_mut() {
-            self.memory.push(VmObject::convert(BramaPrimative::Empty.clone()));
+            self.memory.push(VmObject::convert(Rc::new(BramaPrimative::Empty)));
             *value = index;
             index += 1;
         }
 
         let start_index = self.get_temp_size();
         for _ in 0..start_index {
-            self.memory.push(VmObject::convert(BramaPrimative::Empty.clone()));
+            self.memory.push(VmObject::convert(Rc::new(BramaPrimative::Empty)));
         }
     }
 
@@ -54,13 +55,12 @@ impl Storage for InnerStorage {
     fn reset_temp_counter(&mut self)  { self.temp_counter = 0; }
 
     fn add_constant(&mut self, value: &BramaPrimative) {
-        let object = VmObject::convert(value.clone());
         let position = self.constants.iter().position(|x| {
-            return *x == object;
+            return x.deref() == *value;
         });
         
         match position {
-            None => self.constants.push(object),
+            None => self.constants.push(VmObject::convert(Rc::new(value.clone()))),
             _ => ()
         };
     }
@@ -88,7 +88,7 @@ impl Storage for InnerStorage {
     }
 
     fn get_constant_location(&mut self, value: &BramaPrimative) -> Option<u16> {
-        let object = VmObject::convert(value.clone());
+        let object = VmObject::convert(Rc::new(value.clone()));
         return match self.memory.iter().position(|x| { return *x == object; }) {
             Some(number) => Some(number as u16),
             _ => None

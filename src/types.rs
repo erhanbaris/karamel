@@ -6,6 +6,7 @@ use std::result::Result;
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 use std::collections::hash_map::DefaultHasher;
+use std::rc::{Rc, Weak};
 
 pub type ParseResult        = Result<(), (&'static str, u32, u32)>;
 pub type AstResult          = Result<BramaAstType, (&'static str, u32, u32)>;
@@ -213,20 +214,18 @@ pub enum BramaPrimative {
 }
 
 impl VmObject {
-    pub fn convert(primative: BramaPrimative) -> VmObject {
-        match primative {
+    pub fn convert(primative: Rc<BramaPrimative>) -> VmObject {
+        match &*primative {
             BramaPrimative::Empty            => VmObject(QNAN | EMPTY_FLAG),
             BramaPrimative::Number(number)   => VmObject(number.to_bits()),
-            BramaPrimative::Bool(boolean)    => VmObject(QNAN | if boolean { TRUE_FLAG } else { FALSE_FLAG }),
-            other                            => VmObject(QNAN | POINTER_FLAG | (
-                POINTER_MASK & (Box::into_raw(Box::new(other.clone()))) as u64
+            BramaPrimative::Bool(boolean)    => VmObject(QNAN | if *boolean { TRUE_FLAG } else { FALSE_FLAG }),
+            _                                => VmObject(QNAN | POINTER_FLAG | (
+                POINTER_MASK & (Rc::into_raw(primative)) as u64
             ))
         }
     }
 
     pub fn deref(&self) -> BramaPrimative {
-        let VmObject(bits) = self;
-
         match self.0 {
             n if (n & QNAN) != QNAN       => BramaPrimative::Number(f64::from_bits(n)),
             e if e == (QNAN | EMPTY_FLAG) => BramaPrimative::Empty,
@@ -234,7 +233,7 @@ impl VmObject {
             t if t == (QNAN | TRUE_FLAG)  => BramaPrimative::Bool(true),
             p if (p & POINTER_FLAG) == POINTER_FLAG => {
                 let pointer = (self.0 & POINTER_MASK) as *mut BramaPrimative;
-                (*unsafe { Box::from_raw(pointer) }).clone()
+                (*unsafe { Rc::from_raw(pointer) }).clone()
             },
             _ => BramaPrimative::Empty
         }
