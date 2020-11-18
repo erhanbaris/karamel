@@ -30,7 +30,7 @@ mod tests {
             
                 opcode_compiler.prepare_variable_store(&syntax_result.unwrap(), &mut compiler_options);
                 for object in &compiler_options.storages[0].memory {
-                    converted_memory.push(object.convert().unwrap());
+                    converted_memory.push(object.deref());
                 }    
                 assert_eq!(converted_memory, $result);
             }
@@ -41,7 +41,5 @@ mod tests {
     memory_check!(memory_2, "10 + 123", vec![BramaPrimative::Number(10.0), BramaPrimative::Number(123.0), BramaPrimative::Empty]);
     memory_check!(memory_3, "11 + 12 + 13", vec![BramaPrimative::Number(11.0), BramaPrimative::Number(12.0), BramaPrimative::Number(13.0), BramaPrimative::Empty, BramaPrimative::Empty]);
     memory_check!(memory_4, "11 + 12 + 13 + 14", vec![BramaPrimative::Number(11.0), BramaPrimative::Number(12.0), BramaPrimative::Number(13.0), BramaPrimative::Number(14.0), BramaPrimative::Empty, BramaPrimative::Empty, BramaPrimative::Empty]);
-    memory_check!(memory_5, "'erhan' + 'barış'", vec![BramaPrimative::Text("erhan"), BramaPrimative::Text("barış"), BramaPrimative::Empty]);
-    memory_check!(memory_6, "'erhan' + '-' + 'barış'", vec![BramaPrimative::Text("erhan"), BramaPrimative::Text("-"), BramaPrimative::Text("barış"), BramaPrimative::Empty, BramaPrimative::Empty]);
     memory_check!(memory_7, "doğru == yanlış", vec![BramaPrimative::Bool(true), BramaPrimative::Bool(false), BramaPrimative::Empty]);
 }

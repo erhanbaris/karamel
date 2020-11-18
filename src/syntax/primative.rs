@@ -18,7 +18,7 @@ impl PrimativeParser {
         let result = match &token.unwrap().token_type {
             BramaTokenType::Integer(int)      => Ok(BramaAstType::Primative(BramaPrimative::Number(*int as f64))),
             BramaTokenType::Double(double)    => Ok(BramaAstType::Primative(BramaPrimative::Number(*double))),
-            BramaTokenType::Text(text)        => Ok(BramaAstType::Primative(BramaPrimative::Text(text))),
+            BramaTokenType::Text(text)        => Ok(BramaAstType::Primative(BramaPrimative::Text(text.to_string()))),
             BramaTokenType::Keyword(keyword)  => {
                 match keyword {
                     BramaKeywordType::True  => Ok(BramaAstType::Primative(BramaPrimative::Bool(true))),

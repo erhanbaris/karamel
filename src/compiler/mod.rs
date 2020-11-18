@@ -27,14 +27,14 @@ impl Storage for InnerStorage {
         /*  Allocate variable memory and update referances */
         let mut index = self.get_constant_size();
         for (_, value) in self.variables.iter_mut() {
-            self.memory.push(BramaPrimative::Empty.convert());
+            self.memory.push(VmObject::convert(BramaPrimative::Empty.clone()));
             *value = index;
             index += 1;
         }
 
         let start_index = self.get_temp_size();
         for _ in 0..start_index {
-            self.memory.push(BramaPrimative::Empty.convert());
+            self.memory.push(VmObject::convert(BramaPrimative::Empty.clone()));
         }
     }
 
@@ -53,13 +53,14 @@ impl Storage for InnerStorage {
     fn inc_temp_counter(&mut self)    { self.temp_counter += 1; }
     fn reset_temp_counter(&mut self)  { self.temp_counter = 0; }
 
-    fn add_constant(&mut self, value: VmObject) {
+    fn add_constant(&mut self, value: &BramaPrimative) {
+        let object = VmObject::convert(value.clone());
         let position = self.constants.iter().position(|x| {
-            return *x == value;
+            return *x == object;
         });
         
         match position {
-            None => self.constants.push(value),
+            None => self.constants.push(object),
             _ => ()
         };
     }
@@ -86,7 +87,8 @@ impl Storage for InnerStorage {
         return None;
     }
 
-    fn get_constant_location(&mut self, object: VmObject) -> Option<u16> {
+    fn get_constant_location(&mut self, value: &BramaPrimative) -> Option<u16> {
+        let object = VmObject::convert(value.clone());
         return match self.memory.iter().position(|x| { return *x == object; }) {
             Some(number) => Some(number as u16),
             _ => None
@@ -98,7 +100,7 @@ impl Storage for InnerStorage {
         println!("        MEMORY DUMP");
         println!("-------------------------------");
         for (index, item) in self.memory.iter().enumerate() {
-            println!("| {:?} | {:?}", index, item.convert());
+            println!("| {:?} | {:?}", index, item.deref());
         }
         println!("-------------------------------");
         println!("-------------------------------");
@@ -124,9 +126,9 @@ impl InnerStorage {
         }
     }
 
-    fn find_const_variable(&self, obj: VmObject) -> Option<usize> {
+    fn find_const_variable(&self, obj: &BramaPrimative) -> Option<usize> {
         self.memory.iter().position(|x| {
-            return *x == obj;
+            return x.deref() == *obj;
         })
     }
 }
@@ -190,7 +192,7 @@ impl InterpreterCompiler {
                 0
             },
             BramaAstType::Primative(primative) => {
-                options.storages.get_mut(storage_index).unwrap().add_constant(primative.convert());
+                options.storages.get_mut(storage_index).unwrap().add_constant(primative);
                 if let BramaPrimative::List(list) = primative {
                     let mut list_temp_count = 0;
                     for array_item in list {
@@ -208,7 +210,7 @@ impl InterpreterCompiler {
     fn primative(&self, primative: &BramaPrimative, compiler_info: &mut CompileInfo, options: &mut BramaCompilerOption, storage_index: usize) -> CompilerResult {
         let storage :&InnerStorage = &options.storages[storage_index];
 
-        let result = storage.find_const_variable(primative.convert());
+        let result = storage.find_const_variable(primative);
         match result {
             Some(index) => {
                 compiler_info.index = index as i16;

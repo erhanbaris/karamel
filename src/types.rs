@@ -23,7 +23,8 @@ pub const FALSE_FLAG:   u64 = QNAN | TAG_FALSE;
 pub const TRUE_FLAG:    u64 = QNAN | TAG_TRUE;
 pub const EMPTY_FLAG:   u64 = QNAN | TAG_NULL;
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Hash)]
+#[repr(transparent)]
 pub struct VmObject(pub u64);
 
 #[derive(Clone, Copy)]
@@ -208,41 +209,34 @@ pub enum BramaPrimative {
     Bool(bool),
     List(Vec<Box<BramaAstType>>),
     Atom(u64),
-    Text(&'static str)
+    Text(String)
 }
 
-impl BramaPrimative {
-    pub fn convert(&self) -> VmObject {
-        match self {
+impl VmObject {
+    pub fn convert(primative: BramaPrimative) -> VmObject {
+        match primative {
             BramaPrimative::Empty            => VmObject(QNAN | EMPTY_FLAG),
             BramaPrimative::Number(number)   => VmObject(number.to_bits()),
-            BramaPrimative::Bool(boolean)    => VmObject(QNAN | if *boolean { TRUE_FLAG } else { FALSE_FLAG }),
-            _                                => VmObject(QNAN | POINTER_FLAG | (
-                POINTER_MASK & (Box::into_raw(Box::new(self))) as u64
+            BramaPrimative::Bool(boolean)    => VmObject(QNAN | if boolean { TRUE_FLAG } else { FALSE_FLAG }),
+            other                            => VmObject(QNAN | POINTER_FLAG | (
+                POINTER_MASK & (Box::into_raw(Box::new(other.clone()))) as u64
             ))
         }
     }
-}
 
+    pub fn deref(&self) -> BramaPrimative {
+        let VmObject(bits) = self;
 
-impl VmObject {
-    pub fn convert(&self) -> Option<BramaPrimative> {
         match self.0 {
-            n if (n & QNAN) != QNAN       => Some(BramaPrimative::Number(f64::from_bits(n))),
-            e if e == (QNAN | EMPTY_FLAG) => Some(BramaPrimative::Empty),
-            f if f == (QNAN | FALSE_FLAG) => Some(BramaPrimative::Bool(false)),
-            t if t == (QNAN | TRUE_FLAG)  => Some(BramaPrimative::Bool(true)),
+            n if (n & QNAN) != QNAN       => BramaPrimative::Number(f64::from_bits(n)),
+            e if e == (QNAN | EMPTY_FLAG) => BramaPrimative::Empty,
+            f if f == (QNAN | FALSE_FLAG) => BramaPrimative::Bool(false),
+            t if t == (QNAN | TRUE_FLAG)  => BramaPrimative::Bool(true),
             p if (p & POINTER_FLAG) == POINTER_FLAG => {
-                let pointer = (self.0 & POINTER_MASK) as *mut &BramaPrimative;
-                let data    = unsafe { *Box::from_raw(pointer) };
-                match data {
-                    BramaPrimative::Atom(atom) => Some(BramaPrimative::Atom(*atom)),
-                    BramaPrimative::List(list) => Some(BramaPrimative::List(list.to_vec())),
-                    BramaPrimative::Text(text) => Some(BramaPrimative::Text(text)),
-                    _ => None
-                }
+                let pointer = (self.0 & POINTER_MASK) as *mut BramaPrimative;
+                (*unsafe { Box::from_raw(pointer) }).clone()
             },
-            _ => None
+            _ => BramaPrimative::Empty
         }
     }
 }
@@ -452,10 +446,10 @@ pub trait Storage {
 
     fn add_variable(&mut self, name: &'static str);
     fn set_variable_value(&mut self, name: &'static str, object: VmObject);
-    fn add_constant(&mut self, object: VmObject);
+    fn add_constant(&mut self, object: &BramaPrimative);
 
     fn get_variable_location(&mut self, name: &'static str) -> Option<u16>;
-    fn get_constant_location(&mut self, object: VmObject) -> Option<u16>;
+    fn get_constant_location(&mut self, object: &BramaPrimative) -> Option<u16>;
 
     fn dump(&self);
 }

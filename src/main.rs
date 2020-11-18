@@ -68,7 +68,7 @@ fn main() {
     }
 */
     //vm::vm::run_vm(&opcodes);
-    parse("10 + 10");
+    parse("'erhan' == 'barış'");
 }
 
 #[warn(dead_code)]
@@ -95,7 +95,7 @@ fn memory_5_1 () {
 
     opcode_compiler.prepare_variable_store(&syntax_result.unwrap(), &mut compiler_options);
     for object in &compiler_options.storages[0].memory {
-        converted_memory.push(object.convert().unwrap());
+        converted_memory.push(object.deref());
     }    
     assert_eq!(converted_memory, result);
 }
