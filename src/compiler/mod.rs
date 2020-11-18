@@ -28,14 +28,14 @@ impl Storage for InnerStorage {
         /*  Allocate variable memory and update referances */
         let mut index = self.get_constant_size();
         for (_, value) in self.variables.iter_mut() {
-            self.memory.push(VmObject::convert(BramaPrimative::Empty));
+            self.memory.push(VmObject::convert(&BramaPrimative::Empty));
             *value = index;
             index += 1;
         }
 
         let start_index = self.get_temp_size();
         for _ in 0..start_index {
-            self.memory.push(VmObject::convert(BramaPrimative::Empty));
+            self.memory.push(VmObject::convert(&BramaPrimative::Empty));
         }
     }
 
@@ -54,13 +54,13 @@ impl Storage for InnerStorage {
     fn inc_temp_counter(&mut self)    { self.temp_counter += 1; }
     fn reset_temp_counter(&mut self)  { self.temp_counter = 0; }
 
-    fn add_constant(&mut self, value: BramaPrimative) {
+    fn add_constant(&mut self, value: &BramaPrimative) {
         let position = self.constants.iter().position(|x| {
-            return x.deref() == value;
+            return x.deref() == *value;
         });
         
         match position {
-            None => self.constants.push(VmObject::convert(value.clone())),
+            None => self.constants.push(VmObject::convert(value)),
             _ => ()
         };
     }
@@ -88,7 +88,7 @@ impl Storage for InnerStorage {
     }
 
     fn get_constant_location(&mut self, value: &BramaPrimative) -> Option<u16> {
-        let object = VmObject::convert(value.clone());
+        let object = VmObject::convert(value);
         return match self.memory.iter().position(|x| { return *x == object; }) {
             Some(number) => Some(number as u16),
             _ => None
@@ -193,7 +193,7 @@ impl InterpreterCompiler {
                 0
             },
             BramaAstType::Primative(primative) => {
-                options.storages.get_mut(storage_index).unwrap().add_constant(primative.clone());
+                options.storages.get_mut(storage_index).unwrap().add_constant(primative);
                 if let BramaPrimative::List(list) = primative {
                     let mut list_temp_count = 0;
                     for array_item in list {
