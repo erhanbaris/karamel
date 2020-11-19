@@ -6,6 +6,8 @@ use std::result::Result;
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 use std::collections::hash_map::DefaultHasher;
+use std::mem::ManuallyDrop;
+
 
 pub type ParseResult        = Result<(), (&'static str, u32, u32)>;
 pub type AstResult          = Result<BramaAstType, (&'static str, u32, u32)>;
@@ -23,7 +25,8 @@ pub const FALSE_FLAG:   u64 = QNAN | TAG_FALSE;
 pub const TRUE_FLAG:    u64 = QNAN | TAG_TRUE;
 pub const EMPTY_FLAG:   u64 = QNAN | TAG_NULL;
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Hash)]
+#[repr(transparent)]
 pub struct VmObject(pub u64);
 
 #[derive(Clone, Copy)]
@@ -158,9 +161,9 @@ pub enum BramaTokenType {
     None,
     Integer(i64),
     Double(f64),
-    Symbol(&'static str),
+    Symbol(String),
     Operator(BramaOperatorType),
-    Text(&'static str),
+    Text(String),
     Keyword(BramaKeywordType),
     WhiteSpace(u8),
     NewLine(u8)
@@ -208,41 +211,38 @@ pub enum BramaPrimative {
     Bool(bool),
     List(Vec<Box<BramaAstType>>),
     Atom(u64),
-    Text(&'static str)
+    Text(String)
 }
 
-impl BramaPrimative {
-    pub fn convert(&self) -> VmObject {
-        match self {
+/*impl Drop for BramaPrimative {
+    fn drop(&mut self) {
+        println!("Dropping BramaPrimative!, {:?}", self);
+    }
+}*/
+
+impl VmObject {
+    pub fn convert(primative: &BramaPrimative) -> VmObject {
+        match primative {
             BramaPrimative::Empty            => VmObject(QNAN | EMPTY_FLAG),
             BramaPrimative::Number(number)   => VmObject(number.to_bits()),
             BramaPrimative::Bool(boolean)    => VmObject(QNAN | if *boolean { TRUE_FLAG } else { FALSE_FLAG }),
             _                                => VmObject(QNAN | POINTER_FLAG | (
-                POINTER_MASK & (Box::into_raw(Box::new(self))) as u64
+                POINTER_MASK & (Box::into_raw(Box::new(primative))) as u64
             ))
         }
     }
-}
 
-
-impl VmObject {
-    pub fn convert(&self) -> Option<BramaPrimative> {
+    pub fn deref(&self) -> BramaPrimative {
         match self.0 {
-            n if (n & QNAN) != QNAN       => Some(BramaPrimative::Number(f64::from_bits(n))),
-            e if e == (QNAN | EMPTY_FLAG) => Some(BramaPrimative::Empty),
-            f if f == (QNAN | FALSE_FLAG) => Some(BramaPrimative::Bool(false)),
-            t if t == (QNAN | TRUE_FLAG)  => Some(BramaPrimative::Bool(true)),
+            n if (n & QNAN) != QNAN       => BramaPrimative::Number(f64::from_bits(n)),
+            e if e == (QNAN | EMPTY_FLAG) => BramaPrimative::Empty,
+            f if f == (QNAN | FALSE_FLAG) => BramaPrimative::Bool(false),
+            t if t == (QNAN | TRUE_FLAG)  => BramaPrimative::Bool(true),
             p if (p & POINTER_FLAG) == POINTER_FLAG => {
                 let pointer = (self.0 & POINTER_MASK) as *mut &BramaPrimative;
-                let data    = unsafe { *Box::from_raw(pointer) };
-                match data {
-                    BramaPrimative::Atom(atom) => Some(BramaPrimative::Atom(*atom)),
-                    BramaPrimative::List(list) => Some(BramaPrimative::List(list.to_vec())),
-                    BramaPrimative::Text(text) => Some(BramaPrimative::Text(text)),
-                    _ => None
-                }
+                Box::leak(unsafe { Box::from_raw(pointer) }).clone()
             },
-            _ => None
+            _ => BramaPrimative::Empty
         }
     }
 }
@@ -271,7 +271,7 @@ pub enum BramaAstType {
     Assign,
     Loop,
     IfStatement,*/
-    Symbol(&'static str)
+    Symbol(String)
 }
 
 impl Tokinizer {
@@ -398,10 +398,10 @@ impl BramaTokenType {
         }
     }
 
-    pub fn get_symbol(&self) -> &'static str {
+    pub fn get_symbol(&self) -> String {
         return match self {
-            BramaTokenType::Symbol(string) => string,
-            _ => ""
+            BramaTokenType::Symbol(string) => string.to_string(),
+            _ => String::from("")
         }
     }
 }
@@ -431,7 +431,7 @@ pub struct InnerStorage {
     pub constant_size         : u16,
     pub temp_size             : u16,
     pub temp_counter          : u16,
-    pub variables             : HashMap<&'static str, u16>,
+    pub variables             : HashMap<String, u16>,
     pub memory                : Vec<VmObject>,
     pub total_const_variables : u16
 }
@@ -450,12 +450,12 @@ pub trait Storage {
     fn inc_temp_counter(&mut self);
     fn reset_temp_counter(&mut self);
 
-    fn add_variable(&mut self, name: &'static str);
-    fn set_variable_value(&mut self, name: &'static str, object: VmObject);
-    fn add_constant(&mut self, object: VmObject);
+    fn add_variable(&mut self, name: &String);
+    fn set_variable_value(&mut self, name: &String, object: VmObject);
+    fn add_constant(&mut self, object: &BramaPrimative);
 
-    fn get_variable_location(&mut self, name: &'static str) -> Option<u16>;
-    fn get_constant_location(&mut self, object: VmObject) -> Option<u16>;
+    fn get_variable_location(&mut self, name: &String) -> Option<u16>;
+    fn get_constant_location(&mut self, object: &BramaPrimative) -> Option<u16>;
 
     fn dump(&self);
 }

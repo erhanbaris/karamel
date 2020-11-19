@@ -49,6 +49,6 @@ impl TokenParser for SymbolParser {
             }
         }
 
-        return Ok(BramaTokenType::Symbol(&tokinizer.data[start..end]));
+        return Ok(BramaTokenType::Symbol(tokinizer.data[start..end].to_string()));
     }
 }

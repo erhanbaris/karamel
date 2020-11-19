@@ -32,7 +32,7 @@ mod tests {
                 opcode_compiler.prepare_variable_store(ast, &mut compiler_options);
                 if let Ok(_) = opcode_compiler.compile(ast, &mut compiler_options) {
                     vm::run_vm(&mut compiler_options);
-                    assert_eq!(compiler_options.storages[0].memory.last().unwrap().convert().unwrap(), $result);
+                    assert_eq!(compiler_options.storages[0].memory.last().unwrap().deref(), $result);
                 }
             }
         };
@@ -40,14 +40,14 @@ mod tests {
 
     test_last_memory!(vm_1, "10 + 10", BramaPrimative::Number(20.0));
     test_last_memory!(vm_2, "10 + 20 + 30", BramaPrimative::Number(60.0));
-    test_last_memory!(vm_3, "'erhan' + 'barış'", BramaPrimative::Text("erhanbarış"));
-    test_last_memory!(vm_4, "'erhan' + 10", BramaPrimative::Text("erhan10"));
+    test_last_memory!(vm_3, "'erhan' + 'barış'", BramaPrimative::Text("erhanbarış".to_string()));
+    test_last_memory!(vm_4, "'erhan' + 10", BramaPrimative::Text("erhan10".to_string()));
     test_last_memory!(vm_5, "123.456 + 123.456", BramaPrimative::Number(246.912));
     test_last_memory!(vm_6, "123 + 123.456", BramaPrimative::Number(246.45600000000002));
     test_last_memory!(vm_7, "123.456 + 123", BramaPrimative::Number(246.45600000000002));
-    test_last_memory!(vm_8, "'erhan' + 10.1", BramaPrimative::Text("erhan10.1"));
-    test_last_memory!(vm_9, "'erhan' + doğru", BramaPrimative::Text("erhandoğru"));
-    test_last_memory!(vm_10, "'erhan' + false", BramaPrimative::Text("erhanyanlış"));
+    test_last_memory!(vm_8, "'erhan' + 10.1", BramaPrimative::Text("erhan10.1".to_string()));
+    test_last_memory!(vm_9, "'erhan' + doğru", BramaPrimative::Text("erhandoğru".to_string()));
+    test_last_memory!(vm_10, "'erhan' + false", BramaPrimative::Text("erhanyanlış".to_string()));
     test_last_memory!(vm_11, "10 - 10", BramaPrimative::Number(0.0));
     test_last_memory!(vm_12, "110.0 - 10.0", BramaPrimative::Number(100.0));
     test_last_memory!(vm_13, "110 - 10.0", BramaPrimative::Number(100.0));
@@ -73,7 +73,7 @@ mod tests {
     test_last_memory!(vm_33, "100 <= 110.0", BramaPrimative::Bool(true));
     test_last_memory!(vm_34, "110 >= 110.0", BramaPrimative::Bool(true));
     test_last_memory!(vm_35, "110 <= 110.0", BramaPrimative::Bool(true));
-    test_last_memory!(vm_36, "'erhan' * 2", BramaPrimative::Text("erhanerhan"));
+    test_last_memory!(vm_36, "'erhan' * 2", BramaPrimative::Text("erhanerhan".to_string()));
     test_last_memory!(vm_37, "2 * 2", BramaPrimative::Number(4.0));
     test_last_memory!(vm_38, "2.0 * 20", BramaPrimative::Number(40.0));
     test_last_memory!(vm_39, "'erhan' * 2 == 'erhanbaris'", BramaPrimative::Bool(false));

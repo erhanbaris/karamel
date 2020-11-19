@@ -41,6 +41,6 @@ impl TokenParser for TextParser {
             return Err(("Missing string deliminator", tokinizer.line, tokinizer.column));
         }
 
-        return Ok(BramaTokenType::Text(&tokinizer.data[start..end]));
+        return Ok(BramaTokenType::Text(tokinizer.data[start..end].to_string()));
     }
 }

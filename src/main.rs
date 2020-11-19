@@ -68,14 +68,15 @@ fn main() {
     }
 */
     //vm::vm::run_vm(&opcodes);
-    parse("10 + 10");
+    memory_5_1();
+    parse("'erhan' + '-' + 'barış'");
 }
 
 #[warn(dead_code)]
 fn memory_5_1 () {
     //text : &'static str, result : Vec<BramaPrimative>
     let mut converted_memory = Vec::new();
-    let text   = "doğru == yanlış";
+    let text   = "'erhan' + '-' + 'barış'";
     let result = vec![BramaPrimative::Bool(true), BramaPrimative::Bool(false), BramaPrimative::Bool(false)];
     let mut parser = Parser::new(text);
     match parser.parse() {
@@ -95,7 +96,8 @@ fn memory_5_1 () {
 
     opcode_compiler.prepare_variable_store(&syntax_result.unwrap(), &mut compiler_options);
     for object in &compiler_options.storages[0].memory {
-        converted_memory.push(object.convert().unwrap());
+        converted_memory.push(object.deref());
     }    
+    compiler_options.storages[0].dump();
     assert_eq!(converted_memory, result);
 }
