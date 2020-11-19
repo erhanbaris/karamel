@@ -6,7 +6,7 @@ use std::result::Result;
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 use std::collections::hash_map::DefaultHasher;
-use std::mem::ManuallyDrop;
+use std::rc::Rc;
 
 
 pub type ParseResult        = Result<(), (&'static str, u32, u32)>;
@@ -220,15 +220,26 @@ pub enum BramaPrimative {
     }
 }*/
 
+
+#[repr(C)]
+#[derive(Clone, Debug, PartialEq)]
+pub enum ValueItem {
+    List(Rc<Vec<Box<BramaAstType>>>),
+    Atom(Rc<String>),
+    Text(Rc<String>)
+}
+
 impl VmObject {
     pub fn convert(primative: &BramaPrimative) -> VmObject {
         match primative {
             BramaPrimative::Empty            => VmObject(QNAN | EMPTY_FLAG),
             BramaPrimative::Number(number)   => VmObject(number.to_bits()),
             BramaPrimative::Bool(boolean)    => VmObject(QNAN | if *boolean { TRUE_FLAG } else { FALSE_FLAG }),
-            _                                => VmObject(QNAN | POINTER_FLAG | (
-                POINTER_MASK & (Box::into_raw(Box::new(primative))) as u64
-            ))
+            _                                => {
+                let value_item = match {
+                };
+                VmObject(QNAN | POINTER_FLAG | (POINTER_MASK & (Box::into_raw(Box::new(primative))) as u64))
+            }
         }
     }
 
