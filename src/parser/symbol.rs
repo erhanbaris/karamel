@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::rc::Rc;
 use crate::types::*;
 
 pub struct SymbolParser {
@@ -49,6 +50,6 @@ impl TokenParser for SymbolParser {
             }
         }
 
-        return Ok(BramaTokenType::Symbol(tokinizer.data[start..end].to_string()));
+        return Ok(BramaTokenType::Symbol(Rc::new(tokinizer.data[start..end].to_string())));
     }
 }

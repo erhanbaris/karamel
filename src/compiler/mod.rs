@@ -1,7 +1,6 @@
 use std::vec::Vec;
 use std::collections::HashMap;
-use std::cmp;
-
+use std::rc::Rc;
 
 use crate::types::*;
 
@@ -27,14 +26,14 @@ impl Storage for InnerStorage {
         /*  Allocate variable memory and update referances */
         let mut index = self.get_constant_size();
         for (_, value) in self.variables.iter_mut() {
-            self.memory.push(VmObject::convert(BramaPrimative::Empty));
+            self.memory.push(VmObject::convert(Rc::new(BramaPrimative::Empty)));
             *value = index;
             index += 1;
         }
 
         let start_index = self.get_temp_size();
         for _ in 0..start_index {
-            self.memory.push(VmObject::convert(BramaPrimative::Empty));
+            self.memory.push(VmObject::convert(Rc::new(BramaPrimative::Empty)));
         }
     }
 
@@ -53,14 +52,13 @@ impl Storage for InnerStorage {
     fn inc_temp_counter(&mut self)    { self.temp_counter += 1; }
     fn reset_temp_counter(&mut self)  { self.temp_counter = 0; }
 
-    fn add_constant(&mut self, value: &BramaPrimative) {
-        let position = self.constants.iter().position(|x| {
-            return *x.deref() == *value;
+    fn add_constant(&mut self, value: Rc<BramaPrimative>) {
+        let has = self.constants.iter().any(|x| {
+            *x.deref() == *value
         });
         
-        match position {
-            None => self.constants.push(VmObject::convert(value.clone())),
-            _ => ()
+        if !has { 
+            self.constants.push(VmObject::convert(value.clone()));
         };
     }
 
@@ -79,14 +77,14 @@ impl Storage for InnerStorage {
         };
     }
 
-    fn get_variable_location(&mut self, name: &String) -> Option<u16> {
+    fn get_variable_location(&self, name: &String) -> Option<u16> {
         if self.variables.contains_key(name) {
             return Some(*self.variables.get(name).unwrap());
         }
         return None;
     }
 
-    fn get_constant_location(&mut self, value: &BramaPrimative) -> Option<u16> {
+    fn get_constant_location(&self, value: Rc<BramaPrimative>) -> Option<u16> {
         return match self.memory.iter().position(|x| { return *x.deref() == *value; }) {
             Some(number) => Some(number as u16),
             _ => None
@@ -123,12 +121,6 @@ impl InnerStorage {
             variables: HashMap::new()
         }
     }
-
-    fn find_const_variable(&self, obj: &BramaPrimative) -> Option<usize> {
-        self.memory.iter().position(|x| {
-            return *x.deref() == *obj;
-        })
-    }
 }
 
 struct CompileInfo {
@@ -160,10 +152,10 @@ impl Compiler for InterpreterCompiler {
 impl InterpreterCompiler {
     fn inner_compile(&self, ast: &BramaAstType, upper_ast: &BramaAstType, compiler_info: &mut CompileInfo, options: &mut BramaCompilerOption, storage_index: usize) -> CompilerResult {
         match ast {
-            BramaAstType::Symbol(variable) => self.symbol(variable, upper_ast, compiler_info, options, storage_index),
+            BramaAstType::Symbol(variable)                  => self.symbol(variable, upper_ast, compiler_info, options, storage_index),
             BramaAstType::Control { left, operator, right } => self.control(left, operator, right, upper_ast, compiler_info, options, storage_index),
-            BramaAstType::Binary { left, operator, right } => self.binary(left, operator, right, upper_ast, compiler_info, options, storage_index),
-            BramaAstType::Primative(primative) => self.primative(primative, compiler_info, options, storage_index),
+            BramaAstType::Binary { left, operator, right }  => self.binary(left, operator, right, upper_ast, compiler_info, options, storage_index),
+            BramaAstType::Primative(primative)              => self.primative(primative.clone(), compiler_info, options, storage_index),
             _ => {
                 println!("{:?}", ast);
                 Err(("Not implemented", 0, 0))
@@ -190,13 +182,13 @@ impl InterpreterCompiler {
                 0
             },
             BramaAstType::Primative(primative) => {
-                options.storages.get_mut(storage_index).unwrap().add_constant(primative);
-                if let BramaPrimative::List(list) = primative {
+                options.storages.get_mut(storage_index).unwrap().add_constant(Rc::clone(primative));
+                /*if let BramaPrimative::List(list) = primative {
                     let mut list_temp_count = 0;
                     for array_item in list {
                         list_temp_count = cmp::max(self.add_ast(array_item, ast, options, storage_index), list_temp_count);
                     }
-                }
+                }*/
                 0
             }
             _ => 0
@@ -204,10 +196,10 @@ impl InterpreterCompiler {
         return temp_count;
     }
 
-    fn primative(&self, primative: &BramaPrimative, compiler_info: &mut CompileInfo, options: &mut BramaCompilerOption, storage_index: usize) -> CompilerResult {
+    fn primative(&self, primative: Rc<BramaPrimative>, compiler_info: &mut CompileInfo, options: &mut BramaCompilerOption, storage_index: usize) -> CompilerResult {
         let storage :&InnerStorage = &options.storages[storage_index];
 
-        let result = storage.find_const_variable(primative);
+        let result = storage.get_constant_location(primative);
         match result {
             Some(index) => {
                 compiler_info.index = index as i16;

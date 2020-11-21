@@ -17,14 +17,14 @@ impl PrimativeParser {
         }
 
         let result = match &token.unwrap().token_type {
-            BramaTokenType::Integer(int)      => Ok(BramaAstType::Primative(BramaPrimative::Number(*int as f64))),
-            BramaTokenType::Double(double)    => Ok(BramaAstType::Primative(BramaPrimative::Number(*double))),
-            BramaTokenType::Text(text)        => Ok(BramaAstType::Primative(BramaPrimative::Text(Rc::new(text.to_string())))),
+            BramaTokenType::Integer(int)      => Ok(BramaAstType::Primative(Rc::new(BramaPrimative::Number(*int as f64)))),
+            BramaTokenType::Double(double)    => Ok(BramaAstType::Primative(Rc::new(BramaPrimative::Number(*double)))),
+            BramaTokenType::Text(text)        => Ok(BramaAstType::Primative(Rc::new(BramaPrimative::Text(Rc::clone(text))))),
             BramaTokenType::Keyword(keyword)  => {
                 match keyword {
-                    BramaKeywordType::True  => Ok(BramaAstType::Primative(BramaPrimative::Bool(true))),
-                    BramaKeywordType::False => Ok(BramaAstType::Primative(BramaPrimative::Bool(false))),
-                    BramaKeywordType::Empty => Ok(BramaAstType::Primative(BramaPrimative::Empty)),
+                    BramaKeywordType::True  => Ok(BramaAstType::Primative(Rc::new(BramaPrimative::Bool(true)))),
+                    BramaKeywordType::False => Ok(BramaAstType::Primative(Rc::new(BramaPrimative::Bool(false)))),
+                    BramaKeywordType::Empty => Ok(BramaAstType::Primative(Rc::new(BramaPrimative::Empty))),
                     _ => Ok(BramaAstType::None)
                 }
             },
@@ -41,7 +41,7 @@ impl PrimativeParser {
                         let mut hasher = DefaultHasher::new();
                         symbol.hash(&mut hasher);
 
-                        Ok(BramaAstType::Primative(BramaPrimative::Atom(hasher.finish())))
+                        Ok(BramaAstType::Primative(Rc::new(BramaPrimative::Atom(hasher.finish()))))
                     },
                     _ => Ok(BramaAstType::None)
                 }
@@ -88,7 +88,7 @@ impl PrimativeParser {
                 return Err(("Array not closed", 0, 0));
             }
 
-            return Ok(BramaAstType::Primative(BramaPrimative::List(ast_vec)));
+            return Ok(BramaAstType::Primative(Rc::new(BramaPrimative::List(ast_vec))));
         }
 
         return Ok(BramaAstType::None);

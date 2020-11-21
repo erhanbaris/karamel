@@ -1,3 +1,4 @@
+use std::rc::Rc;
 use crate::types::*;
 
 pub struct TextParser {
@@ -41,6 +42,6 @@ impl TokenParser for TextParser {
             return Err(("Missing string deliminator", tokinizer.line, tokinizer.column));
         }
 
-        return Ok(BramaTokenType::Text(tokinizer.data[start..end].to_string()));
+        return Ok(BramaTokenType::Text(Rc::new(tokinizer.data[start..end].to_string())));
     }
 }

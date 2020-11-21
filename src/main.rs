@@ -68,7 +68,7 @@ fn main() {
     }
 */
     //vm::vm::run_vm(&opcodes);
-    parse("'erhan' + '-' + 'barış'");
+    parse("'erhan' + doğru");
 }
 
 #[warn(dead_code)]

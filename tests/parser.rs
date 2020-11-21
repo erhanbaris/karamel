@@ -91,7 +91,7 @@ mod tests {
         assert_eq!(1, tokens.len());
         for item in tokens.iter() {
             match &item.token_type {
-                BramaTokenType::Text(text) => assert_eq!(*text, "erhan barış"),
+                BramaTokenType::Text(text) => assert_eq!(**text, "erhan barış"),
                 _ => assert_eq!(true, false)
             }
         }
@@ -107,11 +107,11 @@ mod tests {
         let tokens = parser.tokens();
         assert_eq!(2, tokens.len());
         match &tokens[0].token_type {
-            BramaTokenType::Text(text) => assert_eq!(*text, "erhan barış"),
+            BramaTokenType::Text(text) => assert_eq!(**text, "erhan barış"),
             _ => assert_eq!(true, false)
         }
         match &tokens[1].token_type {
-            BramaTokenType::Text(text) => assert_eq!(*text, ""),
+            BramaTokenType::Text(text) => assert_eq!(**text, ""),
             _ => assert_eq!(true, false)
         }
     }
@@ -126,11 +126,11 @@ mod tests {
         let tokens = parser.tokens();
         assert_eq!(2, tokens.len());
         match &tokens[0].token_type {
-            BramaTokenType::Text(text) => assert_eq!(*text, "erhan barış"),
+            BramaTokenType::Text(text) => assert_eq!(**text, "erhan barış"),
             _ => assert_eq!(true, false)
         }
         match &tokens[1].token_type {
-            BramaTokenType::Text(text) => assert_eq!(*text, ""),
+            BramaTokenType::Text(text) => assert_eq!(**text, ""),
             _ => assert_eq!(true, false)
         }
     }
@@ -146,7 +146,7 @@ mod tests {
 
         assert_eq!(1, tokens.len());
         match &tokens[0].token_type {
-            BramaTokenType::Symbol(symbol) => assert_eq!("_test_", *symbol),
+            BramaTokenType::Symbol(symbol) => assert_eq!("_test_", **symbol),
             _ => assert_eq!(true, false)
         }
 
@@ -159,7 +159,7 @@ mod tests {
 
         assert_eq!(1, tokens.len());
         match &tokens[0].token_type {
-            BramaTokenType::Symbol(symbol) => assert_eq!("$", *symbol),
+            BramaTokenType::Symbol(symbol) => assert_eq!("$", **symbol),
             _ => assert_eq!(true, false)
         }
 
@@ -172,7 +172,7 @@ mod tests {
 
         assert_eq!(1, tokens.len());
         match &tokens[0].token_type {
-            BramaTokenType::Symbol(symbol) => assert_eq!("$$erhan$$", *symbol),
+            BramaTokenType::Symbol(symbol) => assert_eq!("$$erhan$$", **symbol),
             _ => assert_eq!(true, false)
         }
     }

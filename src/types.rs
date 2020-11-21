@@ -7,6 +7,7 @@ use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 use std::collections::hash_map::DefaultHasher;
 use std::rc::Rc;
+use std::mem::ManuallyDrop;
 
 
 pub type ParseResult        = Result<(), (&'static str, u32, u32)>;
@@ -25,7 +26,7 @@ pub const FALSE_FLAG:   u64 = QNAN | TAG_FALSE;
 pub const TRUE_FLAG:    u64 = QNAN | TAG_TRUE;
 pub const EMPTY_FLAG:   u64 = QNAN | TAG_NULL;
 
-#[derive(PartialEq, Debug, Hash)]
+#[derive(PartialEq, Debug, Hash, Clone, Copy)]
 #[repr(transparent)]
 pub struct VmObject(pub u64);
 
@@ -161,9 +162,9 @@ pub enum BramaTokenType {
     None,
     Integer(i64),
     Double(f64),
-    Symbol(String),
+    Symbol(Rc<String>),
     Operator(BramaOperatorType),
-    Text(String),
+    Text(Rc<String>),
     Keyword(BramaKeywordType),
     WhiteSpace(u8),
     NewLine(u8)
@@ -216,7 +217,7 @@ pub enum BramaPrimative {
 
 impl Drop for BramaPrimative {
     fn drop(&mut self) {
-        println!("> {:?}", self);
+        //println!("> {:?}", self);
     }
 }
 
@@ -228,20 +229,20 @@ impl PartialEq for BramaPrimative {
             (BramaPrimative::List(lvalue),  BramaPrimative::List(rvalue)) => lvalue == rvalue,
             (BramaPrimative::Empty,         BramaPrimative::Empty)        => true,
             (BramaPrimative::Number(n),     BramaPrimative::Number(m))    => if n.is_nan() && m.is_nan() { true } else { n == m },
-            (BramaPrimative::Text(lstring), BramaPrimative::Text(rstring))    => lstring == rstring,
-            _ => true
+            (BramaPrimative::Text(lvalue),  BramaPrimative::Text(rvalue)) => lvalue == rvalue,
+            _ => false
         }
     }
 }
 
 impl VmObject {
-    pub fn convert(primative: BramaPrimative) -> VmObject {
-        match primative {
+    pub fn convert(primative: Rc<BramaPrimative>) -> VmObject {
+        match *primative {
             BramaPrimative::Empty            => VmObject(QNAN | EMPTY_FLAG),
             BramaPrimative::Number(number)   => VmObject(number.to_bits()),
             BramaPrimative::Bool(boolean)    => VmObject(QNAN | if boolean { TRUE_FLAG } else { FALSE_FLAG }),
             _                                => {
-                VmObject(QNAN | POINTER_FLAG | (POINTER_MASK & (Rc::into_raw(Rc::new(primative))) as u64))
+                VmObject(QNAN | POINTER_FLAG | (POINTER_MASK & (Rc::into_raw(primative)) as u64))
             }
         }
     }
@@ -254,7 +255,8 @@ impl VmObject {
             t if t == (QNAN | TRUE_FLAG)  => Rc::new(BramaPrimative::Bool(true)),
             p if (p & POINTER_FLAG) == POINTER_FLAG => {
                 let pointer = (self.0 & POINTER_MASK) as *mut BramaPrimative;
-                unsafe { Rc::from_raw(pointer) }
+                let data = unsafe { ManuallyDrop::new(Rc::from_raw(pointer)) };
+                Rc::clone(&data)
             },
             _ => Rc::new(BramaPrimative::Empty)
         }
@@ -267,7 +269,7 @@ impl VmObject {
 #[derive(PartialEq)]
 pub enum BramaAstType {
     None,
-    Primative(BramaPrimative),
+    Primative(Rc<BramaPrimative>),
     Binary {
         left: Box<BramaAstType>, 
         operator: BramaOperatorType, 
@@ -466,10 +468,10 @@ pub trait Storage {
 
     fn add_variable(&mut self, name: &String);
     fn set_variable_value(&mut self, name: &String, object: VmObject);
-    fn add_constant(&mut self, object: &BramaPrimative);
+    fn add_constant(&mut self, object: Rc<BramaPrimative>);
 
-    fn get_variable_location(&mut self, name: &String) -> Option<u16>;
-    fn get_constant_location(&mut self, object: &BramaPrimative) -> Option<u16>;
+    fn get_variable_location(&self, name: &String) -> Option<u16>;
+    fn get_constant_location(&self, object: Rc<BramaPrimative>) -> Option<u16>;
 
     fn dump(&self);
 }
