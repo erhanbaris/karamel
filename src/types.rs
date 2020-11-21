@@ -204,56 +204,59 @@ pub struct SyntaxParser {
 }
 
 #[repr(C)]
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug)]
 pub enum BramaPrimative {
     Empty,
     Number(f64),
     Bool(bool),
     List(Vec<Box<BramaAstType>>),
     Atom(u64),
-    Text(String)
-}
-
-/*impl Drop for BramaPrimative {
-    fn drop(&mut self) {
-        println!("Dropping BramaPrimative!, {:?}", self);
-    }
-}*/
-
-
-#[repr(C)]
-#[derive(Clone, Debug, PartialEq)]
-pub enum ValueItem {
-    List(Rc<Vec<Box<BramaAstType>>>),
-    Atom(Rc<String>),
     Text(Rc<String>)
 }
 
+impl Drop for BramaPrimative {
+    fn drop(&mut self) {
+        println!("> {:?}", self);
+    }
+}
+
+impl PartialEq for BramaPrimative {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, &other) {
+            (BramaPrimative::Bool(lvalue),  BramaPrimative::Bool(rvalue)) => lvalue == rvalue,
+            (BramaPrimative::Atom(lvalue),  BramaPrimative::Atom(rvalue)) => lvalue == rvalue,
+            (BramaPrimative::List(lvalue),  BramaPrimative::List(rvalue)) => lvalue == rvalue,
+            (BramaPrimative::Empty,         BramaPrimative::Empty)        => true,
+            (BramaPrimative::Number(n),     BramaPrimative::Number(m))    => if n.is_nan() && m.is_nan() { true } else { n == m },
+            (BramaPrimative::Text(lstring), BramaPrimative::Text(rstring))    => lstring == rstring,
+            _ => true
+        }
+    }
+}
+
 impl VmObject {
-    pub fn convert(primative: &BramaPrimative) -> VmObject {
+    pub fn convert(primative: BramaPrimative) -> VmObject {
         match primative {
             BramaPrimative::Empty            => VmObject(QNAN | EMPTY_FLAG),
             BramaPrimative::Number(number)   => VmObject(number.to_bits()),
-            BramaPrimative::Bool(boolean)    => VmObject(QNAN | if *boolean { TRUE_FLAG } else { FALSE_FLAG }),
+            BramaPrimative::Bool(boolean)    => VmObject(QNAN | if boolean { TRUE_FLAG } else { FALSE_FLAG }),
             _                                => {
-                let value_item = match {
-                };
-                VmObject(QNAN | POINTER_FLAG | (POINTER_MASK & (Box::into_raw(Box::new(primative))) as u64))
+                VmObject(QNAN | POINTER_FLAG | (POINTER_MASK & (Rc::into_raw(Rc::new(primative))) as u64))
             }
         }
     }
 
-    pub fn deref(&self) -> BramaPrimative {
+    pub fn deref(&self) -> Rc<BramaPrimative> {
         match self.0 {
-            n if (n & QNAN) != QNAN       => BramaPrimative::Number(f64::from_bits(n)),
-            e if e == (QNAN | EMPTY_FLAG) => BramaPrimative::Empty,
-            f if f == (QNAN | FALSE_FLAG) => BramaPrimative::Bool(false),
-            t if t == (QNAN | TRUE_FLAG)  => BramaPrimative::Bool(true),
+            n if (n & QNAN) != QNAN       => Rc::new(BramaPrimative::Number(f64::from_bits(n))),
+            e if e == (QNAN | EMPTY_FLAG) => Rc::new(BramaPrimative::Empty),
+            f if f == (QNAN | FALSE_FLAG) => Rc::new(BramaPrimative::Bool(false)),
+            t if t == (QNAN | TRUE_FLAG)  => Rc::new(BramaPrimative::Bool(true)),
             p if (p & POINTER_FLAG) == POINTER_FLAG => {
-                let pointer = (self.0 & POINTER_MASK) as *mut &BramaPrimative;
-                Box::leak(unsafe { Box::from_raw(pointer) }).clone()
+                let pointer = (self.0 & POINTER_MASK) as *mut BramaPrimative;
+                unsafe { Rc::from_raw(pointer) }
             },
-            _ => BramaPrimative::Empty
+            _ => Rc::new(BramaPrimative::Empty)
         }
     }
 }

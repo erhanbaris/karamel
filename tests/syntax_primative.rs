@@ -4,6 +4,7 @@ extern crate tpd;
 mod tests {
     use crate::tpd::parser::*;
     use crate::tpd::types::*;
+    use std::rc::Rc;
 
     #[warn(unused_macros)]
     macro_rules! test_success {
@@ -48,8 +49,8 @@ mod tests {
     test_success!(binary_3, "0b01", Ok(BramaAstType::Primative(BramaPrimative::Number(1.0))));
     test_success!(binary_4, "0B00000000011111111111111111111111", Ok(BramaAstType::Primative(BramaPrimative::Number(8388607.0))));
 
-    test_success!(test_1, "'merhaba dünya'", Ok(BramaAstType::Primative(BramaPrimative::Text("merhaba dünya".to_string()))));
-    test_success!(test_2, "\"merhaba dünya\"", Ok(BramaAstType::Primative(BramaPrimative::Text("merhaba dünya".to_string()))));
+    test_success!(test_1, "'merhaba dünya'", Ok(BramaAstType::Primative(BramaPrimative::Text(Rc::new("merhaba dünya".to_string())))));
+    test_success!(test_2, "\"merhaba dünya\"", Ok(BramaAstType::Primative(BramaPrimative::Text(Rc::new("merhaba dünya".to_string())))));
     test_success!(test_3, "'merhaba dünya", Err(("Missing string deliminator", 0, 0)));
     test_success!(test_4, "\"merhaba dünya", Err(("Missing string deliminator", 0, 0)));
     test_success!(test_5, "merhaba dünya'", Err(("Missing string deliminator", 0, 0)));
@@ -68,7 +69,7 @@ mod tests {
     test_success!(list_2, "[1]", Ok(BramaAstType::Primative(BramaPrimative::List([Box::new(BramaAstType::Primative(BramaPrimative::Number(1.0)))].to_vec()))));
     test_success!(list_3, "[doğru]", Ok(BramaAstType::Primative(BramaPrimative::List([Box::new(BramaAstType::Primative(BramaPrimative::Bool(true)))].to_vec()))));
     test_success!(list_4, "[ ]", Ok(BramaAstType::Primative(BramaPrimative::List([].to_vec()))));
-    test_success!(list_5, "[123,doğru,:erhan_barış,'merhaba dünya',1.3]", Ok(BramaAstType::Primative(BramaPrimative::List([Box::new(BramaAstType::Primative(BramaPrimative::Number(123.0))), Box::new(BramaAstType::Primative(BramaPrimative::Bool(true))), Box::new(BramaAstType::Primative(BramaPrimative::Atom("erhan_barış".atom()))), Box::new(BramaAstType::Primative(BramaPrimative::Text("merhaba dünya".to_string()))), Box::new(BramaAstType::Primative(BramaPrimative::Number(1.3)))].to_vec()))));
+    test_success!(list_5, "[123,doğru,:erhan_barış,'merhaba dünya',1.3]", Ok(BramaAstType::Primative(BramaPrimative::List([Box::new(BramaAstType::Primative(BramaPrimative::Number(123.0))), Box::new(BramaAstType::Primative(BramaPrimative::Bool(true))), Box::new(BramaAstType::Primative(BramaPrimative::Atom("erhan_barış".atom()))), Box::new(BramaAstType::Primative(BramaPrimative::Text(Rc::new("merhaba dünya".to_string())))), Box::new(BramaAstType::Primative(BramaPrimative::Number(1.3)))].to_vec()))));
     test_success!(list_6, "[[]]", Ok(BramaAstType::Primative(BramaPrimative::List([Box::new(BramaAstType::Primative(BramaPrimative::List([].to_vec())))].to_vec()))));
 
     test_success!(list_7, "[123", Err(("Array not closed", 0, 0)));

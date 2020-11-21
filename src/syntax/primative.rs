@@ -1,5 +1,6 @@
 use std::hash::{Hash, Hasher};
 use std::collections::hash_map::DefaultHasher;
+use std::rc::Rc;
 
 use crate::types::*;
 use crate::syntax::util::*;
@@ -18,7 +19,7 @@ impl PrimativeParser {
         let result = match &token.unwrap().token_type {
             BramaTokenType::Integer(int)      => Ok(BramaAstType::Primative(BramaPrimative::Number(*int as f64))),
             BramaTokenType::Double(double)    => Ok(BramaAstType::Primative(BramaPrimative::Number(*double))),
-            BramaTokenType::Text(text)        => Ok(BramaAstType::Primative(BramaPrimative::Text(text.to_string()))),
+            BramaTokenType::Text(text)        => Ok(BramaAstType::Primative(BramaPrimative::Text(Rc::new(text.to_string())))),
             BramaTokenType::Keyword(keyword)  => {
                 match keyword {
                     BramaKeywordType::True  => Ok(BramaAstType::Primative(BramaPrimative::Bool(true))),

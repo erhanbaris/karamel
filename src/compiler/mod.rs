@@ -1,7 +1,6 @@
 use std::vec::Vec;
 use std::collections::HashMap;
 use std::cmp;
-use std::rc::{Rc, Weak};
 
 
 use crate::types::*;
@@ -28,14 +27,14 @@ impl Storage for InnerStorage {
         /*  Allocate variable memory and update referances */
         let mut index = self.get_constant_size();
         for (_, value) in self.variables.iter_mut() {
-            self.memory.push(VmObject::convert(&BramaPrimative::Empty));
+            self.memory.push(VmObject::convert(BramaPrimative::Empty));
             *value = index;
             index += 1;
         }
 
         let start_index = self.get_temp_size();
         for _ in 0..start_index {
-            self.memory.push(VmObject::convert(&BramaPrimative::Empty));
+            self.memory.push(VmObject::convert(BramaPrimative::Empty));
         }
     }
 
@@ -56,11 +55,11 @@ impl Storage for InnerStorage {
 
     fn add_constant(&mut self, value: &BramaPrimative) {
         let position = self.constants.iter().position(|x| {
-            return x.deref() == *value;
+            return *x.deref() == *value;
         });
         
         match position {
-            None => self.constants.push(VmObject::convert(value)),
+            None => self.constants.push(VmObject::convert(value.clone())),
             _ => ()
         };
     }
@@ -88,8 +87,7 @@ impl Storage for InnerStorage {
     }
 
     fn get_constant_location(&mut self, value: &BramaPrimative) -> Option<u16> {
-        let object = VmObject::convert(value);
-        return match self.memory.iter().position(|x| { return *x == object; }) {
+        return match self.memory.iter().position(|x| { return *x.deref() == *value; }) {
             Some(number) => Some(number as u16),
             _ => None
         };
@@ -100,7 +98,7 @@ impl Storage for InnerStorage {
         println!("        MEMORY DUMP");
         println!("-------------------------------");
         for (index, item) in self.memory.iter().enumerate() {
-            println!("| {:?} | {:?}", index, item.deref());
+            println!("| {:?} | {:?}", index, *item.deref());
         }
         println!("-------------------------------");
         println!("-------------------------------");
@@ -128,7 +126,7 @@ impl InnerStorage {
 
     fn find_const_variable(&self, obj: &BramaPrimative) -> Option<usize> {
         self.memory.iter().position(|x| {
-            return x.deref() == *obj;
+            return *x.deref() == *obj;
         })
     }
 }
@@ -203,7 +201,6 @@ impl InterpreterCompiler {
             }
             _ => 0
         };
-        println!("temp_count {:?}", temp_count);
         return temp_count;
     }
 

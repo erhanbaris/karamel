@@ -68,7 +68,6 @@ fn main() {
     }
 */
     //vm::vm::run_vm(&opcodes);
-    memory_5_1();
     parse("'erhan' + '-' + 'barış'");
 }
 
@@ -96,7 +95,7 @@ fn memory_5_1 () {
 
     opcode_compiler.prepare_variable_store(&syntax_result.unwrap(), &mut compiler_options);
     for object in &compiler_options.storages[0].memory {
-        converted_memory.push(object.deref());
+        converted_memory.push((*object.deref()).clone());
     }    
     compiler_options.storages[0].dump();
     assert_eq!(converted_memory, result);
