@@ -18,12 +18,12 @@ use self::line::LineParser;
 use self::whitespace::WhitespaceParser;
 use self::comment::CommentParser;
 
-pub struct Parser {
-    tokinizer: Tokinizer
+pub struct Parser<'a> {
+    tokinizer: Tokinizer<'a>
 }
 
-impl<'a> Parser {
-    pub fn new(data: &'static str) -> Parser {
+impl<'a> Parser<'a> {
+    pub fn new(data: &'a str) -> Parser {
         let mut parser = Parser {
             tokinizer: Tokinizer {
                 column: 0,
@@ -32,7 +32,7 @@ impl<'a> Parser {
                 iter: data.chars().peekable(),
                 iter_second: data.chars().peekable(),
                 iter_third: data.chars().peekable(),
-                data: data,
+                data: data.to_string(),
                 index: 0
             }
         };

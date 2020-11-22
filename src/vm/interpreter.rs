@@ -1,13 +1,15 @@
-use crate::types::*;
+use crate::types::{VmObject, BramaVmOpCode, BramaPrimative};
+use crate::compiler::*;
 use std::rc::Rc;
 
-pub fn run_vm(options: &mut BramaCompilerOption)
+
+pub fn run_vm<S>(options: &mut BramaCompilerOption<S>) where S: Storage
 {
     let empty_primative: VmObject  = VmObject::convert(Rc::new(BramaPrimative::Empty));
     let false_primative : VmObject = VmObject::convert(Rc::new(BramaPrimative::Bool(false)));
     let true_primative : VmObject  = VmObject::convert(Rc::new(BramaPrimative::Bool(true)));
     
-    let memory = &mut options.storages[0].memory;
+    let memory = &mut options.storages[0].get_memory();
     for op in &options.opcodes {
         match op {
             BramaVmOpCode::And { target, left, right } => {
@@ -120,9 +122,12 @@ pub fn run_vm(options: &mut BramaCompilerOption)
                     _ => empty_primative
                 };
             },
+            BramaVmOpCode::Assign { target, expression } => {
+                memory[*target as usize] = memory[*expression as usize];
+            },
             _ => ()
         }
     }
-
+    
     options.storages[0].dump();
 }

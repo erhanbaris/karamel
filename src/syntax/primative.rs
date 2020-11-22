@@ -128,8 +128,6 @@ impl PrimativeParser {
 }
 
 impl SyntaxParserTrait for PrimativeParser {
-    type Item = PrimativeParser;
-
     fn parse(parser: &SyntaxParser) -> AstResult {
         return map_parser(parser, &[Self::parse_list, Self::parse_parenthesis, Self::parse_symbol, Self::parse_basic_primatives]);
     }
