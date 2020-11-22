@@ -3,7 +3,8 @@ use crate::types::*;
 use crate::parser::*;
 use crate::compiler::*;
 
-use std::io::{self, BufRead};
+use std::io::{self};
+use std::io::Write;
 
 #[warn(dead_code)]
 pub fn code_executer(data: &String) {
@@ -29,16 +30,34 @@ pub fn code_executer(data: &String) {
     }
 }
 
+fn console_welcome() {
+    println!("Türkçe Programlama Dili (TPD) komut satırı");
+    print!("-> ");
+    io::stdout().flush().unwrap();
+}
+
 #[warn(dead_code)]
-pub fn command_line_executer() {
-    let data = "";
-
+pub fn console_executer() {
+    console_welcome();
+    
     let mut compiler_options: BramaCompilerOption<DynamicStorage> = BramaCompilerOption::new();
+    let mut line = String::new();
 
-    let stdin = io::stdin();
-    for line in stdin.lock().lines() {
+    loop {
+        match io::stdin().read_line(&mut line) {
+            Ok(_) => (),
+            _     => {
+                println!("ERR >");
+                return;
+            }
+        };
 
-        let mut parser = Parser::new("");
+        if line.trim().len() == 0 {
+            println!("EOL >");
+            return;
+        }
+
+        let mut parser = Parser::new(&line);
         match parser.parse() {
             Err(_) => (),
             _ => ()
@@ -56,6 +75,9 @@ pub fn command_line_executer() {
                 run_vm(&mut compiler_options);
             }
         }
+
+        print!("-> ");
+        io::stdout().flush().unwrap();
     }
 }
 

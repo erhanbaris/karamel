@@ -187,14 +187,14 @@ pub struct Token {
     pub token_type: BramaTokenType
 }
 
-pub struct Tokinizer {
+pub struct Tokinizer<'a> {
     pub line  : u32,
     pub column: u32,
     pub tokens: Vec<Token>,
-    pub iter: Peekable<Chars<'static>>,
-    pub iter_second: Peekable<Chars<'static>>,
-    pub iter_third: Peekable<Chars<'static>>,
-    pub data: &'static str,
+    pub iter: Peekable<Chars<'a>>,
+    pub iter_second: Peekable<Chars<'a>>,
+    pub iter_third: Peekable<Chars<'a>>,
+    pub data: String,
     pub index: u32
 }
 
@@ -293,7 +293,7 @@ pub enum BramaAstType {
     Symbol(String)
 }
 
-impl Tokinizer {
+impl Tokinizer<'_> {
     pub fn is_end(&mut self) -> bool {
         return match self.iter.peek() {
             Some(_) => false,

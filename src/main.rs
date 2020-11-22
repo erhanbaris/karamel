@@ -5,5 +5,5 @@ mod vm;
 mod compiler;
 
 fn main() {
-    vm::executer::code_executer(&"erhan = 'asd'".to_string());
+    vm::executer::console_executer();
 }
