@@ -28,10 +28,10 @@ mod tests {
                 };
 
                 let opcode_compiler  = InterpreterCompiler {};
-                let mut compiler_options = BramaCompilerOption::new();
+                let mut compiler_options: BramaCompilerOption<StaticStorage> = BramaCompilerOption::new();
 
                 opcode_compiler.prepare_variable_store(&syntax_result.unwrap(), &mut compiler_options);
-                for object in &compiler_options.storages[0].memory {
+                for object in compiler_options.storages[0].get_memory() {
                     converted_memory.push((*object.deref()).clone());
                 }
                 assert_eq!(converted_memory, $result);
