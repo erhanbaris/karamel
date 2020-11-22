@@ -6,7 +6,7 @@ use std::rc::Rc;
 
 
 #[derive(PartialEq, Debug)]
-pub struct StaticStorage {
+pub struct DynamicStorage {
     pub constants             : Vec<VmObject>,
     pub constant_size         : u16,
     pub temp_size             : u16,
@@ -16,9 +16,9 @@ pub struct StaticStorage {
     pub total_const_variables : u16
 }
 
-impl StaticStorage {
-    pub fn new() -> StaticStorage {
-        StaticStorage {
+impl Storage for DynamicStorage {
+    fn new() -> DynamicStorage {
+        DynamicStorage {
             constants: Vec::new(),
             constant_size: 0,
             temp_size: 0,
@@ -28,20 +28,7 @@ impl StaticStorage {
             variables: HashMap::new()
         }
     }
-}
 
-
-/*
-### STORAGE STRUCTURE ###
--------------------------
-  CONSTANT VALUES
--------------------------
-  VARIABLE VALUES
--------------------------
-  TEMP VALUES
--------------------------
-*/
-impl Storage for StaticStorage {
     fn build(&mut self) {
         self.constant_size = self.constants.len() as u16;
 
@@ -82,11 +69,11 @@ impl Storage for StaticStorage {
     fn reset_temp_counter(&mut self)  { self.temp_counter = 0; }
 
     fn add_constant(&mut self, value: Rc<BramaPrimative>) {
-        let has = self.constants.iter().any(|x| {
+        let found = self.constants.iter().any(|x| {
             *x.deref() == *value
         });
         
-        if !has { 
+        if !found { 
             self.constants.push(VmObject::convert(value.clone()));
         };
     }

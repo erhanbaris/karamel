@@ -40,6 +40,37 @@ mod tests {
         };
     }
 
+    #[warn(unused_macros)]
+    macro_rules! test_variable_value {
+        ($name:ident, $variable:expr, $text:expr, $result:expr) => {
+            #[test]
+            fn $name () {
+                let mut parser = Parser::new($text);
+                match parser.parse() {
+                    Err(_) => assert_eq!(true, false),
+                    _ => ()
+                };
+
+                let syntax = SyntaxParser::new(Box::new(parser.tokens().to_vec()));
+                let syntax_result = syntax.parse();
+                match syntax_result {
+                    Err(_) => assert_eq!(true, false),
+                    _ => ()
+                };
+
+                let opcode_compiler  = InterpreterCompiler {};
+                let mut compiler_options = BramaCompilerOption::new();
+                let ast = &syntax_result.unwrap();
+
+                opcode_compiler.prepare_variable_store(ast, &mut compiler_options);
+                if let Ok(_) = opcode_compiler.compile(ast, &mut compiler_options) {
+                    vm::run_vm(&mut compiler_options);
+                    assert_eq!(*compiler_options.storages[0].memory.last().unwrap().deref(), $result);
+                }
+            }
+        };
+    }
+
     test_last_memory!(vm_1, "10 + 10", BramaPrimative::Number(20.0));
     test_last_memory!(vm_2, "10 + 20 + 30", BramaPrimative::Number(60.0));
     test_last_memory!(vm_3, "'erhan' + 'barış'", BramaPrimative::Text(Rc::new("erhanbarış".to_string())));
@@ -95,5 +126,5 @@ mod tests {
     test_last_memory!(vm_53, "yok != yok", BramaPrimative::Bool(false));
     test_last_memory!(vm_54, ":ok - 1 == yok", BramaPrimative::Bool(true));
     test_last_memory!(vm_55, "test_1 == test_2", BramaPrimative::Bool(true));
-
+    test_last_memory!(vm_55, "test_1 == test_2", BramaPrimative::Bool(true));
 }

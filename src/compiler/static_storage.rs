@@ -16,20 +16,6 @@ pub struct StaticStorage {
     pub total_const_variables : u16
 }
 
-impl StaticStorage {
-    pub fn new() -> StaticStorage {
-        StaticStorage {
-            constants: Vec::new(),
-            constant_size: 0,
-            temp_size: 0,
-            temp_counter: 0,
-            total_const_variables: 0,
-            memory: Vec::new(),
-            variables: HashMap::new()
-        }
-    }
-}
-
 
 /*
 ### STORAGE STRUCTURE ###
@@ -42,6 +28,18 @@ impl StaticStorage {
 -------------------------
 */
 impl Storage for StaticStorage {
+    fn new() -> StaticStorage {
+        StaticStorage {
+            constants: Vec::new(),
+            constant_size: 0,
+            temp_size: 0,
+            temp_counter: 0,
+            total_const_variables: 0,
+            memory: Vec::new(),
+            variables: HashMap::new()
+        }
+    }
+
     fn build(&mut self) {
         self.constant_size = self.constants.len() as u16;
 

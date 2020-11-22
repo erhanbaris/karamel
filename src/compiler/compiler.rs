@@ -2,18 +2,21 @@ use std::vec::Vec;
 use std::rc::Rc;
 
 use crate::types::*;
-use crate::compiler::storage::*;
+use crate::compiler::*;
 
-pub struct BramaCompilerOption {
+pub struct BramaCompilerOption<S>
+where S: Storage {
     pub opcodes : Vec<BramaVmOpCode>,
-    pub storages: Vec<StaticStorage>
+    pub storages: Vec<S>
 }
 
-impl BramaCompilerOption {
-    pub fn new() -> BramaCompilerOption {
+impl<S>  BramaCompilerOption<S>
+where S: Storage
+{
+    pub fn new() -> BramaCompilerOption<S> {
         BramaCompilerOption {
             opcodes: Vec::new(),
-            storages: vec![StaticStorage::new()]
+            storages: vec![S::new()]
         }
     }
 }
@@ -23,21 +26,22 @@ struct CompileInfo {
     index: i16
 }
 
-pub trait Compiler {
-    fn prepare_variable_store(&self, ast: &BramaAstType, options: &mut BramaCompilerOption);
-    fn compile(&self, ast: &BramaAstType, options: &mut BramaCompilerOption) -> CompilerResult;
+pub trait Compiler<S> where S: Storage
+{
+    fn prepare_variable_store(&self, ast: &BramaAstType, options: &mut BramaCompilerOption<S>);
+    fn compile(&self, ast: &BramaAstType, options: &mut BramaCompilerOption<S>) -> CompilerResult;
 }
 
 
 pub struct InterpreterCompiler;
-impl Compiler for InterpreterCompiler {
-    fn prepare_variable_store(&self, ast: &BramaAstType, options: &mut BramaCompilerOption) {
+impl<S> Compiler<S> for InterpreterCompiler where S: Storage {
+    fn prepare_variable_store(&self, ast: &BramaAstType, options: &mut BramaCompilerOption<S>) {
         let max_temps = self.get_temp_count_from_ast(ast, &BramaAstType::None, options, 0);
         options.storages[0].set_temp_size(max_temps);
         options.storages[0].build();
     }
     
-    fn compile(&self, ast: &BramaAstType, options: &mut BramaCompilerOption) -> CompilerResult {
+    fn compile(&self, ast: &BramaAstType, options: &mut BramaCompilerOption<S>) -> CompilerResult {
         let mut main_compile_info = CompileInfo {index: 0};
 
         self.generate_opcode(ast, &BramaAstType::None, &mut main_compile_info, options, 0)?;
@@ -46,7 +50,7 @@ impl Compiler for InterpreterCompiler {
 }
 
 impl InterpreterCompiler {
-    fn generate_opcode(&self, ast: &BramaAstType, upper_ast: &BramaAstType, compiler_info: &mut CompileInfo, options: &mut BramaCompilerOption, storage_index: usize) -> CompilerResult {
+    fn generate_opcode<S>(&self, ast: &BramaAstType, upper_ast: &BramaAstType, compiler_info: &mut CompileInfo, options: &mut BramaCompilerOption<S>, storage_index: usize) -> CompilerResult where S: Storage {
         match ast {
             BramaAstType::Assignment { variable, operator, expression } => self.generate_assignment(variable.clone(), operator, expression, compiler_info, options, storage_index),
             BramaAstType::Symbol(variable)                              => self.generate_symbol(variable, upper_ast, compiler_info, options, storage_index),
@@ -60,16 +64,16 @@ impl InterpreterCompiler {
         }
     }
 
-    fn get_temp_count_from_ast(&self, ast: &BramaAstType, _: &BramaAstType, options: &mut BramaCompilerOption, storage_index: usize) -> u16 {
+    fn get_temp_count_from_ast<S>(&self, ast: &BramaAstType, _: &BramaAstType, options: &mut BramaCompilerOption<S>, storage_index: usize) -> u16 where S: Storage {
         let temp_count = match ast {
             BramaAstType::Binary {
-                left, 
-                operator: _, 
+                left,
+                operator: _,
                 right
             } => self.get_temp_count_from_ast(left, ast, options, storage_index) + self.get_temp_count_from_ast(right, ast, options, storage_index) + 1,
             BramaAstType::Control {
-                left, 
-                operator: _, 
+                left,
+                operator: _,
                 right
             } => self.get_temp_count_from_ast(left, ast, options, storage_index) + self.get_temp_count_from_ast(right, ast, options, storage_index) + 1,
             BramaAstType::PrefixUnary(_, inner_ast) => self.get_temp_count_from_ast(inner_ast, ast, options, storage_index),
@@ -101,8 +105,8 @@ impl InterpreterCompiler {
         return temp_count;
     }
 
-    fn generate_primative(&self, primative: Rc<BramaPrimative>, compiler_info: &mut CompileInfo, options: &mut BramaCompilerOption, storage_index: usize) -> CompilerResult {
-        let storage :&StaticStorage = &options.storages[storage_index];
+    fn generate_primative<S>(&self, primative: Rc<BramaPrimative>, compiler_info: &mut CompileInfo, options: &mut BramaCompilerOption<S>, storage_index: usize) -> CompilerResult where S: Storage {
+        let storage = &options.storages[storage_index];
 
         let result = storage.get_constant_location(primative);
         match result {
@@ -114,7 +118,7 @@ impl InterpreterCompiler {
         }
     }
 
-    fn generate_symbol(&self, variable: &String, _: &BramaAstType, compiler_info: &mut CompileInfo, options: &mut BramaCompilerOption, storage_index: usize) -> CompilerResult {
+    fn generate_symbol<S>(&self, variable: &String, _: &BramaAstType, compiler_info: &mut CompileInfo, options: &mut BramaCompilerOption<S>, storage_index: usize) -> CompilerResult where S: Storage {
         compiler_info.index = match options.storages.get_mut(storage_index).unwrap().get_variable_location(variable) {
             Some(location) => location as i16,
             _ => return Err(("Variable not found in storage", 0, 0))
@@ -123,7 +127,7 @@ impl InterpreterCompiler {
         Ok(())
     }
 
-    fn generate_control(&self, left_ast: &BramaAstType, operator: &BramaOperatorType, right_ast: &BramaAstType, _: &BramaAstType, compiler_info: &mut CompileInfo, options: &mut BramaCompilerOption, storage_index: usize) -> CompilerResult {
+    fn generate_control<S>(&self, left_ast: &BramaAstType, operator: &BramaOperatorType, right_ast: &BramaAstType, _: &BramaAstType, compiler_info: &mut CompileInfo, options: &mut BramaCompilerOption<S>, storage_index: usize) -> CompilerResult where S: Storage {
         compiler_info.index = -1;
 
         self.generate_opcode(left_ast, &BramaAstType::None, compiler_info, options, storage_index)?;
@@ -153,7 +157,7 @@ impl InterpreterCompiler {
         Ok(())
     }
 
-    fn generate_assignment(&self, variable: Rc<String>, operator: &BramaOperatorType, expression_ast: &BramaAstType, compiler_info: &mut CompileInfo, options: &mut BramaCompilerOption, storage_index: usize) -> CompilerResult {
+    fn generate_assignment<S>(&self, variable: Rc<String>, operator: &BramaOperatorType, expression_ast: &BramaAstType, compiler_info: &mut CompileInfo, options: &mut BramaCompilerOption<S>, storage_index: usize) -> CompilerResult where S: Storage {
         let target = options.storages.get_mut(storage_index).unwrap().add_variable(&*variable) as i16;
         compiler_info.index = -1;
         self.generate_opcode(expression_ast, &BramaAstType::None, compiler_info, options, storage_index)?;
@@ -171,7 +175,7 @@ impl InterpreterCompiler {
         Ok(())
     }
 
-    fn generate_binary(&self, left_ast: &BramaAstType, operator: &BramaOperatorType, right_ast: &BramaAstType, _: &BramaAstType, compiler_info: &mut CompileInfo, options: &mut BramaCompilerOption, storage_index: usize) -> CompilerResult {
+    fn generate_binary<S>(&self, left_ast: &BramaAstType, operator: &BramaOperatorType, right_ast: &BramaAstType, _: &BramaAstType, compiler_info: &mut CompileInfo, options: &mut BramaCompilerOption<S>, storage_index: usize) -> CompilerResult where S: Storage {
         compiler_info.index = -1;
 
         self.generate_opcode(left_ast, &BramaAstType::None, compiler_info, options, storage_index)?;
