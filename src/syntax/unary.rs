@@ -6,8 +6,6 @@ use crate::syntax::primative::PrimativeParser;
 pub struct UnaryParser;
 
 impl SyntaxParserTrait for UnaryParser {
-    type Item = UnaryParser;
-
     fn parse(parser: &SyntaxParser) -> AstResult {
         return map_parser(parser, &[Self::parse_prefix_unary, Self::parse_suffix_unary, PrimativeParser::parse]);
     }

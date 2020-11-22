@@ -9,40 +9,30 @@ pub struct EqualityParser;
 pub struct ControlParser;
 
 impl SyntaxParserTrait for ExpressionParser {
-    type Item = ExpressionParser;
-
     fn parse(parser: &SyntaxParser) -> AstResult {
         return OrParser::parse(parser);
     }
 }
 
 impl SyntaxParserTrait for OrParser {
-    type Item = OrParser;
-
     fn parse(parser: &SyntaxParser) -> AstResult {
         return parse_control::<AndParser>(parser, &[BramaOperatorType::Or]);
     }
 }
 
 impl SyntaxParserTrait for AndParser {
-    type Item = AndParser;
-
     fn parse(parser: &SyntaxParser) -> AstResult {
         return parse_control::<EqualityParser>(parser, &[BramaOperatorType::And]);
     }
 }
 
 impl SyntaxParserTrait for EqualityParser {
-    type Item = EqualityParser;
-
     fn parse(parser: &SyntaxParser) -> AstResult {
         return parse_control::<ControlParser>(parser, &[BramaOperatorType::Equal, BramaOperatorType::NotEqual]);
     }
 }
 
 impl SyntaxParserTrait for ControlParser {
-    type Item = ControlParser;
-
     fn parse(parser: &SyntaxParser) -> AstResult {
         return parse_control::<AddSubtractParser>(parser, &[BramaOperatorType::GreaterEqualThan, 
             BramaOperatorType::GreaterThan,

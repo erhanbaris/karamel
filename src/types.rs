@@ -3,7 +3,6 @@ use std::str::Chars;
 use std::iter::Peekable;
 use std::cell::Cell;
 use std::result::Result;
-use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 use std::collections::hash_map::DefaultHasher;
 use std::rc::Rc;
@@ -202,6 +201,7 @@ pub struct Tokinizer {
 pub struct SyntaxParser {
     pub tokens: Box<Vec<Token>>,
     pub index: Cell<usize>,
+    pub backup_index: Cell<usize>
 }
 
 #[repr(C)]
@@ -283,9 +283,12 @@ pub enum BramaAstType {
     /*Control,*/
     PrefixUnary(BramaOperatorType, Box<BramaAstType>),
     SuffixUnary(BramaOperatorType, Box<BramaAstType>),
-    /*
-    Assign,
-    Loop,
+    Assignment {
+        variable: Rc<String>,
+        operator: BramaOperatorType,
+        expression: Box<BramaAstType>
+    },
+    /*Loop,
     IfStatement,*/
     Symbol(String)
 }
@@ -339,7 +342,6 @@ pub trait TokenParser {
 }
 
 pub trait SyntaxParserTrait {
-    type Item;
     fn parse(parser: &SyntaxParser) -> AstResult;
 }
 
@@ -427,58 +429,23 @@ impl BramaTokenType {
 #[derive(PartialEq)]
 pub enum BramaVmOpCode {
     None,
-    Addition         {target: i16, left: i16, right: i16},
-    Subraction       {target: i16, left: i16, right: i16},
-    Multiply         {target: i16, left: i16, right: i16},
-    Division         {target: i16, left: i16, right: i16},
-    And              {target: i16, left: i16, right: i16},
-    Or               {target: i16, left: i16, right: i16},
-    Equal            {target: i16, left: i16, right: i16},
-    NotEqual         {target: i16, left: i16, right: i16},
-    GreaterThan      {target: i16, left: i16, right: i16},
-    LessThan         {target: i16, left: i16, right: i16},
-    GreaterEqualThan {target: i16, left: i16, right: i16},
-    LessEqualThan    {target: i16, left: i16, right: i16}
-}
-
-#[derive(PartialEq, Debug)]
-pub struct InnerStorage {
-    pub constants             : Vec<VmObject>,
-    pub constant_size         : u16,
-    pub temp_size             : u16,
-    pub temp_counter          : u16,
-    pub variables             : HashMap<String, u16>,
-    pub memory                : Vec<VmObject>,
-    pub total_const_variables : u16
-}
-
-pub trait Storage {
-    /// Build memory block with temporary, constant and variable definitions
-    fn build(&mut self);
-    fn get_memory(&self) -> &Vec<VmObject>;
-    fn get_constant_size(&self) -> u16;
-    fn get_variable_size(&self) -> u16;
-    fn get_temp_size(&self) -> u16;
-    fn get_free_temp_slot(&mut self) -> u16;
-    fn set_temp_size(&mut self, value: u16);
-
-    fn get_temp_counter(&self) -> u16;
-    fn inc_temp_counter(&mut self);
-    fn reset_temp_counter(&mut self);
-
-    fn add_variable(&mut self, name: &String);
-    fn set_variable_value(&mut self, name: &String, object: VmObject);
-    fn add_constant(&mut self, object: Rc<BramaPrimative>);
-
-    fn get_variable_location(&self, name: &String) -> Option<u16>;
-    fn get_constant_location(&self, object: Rc<BramaPrimative>) -> Option<u16>;
-
-    fn dump(&self);
-}
-
-pub struct BramaCompilerOption {
-    pub opcodes : Vec<BramaVmOpCode>,
-    pub storages: Vec<InnerStorage>
+    Addition             {target: i16, left: i16, right: i16},
+    Subraction           {target: i16, left: i16, right: i16},
+    Multiply             {target: i16, left: i16, right: i16},
+    Division             {target: i16, left: i16, right: i16},
+    And                  {target: i16, left: i16, right: i16},
+    Or                   {target: i16, left: i16, right: i16},
+    Equal                {target: i16, left: i16, right: i16},
+    NotEqual             {target: i16, left: i16, right: i16},
+    GreaterThan          {target: i16, left: i16, right: i16},
+    LessThan             {target: i16, left: i16, right: i16},
+    GreaterEqualThan     {target: i16, left: i16, right: i16},
+    LessEqualThan        {target: i16, left: i16, right: i16},
+    Assign               {target: i16, expression: i16},
+    AssignAddition       {target: i16, expression: i16},
+    AssignSubtraction    {target: i16, expression: i16},
+    AssignMultiplication {target: i16, expression: i16},
+    AssignDivision       {target: i16, expression: i16}
 }
 
 pub trait StrTrait {

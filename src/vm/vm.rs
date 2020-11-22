@@ -1,4 +1,5 @@
 use crate::types::*;
+use crate::compiler::*;
 use std::rc::Rc;
 
 pub fn run_vm(options: &mut BramaCompilerOption)
@@ -120,9 +121,12 @@ pub fn run_vm(options: &mut BramaCompilerOption)
                     _ => empty_primative
                 };
             },
+            BramaVmOpCode::Assign { target, expression } => {
+                memory[*target as usize] = memory[*expression as usize];
+            },
             _ => ()
         }
     }
-
+    
     options.storages[0].dump();
 }

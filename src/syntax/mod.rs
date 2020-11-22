@@ -3,24 +3,35 @@ pub mod unary;
 pub mod util;
 pub mod binary;
 pub mod control;
+pub mod block;
+pub mod assignment;
 
 use std::vec::{Vec};
 use std::cell::Cell;
 
 use crate::types::*;
 use crate::types::SyntaxParser;
-use self::control::ExpressionParser;
+use self::block::BlockParser;
 
 impl SyntaxParser {
     pub fn new(tokens: Box<Vec<Token>>) -> SyntaxParser {
         SyntaxParser {
             tokens: tokens,
-            index: Cell::new(0)
+            index: Cell::new(0),
+            backup_index: Cell::new(0)
         }
     }
 
     pub fn parse(&self) -> AstResult {
-        return ExpressionParser::parse(&self);
+        return BlockParser::parse(&self);
+    }
+
+    pub fn backup(&self) {
+        self.backup_index.set(self.index.get());
+    }
+
+    pub fn restore(&self) {
+        self.index.set(self.backup_index.get());
     }
 
     fn peek_token(&self) -> Result<&Token, ()> {
@@ -67,7 +78,6 @@ impl SyntaxParser {
             if let Ok(current_token) = self.peek_token() {
                 let done = match current_token.token_type {
                     BramaTokenType::WhiteSpace(_) => false,
-                    BramaTokenType::NewLine(_) => false,
                     _ => true
                 };
 
