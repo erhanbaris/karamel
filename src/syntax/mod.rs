@@ -34,21 +34,21 @@ impl SyntaxParser {
         self.index.set(self.backup_index.get());
     }
 
-    fn peek_token(&self) -> Result<&Token, ()> {
+    pub fn peek_token(&self) -> Result<&Token, ()> {
         match self.tokens.get(self.index.get()) {
             Some(token) => Ok(token),
             None => Err(())
         }
     }
 
-    fn next_token(&self) -> Result<&Token, ()> {
+    pub fn next_token(&self) -> Result<&Token, ()> {
         match self.tokens.get(self.index.get() + 1) {
             Some(token) => Ok(token),
             None => Err(())
         }
     }
     
-    fn consume_token(&self) -> Option<&Token> {
+    pub fn consume_token(&self) -> Option<&Token> {
         self.index.set(self.index.get() + 1);
         self.tokens.get(self.index.get())
     }
@@ -78,6 +78,26 @@ impl SyntaxParser {
             if let Ok(current_token) = self.peek_token() {
                 let done = match current_token.token_type {
                     BramaTokenType::WhiteSpace(_) => false,
+                    _ => true
+                };
+
+                if done {
+                    break;
+                }
+
+                self.consume_token();
+            }
+            else {
+                break;
+            }
+        }
+    }
+
+    pub fn consume_newline(&self) {
+        loop {
+            if let Ok(current_token) = self.peek_token() {
+                let done = match current_token.token_type {
+                    BramaTokenType::NewLine(_) => false,
                     _ => true
                 };
 

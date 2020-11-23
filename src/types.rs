@@ -1,4 +1,4 @@
-use std::vec::{Vec};
+use std::vec::Vec;
 use std::str::Chars;
 use std::iter::Peekable;
 use std::cell::Cell;
@@ -269,6 +269,7 @@ impl VmObject {
 #[derive(PartialEq)]
 pub enum BramaAstType {
     None,
+    Block(Vec<BramaAstType>),
     Primative(Rc<BramaPrimative>),
     Binary {
         left: Box<BramaAstType>, 
@@ -324,7 +325,8 @@ impl Tokinizer<'_> {
         self.iter.next();
         self.iter_second.next();
         self.iter_third.next();
-        self.index += self.get_char().len_utf8() as u32;
+        self.index  += self.get_char().len_utf8() as u32;
+        self.column += 1;
     }
 
     pub fn increate_line(& mut self) {

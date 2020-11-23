@@ -13,7 +13,8 @@ pub struct DynamicStorage {
     pub temp_counter          : u16,
     pub variables             : HashMap<String, u16>,
     pub memory                : Vec<VmObject>,
-    pub total_const_variables : u16
+    pub total_const_variables : u16,
+    pub builded               : bool
 }
 
 impl Storage for DynamicStorage {
@@ -25,7 +26,8 @@ impl Storage for DynamicStorage {
             temp_counter: 0,
             total_const_variables: 0,
             memory: Vec::new(),
-            variables: HashMap::new()
+            variables: HashMap::new(),
+            builded: false
         }
     }
 
@@ -33,22 +35,10 @@ impl Storage for DynamicStorage {
         self.constant_size = self.constants.len() as u16;
 
         /* Allocate memory */
-        let memory_size = self.get_constant_size() + self.get_variable_size() + self.get_temp_size();
-        self.memory.reserve(memory_size.into());
-
-        /* Move all constants informations to memory location */
-        self.memory.append(&mut self.constants);
-
-        /*  Allocate variable memory and update referances */
-        let mut index = self.get_constant_size();
-        for (_, value) in self.variables.iter_mut() {
-            self.memory.push(VmObject::convert(Rc::new(BramaPrimative::Empty)));
-            *value = index;
-            index += 1;
-        }
-
-        let start_index = self.get_temp_size();
-        for _ in 0..start_index {
+        let new_memory_size = self.get_constant_size() + self.get_variable_size() + self.get_temp_size();
+        let current_memory_size = self.memory.len();
+        
+        for _ in current_memory_size..new_memory_size.into() {
             self.memory.push(VmObject::convert(Rc::new(BramaPrimative::Empty)));
         }
     }
@@ -74,12 +64,13 @@ impl Storage for DynamicStorage {
         });
         
         if !found { 
-            self.constants.push(VmObject::convert(value.clone()));
+            self.memory.push(VmObject::convert(value.clone()));
         };
     }
 
     fn add_variable(&mut self, name: &String) -> u16 { 
         if !self.variables.contains_key(&name[..]) {
+            self.memory.push(VmObject::convert(Rc::new(BramaPrimative::Empty)));
             self.variables.insert(name.to_string(), 0);
         }
 
@@ -116,7 +107,6 @@ impl Storage for DynamicStorage {
         for (index, item) in self.memory.iter().enumerate() {
             println!("| {:?} | {:?}", index, *item.deref());
         }
-        println!("-------------------------------");
         println!("-------------------------------");
         println!("        VARIABLE DUMP");
         println!("-------------------------------");

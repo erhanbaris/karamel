@@ -1,5 +1,6 @@
 use std::vec::Vec;
 use std::rc::Rc;
+use std::cmp::max;
 
 use crate::types::*;
 use crate::compiler::*;
@@ -56,6 +57,7 @@ impl InterpreterCompiler {
             BramaAstType::Symbol(variable)                              => self.generate_symbol(variable, upper_ast, compiler_info, options, storage_index),
             BramaAstType::Control { left, operator, right }             => self.generate_control(left, operator, right, upper_ast, compiler_info, options, storage_index),
             BramaAstType::Binary { left, operator, right }              => self.generate_binary(left, operator, right, upper_ast, compiler_info, options, storage_index),
+            BramaAstType::Block(asts) => self.generate_block(asts, upper_ast, compiler_info, options, storage_index),
             BramaAstType::Primative(primative)                          => self.generate_primative(primative.clone(), compiler_info, options, storage_index),
             _ => {
                 println!("{:?}", ast);
@@ -69,27 +71,36 @@ impl InterpreterCompiler {
             BramaAstType::Binary {
                 left,
                 operator: _,
-                right
-            } => self.get_temp_count_from_ast(left, ast, options, storage_index) + self.get_temp_count_from_ast(right, ast, options, storage_index) + 1,
+                right} => self.get_temp_count_from_ast(left, ast, options, storage_index) + self.get_temp_count_from_ast(right, ast, options, storage_index) + 1,
+            
             BramaAstType::Control {
                 left,
                 operator: _,
-                right
-            } => self.get_temp_count_from_ast(left, ast, options, storage_index) + self.get_temp_count_from_ast(right, ast, options, storage_index) + 1,
+                right} => self.get_temp_count_from_ast(left, ast, options, storage_index) + self.get_temp_count_from_ast(right, ast, options, storage_index) + 1,
+            
             BramaAstType::PrefixUnary(_, inner_ast) => self.get_temp_count_from_ast(inner_ast, ast, options, storage_index),
             BramaAstType::SuffixUnary(_, inner_ast) => self.get_temp_count_from_ast(inner_ast, ast, options, storage_index),
             BramaAstType::Symbol(string) => {
                 options.storages.get_mut(storage_index).unwrap().add_variable(&string);
                 0
             },
+            
             BramaAstType::Assignment {
                 variable,
                 operator: _,
-                expression
-            } =>  {
+                expression} =>  {
                 options.storages.get_mut(storage_index).unwrap().add_variable(&*variable);
                 self.get_temp_count_from_ast(expression, ast, options, storage_index)
             },
+            
+            BramaAstType::Block(asts) => {
+                let mut list_temp_count = 0;
+                for array_item in asts {
+                    list_temp_count = max(self.get_temp_count_from_ast(array_item, ast, options, storage_index), list_temp_count);
+                }
+                list_temp_count
+            },
+
             BramaAstType::Primative(primative) => {
                 options.storages.get_mut(storage_index).unwrap().add_constant(Rc::clone(primative));
                 /*if let BramaPrimative::List(list) = primative {
@@ -198,6 +209,14 @@ impl InterpreterCompiler {
         options.opcodes.push(opcode);
         compiler_info.index = target;
 
+        Ok(())
+    }
+
+    fn generate_block<S>(&self, asts: &Vec<BramaAstType>, upper_ast: &BramaAstType, compiler_info: &mut CompileInfo, options: &mut BramaCompilerOption<S>, storage_index: usize) -> CompilerResult where S: Storage {
+        for ast in asts {
+            self.generate_opcode(&ast, upper_ast, compiler_info, options, storage_index)?;
+            options.storages[storage_index].reset_temp_counter();
+        }
         Ok(())
     }
 }

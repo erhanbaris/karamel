@@ -19,7 +19,7 @@ impl TokenParser for LineParser {
             whitespace_count += 1;
             ch = tokinizer.get_char();
         }
-
+        tokinizer.increate_line();
         return Ok(BramaTokenType::NewLine(whitespace_count));
     }
 }

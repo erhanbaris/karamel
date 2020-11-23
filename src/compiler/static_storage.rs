@@ -128,7 +128,6 @@ impl Storage for StaticStorage {
             println!("| {:?} | {:?}", index, *item.deref());
         }
         println!("-------------------------------");
-        println!("-------------------------------");
         println!("        VARIABLE DUMP");
         println!("-------------------------------");
         for (variable, value) in &self.variables {
