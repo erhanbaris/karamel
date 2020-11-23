@@ -5,7 +5,5 @@ mod vm;
 mod compiler;
 
 fn main() {
-    vm::executer::code_executer(&r#"erhan = 1 + 12
-baris=2 * 12
-erhanbaris = erhan + baris"#.to_string());
+    vm::executer::code_executer(&r#"print('merhaba dünya')"#.to_string());
 }

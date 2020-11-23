@@ -5,6 +5,7 @@ pub mod binary;
 pub mod control;
 pub mod block;
 pub mod assignment;
+pub mod func_call;
 
 use std::vec::{Vec};
 use std::cell::Cell;

@@ -270,6 +270,10 @@ impl VmObject {
 pub enum BramaAstType {
     None,
     Block(Vec<BramaAstType>),
+    FunCall {
+        name: String,
+        expression: Box<BramaAstType>
+    },
     Primative(Rc<BramaPrimative>),
     Binary {
         left: Box<BramaAstType>, 
