@@ -33,6 +33,8 @@ pub trait Storage {
     fn add_constant(&mut self, object: Rc<BramaPrimative>);
 
     fn get_variable_location(&self, name: &String) -> Option<u16>;
+    fn get_variable_value(&self, name: &String) -> Option<Rc<BramaPrimative>>;
+
     fn get_constant_location(&self, object: Rc<BramaPrimative>) -> Option<u16>;
 
     fn dump(&self);

@@ -7,12 +7,23 @@ pub mod block;
 pub mod assignment;
 pub mod func_call;
 
-use std::vec::{Vec};
+use std::vec::Vec;
 use std::cell::Cell;
 
 use crate::types::*;
-use crate::types::SyntaxParser;
 use self::block::BlockParser;
+
+pub type ParseType = fn(parser: &SyntaxParser) -> AstResult;
+
+pub struct SyntaxParser {
+    pub tokens: Box<Vec<Token>>,
+    pub index: Cell<usize>,
+    pub backup_index: Cell<usize>
+}
+
+pub trait SyntaxParserTrait {
+    fn parse(parser: &SyntaxParser) -> AstResult;
+}
 
 impl SyntaxParser {
     pub fn new(tokens: Box<Vec<Token>>) -> SyntaxParser {

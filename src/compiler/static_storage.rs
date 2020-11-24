@@ -113,6 +113,13 @@ impl Storage for StaticStorage {
         return None;
     }
 
+    fn get_variable_value(&self, name: &String) -> Option<Rc<BramaPrimative>> {
+        match self.get_variable_location(name) {
+            Some(loc) => Some(self.memory[loc as usize].deref()),
+            _ => None
+        }
+    }
+
     fn get_constant_location(&self, value: Rc<BramaPrimative>) -> Option<u16> {
         return match self.memory.iter().position(|x| { return *x.deref() == *value; }) {
             Some(number) => Some(number as u16),

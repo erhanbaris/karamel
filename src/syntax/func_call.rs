@@ -1,8 +1,6 @@
 use crate::types::*;
-use crate::syntax::SyntaxParser;
+use crate::syntax::{SyntaxParser, SyntaxParserTrait};
 use crate::syntax::control::ExpressionParser;
-use crate::syntax::assignment::AssignmentParser;
-use crate::syntax::util::map_parser;
 
 pub struct FuncCallParser;
 

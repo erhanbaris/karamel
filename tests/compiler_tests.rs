@@ -4,6 +4,7 @@ extern crate tpd;
 mod tests {
     use crate::tpd::parser::*;
     use crate::tpd::types::*;
+    use crate::tpd::syntax::*;
     use crate::tpd::compiler::*;
 
     use std::rc::Rc;

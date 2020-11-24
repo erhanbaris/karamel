@@ -1,5 +1,5 @@
 use crate::types::*;
-use crate::syntax::SyntaxParser;
+use crate::syntax::{SyntaxParser, SyntaxParserTrait};
 use crate::syntax::util::map_parser;
 use crate::syntax::primative::PrimativeParser;
 

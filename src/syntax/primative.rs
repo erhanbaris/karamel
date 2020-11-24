@@ -4,7 +4,7 @@ use std::rc::Rc;
 
 use crate::types::*;
 use crate::syntax::util::*;
-use crate::syntax::SyntaxParser;
+use crate::syntax::{SyntaxParser, SyntaxParserTrait};
 use crate::syntax::control::ExpressionParser;
 
 pub struct PrimativeParser;

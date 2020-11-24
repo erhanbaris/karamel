@@ -1,7 +1,6 @@
 use std::vec::Vec;
 use std::str::Chars;
 use std::iter::Peekable;
-use std::cell::Cell;
 use std::result::Result;
 use std::hash::{Hash, Hasher};
 use std::collections::hash_map::DefaultHasher;
@@ -12,7 +11,6 @@ use std::mem::ManuallyDrop;
 pub type ParseResult        = Result<(), (&'static str, u32, u32)>;
 pub type AstResult          = Result<BramaAstType, (&'static str, u32, u32)>;
 pub type CompilerResult     = Result<(), (&'static str, u32, u32)>;
-pub type ParseType          = fn(parser: &SyntaxParser) -> AstResult;
 
 pub const TAG_NULL        : u64 = 0;
 pub const TAG_FALSE       : u64 = 1;
@@ -198,12 +196,6 @@ pub struct Tokinizer<'a> {
     pub index: u32
 }
 
-pub struct SyntaxParser {
-    pub tokens: Box<Vec<Token>>,
-    pub index: Cell<usize>,
-    pub backup_index: Cell<usize>
-}
-
 #[repr(C)]
 #[derive(Clone, Debug)]
 pub enum BramaPrimative {
@@ -345,10 +337,6 @@ impl Tokinizer<'_> {
 pub trait TokenParser {
     fn check(&self, tokinizer: &mut Tokinizer) -> bool;
     fn parse(&self, tokinizer: &mut Tokinizer) -> Result<BramaTokenType, (&'static str, u32, u32)>;
-}
-
-pub trait SyntaxParserTrait {
-    fn parse(parser: &SyntaxParser) -> AstResult;
 }
 
 pub trait CharTraits {

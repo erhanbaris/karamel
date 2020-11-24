@@ -4,6 +4,7 @@ extern crate tpd;
 mod tests {
     use crate::tpd::parser::*;
     use crate::tpd::types::*;
+    use crate::tpd::syntax::*;
     use std::rc::Rc;
 
     #[warn(unused_macros)]
@@ -116,7 +117,7 @@ mod tests {
     }));
 
     test_compare!(multiply_divide_8, "1/", Err(("Syntax error", 0, 0)));
-    test_compare!(multiply_divide_9, "/1", Err(("Syntax error", 0, 0)));
+    test_compare!(multiply_divide_9, "/1", Err(("Syntax error", 0, 1)));
 
 
 

@@ -1,5 +1,5 @@
 use crate::types::*;
-use crate::syntax::SyntaxParser;
+use crate::syntax::{SyntaxParser, SyntaxParserTrait};
 use crate::syntax::control::ExpressionParser;
 use crate::syntax::func_call::FuncCallParser;
 use crate::syntax::assignment::AssignmentParser;
@@ -31,10 +31,10 @@ impl SyntaxParserTrait for BlockParser {
             }
         }
 
-        if block_asts.len() == 0 {
-            return Ok(BramaAstType::None);
+        return match block_asts.len() {
+            0 => Ok(BramaAstType::None),
+            1 => Ok(block_asts[0].clone()),
+            _ => Ok(BramaAstType::Block(block_asts.to_vec()))
         }
-
-        return Ok(BramaAstType::Block(block_asts.to_vec()));
     }
 }

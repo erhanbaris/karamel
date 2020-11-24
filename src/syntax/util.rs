@@ -1,5 +1,6 @@
 use crate::types::*;
 use crate::syntax::SyntaxParser;
+use crate::syntax::ParseType;
 
 
 // https://github.com/rust-lang/rust/issues/75429

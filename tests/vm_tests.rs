@@ -6,6 +6,7 @@ mod tests {
     use crate::tpd::types::*;
     use crate::tpd::compiler::*;
     use crate::tpd::vm::*;
+    use crate::tpd::syntax::*;
 
     use std::rc::Rc;
 
@@ -59,13 +60,16 @@ mod tests {
                 };
 
                 let opcode_compiler  = InterpreterCompiler {};
-                let mut compiler_options = BramaCompilerOption::new();
+                let mut compiler_options: BramaCompilerOption<StaticStorage> = BramaCompilerOption::new();
                 let ast = &syntax_result.unwrap();
 
                 opcode_compiler.prepare_variable_store(ast, &mut compiler_options);
                 if let Ok(_) = opcode_compiler.compile(ast, &mut compiler_options) {
-                    vm::run_vm(&mut compiler_options);
-                    assert_eq!(*compiler_options.storages[0].get_memory().last().unwrap().deref(), $result);
+                    interpreter::run_vm(&mut compiler_options);
+                    match compiler_options.storages[0].get_variable_value(&$variable.to_string()) {
+                        Some(ast) => assert_eq!(*ast, $result),
+                        None => assert!(false)
+                    }
                 }
             }
         };
@@ -126,4 +130,10 @@ mod tests {
     test_last_memory!(vm_53, "yok != yok", BramaPrimative::Bool(false));
     test_last_memory!(vm_54, ":ok - 1 == yok", BramaPrimative::Bool(true));
     test_last_memory!(vm_55, "test_1 == test_2", BramaPrimative::Bool(true));
+    test_variable_value!(vm_56, "text", "text = 1024", BramaPrimative::Number(1024.0));
+    test_variable_value!(vm_57, "result", r#"text = 1024
+result = text *2"#, BramaPrimative::Number(2048.0));
+    test_variable_value!(vm_58, "full_text", r#"text_1 = 'erhan'
+text_2 = 'baris'
+full_text = text_1 + ' ' + text_2"#, BramaPrimative::Text(Rc::new("erhan baris".to_string())));
 }

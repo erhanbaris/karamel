@@ -1,7 +1,7 @@
 use crate::vm::interpreter::run_vm;
-use crate::types::*;
 use crate::parser::*;
 use crate::compiler::*;
+use crate::syntax::SyntaxParser;
 
 use std::io::{self};
 use std::io::Write;
@@ -33,13 +33,14 @@ pub fn code_executer(data: &String) {
     }
 }
 
+#[allow(dead_code)]
 fn console_welcome() {
     println!("Türkçe Programlama Dili (TPD) komut satırı");
     print!("-> ");
     io::stdout().flush().unwrap();
 }
 
-#[warn(dead_code)]
+#[allow(dead_code)]
 pub fn console_executer() {
     console_welcome();
     
