@@ -227,6 +227,19 @@ impl PartialEq for BramaPrimative {
     }
 }
 
+impl BramaPrimative {
+    pub fn to_object(&self) -> VmObject {
+        match self {
+            BramaPrimative::Empty            => VmObject(QNAN | EMPTY_FLAG),
+            BramaPrimative::Number(number)   => VmObject(number.to_bits()),
+            BramaPrimative::Bool(boolean)    => VmObject(QNAN | if *boolean { TRUE_FLAG } else { FALSE_FLAG }),
+            _                                => {
+                VmObject(QNAN | POINTER_FLAG | (POINTER_MASK & (Rc::into_raw(Rc::new(self))) as u64))
+            }
+        }
+    } 
+}
+
 impl VmObject {
     pub fn convert(primative: Rc<BramaPrimative>) -> VmObject {
         match *primative {

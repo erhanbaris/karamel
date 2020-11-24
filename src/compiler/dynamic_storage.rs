@@ -78,12 +78,12 @@ impl Storage for DynamicStorage {
     }
 
     fn set_variable_value(&mut self, name: &String, object: VmObject) {
-        match self.get_variable_location(name) {
-            Some(location) => {
-                self.memory[location as usize] = object;
-            },
-            _ => ()
+        let location = match self.get_variable_location(name) {
+            Some(location) => location,
+            _ => self.add_variable(name)
         };
+
+        self.memory[location as usize] = object;
     }
 
     fn get_variable_location(&self, name: &String) -> Option<u16> {
