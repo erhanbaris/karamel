@@ -110,7 +110,7 @@ impl InterpreterCompiler {
             BramaAstType::FunCall{
                 name: _,
                 expression
-            } => self.get_temp_count_from_ast(expression, ast, options, storage_index),
+            } => self.get_temp_count_from_ast(expression, ast, options, storage_index) + 1,
 
             BramaAstType::Primative(primative) => {
                 options.storages.get_mut(storage_index).unwrap().add_constant(Rc::clone(primative));
