@@ -3,7 +3,6 @@ extern crate tpd;
 #[cfg(test)]
 mod tests {
     use crate::tpd::parser::*;
-    use crate::tpd::types::*;
     use crate::tpd::compiler::*;
     use crate::tpd::vm::*;
     use crate::tpd::syntax::*;

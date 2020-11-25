@@ -1,6 +1,7 @@
 use crate::types::*;
 use crate::syntax::{SyntaxParser, SyntaxParserTrait};
 use crate::syntax::unary::UnaryParser;
+use crate::compiler::ast::BramaAstType;
 
 pub struct ModuloParser;
 pub struct MultiplyDivideParser;

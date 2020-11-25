@@ -1,5 +1,5 @@
 use crate::types::*;
-use crate::compiler::Storage;
+use crate::compiler::*;
 
 use std::collections::HashMap;
 use std::rc::Rc;

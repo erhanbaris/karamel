@@ -1,6 +1,7 @@
 use crate::types::*;
 use crate::syntax::{SyntaxParser, SyntaxParserTrait};
 use crate::syntax::binary::AddSubtractParser;
+use crate::compiler::ast::BramaAstType;
 
 pub struct ExpressionParser;
 pub struct OrParser;

@@ -1,12 +1,16 @@
 mod compiler;
 mod static_storage;
 mod dynamic_storage;
+pub mod value;
+pub mod ast;
 
 pub use self::compiler::*;
 pub use self::static_storage::*;
 pub use self::dynamic_storage::*;
+pub use self::value::*;
 
 use crate::types::*;
+use crate::core::NativeCall;
 
 use std::rc::Rc;
 use std::vec::Vec;
@@ -38,4 +42,27 @@ pub trait Storage {
     fn get_constant_location(&self, object: Rc<BramaPrimative>) -> Option<u16>;
 
     fn dump(&self);
+}
+
+#[repr(C)]
+pub enum BramaVmOpCode {
+    None,
+    Addition             {target: i16, left: i16, right: i16},
+    Subraction           {target: i16, left: i16, right: i16},
+    Multiply             {target: i16, left: i16, right: i16},
+    Division             {target: i16, left: i16, right: i16},
+    And                  {target: i16, left: i16, right: i16},
+    Or                   {target: i16, left: i16, right: i16},
+    Equal                {target: i16, left: i16, right: i16},
+    NotEqual             {target: i16, left: i16, right: i16},
+    GreaterThan          {target: i16, left: i16, right: i16},
+    LessThan             {target: i16, left: i16, right: i16},
+    GreaterEqualThan     {target: i16, left: i16, right: i16},
+    LessEqualThan        {target: i16, left: i16, right: i16},
+    Assign               {target: i16, expression: i16},
+    AssignAddition       {target: i16, expression: i16},
+    AssignSubtraction    {target: i16, expression: i16},
+    AssignMultiplication {target: i16, expression: i16},
+    AssignDivision       {target: i16, expression: i16},
+    NativeFuncCall       {target: i16, func: NativeCall, expression: i16}
 }

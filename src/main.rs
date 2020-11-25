@@ -8,12 +8,11 @@ mod core;
 use crate::compiler::*;
 
 fn main() {
-    let mut collection: core::ModuleCollection<compiler::DynamicStorage> = core::ModuleCollection::new();
-    let buildin_module = core::buildin::BuildinModule {};
-    collection.add_module(&buildin_module);
+    let mut collection: core::ModuleCollection = core::ModuleCollection::new();
+    collection.add_module(&core::buildin::BuildinModule { });
     let func = collection.get_function("buildin".to_string(), "print".to_string());
     
-    let mut storage = compiler::DynamicStorage::new();
+    let mut storage = compiler::StaticStorage::new();
     match func {
         Some(function) => {
             function([].to_vec(), &mut storage);

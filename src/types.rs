@@ -5,8 +5,7 @@ use std::result::Result;
 use std::hash::{Hash, Hasher};
 use std::collections::hash_map::DefaultHasher;
 use std::rc::Rc;
-use std::mem::ManuallyDrop;
-
+use crate::compiler::ast::BramaAstType;
 
 pub type ParseResult        = Result<(), (&'static str, u32, u32)>;
 pub type AstResult          = Result<BramaAstType, (&'static str, u32, u32)>;
@@ -196,113 +195,6 @@ pub struct Tokinizer<'a> {
     pub index: u32
 }
 
-#[repr(C)]
-#[derive(Clone, Debug)]
-pub enum BramaPrimative {
-    Empty,
-    Number(f64),
-    Bool(bool),
-    List(Vec<Box<BramaAstType>>),
-    Atom(u64),
-    Text(Rc<String>)
-}
-
-impl Drop for BramaPrimative {
-    fn drop(&mut self) {
-        //println!("> {:?}", self);
-    }
-}
-
-impl PartialEq for BramaPrimative {
-    fn eq(&self, other: &Self) -> bool {
-        match (self, &other) {
-            (BramaPrimative::Bool(lvalue),  BramaPrimative::Bool(rvalue)) => lvalue == rvalue,
-            (BramaPrimative::Atom(lvalue),  BramaPrimative::Atom(rvalue)) => lvalue == rvalue,
-            (BramaPrimative::List(lvalue),  BramaPrimative::List(rvalue)) => lvalue == rvalue,
-            (BramaPrimative::Empty,         BramaPrimative::Empty)        => true,
-            (BramaPrimative::Number(n),     BramaPrimative::Number(m))    => if n.is_nan() && m.is_nan() { true } else { n == m },
-            (BramaPrimative::Text(lvalue),  BramaPrimative::Text(rvalue)) => lvalue == rvalue,
-            _ => false
-        }
-    }
-}
-
-impl BramaPrimative {
-    pub fn to_object(&self) -> VmObject {
-        match self {
-            BramaPrimative::Empty            => VmObject(QNAN | EMPTY_FLAG),
-            BramaPrimative::Number(number)   => VmObject(number.to_bits()),
-            BramaPrimative::Bool(boolean)    => VmObject(QNAN | if *boolean { TRUE_FLAG } else { FALSE_FLAG }),
-            _                                => {
-                VmObject(QNAN | POINTER_FLAG | (POINTER_MASK & (Rc::into_raw(Rc::new(self))) as u64))
-            }
-        }
-    } 
-}
-
-impl VmObject {
-    pub fn convert(primative: Rc<BramaPrimative>) -> VmObject {
-        match *primative {
-            BramaPrimative::Empty            => VmObject(QNAN | EMPTY_FLAG),
-            BramaPrimative::Number(number)   => VmObject(number.to_bits()),
-            BramaPrimative::Bool(boolean)    => VmObject(QNAN | if boolean { TRUE_FLAG } else { FALSE_FLAG }),
-            _                                => {
-                VmObject(QNAN | POINTER_FLAG | (POINTER_MASK & (Rc::into_raw(primative)) as u64))
-            }
-        }
-    }
-
-    pub fn deref(&self) -> Rc<BramaPrimative> {
-        match self.0 {
-            n if (n & QNAN) != QNAN       => Rc::new(BramaPrimative::Number(f64::from_bits(n))),
-            e if e == (QNAN | EMPTY_FLAG) => Rc::new(BramaPrimative::Empty),
-            f if f == (QNAN | FALSE_FLAG) => Rc::new(BramaPrimative::Bool(false)),
-            t if t == (QNAN | TRUE_FLAG)  => Rc::new(BramaPrimative::Bool(true)),
-            p if (p & POINTER_FLAG) == POINTER_FLAG => {
-                let pointer = (self.0 & POINTER_MASK) as *mut BramaPrimative;
-                let data = unsafe { ManuallyDrop::new(Rc::from_raw(pointer)) };
-                Rc::clone(&data)
-            },
-            _ => Rc::new(BramaPrimative::Empty)
-        }
-    }
-}
-
-#[repr(C)]
-#[derive(Clone)]
-#[derive(Debug)]
-#[derive(PartialEq)]
-pub enum BramaAstType {
-    None,
-    Block(Vec<BramaAstType>),
-    FunCall {
-        name: String,
-        expression: Box<BramaAstType>
-    },
-    Primative(Rc<BramaPrimative>),
-    Binary {
-        left: Box<BramaAstType>, 
-        operator: BramaOperatorType, 
-        right: Box<BramaAstType>
-    },
-    Control {
-        left: Box<BramaAstType>, 
-        operator: BramaOperatorType, 
-        right: Box<BramaAstType>
-    },
-    /*Control,*/
-    PrefixUnary(BramaOperatorType, Box<BramaAstType>),
-    SuffixUnary(BramaOperatorType, Box<BramaAstType>),
-    Assignment {
-        variable: Rc<String>,
-        operator: BramaOperatorType,
-        expression: Box<BramaAstType>
-    },
-    /*Loop,
-    IfStatement,*/
-    Symbol(String)
-}
-
 impl Tokinizer<'_> {
     pub fn is_end(&mut self) -> bool {
         return match self.iter.peek() {
@@ -429,30 +321,6 @@ impl BramaTokenType {
             _ => String::from("")
         }
     }
-}
-
-#[repr(C)]
-#[derive(Debug)]
-#[derive(PartialEq)]
-pub enum BramaVmOpCode {
-    None,
-    Addition             {target: i16, left: i16, right: i16},
-    Subraction           {target: i16, left: i16, right: i16},
-    Multiply             {target: i16, left: i16, right: i16},
-    Division             {target: i16, left: i16, right: i16},
-    And                  {target: i16, left: i16, right: i16},
-    Or                   {target: i16, left: i16, right: i16},
-    Equal                {target: i16, left: i16, right: i16},
-    NotEqual             {target: i16, left: i16, right: i16},
-    GreaterThan          {target: i16, left: i16, right: i16},
-    LessThan             {target: i16, left: i16, right: i16},
-    GreaterEqualThan     {target: i16, left: i16, right: i16},
-    LessEqualThan        {target: i16, left: i16, right: i16},
-    Assign               {target: i16, expression: i16},
-    AssignAddition       {target: i16, expression: i16},
-    AssignSubtraction    {target: i16, expression: i16},
-    AssignMultiplication {target: i16, expression: i16},
-    AssignDivision       {target: i16, expression: i16}
 }
 
 pub trait StrTrait {

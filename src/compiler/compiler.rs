@@ -4,11 +4,15 @@ use std::cmp::max;
 
 use crate::types::*;
 use crate::compiler::*;
+use crate::core::*;
+use crate::compiler::value::BramaPrimative;
+use crate::compiler::ast::BramaAstType;
 
 pub struct BramaCompilerOption<S>
 where S: Storage {
     pub opcodes : Vec<BramaVmOpCode>,
-    pub storages: Vec<S>
+    pub storages: Vec<S>,
+    pub modules: ModuleCollection
 }
 
 impl<S>  BramaCompilerOption<S>
@@ -17,7 +21,8 @@ where S: Storage
     pub fn new() -> BramaCompilerOption<S> {
         BramaCompilerOption {
             opcodes: Vec::new(),
-            storages: vec![S::new()]
+            storages: vec![S::new()],
+            modules: ModuleCollection::new()
         }
     }
 }
@@ -58,6 +63,7 @@ impl InterpreterCompiler {
             BramaAstType::Control { left, operator, right }             => self.generate_control(left, operator, right, upper_ast, compiler_info, options, storage_index),
             BramaAstType::Binary { left, operator, right }              => self.generate_binary(left, operator, right, upper_ast, compiler_info, options, storage_index),
             BramaAstType::Block(asts) => self.generate_block(asts, upper_ast, compiler_info, options, storage_index),
+            BramaAstType::FunCall { name, expression } => self.generate_func_call(name, expression, upper_ast, compiler_info, options, storage_index),
             BramaAstType::Primative(primative)                          => self.generate_primative(primative.clone(), compiler_info, options, storage_index),
             _ => {
                 println!("{:?}", ast);
@@ -100,6 +106,11 @@ impl InterpreterCompiler {
                 }
                 list_temp_count
             },
+            
+            BramaAstType::FunCall{
+                name: _,
+                expression
+            } => self.get_temp_count_from_ast(expression, ast, options, storage_index),
 
             BramaAstType::Primative(primative) => {
                 options.storages.get_mut(storage_index).unwrap().add_constant(Rc::clone(primative));
@@ -127,6 +138,26 @@ impl InterpreterCompiler {
             },
             _ => Err(("Value not found in storage", 0, 0))
         }
+    }
+
+    fn generate_func_call<S>(&self, name: &String, expression: &BramaAstType,  upper_ast: &BramaAstType, compiler_info: &mut CompileInfo, options: &mut BramaCompilerOption<S>, storage_index: usize) -> CompilerResult where S: Storage {
+        /*compiler_info.index = -1;
+        self.generate_opcode(expression, &BramaAstType::None, compiler_info, options, storage_index)?;
+        let expression = compiler_info.index;
+
+        let target = options.storages[storage_index].get_free_temp_slot() as i16;
+
+        let func = options.modules.get_function("buildin".to_string(), name);
+        match func {
+            Some(function) => {
+                BramaVmOpCode::NativeFuncCall {
+                    target: target,
+                    function
+                };
+            },
+            None => ()
+        };*/
+        Ok(())
     }
 
     fn generate_symbol<S>(&self, variable: &String, _: &BramaAstType, compiler_info: &mut CompileInfo, options: &mut BramaCompilerOption<S>, storage_index: usize) -> CompilerResult where S: Storage {

@@ -6,6 +6,8 @@ use crate::types::*;
 use crate::syntax::util::*;
 use crate::syntax::{SyntaxParser, SyntaxParserTrait};
 use crate::syntax::control::ExpressionParser;
+use crate::compiler::value::BramaPrimative;
+use crate::compiler::ast::BramaAstType;
 
 pub struct PrimativeParser;
 

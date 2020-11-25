@@ -1,32 +1,35 @@
 pub mod buildin;
 
 use std::collections::HashMap;
+use std::vec::Vec;
 
-use crate::types::BramaPrimative;
-use crate::compiler::Storage;
+use crate::compiler::StaticStorage;
+use crate::compiler::value::BramaPrimative;
 
 pub type NativeCallResult = Result<(), (&'static str, u32, u32)>;
-pub type NativeCall<T> where T: Storage= fn(params: Vec<BramaPrimative>, storage: &mut T) -> NativeCallResult;
+pub type NativeCall       = fn(params: Vec<BramaPrimative>, storage: &mut StaticStorage) -> NativeCallResult;
 
-pub trait Module<T: Storage> {
+pub trait Module {
     fn get_module_name(&self) -> String;
-    fn get_methods(&self) -> Vec<(&'static str, NativeCall<T>)>;
+    fn get_methods(&self) -> Vec<(&'static str, NativeCall)>;
 }
 
-pub struct ModuleCollection<T: Storage> {
-    modules: HashMap<String, HashMap<String, NativeCall<T>>>
+pub struct ModuleCollection {
+    modules: HashMap<String, HashMap<String, NativeCall>>
 }
 
-impl<T: Storage> ModuleCollection<T>
+impl ModuleCollection
 {
-    pub fn new() -> ModuleCollection<T> {
-        ModuleCollection {
+    pub fn new() -> ModuleCollection {
+        let mut collection = ModuleCollection {
             modules: HashMap::new()
-        }
+        };
+        collection.add_module(&buildin::BuildinModule {});
+        collection
     }
 
-    pub fn add_module(&mut self, module: &dyn Module<T>) {
-        let mut module_functions: HashMap<String, NativeCall<T>> = HashMap::new();
+    pub fn add_module(&mut self, module: &dyn Module) {
+        let mut module_functions: HashMap<String, NativeCall> = HashMap::new();
         
         for (name, func) in module.get_methods() {
             module_functions.insert(name.to_string(), func);
@@ -39,7 +42,7 @@ impl<T: Storage> ModuleCollection<T>
         self.modules.contains_key(&module)
     }
 
-    pub fn get_function(&self, module: String, func_name: String) -> Option<NativeCall<T>> {
+    pub fn get_function(&self, module: String, func_name: String) -> Option<NativeCall> {
         match self.modules.get(&module) {
             Some(module) => {
                 match module.get(&func_name) {
