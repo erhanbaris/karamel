@@ -52,7 +52,7 @@ impl PrimativeParser {
         };
 
         match result {
-            Ok(BramaAstType::None) => Err(("Syntax error", token.unwrap().line, token.unwrap().column)),
+            Ok(BramaAstType::None) => Ok(BramaAstType::None),
             Ok(ast) => {
                 parser.consume_token();
                 Ok(ast)

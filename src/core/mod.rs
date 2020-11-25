@@ -38,10 +38,6 @@ impl ModuleCollection
         self.modules.insert(module.get_module_name(), module_functions);
     }
 
-    pub fn has_module(&self, module: String) -> bool {
-        self.modules.contains_key(&module)
-    }
-
     pub fn get_function(&self, module: String, func_name: String) -> Option<NativeCall> {
         match self.modules.get(&module) {
             Some(module) => {

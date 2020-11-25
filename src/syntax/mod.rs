@@ -35,7 +35,16 @@ impl SyntaxParser {
     }
 
     pub fn parse(&self) -> AstResult {
-        return BlockParser::parse(&self);
+        return match BlockParser::parse(&self) {
+            Ok(ast) => {
+                if let Ok(token) = self.next_token() {
+                    println!("{:?}", token);
+                    return Err(("Syntax error", token.line, token.column));
+                }
+                Ok(ast)
+            },
+            other => other
+        };
     }
 
     pub fn backup(&self) {

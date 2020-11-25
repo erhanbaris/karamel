@@ -17,27 +17,33 @@ impl SyntaxParserTrait for FuncCallParser {
                 parser.clear_whitespaces();
 
                 if let Some(_) = parser.match_operator(&[BramaOperatorType::LeftParentheses]) {
-                    parser.clear_whitespaces();
-                    
-                    let expression = ExpressionParser::parse(parser);
-                    match expression {
-                        Ok(BramaAstType::None) => return expression,
-                        Ok(_) => (),
-                        Err(_) => return expression
+                    let mut arguments = Vec::new();
+
+                    /* Parse function call arguments */
+                    loop {
+                        parser.clear_whitespaces();
+                        
+                        let expression = ExpressionParser::parse(parser);
+                        match expression {
+                            Err(_) => return expression,
+                            Ok(BramaAstType::None) => break,
+                            _ => arguments.push(Box::new(expression.unwrap()))
+                        };
+                        
+                        parser.clear_whitespaces();
+                        match parser.match_operator(&[BramaOperatorType::RightParentheses, BramaOperatorType::Comma]) {
+                            Some(BramaOperatorType::RightParentheses) => break,  
+                            Some(BramaOperatorType::Comma)            => continue,
+                            _ => return Err(("Right parantheses missing", 0, 0))
+                        }
+                    }
+
+                    let funcall_ast = BramaAstType::FunCall {
+                        name: name.to_string(),
+                        arguments: arguments
                     };
                     
-                    parser.clear_whitespaces();
-                    if let Some(_) = parser.match_operator(&[BramaOperatorType::RightParentheses]) {
-                        
-                        let funcall_ast = BramaAstType::FunCall {
-                            name: name.to_string(),
-                            expression: Box::new(expression.unwrap())
-                        };
-                        return Ok(funcall_ast);
-                    }
-                    else {
-                        return Err(("Right parantheses missing", 0, 0));
-                    }
+                    return Ok(funcall_ast);
                 }
             }
         }

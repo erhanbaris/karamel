@@ -47,5 +47,10 @@ mod tests {
     test_compare!(unary_17, "data++", Ok(BramaAstType::SuffixUnary(BramaOperatorType::Increment, Box::new(BramaAstType::Symbol("data".to_string())))));
 
     test_compare!(unary_18, "+ 1024", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Addition, Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(1024.0)))))));
+    test_compare!(unary_19, "++data - 1", Ok(BramaAstType::Binary {
+        left: Box::new(BramaAstType::PrefixUnary(BramaOperatorType::Increment, Box::new(BramaAstType::Symbol("data".to_string())))),
+        operator: BramaOperatorType::Subtraction,
+        right: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(1.0))))
+    }));
     //test_compare!(unary_19, "doğru değil", Ok(BramaAstType::SuffixUnary(BramaOperatorType::Not, Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Bool(true))))));
 }

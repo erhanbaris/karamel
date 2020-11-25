@@ -15,7 +15,7 @@ impl Module for BuildinModule {
 }
 
 impl BuildinModule  {
-    pub fn print(params: Vec<BramaPrimative>, storage: &mut StaticStorage) -> NativeCallResult {
+    pub fn print(_: Vec<BramaPrimative>, storage: &mut StaticStorage) -> NativeCallResult {
         storage.set_variable_value(&"erhan".to_string(), BramaPrimative::Number(1024.0).to_object());
         Ok(())
     }

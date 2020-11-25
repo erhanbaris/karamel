@@ -10,7 +10,6 @@ pub use self::dynamic_storage::*;
 pub use self::value::*;
 
 use crate::types::*;
-use crate::core::NativeCall;
 
 use std::rc::Rc;
 use std::vec::Vec;
@@ -63,6 +62,5 @@ pub enum BramaVmOpCode {
     AssignAddition       {target: i16, expression: i16},
     AssignSubtraction    {target: i16, expression: i16},
     AssignMultiplication {target: i16, expression: i16},
-    AssignDivision       {target: i16, expression: i16},
-    NativeFuncCall       {target: i16, func: NativeCall, expression: i16}
+    AssignDivision       {target: i16, expression: i16}
 }

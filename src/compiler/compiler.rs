@@ -63,7 +63,7 @@ impl InterpreterCompiler {
             BramaAstType::Control { left, operator, right }             => self.generate_control(left, operator, right, upper_ast, compiler_info, options, storage_index),
             BramaAstType::Binary { left, operator, right }              => self.generate_binary(left, operator, right, upper_ast, compiler_info, options, storage_index),
             BramaAstType::Block(asts) => self.generate_block(asts, upper_ast, compiler_info, options, storage_index),
-            BramaAstType::FunCall { name, expression } => self.generate_func_call(name, expression, upper_ast, compiler_info, options, storage_index),
+            BramaAstType::FunCall { name, arguments } => self.generate_func_call(name, arguments, upper_ast, compiler_info, options, storage_index),
             BramaAstType::Primative(primative)                          => self.generate_primative(primative.clone(), compiler_info, options, storage_index),
             _ => {
                 println!("{:?}", ast);
@@ -109,8 +109,14 @@ impl InterpreterCompiler {
             
             BramaAstType::FunCall{
                 name: _,
-                expression
-            } => self.get_temp_count_from_ast(expression, ast, options, storage_index) + 1,
+                arguments
+            } => {
+                let mut max_temp = 0;
+                for arg in arguments {
+                    max_temp = max(self.get_temp_count_from_ast(arg, ast, options, storage_index), max_temp);
+                }
+                max_temp
+            },
 
             BramaAstType::Primative(primative) => {
                 options.storages.get_mut(storage_index).unwrap().add_constant(Rc::clone(primative));
@@ -140,7 +146,7 @@ impl InterpreterCompiler {
         }
     }
 
-    fn generate_func_call<S>(&self, name: &String, expression: &BramaAstType,  upper_ast: &BramaAstType, compiler_info: &mut CompileInfo, options: &mut BramaCompilerOption<S>, storage_index: usize) -> CompilerResult where S: Storage {
+    fn generate_func_call<S>(&self, _: &String, _: &Vec<Box<BramaAstType>>,  _: &BramaAstType, _: &mut CompileInfo, _: &mut BramaCompilerOption<S>, _: usize) -> CompilerResult where S: Storage {
         /*compiler_info.index = -1;
         self.generate_opcode(expression, &BramaAstType::None, compiler_info, options, storage_index)?;
         let expression = compiler_info.index;

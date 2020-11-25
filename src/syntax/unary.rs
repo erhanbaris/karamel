@@ -65,6 +65,7 @@ impl UnaryParser {
                 BramaOperatorType::Increment | BramaOperatorType::Deccrement => {
                     if token.token_type.is_symbol() {
                         unary_ast = BramaAstType::Symbol(token.token_type.get_symbol().to_string());
+                        parser.consume_token();
                     }
                 },
 
