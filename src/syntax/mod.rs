@@ -39,7 +39,7 @@ impl SyntaxParser {
             Ok(ast) => {
                 if let Ok(token) = self.next_token() {
                     println!("{:?}", token);
-                    return Err(("Syntax error", token.line, token.column));
+                    return Err(("Syntax error, undefined syntax", token.line, token.column));
                 }
                 Ok(ast)
             },

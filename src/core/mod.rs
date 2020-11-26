@@ -3,11 +3,8 @@ pub mod buildin;
 use std::collections::HashMap;
 use std::vec::Vec;
 
-use crate::compiler::StaticStorage;
-use crate::compiler::value::BramaPrimative;
-
-pub type NativeCallResult = Result<(), (&'static str, u32, u32)>;
-pub type NativeCall       = fn(params: Vec<BramaPrimative>, storage: &mut StaticStorage) -> NativeCallResult;
+use crate::compiler::value::NativeCall;
+use crate::compiler::value::NativeCallResult;
 
 pub trait Module {
     fn get_module_name(&self) -> String;

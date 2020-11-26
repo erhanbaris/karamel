@@ -1,7 +1,6 @@
 use crate::types::*;
 use crate::syntax::{SyntaxParser, SyntaxParserTrait};
 use crate::syntax::control::ExpressionParser;
-use crate::syntax::func_call::FuncCallParser;
 use crate::syntax::assignment::AssignmentParser;
 use crate::syntax::util::map_parser;
 use crate::compiler::ast::BramaAstType;
@@ -13,7 +12,7 @@ impl SyntaxParserTrait for BlockParser {
         let mut block_asts: Vec<BramaAstType> = Vec::new();
 
         loop {
-            let ast = map_parser(parser, &[FuncCallParser::parse, AssignmentParser::parse, ExpressionParser::parse])?;
+            let ast = map_parser(parser, &[AssignmentParser::parse, ExpressionParser::parse])?;
             match ast {
                 BramaAstType::None => break,
                 _                  => block_asts.push(ast)

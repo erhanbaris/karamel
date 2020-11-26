@@ -1,19 +1,40 @@
 use std::vec::Vec;
 use std::rc::Rc;
 use std::mem::ManuallyDrop;
+use std::fmt;
 
 use crate::types::*;
 use crate::compiler::ast::BramaAstType;
+use crate::compiler::static_storage::StaticStorage;
+
+
+pub type NativeCallResult = Result<(), (&'static str, u32, u32)>;
+pub type NativeCall       = fn(params: Vec<BramaPrimative>, storage: &mut StaticStorage) -> NativeCallResult;
 
 #[repr(C)]
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub enum BramaPrimative {
     Empty,
     Number(f64),
     Bool(bool),
     List(Vec<Box<BramaAstType>>),
     Atom(u64),
-    Text(Rc<String>)
+    Text(Rc<String>),
+    FuncNativeCall(NativeCall)
+}
+
+impl fmt::Debug for BramaPrimative {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            BramaPrimative::Empty => write!(f, "Empty"),
+            BramaPrimative::Number(number) => write!(f, "Primative({:?})", number),
+            BramaPrimative::FuncNativeCall(_) => write!(f, "Primative(func)"),
+            BramaPrimative::Bool(b) => write!(f, "Primative({:?})", b),
+            BramaPrimative::List(b) => write!(f, "Primative({:?})", b),
+            BramaPrimative::Atom(b) => write!(f, "Primative({:?})", b),
+            BramaPrimative::Text(b) => write!(f, "Primative({:?})", b)
+        }
+    }
 }
 
 impl Drop for BramaPrimative {
@@ -31,6 +52,7 @@ impl PartialEq for BramaPrimative {
             (BramaPrimative::Empty,         BramaPrimative::Empty)        => true,
             (BramaPrimative::Number(n),     BramaPrimative::Number(m))    => if n.is_nan() && m.is_nan() { true } else { n == m },
             (BramaPrimative::Text(lvalue),  BramaPrimative::Text(rvalue)) => lvalue == rvalue,
+            (BramaPrimative::FuncNativeCall(lvalue),  BramaPrimative::FuncNativeCall(rvalue)) => *lvalue as usize == *rvalue as usize,
             _ => false
         }
     }

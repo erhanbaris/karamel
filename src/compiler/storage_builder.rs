@@ -3,6 +3,7 @@ use std::cmp::max;
 
 use crate::compiler::Storage;
 use crate::compiler::ast::BramaAstType;
+use crate::compiler::value::BramaPrimative;
 use crate::compiler::BramaCompilerOption;
 pub struct StorageBuilder<S> where S: Storage { _marker: PhantomData<S> }
 
@@ -55,14 +56,18 @@ impl<S> StorageBuilder<S> where S: Storage {
             },
             
             BramaAstType::FunCall{
-                name: _,
+                name,
                 arguments
             } => {
-                let mut max_temp = 0;
-                for arg in arguments {
-                    max_temp = max(self.get_temp_count_from_ast(arg, ast, options, storage_index), max_temp);
+                /* Need to allocate space for function arguments */
+                let mut max_temp = arguments.len() as u16;
+                if let Some(function) = options.modules.get_function("buildin".to_string(), name.to_string()) {
+                    options.storages.get_mut(storage_index).unwrap().add_constant(Rc::new(BramaPrimative::FuncNativeCall(function)));
+                    for arg in arguments {
+                        max_temp = max(self.get_temp_count_from_ast(arg, ast, options, storage_index), max_temp);
+                    }
                 }
-                max_temp
+                max_temp + 1
             },
 
             BramaAstType::Primative(primative) => {

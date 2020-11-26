@@ -2,13 +2,14 @@ use crate::types::*;
 use crate::syntax::{SyntaxParser, SyntaxParserTrait};
 use crate::syntax::util::map_parser;
 use crate::syntax::primative::PrimativeParser;
+use crate::syntax::func_call::FuncCallParser;
 use crate::compiler::ast::BramaAstType;
 
 pub struct UnaryParser;
 
 impl SyntaxParserTrait for UnaryParser {
     fn parse(parser: &SyntaxParser) -> AstResult {
-        return map_parser(parser, &[Self::parse_prefix_unary, Self::parse_suffix_unary, PrimativeParser::parse]);
+        return map_parser(parser, &[Self::parse_prefix_unary, Self::parse_suffix_unary, FuncCallParser::parse, PrimativeParser::parse]);
     }
 }
 

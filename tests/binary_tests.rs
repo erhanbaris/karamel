@@ -118,8 +118,8 @@ mod tests {
         right: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Bool(true)))), 
     }));
 
-    test_compare!(multiply_divide_8, "1/", Err(("Syntax error", 0, 0)));
-    test_compare!(multiply_divide_9, "/1", Err(("Syntax error", 0, 1)));
+    test_compare!(multiply_divide_8, "1/", Err(("Symbol parse issue", 0, 0)));
+    test_compare!(multiply_divide_9, "/1", Err(("Syntax error, undefined syntax", 0, 1)));
 
 
 

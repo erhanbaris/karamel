@@ -100,7 +100,7 @@ impl PrimativeParser {
         parser.clear_whitespaces();
         let token = parser.peek_token();
         if token.is_err() {
-            return Err(("Syntax error", 0, 0));
+            return Err(("Symbol parse issue", 0, 0));
         }
 
         if let BramaTokenType::Symbol(symbol) = &token.unwrap().token_type {
