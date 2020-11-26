@@ -31,7 +31,6 @@ mod tests {
                 let mut compiler_options: BramaCompilerOption<StaticStorage> = BramaCompilerOption::new();
                 let ast = &syntax_result.unwrap();
 
-                opcode_compiler.prepare_variable_store(ast, &mut compiler_options);
                 if let Ok(_) = opcode_compiler.compile(ast, &mut compiler_options) {
                     interpreter::run_vm(&mut compiler_options);
                     assert_eq!(*compiler_options.storages[0].get_memory().last().unwrap().deref(), $result);
@@ -62,7 +61,6 @@ mod tests {
                 let mut compiler_options: BramaCompilerOption<StaticStorage> = BramaCompilerOption::new();
                 let ast = &syntax_result.unwrap();
 
-                opcode_compiler.prepare_variable_store(ast, &mut compiler_options);
                 if let Ok(_) = opcode_compiler.compile(ast, &mut compiler_options) {
                     interpreter::run_vm(&mut compiler_options);
                     match compiler_options.storages[0].get_variable_value(&$variable.to_string()) {

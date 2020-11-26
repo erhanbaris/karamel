@@ -21,8 +21,6 @@ pub fn code_executer(data: &String) {
 
     if let Ok(ast) = syntax_result {
         let opcode_compiler = InterpreterCompiler {};
-
-        opcode_compiler.prepare_variable_store(&ast, &mut compiler_options);
         
         if let Ok(_) = opcode_compiler.compile(&ast, &mut compiler_options) {
             run_vm(&mut compiler_options);
@@ -72,8 +70,6 @@ pub fn console_executer() {
 
         if let Ok(ast) = syntax_result {
             let opcode_compiler = InterpreterCompiler {};
-
-            opcode_compiler.prepare_variable_store(&ast, &mut compiler_options);
             
             if let Ok(_) = opcode_compiler.compile(&ast, &mut compiler_options) {
                 run_vm(&mut compiler_options);

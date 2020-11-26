@@ -1,6 +1,8 @@
 mod compiler;
 mod static_storage;
 mod dynamic_storage;
+mod storage_builder;
+
 pub mod value;
 pub mod ast;
 
