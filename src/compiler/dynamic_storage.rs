@@ -9,12 +9,12 @@ use std::rc::Rc;
 #[derive(PartialEq, Debug)]
 pub struct DynamicStorage {
     pub constants             : Vec<VmObject>,
-    pub constant_size         : u16,
-    pub temp_size             : u16,
-    pub temp_counter          : u16,
-    pub variables             : HashMap<String, u16>,
+    pub constant_size         : u8,
+    pub temp_size             : u8,
+    pub temp_counter          : u8,
+    pub variables             : HashMap<String, u8>,
     pub memory                : Vec<VmObject>,
-    pub total_const_variables : u16,
+    pub total_const_variables : u8,
     pub builded               : bool
 }
 
@@ -33,7 +33,7 @@ impl Storage for DynamicStorage {
     }
 
     fn build(&mut self) {
-        self.constant_size = self.constants.len() as u16;
+        self.constant_size = self.constants.len() as u8;
 
         /* Allocate memory */
         let new_memory_size = self.get_constant_size() + self.get_variable_size() + self.get_temp_size();
@@ -45,17 +45,18 @@ impl Storage for DynamicStorage {
     }
 
     fn get_memory(&mut self) -> &mut Vec<VmObject> { &mut self.memory }
-    fn get_constant_size(&self) -> u16 { self.constant_size }
-    fn get_variable_size(&self) -> u16 { self.variables.len() as u16 }
-    fn get_temp_size(&self) -> u16     { self.temp_size }
-    fn set_temp_size(&mut self, value: u16) { self.temp_size = value; }
-    fn get_free_temp_slot(&mut self) -> u16 { 
+    fn get_constant_size(&self) -> u8 { self.constant_size }
+    fn get_variable_size(&self) -> u8 { self.variables.len() as u8 }
+    fn get_temp_size(&self) -> u8     { self.temp_size }
+    fn set_temp_size(&mut self, value: u8) { self.temp_size = value; }
+    fn get_free_temp_slot(&mut self) -> u8 { 
         let index = self.temp_counter;
         self.temp_counter += 1;
         return self.get_constant_size() + self.get_variable_size() + index;
     }
 
-    fn get_temp_counter(&self) -> u16 { self.temp_counter }
+    fn get_temp_counter(&self) -> u8 { self.temp_counter }
+    fn set_temp_counter(&mut self, counter: u8) { self.temp_counter = counter; }
     fn inc_temp_counter(&mut self)    { self.temp_counter += 1; }
     fn reset_temp_counter(&mut self)  { self.temp_counter = 0; }
 
@@ -69,7 +70,7 @@ impl Storage for DynamicStorage {
         };
     }
 
-    fn add_variable(&mut self, name: &String) -> u16 { 
+    fn add_variable(&mut self, name: &String) -> u8 { 
         if !self.variables.contains_key(&name[..]) {
             self.memory.push(VmObject::convert(Rc::new(BramaPrimative::Empty)));
             self.variables.insert(name.to_string(), 0);
@@ -87,7 +88,7 @@ impl Storage for DynamicStorage {
         self.memory[location as usize] = object;
     }
 
-    fn get_variable_location(&self, name: &String) -> Option<u16> {
+    fn get_variable_location(&self, name: &String) -> Option<u8> {
         if self.variables.contains_key(name) {
             return Some(*self.variables.get(name).unwrap());
         }
@@ -101,9 +102,9 @@ impl Storage for DynamicStorage {
         }
     }
 
-    fn get_constant_location(&self, value: Rc<BramaPrimative>) -> Option<u16> {
+    fn get_constant_location(&self, value: Rc<BramaPrimative>) -> Option<u8> {
         return match self.memory.iter().position(|x| { return *x.deref() == *value; }) {
-            Some(number) => Some(number as u16),
+            Some(number) => Some(number as u8),
             _ => None
         };
     }

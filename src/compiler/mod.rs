@@ -15,7 +15,7 @@ use crate::types::*;
 
 use std::rc::Rc;
 use std::vec::Vec;
-
+use std::mem;
 
 pub trait Storage {
 
@@ -23,46 +23,101 @@ pub trait Storage {
     fn build(&mut self);
     fn new() -> Self;
     fn get_memory(&mut self) -> &mut Vec<VmObject>;
-    fn get_constant_size(&self) -> u16;
-    fn get_variable_size(&self) -> u16;
-    fn get_temp_size(&self) -> u16;
-    fn get_free_temp_slot(&mut self) -> u16;
-    fn set_temp_size(&mut self, value: u16);
+    fn get_constant_size(&self) -> u8;
+    fn get_variable_size(&self) -> u8;
+    fn get_temp_size(&self) -> u8;
+    fn get_free_temp_slot(&mut self) -> u8;
+    fn set_temp_size(&mut self, value: u8);
 
-    fn get_temp_counter(&self) -> u16;
+    fn get_temp_counter(&self) -> u8;
+    fn set_temp_counter(&mut self, counter: u8);
     fn inc_temp_counter(&mut self);
     fn reset_temp_counter(&mut self);
 
-    fn add_variable(&mut self, name: &String) -> u16;
+    fn add_variable(&mut self, name: &String) -> u8;
     fn set_variable_value(&mut self, name: &String, object: VmObject);
     fn add_constant(&mut self, object: Rc<BramaPrimative>);
 
-    fn get_variable_location(&self, name: &String) -> Option<u16>;
+    fn get_variable_location(&self, name: &String) -> Option<u8>;
     fn get_variable_value(&self, name: &String) -> Option<Rc<BramaPrimative>>;
 
-    fn get_constant_location(&self, object: Rc<BramaPrimative>) -> Option<u16>;
+    fn get_constant_location(&self, object: Rc<BramaPrimative>) -> Option<u8>;
 
     fn dump(&self);
 }
 
-#[repr(C)]
-pub enum BramaVmOpCode {
-    None,
-    Addition             {target: i16, left: i16, right: i16},
-    Subraction           {target: i16, left: i16, right: i16},
-    Multiply             {target: i16, left: i16, right: i16},
-    Division             {target: i16, left: i16, right: i16},
-    And                  {target: i16, left: i16, right: i16},
-    Or                   {target: i16, left: i16, right: i16},
-    Equal                {target: i16, left: i16, right: i16},
-    NotEqual             {target: i16, left: i16, right: i16},
-    GreaterThan          {target: i16, left: i16, right: i16},
-    LessThan             {target: i16, left: i16, right: i16},
-    GreaterEqualThan     {target: i16, left: i16, right: i16},
-    LessEqualThan        {target: i16, left: i16, right: i16},
-    Assign               {target: i16, expression: i16},
-    AssignAddition       {target: i16, expression: i16},
-    AssignSubtraction    {target: i16, expression: i16},
-    AssignMultiplication {target: i16, expression: i16},
-    AssignDivision       {target: i16, expression: i16}
+pub struct VmByte(pub u32);
+pub struct VmData {
+    pub opcode: VmOpCode,
+    pub target: u8,
+    pub a: u8,
+    pub b: u8
+}
+
+impl VmData {
+    pub fn encode(&self) -> VmByte {
+        VmByte((self.opcode as u32) |
+            (self.target as u32) << 8 |
+            (self.a as u32) << 16 |
+            (self.b as u32) << 24)
+    }
+}
+
+impl VmByte {
+    pub fn none() -> VmByte {
+        Self::new(VmOpCode::None, 0, 0, 0)
+    }
+
+    pub fn new(opcode: VmOpCode, target: u8, a: u8, b: u8) -> VmByte {
+        VmData {
+            target,
+            opcode,
+            a,
+            b
+        }.encode()
+    }
+
+    pub fn decode(&self) -> VmData {
+        let VmByte(bits) = *self;
+
+        VmData {
+            opcode: unsafe { mem::transmute::<_, VmOpCode>((bits & 0xff) as u8) },
+            target: (bits >> 8) as u8,
+            a: (bits >> 16) as u8,
+            b: (bits >> 24) as u8
+        }
+    }
+
+    pub fn decode_as_tuple(&self) -> (VmOpCode, usize, usize, usize) {
+        let VmByte(bits) = *self;
+        let opcode = unsafe { mem::transmute::<_, VmOpCode>((bits & 0xff) as u8) };
+        let target = (bits >> 8) as u8;
+        let a = (bits >> 16) as u8;
+        let b = (bits >> 24) as u8;
+
+        (opcode, target as usize, a as usize, b as usize)
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+#[repr(u8)]
+pub enum VmOpCode {
+    None = 0,
+    Addition,
+    Subraction,
+    Multiply,
+    Division,
+    And,
+    Or,
+    Equal,
+    NotEqual,
+    GreaterThan,
+    LessThan,
+    GreaterEqualThan,
+    LessEqualThan,
+    Assign,
+    AssignAddition,
+    AssignSubtraction,
+    AssignMultiplication,
+    AssignDivision
 }

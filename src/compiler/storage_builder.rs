@@ -20,7 +20,7 @@ impl<S> StorageBuilder<S> where S: Storage {
         options.storages[0].build();
     }
 
-    fn get_temp_count_from_ast(&self, ast: &BramaAstType, _: &BramaAstType, options: &mut BramaCompilerOption<S>, storage_index: usize) -> u16 {
+    fn get_temp_count_from_ast(&self, ast: &BramaAstType, _: &BramaAstType, options: &mut BramaCompilerOption<S>, storage_index: usize) -> u8 {
         let temp_count = match ast {
             BramaAstType::Binary {
                 left,
@@ -54,20 +54,36 @@ impl<S> StorageBuilder<S> where S: Storage {
                 }
                 list_temp_count
             },
-            
-            BramaAstType::FunCall{
-                name,
-                arguments
-            } => {
+
+/*
+╔══════════════════════╗
+║# Function call ast  #║
+╚══════════════════════╝
+╔══════════════════════╗
+║         Arg 1        ║
+╠══════════════════════╣
+║         Arg 2        ║
+╠══════════════════════╣
+║         Arg 3        ║
+╠══════════════════════╣
+║   Function Pointer   ║
+╚══════════════════════╝
+ */
+            BramaAstType::FuncCall{ name, arguments } => {
+
                 /* Need to allocate space for function arguments */
-                let mut max_temp = arguments.len() as u16;
+                let mut max_temp = arguments.len() as u8;
+
+                /* Native function call */
                 if let Some(function) = options.modules.get_function("buildin".to_string(), name.to_string()) {
-                    options.storages.get_mut(storage_index).unwrap().add_constant(Rc::new(BramaPrimative::FuncNativeCall(function)));
                     for arg in arguments {
                         max_temp = max(self.get_temp_count_from_ast(arg, ast, options, storage_index), max_temp);
                     }
+
+                    /* Add function pointer to consts */
+                    options.storages.get_mut(storage_index).unwrap().add_constant(Rc::new(BramaPrimative::FuncNativeCall(function)));
                 }
-                max_temp + 1
+                max_temp + 1 /* Variables + function */
             },
 
             BramaAstType::Primative(primative) => {

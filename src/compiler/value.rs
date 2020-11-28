@@ -23,6 +23,30 @@ pub enum BramaPrimative {
     FuncNativeCall(NativeCall)
 }
 
+impl From<f64> for VmObject {
+    fn from(source: f64) -> Self {
+        VmObject::convert(Rc::new(BramaPrimative::Number(source)))
+    }
+}
+
+impl From<bool> for VmObject {
+    fn from(source: bool) -> Self {
+        VmObject::convert(Rc::new(BramaPrimative::Bool(source)))
+    }
+}
+
+impl From<Rc<String>> for VmObject {
+    fn from(source: Rc<String>) -> Self {
+        VmObject::convert(Rc::new(BramaPrimative::Text(source)))
+    }
+}
+
+impl From<String> for VmObject {
+    fn from(source: String) -> Self {
+        VmObject::convert(Rc::new(BramaPrimative::Text(Rc::new(source))))
+    }
+}
+
 impl fmt::Debug for BramaPrimative {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -58,25 +82,13 @@ impl PartialEq for BramaPrimative {
     }
 }
 
-impl BramaPrimative {
-    pub fn to_object(&self) -> VmObject {
-        match self {
-            BramaPrimative::Empty            => VmObject(QNAN | EMPTY_FLAG),
-            BramaPrimative::Number(number)   => VmObject(number.to_bits()),
-            BramaPrimative::Bool(boolean)    => VmObject(QNAN | if *boolean { TRUE_FLAG } else { FALSE_FLAG }),
-            _                                => {
-                VmObject(QNAN | POINTER_FLAG | (POINTER_MASK & (Rc::into_raw(Rc::new(self))) as u64))
-            }
-        }
-    } 
-}
-
 impl VmObject {
     pub fn convert(primative: Rc<BramaPrimative>) -> VmObject {
         match *primative {
             BramaPrimative::Empty            => VmObject(QNAN | EMPTY_FLAG),
             BramaPrimative::Number(number)   => VmObject(number.to_bits()),
-            BramaPrimative::Bool(boolean)    => VmObject(QNAN | if boolean { TRUE_FLAG } else { FALSE_FLAG }),
+            BramaPrimative::Bool(true)       => VmObject(QNAN | TRUE_FLAG),
+            BramaPrimative::Bool(false)      => VmObject(QNAN | FALSE_FLAG),
             _                                => {
                 VmObject(QNAN | POINTER_FLAG | (POINTER_MASK & (Rc::into_raw(primative)) as u64))
             }

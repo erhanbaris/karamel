@@ -11,7 +11,7 @@ use crate::types::BramaOperatorType;
 pub enum BramaAstType {
     None,
     Block(Vec<BramaAstType>),
-    FunCall {
+    FuncCall {
         name: String,
         arguments: Vec<Box<BramaAstType>>
     },

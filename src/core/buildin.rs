@@ -1,5 +1,7 @@
 use crate::{compiler::StaticStorage, compiler::Storage, core::{Module, NativeCall, NativeCallResult}};
 use crate::compiler::BramaPrimative;
+use crate::types::VmObject;
+use std::rc::Rc;
 
 pub struct BuildinModule;
 
@@ -16,7 +18,7 @@ impl Module for BuildinModule {
 
 impl BuildinModule  {
     pub fn print(_: Vec<BramaPrimative>, storage: &mut StaticStorage) -> NativeCallResult {
-        storage.set_variable_value(&"erhan".to_string(), BramaPrimative::Number(1024.0).to_object());
+        storage.set_variable_value(&"erhan".to_string(), VmObject::convert(Rc::new(BramaPrimative::Number(1234.0))));
         Ok(())
     }
 }

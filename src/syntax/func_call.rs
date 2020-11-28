@@ -38,12 +38,12 @@ impl SyntaxParserTrait for FuncCallParser {
                         }
                     }
 
-                    let funcall_ast = BramaAstType::FunCall {
+                    let funccall_ast = BramaAstType::FuncCall {
                         name: name.to_string(),
                         arguments: arguments
                     };
-                    
-                    return Ok(funcall_ast);
+
+                    return Ok(funccall_ast);
                 }
             }
         }

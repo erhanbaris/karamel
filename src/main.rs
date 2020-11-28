@@ -6,5 +6,5 @@ mod compiler;
 mod core;
 
 fn main() {
-    vm::executer::code_executer(&"print(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)".to_string());
+    vm::executer::code_executer(&"'erhan' + 'barış'".to_string());
 }
