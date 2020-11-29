@@ -174,4 +174,12 @@ erhan=!erhan"#, BramaPrimative::Bool(true));
 barış=erhan++"#, BramaPrimative::Number(2.0));
     test_variable_value!(vm_67, "barış", r#"erhan=1
 barış=erhan++"#, BramaPrimative::Number(1.0));
+    test_variable_value!(vm_68, "erhan", r#"erhan=1
+erhan+=10"#, BramaPrimative::Number(11.0));
+    test_variable_value!(vm_69, "erhan", r#"erhan=11
+erhan-=1"#, BramaPrimative::Number(10.0));
+    test_variable_value!(vm_70, "erhan", r#"erhan=10
+erhan/=2"#, BramaPrimative::Number(5.0));
+    test_variable_value!(vm_71, "erhan", r#"erhan=5
+erhan*=2"#, BramaPrimative::Number(10.0));
 }
