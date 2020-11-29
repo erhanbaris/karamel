@@ -85,19 +85,19 @@ mod tests {
     test_compare!(multiply_divide_2, "10*-10", Ok(BramaAstType::Binary {
         left: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(10.0)))), 
         operator: BramaOperatorType::Multiplication, 
-        right: Box::new(BramaAstType::PrefixUnary(BramaOperatorType::Subtraction, Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(10.0))))))
+        right: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(-10.0))))
     }));
 
     test_compare!(multiply_divide_3, "-10*-10", Ok(BramaAstType::Binary {
-        left: Box::new(BramaAstType::PrefixUnary(BramaOperatorType::Subtraction, Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(10.0)))))), 
+        left: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(-10.0)))), 
         operator: BramaOperatorType::Multiplication, 
-        right: Box::new(BramaAstType::PrefixUnary(BramaOperatorType::Subtraction, Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(10.0))))))
+        right: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(-10.0))))
     }));
 
     test_compare!(multiply_divide_4, "-10/-10", Ok(BramaAstType::Binary {
-        left: Box::new(BramaAstType::PrefixUnary(BramaOperatorType::Subtraction, Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(10.0)))))), 
+        left: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(-10.0)))), 
         operator: BramaOperatorType::Division, 
-        right: Box::new(BramaAstType::PrefixUnary(BramaOperatorType::Subtraction, Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(10.0))))))
+        right: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(-10.0))))
     }));
 
     test_compare!(multiply_divide_5, "10/10", Ok(BramaAstType::Binary {
@@ -120,8 +120,6 @@ mod tests {
 
     test_compare!(multiply_divide_8, "1/", Err(("Symbol parse issue", 0, 0)));
     test_compare!(multiply_divide_9, "/1", Err(("Syntax error, undefined syntax", 0, 1)));
-
-
 
     test_compare!(modulo_1, "10 mod 10", Ok(BramaAstType::Binary {
         left: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(10.0)))), 

@@ -31,7 +31,8 @@ mod tests {
                 let mut compiler_options: BramaCompilerOption<StaticStorage> = BramaCompilerOption::new();
 
                 if let Ok(_) = opcode_compiler.compile(&syntax_result.unwrap(), &mut compiler_options) {
-                    for object in compiler_options.storages[0].get_memory() {
+                    let memory = compiler_options.storages[0].get_memory();
+                    for object in &(*memory.borrow()) {
                         converted_memory.push((*object.deref()).clone());
                     }
                     assert_eq!(converted_memory, $result);

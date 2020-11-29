@@ -276,20 +276,6 @@ impl CharTraits for char {
 }
 
 impl BramaTokenType {
-    pub fn is_integer(&self) -> bool {
-        return match self {
-            BramaTokenType::Integer(_) => true,
-            _ => false
-        }
-    }
-
-    pub fn is_double(&self) -> bool {
-        return match self {
-            BramaTokenType::Double(_) => true,
-            _ => false
-        }
-    }
-
     pub fn is_bool(&self) -> bool {
         if self.is_keyword() {
             return match self {

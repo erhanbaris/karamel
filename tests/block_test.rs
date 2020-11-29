@@ -26,7 +26,7 @@ mod tests {
         };
     }
 
-    test_compare!(block_1, "+1024", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Addition, Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(1024.0)))))));
+    test_compare!(block_1, "+1024", Ok(BramaAstType::Primative(Rc::new(BramaPrimative::Number(1024.0)))));
     test_compare!(block_2, r#"erhan=1024
 baris=2048"#, Ok(BramaAstType::Block([BramaAstType::Assignment {
     variable: Rc::new("erhan".to_string()),

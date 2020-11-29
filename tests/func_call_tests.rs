@@ -26,32 +26,32 @@ mod tests {
     }
 
     test_compare!(func_call_1, "print()", Ok(BramaAstType::FuncCall {
-        name: "print".to_string(), 
+        names: ["print".to_string()].to_vec(),
         arguments: [].to_vec()
     }));
 
     test_compare!(func_call_2, "print(1)", Ok(BramaAstType::FuncCall {
-        name: "print".to_string(),
+        names: ["print".to_string()].to_vec(),
         arguments: [Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(1.0))))].to_vec()
     }));
 
     test_compare!(func_call_3, "print( 1 )", Ok(BramaAstType::FuncCall {
-        name: "print".to_string(),
+        names: ["print".to_string()].to_vec(),
         arguments: [Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(1.0))))].to_vec()
     }));
 
     test_compare!(func_call_4, "print( 1 , 2 )", Ok(BramaAstType::FuncCall {
-        name: "print".to_string(),
+        names: ["print".to_string()].to_vec(),
         arguments: [Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(1.0)))), Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(2.0))))].to_vec()
     }));
 
     test_compare!(func_call_5, "print(1,2)", Ok(BramaAstType::FuncCall {
-        name: "print".to_string(),
+        names: ["print".to_string()].to_vec(),
         arguments: [Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(1.0)))), Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(2.0))))].to_vec()
     }));
 
     test_compare!(func_call_6, "print(1,2,'erhan')", Ok(BramaAstType::FuncCall {
-        name: "print".to_string(),
+        names: ["print".to_string()].to_vec(),
         arguments: [Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(1.0)))),
                     Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(2.0)))),
                     Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Text(Rc::new("erhan".to_string())))))].to_vec()

@@ -4,6 +4,9 @@ use crate::syntax::util::map_parser;
 use crate::syntax::primative::PrimativeParser;
 use crate::syntax::func_call::FuncCallParser;
 use crate::compiler::ast::BramaAstType;
+use crate::compiler::value::BramaPrimative;
+
+use std::rc::Rc;
 
 pub struct UnaryParser;
 
@@ -53,12 +56,17 @@ impl UnaryParser {
             match operator {
                 /* +1024 -1024 */
                 BramaOperatorType::Addition | BramaOperatorType::Subtraction => {
-                    if token.token_type.is_integer() || token.token_type.is_double() {
-                        match PrimativeParser::parse(parser) {
-                            Ok(BramaAstType::None) => (),
-                            Ok(ast) => unary_ast = ast,
-                            Err(err) => return Err(err)
-                        }
+                    let opt = match operator {
+                        BramaOperatorType::Addition    => 1 as f64,
+                        BramaOperatorType::Subtraction => -1 as f64,
+                        _ => 1 as f64
+                    };
+                    
+                    parser.consume_token();
+                    match token.token_type {
+                        BramaTokenType::Integer(integer) => return Ok(BramaAstType::Primative(Rc::new(BramaPrimative::Number(integer as f64 * opt)))),
+                        BramaTokenType::Double(double) => return Ok(BramaAstType::Primative(Rc::new(BramaPrimative::Number(double * opt)))),
+                        _ => return Err(("Unary works with number", 0, 0))
                     }
                 },
 
@@ -71,7 +79,7 @@ impl UnaryParser {
                 },
 
                 BramaOperatorType::Not => {
-                    if token.token_type.is_integer() || token.token_type.is_double() || token.token_type.is_bool() {
+                    if token.token_type.is_symbol() || token.token_type.is_bool() {
                         if let Ok(ast) = PrimativeParser::parse(parser) {
                             unary_ast = ast;
                         }

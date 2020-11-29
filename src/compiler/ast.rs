@@ -12,7 +12,7 @@ pub enum BramaAstType {
     None,
     Block(Vec<BramaAstType>),
     FuncCall {
-        name: String,
+        names: Vec<String>,
         arguments: Vec<Box<BramaAstType>>
     },
     Primative(Rc<BramaPrimative>),

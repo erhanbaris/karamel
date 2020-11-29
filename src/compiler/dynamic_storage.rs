@@ -3,6 +3,7 @@ use crate::compiler::value::*;
 use crate::compiler::Storage;
 
 use std::collections::HashMap;
+use std::cell::{RefCell, RefMut};
 use std::rc::Rc;
 
 
@@ -13,7 +14,7 @@ pub struct DynamicStorage {
     pub temp_size             : u8,
     pub temp_counter          : u8,
     pub variables             : HashMap<String, u8>,
-    pub memory                : Vec<VmObject>,
+    pub memory                : Rc<RefCell<Vec<VmObject>>>,
     pub total_const_variables : u8,
     pub builded               : bool
 }
@@ -44,7 +45,7 @@ impl Storage for DynamicStorage {
         }
     }
 
-    fn get_memory(&mut self) -> &mut Vec<VmObject> { &mut self.memory }
+    fn get_memory(&mut self) -> Rc<RefCell<Vec<VmObject>>> { self.memory.clone() }
     fn get_constant_size(&self) -> u8 { self.constant_size }
     fn get_variable_size(&self) -> u8 { self.variables.len() as u8 }
     fn get_temp_size(&self) -> u8     { self.temp_size }

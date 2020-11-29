@@ -1,6 +1,5 @@
 mod compiler;
 mod static_storage;
-mod dynamic_storage;
 mod storage_builder;
 
 pub mod value;
@@ -8,11 +7,11 @@ pub mod ast;
 
 pub use self::compiler::*;
 pub use self::static_storage::*;
-pub use self::dynamic_storage::*;
 pub use self::value::*;
 
 use crate::types::*;
 
+use std::cell::RefCell;
 use std::rc::Rc;
 use std::vec::Vec;
 use std::mem;
@@ -22,7 +21,7 @@ pub trait Storage {
     /// Build memory block with temporary, constant and variable definitions
     fn build(&mut self);
     fn new() -> Self;
-    fn get_memory(&mut self) -> &mut Vec<VmObject>;
+    fn get_memory(&mut self) -> Rc<RefCell<Vec<VmObject>>>;
     fn get_constant_size(&self) -> u8;
     fn get_variable_size(&self) -> u8;
     fn get_temp_size(&self) -> u8;
@@ -115,9 +114,14 @@ pub enum VmOpCode {
     LessThan,
     GreaterEqualThan,
     LessEqualThan,
-    Assign,
     AssignAddition,
     AssignSubtraction,
     AssignMultiplication,
-    AssignDivision
+    AssignDivision,
+    NativeCall,
+
+    Increment,
+    Decrement,
+
+    Move
 }

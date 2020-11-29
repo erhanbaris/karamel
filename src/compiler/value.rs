@@ -5,11 +5,9 @@ use std::fmt;
 
 use crate::types::*;
 use crate::compiler::ast::BramaAstType;
-use crate::compiler::static_storage::StaticStorage;
 
-
-pub type NativeCallResult = Result<(), (&'static str, u32, u32)>;
-pub type NativeCall       = fn(params: Vec<BramaPrimative>, storage: &mut StaticStorage) -> NativeCallResult;
+pub type NativeCallResult = Result<VmObject, (&'static str, u32, u32)>;
+pub type NativeCall       = fn(items: &Vec<VmObject>) -> NativeCallResult;
 
 #[repr(C)]
 #[derive(Clone)]
@@ -82,13 +80,17 @@ impl PartialEq for BramaPrimative {
     }
 }
 
+pub const EMPTY_OBJECT: VmObject = VmObject(QNAN | EMPTY_FLAG);
+pub const TRUE_OBJECT: VmObject  = VmObject(QNAN | TRUE_FLAG);
+pub const FALSE_OBJECT: VmObject = VmObject(QNAN | FALSE_FLAG);
+
 impl VmObject {
     pub fn convert(primative: Rc<BramaPrimative>) -> VmObject {
         match *primative {
             BramaPrimative::Empty            => VmObject(QNAN | EMPTY_FLAG),
             BramaPrimative::Number(number)   => VmObject(number.to_bits()),
-            BramaPrimative::Bool(true)       => VmObject(QNAN | TRUE_FLAG),
-            BramaPrimative::Bool(false)      => VmObject(QNAN | FALSE_FLAG),
+            BramaPrimative::Bool(true)       => TRUE_OBJECT,
+            BramaPrimative::Bool(false)      => FALSE_OBJECT,
             _                                => {
                 VmObject(QNAN | POINTER_FLAG | (POINTER_MASK & (Rc::into_raw(primative)) as u64))
             }

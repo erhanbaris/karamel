@@ -69,13 +69,13 @@ impl<S> StorageBuilder<S> where S: Storage {
 ║   Function Pointer   ║
 ╚══════════════════════╝
  */
-            BramaAstType::FuncCall{ name, arguments } => {
+            BramaAstType::FuncCall{ names, arguments } => {
 
                 /* Need to allocate space for function arguments */
                 let mut max_temp = arguments.len() as u8;
 
                 /* Native function call */
-                if let Some(function) = options.modules.get_function("buildin".to_string(), name.to_string()) {
+                if let Some(function) = options.modules.find_method(&names) {
                     for arg in arguments {
                         max_temp = max(self.get_temp_count_from_ast(arg, ast, options, storage_index), max_temp);
                     }

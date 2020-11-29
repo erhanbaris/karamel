@@ -12,22 +12,24 @@ pub fn code_executer(data: &String) {
 
     let mut parser = Parser::new(&data[..]);
     match parser.parse() {
-        Err(_) => (),
+        Err((message, line, column)) => {
+            println!("[{:?}:{:?}] {:?}", line, column, message);
+            return ();
+        },
         _ => ()
     };
 
     let syntax = SyntaxParser::new(Box::new(parser.tokens().to_vec()));
-    let syntax_result = syntax.parse();
+    match syntax.parse() {
+        Ok(ast) => {
+            let opcode_compiler = InterpreterCompiler {};
 
-    if let Ok(ast) = syntax_result {
-        let opcode_compiler = InterpreterCompiler {};
-        
-        if let Ok(_) = opcode_compiler.compile(&ast, &mut compiler_options) {
-            run_vm(&mut compiler_options);
-        }
-    } 
-    else if let Err((message, line, column)) = syntax_result {
-        println!("[{}:{}] {}", line, column, message);
+            match opcode_compiler.compile(&ast, &mut compiler_options) {
+                Ok(_) => run_vm(&mut compiler_options),
+                Err(message) => println!("{:?}", message)
+            };
+        },
+        Err((message, line, column)) => println!("[{}:{}] {}", line, column, message)
     }
 }
 
@@ -37,7 +39,7 @@ fn console_welcome() {
     print!("-> ");
     io::stdout().flush().unwrap();
 }
-
+/*
 #[allow(dead_code)]
 pub fn console_executer() {
     console_welcome();
@@ -72,7 +74,7 @@ pub fn console_executer() {
             let opcode_compiler = InterpreterCompiler {};
             
             if let Ok(_) = opcode_compiler.compile(&ast, &mut compiler_options) {
-                run_vm(&mut compiler_options);
+                run_vm(&compiler_options);
             }
         }
 
@@ -80,4 +82,4 @@ pub fn console_executer() {
         io::stdout().flush().unwrap();
     }
 }
-
+*/

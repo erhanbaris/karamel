@@ -14,6 +14,30 @@ impl SyntaxParserTrait for FuncCallParser {
         if token.is_ok() {
             if let BramaTokenType::Symbol(name) = &token.unwrap().token_type {
                 parser.consume_token();
+                let mut name_collection = Vec::new();
+                name_collection.push(name.to_string());
+
+                loop {
+                    if let Some(_) = parser.match_operator(&[BramaOperatorType::ColonMark]) {
+                        if let Some(_) = parser.match_operator(&[BramaOperatorType::ColonMark]) {
+                            let token = parser.peek_token();
+                            if let BramaTokenType::Symbol(name) = &token.unwrap().token_type {
+                                parser.consume_token();
+                                name_collection.push(name.to_string());
+                            }
+                            else {
+                                return Err(("Function name required", 0, 0));
+                            }
+                        }
+                        else {
+                            return Err(("Colon mark required", 0, 0));
+                        }
+                    }
+                    else {
+                        break;
+                    }
+                }
+
                 parser.clear_whitespaces();
 
                 if let Some(_) = parser.match_operator(&[BramaOperatorType::LeftParentheses]) {
@@ -39,7 +63,7 @@ impl SyntaxParserTrait for FuncCallParser {
                     }
 
                     let funccall_ast = BramaAstType::FuncCall {
-                        name: name.to_string(),
+                        names: name_collection.to_vec(),
                         arguments: arguments
                     };
 

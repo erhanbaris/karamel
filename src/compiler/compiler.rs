@@ -8,11 +8,14 @@ use crate::compiler::value::BramaPrimative;
 use crate::compiler::ast::BramaAstType;
 use crate::compiler::storage_builder::StorageBuilder;
 
+use std::marker::PhantomData;
+
 pub struct BramaCompilerOption<S>
 where S: Storage {
     pub opcodes : Vec<VmByte>,
-    pub storages: Vec<S>,
-    pub modules: ModuleCollection
+    pub storages: Vec<StaticStorage>,
+    pub modules: ModuleCollection,
+    pub _marker: PhantomData<S>
 }
 
 impl<S>  BramaCompilerOption<S>
@@ -21,8 +24,9 @@ where S: Storage
     pub fn new() -> BramaCompilerOption<S> {
         BramaCompilerOption {
             opcodes: Vec::new(),
-            storages: vec![S::new()],
-            modules: ModuleCollection::new()
+            storages: vec![StaticStorage::new()],
+            modules: ModuleCollection::new(),
+            _marker: PhantomData
         }
     }
 }
@@ -59,9 +63,11 @@ impl InterpreterCompiler {
             BramaAstType::Control { left, operator, right }             => self.generate_control(left, operator, right, upper_ast, compiler_info, options, storage_index),
             BramaAstType::Binary { left, operator, right }              => self.generate_binary(left, operator, right, upper_ast, compiler_info, options, storage_index),
             BramaAstType::Block(asts)                                   => self.generate_block(asts, upper_ast, compiler_info, options, storage_index),
-            BramaAstType::FuncCall { name, arguments }                  => self.generate_func_call(name, arguments, upper_ast, compiler_info, options, storage_index),
             BramaAstType::Primative(primative)                          => self.generate_primative(primative.clone(), compiler_info, options, storage_index),
-            _ => {
+            BramaAstType::FuncCall { names, arguments }                  => self.generate_func_call(names, arguments, upper_ast, compiler_info, options, storage_index),
+            BramaAstType::PrefixUnary (operator, expression) => self.generate_prefix_unary(operator, expression, upper_ast, compiler_info, options, storage_index),
+            BramaAstType::SuffixUnary (operator, expression) => self.generate_prefix_unary(operator, expression, upper_ast, compiler_info, options, storage_index),
+            BramaAstType::None => {
                 println!("{:?}", ast);
                 Err("Not implemented")
             }
@@ -78,22 +84,28 @@ impl InterpreterCompiler {
         }
     }
 
-    fn generate_func_call<S>(&self, name: &String, arguments: &Vec<Box<BramaAstType>>,  upper_ast: &BramaAstType, compiler_info: &mut CompileInfo, options: &mut BramaCompilerOption<S>, storage_index: usize) -> CompilerResult where S: Storage {
+    fn generate_func_call<S>(&self, names: &Vec<String>, arguments: &Vec<Box<BramaAstType>>,  upper_ast: &BramaAstType, compiler_info: &mut CompileInfo, options: &mut BramaCompilerOption<S>, storage_index: usize) -> CompilerResult where S: Storage {
         /* Save temp counter to restore back */
         let temp_index = options.storages[storage_index].get_temp_counter();
 
         /* Build arguments */
         for argument in arguments {
-            self.generate_opcode(argument, upper_ast, compiler_info, options, storage_index)?;
+            let position = self.generate_opcode(argument, upper_ast, compiler_info, options, storage_index)?;
+            if position < options.storages[0].get_constant_size() + options.storages[0].get_variable_size() {
+                let target = options.storages[storage_index].get_free_temp_slot();
+                let opcode = VmByte::new(VmOpCode::Move, target, position, 0);
+                options.opcodes.push(opcode);
+            }
         }
 
-        let func = options.modules.get_function("buildin".to_string(), name.to_string());
+        let func = options.modules.find_method(names);
         match func {
             Some(function) => {
-                /*BramaVmOpCode::NativeFuncCall {
-                    target: target,
-                    function
-                };*/
+                if let Some(location) = options.storages[storage_index].get_constant_location(Rc::new(BramaPrimative::FuncNativeCall(function))) {
+                    let target = options.storages[storage_index].get_free_temp_slot();
+                    let opcode = VmByte::new(VmOpCode::NativeCall, target, arguments.len() as u8, location);
+                    options.opcodes.push(opcode);
+                }
             },
             None => ()
         };
@@ -136,7 +148,7 @@ impl InterpreterCompiler {
         let source = self.generate_opcode(expression_ast, &BramaAstType::None, compiler_info, options, storage_index)?;
 
         let opcode = match operator {
-            BramaOperatorType::Assign               => VmByte::new(VmOpCode::Assign,               target, source, 0),
+            BramaOperatorType::Assign               => VmByte::new(VmOpCode::Move,                 target, source, 0),
             BramaOperatorType::AssignAddition       => VmByte::new(VmOpCode::AssignAddition,       target, source, 0),
             BramaOperatorType::AssignDivision       => VmByte::new(VmOpCode::AssignDivision,       target, source, 0),
             BramaOperatorType::AssignMultiplication => VmByte::new(VmOpCode::AssignMultiplication, target, source, 0),
@@ -162,6 +174,11 @@ impl InterpreterCompiler {
 
         options.opcodes.push(opcode);
         Ok(target)
+    }
+
+    fn generate_prefix_unary<S>(&self, operator: &BramaOperatorType, expression: &BramaAstType, _: &BramaAstType, compiler_info: &mut CompileInfo, options: &mut BramaCompilerOption<S>, storage_index: usize) -> CompilerResult where S: Storage { 
+        let right  = self.generate_opcode(expression, &BramaAstType::None, compiler_info, options, storage_index)?;
+        Ok(right)
     }
 
     fn generate_block<S>(&self, asts: &Vec<BramaAstType>, upper_ast: &BramaAstType, compiler_info: &mut CompileInfo, options: &mut BramaCompilerOption<S>, storage_index: usize) -> CompilerResult where S: Storage {
