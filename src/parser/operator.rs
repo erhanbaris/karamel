@@ -53,6 +53,7 @@ impl TokenParser for OperatorParser {
                 ',' => BramaOperatorType::Comma,
                 ';' => BramaOperatorType::Semicolon,
                 '.' => BramaOperatorType::Dot,
+                '!' => BramaOperatorType::Not,
                 _ => BramaOperatorType::None
             };
         }

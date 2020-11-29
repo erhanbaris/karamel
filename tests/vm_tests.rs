@@ -155,4 +155,23 @@ result = text *2"#, BramaPrimative::Number(2048.0));
     test_variable_value!(vm_58, "full_text", r#"text_1 = 'erhan'
 text_2 = 'baris'
 full_text = text_1 + ' ' + text_2"#, BramaPrimative::Text(Rc::new("erhan baris".to_string())));
+    test_variable_value!(vm_59, "erhan", r#"erhan=100
+++erhan
+++erhan
+++erhan"#, BramaPrimative::Number(103.0));
+    test_variable_value!(vm_60, "erhan", r#"erhan=100
+--erhan
+--erhan
+--erhan"#, BramaPrimative::Number(97.0));
+    test_variable_value!(vm_61, "erhan", r#"erhan=true
+erhan=!erhan"#, BramaPrimative::Bool(false));
+    test_variable_value!(vm_62, "erhan", r#"erhan=false
+erhan=!erhan"#, BramaPrimative::Bool(true));
+    test_variable_value!(vm_63, "erhan", r#"erhan=!false"#, BramaPrimative::Bool(true));
+    test_variable_value!(vm_64, "erhan", r#"erhan=!true"#, BramaPrimative::Bool(false));
+    test_variable_value!(vm_65, "erhan", r#"erhan=!-100"#, BramaPrimative::Bool(true));
+    test_variable_value!(vm_66, "erhan", r#"erhan=1
+barış=erhan++"#, BramaPrimative::Number(2.0));
+    test_variable_value!(vm_67, "barış", r#"erhan=1
+barış=erhan++"#, BramaPrimative::Number(1.0));
 }

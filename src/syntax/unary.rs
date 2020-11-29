@@ -61,7 +61,7 @@ impl UnaryParser {
                         BramaOperatorType::Subtraction => -1 as f64,
                         _ => 1 as f64
                     };
-                    
+
                     parser.consume_token();
                     match token.token_type {
                         BramaTokenType::Integer(integer) => return Ok(BramaAstType::Primative(Rc::new(BramaPrimative::Number(integer as f64 * opt)))),
@@ -79,11 +79,12 @@ impl UnaryParser {
                 },
 
                 BramaOperatorType::Not => {
-                    if token.token_type.is_symbol() || token.token_type.is_bool() {
-                        if let Ok(ast) = PrimativeParser::parse(parser) {
-                            unary_ast = ast;
-                        }
-                    }
+                    let expression = UnaryParser::parse(parser);
+                    unary_ast = match expression {
+                        Ok(BramaAstType::None) => return Err(("Invalid unary expression", 0, 0)),
+                        Ok(ast) => ast,
+                        Err(_) => return Err(("Invalid unary expression", 0, 0))
+                    };
                 }
                 _ => return Err(("Invalid unary operation", 0, 0))
             }

@@ -211,10 +211,24 @@ pub fn run_vm<S>(options: &mut BramaCompilerOption<S>) where S: Storage
                     };
                 },
 
+                VmOpCode::Not => {
+                    memory[target] = match &*memory[left].deref() {
+                        BramaPrimative::Number(value) => VmObject::from(!(*value > 0.0)),
+                        BramaPrimative::Bool(value)   => VmObject::from(!*value),
+                        _ => empty_primative
+                    };
+                },
+
                 VmOpCode::None => ()
             }
         }
     }
 
     options.storages[0].dump();
+
+    println!("            OPCODE");
+    println!("-------------------------------");
+    for (index, item) in options.opcodes.iter().enumerate() {
+        println!("| {:?} | {:?}", index, item);
+    }
 }

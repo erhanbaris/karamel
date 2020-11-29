@@ -32,8 +32,8 @@ impl<S> StorageBuilder<S> where S: Storage {
                 operator: _,
                 right} => self.get_temp_count_from_ast(left, ast, options, storage_index) + self.get_temp_count_from_ast(right, ast, options, storage_index) + 1,
             
-            BramaAstType::PrefixUnary(_, inner_ast) => self.get_temp_count_from_ast(inner_ast, ast, options, storage_index),
-            BramaAstType::SuffixUnary(_, inner_ast) => self.get_temp_count_from_ast(inner_ast, ast, options, storage_index),
+            BramaAstType::PrefixUnary(_, inner_ast) => self.get_temp_count_from_ast(inner_ast, ast, options, storage_index) + 1,
+            BramaAstType::SuffixUnary(_, inner_ast) => self.get_temp_count_from_ast(inner_ast, ast, options, storage_index) + 1,
             BramaAstType::Symbol(string) => {
                 options.storages.get_mut(storage_index).unwrap().add_variable(&string);
                 0

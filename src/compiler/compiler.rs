@@ -64,9 +64,9 @@ impl InterpreterCompiler {
             BramaAstType::Binary { left, operator, right }              => self.generate_binary(left, operator, right, upper_ast, compiler_info, options, storage_index),
             BramaAstType::Block(asts)                                   => self.generate_block(asts, upper_ast, compiler_info, options, storage_index),
             BramaAstType::Primative(primative)                          => self.generate_primative(primative.clone(), compiler_info, options, storage_index),
-            BramaAstType::FuncCall { names, arguments }                  => self.generate_func_call(names, arguments, upper_ast, compiler_info, options, storage_index),
-            BramaAstType::PrefixUnary (operator, expression) => self.generate_prefix_unary(operator, expression, upper_ast, compiler_info, options, storage_index),
-            BramaAstType::SuffixUnary (operator, expression) => self.generate_prefix_unary(operator, expression, upper_ast, compiler_info, options, storage_index),
+            BramaAstType::FuncCall { names, arguments }                 => self.generate_func_call(names, arguments, upper_ast, compiler_info, options, storage_index),
+            BramaAstType::PrefixUnary (operator, expression)            => self.generate_prefix_unary(operator, expression, upper_ast, compiler_info, options, storage_index),
+            BramaAstType::SuffixUnary (operator, expression)            => self.generate_suffix_unary(operator, expression, upper_ast, compiler_info, options, storage_index),
             BramaAstType::None => {
                 println!("{:?}", ast);
                 Err("Not implemented")
@@ -177,8 +177,37 @@ impl InterpreterCompiler {
     }
 
     fn generate_prefix_unary<S>(&self, operator: &BramaOperatorType, expression: &BramaAstType, _: &BramaAstType, compiler_info: &mut CompileInfo, options: &mut BramaCompilerOption<S>, storage_index: usize) -> CompilerResult where S: Storage { 
-        let right  = self.generate_opcode(expression, &BramaAstType::None, compiler_info, options, storage_index)?;
-        Ok(right)
+        let source           = self.generate_opcode(expression, &BramaAstType::None, compiler_info, options, storage_index)?;
+        let mut return_value = source;
+        let opcode = match operator {
+            BramaOperatorType::Increment  => VmByte::new(VmOpCode::Increment, source, 0, 0),
+            BramaOperatorType::Deccrement => VmByte::new(VmOpCode::Decrement, source, 0, 0),
+            BramaOperatorType::Not        => {
+                let target = options.storages[storage_index].get_free_temp_slot();
+                return_value = target;
+                VmByte::new(VmOpCode::Not, target, source, 0)
+            },
+            _ => return Err("Unary operator not found")
+        };
+
+        options.opcodes.push(opcode);
+        Ok(return_value)
+    }
+
+    fn generate_suffix_unary<S>(&self, operator: &BramaOperatorType, expression: &BramaAstType, _: &BramaAstType, compiler_info: &mut CompileInfo, options: &mut BramaCompilerOption<S>, storage_index: usize) -> CompilerResult where S: Storage { 
+        let source = self.generate_opcode(expression, &BramaAstType::None, compiler_info, options, storage_index)?;
+        let target = options.storages[storage_index].get_free_temp_slot();
+
+        options.opcodes.push(VmByte::new(VmOpCode::Move, target, source, 0));
+
+        let opcode = match operator {
+            BramaOperatorType::Increment  => VmByte::new(VmOpCode::Increment, source, 0, 0),
+            BramaOperatorType::Deccrement => VmByte::new(VmOpCode::Decrement, source, 0, 0),
+            _ => return Err("Unary operator not found")
+        };
+
+        options.opcodes.push(opcode);
+        Ok(target)
     }
 
     fn generate_block<S>(&self, asts: &Vec<BramaAstType>, upper_ast: &BramaAstType, compiler_info: &mut CompileInfo, options: &mut BramaCompilerOption<S>, storage_index: usize) -> CompilerResult where S: Storage {

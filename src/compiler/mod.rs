@@ -15,6 +15,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use std::vec::Vec;
 use std::mem;
+use std::fmt;
 
 pub trait Storage {
 
@@ -59,6 +60,12 @@ impl VmData {
             (self.target as u32) << 8 |
             (self.a as u32) << 16 |
             (self.b as u32) << 24)
+    }
+}
+
+impl fmt::Debug for VmByte {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}", self.decode_as_tuple())
     }
 }
 
@@ -122,6 +129,7 @@ pub enum VmOpCode {
 
     Increment,
     Decrement,
+    Not,
 
     Move
 }
