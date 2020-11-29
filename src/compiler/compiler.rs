@@ -99,20 +99,22 @@ impl InterpreterCompiler {
         }
 
         let func = options.modules.find_method(names);
-        match func {
+        return match func {
             Some(function) => {
                 if let Some(location) = options.storages[storage_index].get_constant_location(Rc::new(BramaPrimative::FuncNativeCall(function))) {
                     let target = options.storages[storage_index].get_free_temp_slot();
                     let opcode = VmByte::new(VmOpCode::NativeCall, target, arguments.len() as u8, location);
                     options.opcodes.push(opcode);
+
+                    /* Restore temp counter */
+                    options.storages[storage_index].set_temp_counter(temp_index);
+                    Ok(target)
+                } else {
+                    Err("Function not found")
                 }
             },
-            None => ()
+            None => Err("Function not found")
         };
-
-        /* Restore temp counter */
-        options.storages[storage_index].set_temp_counter(temp_index);
-        Ok(0)
     }
 
     fn generate_symbol<S>(&self, variable: &String, _: &BramaAstType, _: &mut CompileInfo, options: &mut BramaCompilerOption<S>, storage_index: usize) -> CompilerResult where S: Storage {

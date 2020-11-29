@@ -6,6 +6,5 @@ mod compiler;
 mod core;
 
 fn main() {
-    vm::executer::code_executer(&r#"erhan=1
-barış=erhan++"#.to_string());
+    vm::executer::code_executer(&r#"erhan=num::parse('1024') - 24"#.to_string());
 }

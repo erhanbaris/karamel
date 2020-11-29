@@ -29,6 +29,7 @@ impl ModuleCollection
             modules: HashMap::new()
         };
         collection.add_module(Rc::new(buildin::IoModule::new()));
+        collection.add_module(Rc::new(buildin::NumModule::new()));
         collection
     }
 

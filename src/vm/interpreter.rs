@@ -164,7 +164,14 @@ pub fn run_vm<S>(options: &mut BramaCompilerOption<S>) where S: Storage
                             args.push(*arg);
                         }
 
-                        func(&args);
+                        match func(&args) {
+                            Ok(result) => {
+                                memory[target] = result;
+                            },
+                            Err((error, line, column)) => {
+                                println!("{:?}", error);
+                            }
+                        };
                     }
                 },
 
