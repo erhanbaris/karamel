@@ -86,14 +86,13 @@ impl InterpreterCompiler {
 
     fn generate_func_call<S>(&self, names: &Vec<String>, arguments: &Vec<Box<BramaAstType>>,  upper_ast: &BramaAstType, compiler_info: &mut CompileInfo, options: &mut BramaCompilerOption<S>, storage_index: usize) -> CompilerResult where S: Storage {
         /* Save temp counter to restore back */
-        let temp_index = options.storages[storage_index].get_temp_counter();
+        let temp_index             = options.storages[storage_index].get_temp_counter();
 
         /* Build arguments */
         for argument in arguments {
             let position = self.generate_opcode(argument, upper_ast, compiler_info, options, storage_index)?;
             if position < options.storages[0].get_constant_size() + options.storages[0].get_variable_size() {
-                let target = options.storages[storage_index].get_free_temp_slot();
-                let opcode = VmByte::new(VmOpCode::Move, target, position, 0);
+                let opcode = VmByte::new(VmOpCode::Load, position, 0, 0);
                 options.opcodes.push(opcode);
             }
         }
@@ -102,13 +101,12 @@ impl InterpreterCompiler {
         return match func {
             Some(function) => {
                 if let Some(location) = options.storages[storage_index].get_constant_location(Rc::new(BramaPrimative::FuncNativeCall(function))) {
-                    let target = options.storages[storage_index].get_free_temp_slot();
-                    let opcode = VmByte::new(VmOpCode::NativeCall, target, arguments.len() as u8, location);
+                    let opcode = VmByte::new(VmOpCode::NativeCall, 0 as u8, arguments.len() as u8, location);
                     options.opcodes.push(opcode);
 
                     /* Restore temp counter */
                     options.storages[storage_index].set_temp_counter(temp_index);
-                    Ok(target)
+                    Ok(0 as u8)
                 } else {
                     Err("Function not found")
                 }
@@ -150,7 +148,7 @@ impl InterpreterCompiler {
         let source = self.generate_opcode(expression_ast, &BramaAstType::None, compiler_info, options, storage_index)?;
 
         let opcode = match operator {
-            BramaOperatorType::Assign               => VmByte::new(VmOpCode::Move,                 target, source, 0),
+            BramaOperatorType::Assign               => VmByte::new(VmOpCode::Store,                 target, source, 0),
             BramaOperatorType::AssignAddition       => VmByte::new(VmOpCode::AssignAddition,       target, source, 0),
             BramaOperatorType::AssignDivision       => VmByte::new(VmOpCode::AssignDivision,       target, source, 0),
             BramaOperatorType::AssignMultiplication => VmByte::new(VmOpCode::AssignMultiplication, target, source, 0),

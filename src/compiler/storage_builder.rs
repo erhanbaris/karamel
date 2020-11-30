@@ -83,7 +83,8 @@ impl<S> StorageBuilder<S> where S: Storage {
                     /* Add function pointer to consts */
                     options.storages.get_mut(storage_index).unwrap().add_constant(Rc::new(BramaPrimative::FuncNativeCall(function)));
                 }
-                max_temp + 1 /* Variables + function */
+
+                max_temp /* Variables */
             },
 
             BramaAstType::Primative(primative) => {

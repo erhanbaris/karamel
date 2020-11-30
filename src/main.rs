@@ -6,5 +6,10 @@ mod compiler;
 mod core;
 
 fn main() {
-    vm::executer::code_executer(&r#"erhan=num::parse('1024') - 24"#.to_string());
+    vm::executer::code_executer(&r#"erhan='erhan' + 'barış' + 'erhan'+'barış'"#.to_string());
 }
+/*
+c = a(1) + a(2)
+1
+2
+*/

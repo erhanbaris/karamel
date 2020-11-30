@@ -7,9 +7,10 @@ pub fn run_vm<S>(options: &mut BramaCompilerOption<S>) where S: Storage
 { 
     {
         let empty_primative: VmObject  = VmObject::convert(Rc::new(BramaPrimative::Empty));
-        let memory_ref  = &mut options.storages[0].get_memory();
-        let mut memory  = memory_ref.borrow_mut();
-        let opcodes = options.opcodes.iter().map(|byte| byte.decode_as_tuple()).collect::<Vec<_>>();
+        let memory_ref    = &mut options.storages[0].get_memory();
+        let mut memory    = memory_ref.borrow_mut();
+        let opcodes       = options.opcodes.iter().map(|byte| byte.decode_as_tuple()).collect::<Vec<_>>();
+        let mut tmp_index = (options.storages[0].get_constant_size() + options.storages[0].get_variable_size()) as usize;
 
         for op in &opcodes {
             let &(opcode, target, left, right) = op;
@@ -94,10 +95,12 @@ pub fn run_vm<S>(options: &mut BramaCompilerOption<S>) where S: Storage
                 },
 
                 VmOpCode::Subraction => {
-                    memory[target] = match (&*memory[left].deref(), &*memory[right].deref()) {
+                    memory[target] = match (&*memory[tmp_index-2].deref(), &*memory[tmp_index-1].deref()) {
                         (BramaPrimative::Number(l_value),  BramaPrimative::Number(r_value))   => VmObject::from(*l_value - *r_value),
                         _ => empty_primative
                     };
+
+                    tmp_index -= 2;
                 },
 
                 VmOpCode::Equal => {
@@ -154,21 +157,32 @@ pub fn run_vm<S>(options: &mut BramaCompilerOption<S>) where S: Storage
                     memory[target] = memory[left];
                 },
 
+                VmOpCode::Load => {
+                    memory[tmp_index] = memory[target];
+                    tmp_index += 1;
+                },
+
+                VmOpCode::Store => {
+                    memory[target] = memory[tmp_index + 1];
+                },
+
                 VmOpCode::NativeCall => {
                     if let BramaPrimative::FuncNativeCall(func) = &*memory[right].deref() {
-                        let start   = ((options.storages[0].get_constant_size() + options.storages[0].get_variable_size() + options.storages[0].get_temp_size())  - left as u8) as usize;
-                        let end     = left as usize;
-                        let mut args  = Vec::new();
+                        let start    = ((options.storages[0].get_constant_size() + options.storages[0].get_variable_size() + options.storages[0].get_temp_size())  - left as u8) as usize;
+                        let end      = left as usize;
+                        let mut args = Vec::new();
 
-                        for arg in memory.iter().skip(start - 1).take(end) {
+                        for arg in memory.iter().skip(tmp_index - 1).take(end) {
                             args.push(*arg);
                         }
 
                         match func(&args) {
                             Ok(result) => {
-                                memory[target] = result;
+                                tmp_index        -= end;
+                                memory[tmp_index] = result;
+                                tmp_index        += 1;
                             },
-                            Err((error, line, column)) => {
+                            Err((error, _, _)) => {
                                 println!("{:?}", error);
                             }
                         };

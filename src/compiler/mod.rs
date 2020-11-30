@@ -131,5 +131,7 @@ pub enum VmOpCode {
     Decrement,
     Not,
 
-    Move
+    Move,
+    Load,
+    Store
 }

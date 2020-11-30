@@ -135,15 +135,27 @@ impl Storage for StaticStorage {
         println!("-------------------------------");
         println!("        MEMORY DUMP");
         println!("-------------------------------");
-        
+
+        let consts    = self.constant_size;
+        let variables = self.constant_size as usize + self.variables.len();
+
+        let mut last_type = 'C';
+
         for (index, item) in self.memory.borrow().iter().enumerate() {
-            println!("| {:?} | {:?}", index, *item.deref());
+
+            if consts as usize == index {
+                last_type = 'V';
+            } else if variables as usize == index {
+                last_type = 'T';
+            }
+
+            println!("|{}| {:3?} | {:?}", last_type.to_string(), index, *item.deref());
         }
         println!("-------------------------------");
         println!("        VARIABLE DUMP");
         println!("-------------------------------");
         for (variable, value) in &self.variables {
-            println!("| {:?}  [{:?}]", variable, value);
+            println!("| {}  [{:?}]", variable, value);
         }
         println!("-------------------------------");
     }
