@@ -101,7 +101,8 @@ impl InterpreterCompiler {
         return match func {
             Some(function) => {
                 if let Some(location) = options.storages[storage_index].get_constant_location(Rc::new(BramaPrimative::FuncNativeCall(function))) {
-                    let opcode = VmByte::new(VmOpCode::NativeCall, 0 as u8, arguments.len() as u8, location);
+                    let target = options.storages[storage_index].get_free_temp_slot();
+                    let opcode = VmByte::new(VmOpCode::NativeCall, target as u8, arguments.len() as u8, location);
                     options.opcodes.push(opcode);
 
                     /* Restore temp counter */

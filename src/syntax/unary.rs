@@ -18,10 +18,10 @@ impl SyntaxParserTrait for UnaryParser {
 
 impl UnaryParser {
     fn parse_suffix_unary(parser: &SyntaxParser) -> AstResult {
+        parser.backup();
         match &parser.peek_token() {
             Ok(token) => {
                 if token.token_type.is_symbol() {
-                    let index = parser.index.get();
                     parser.consume_token();
                     parser.clear_whitespaces();
 
@@ -30,15 +30,13 @@ impl UnaryParser {
                         BramaOperatorType::Deccrement]) {
                         return Ok(BramaAstType::SuffixUnary(operator, Box::new(BramaAstType::Symbol(token.token_type.get_symbol().to_string()))));
                     }
-                    else
-                    {
-                        parser.index.set(index);
-                    }
+                    ()
                 }
             },
             _ => ()
         };
-
+        
+        parser.restore();
         return Ok(BramaAstType::None);
     }
 

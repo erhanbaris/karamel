@@ -53,12 +53,12 @@ impl fmt::Debug for BramaPrimative {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             BramaPrimative::Empty => write!(f, "Empty"),
-            BramaPrimative::Number(number) => write!(f, "Primative({:?})", number),
-            BramaPrimative::FuncNativeCall(_) => write!(f, "Primative(func)"),
-            BramaPrimative::Bool(b) => write!(f, "Primative({:?})", b),
-            BramaPrimative::List(b) => write!(f, "Primative({:?})", b),
-            BramaPrimative::Atom(b) => write!(f, "Primative({:?})", b),
-            BramaPrimative::Text(b) => write!(f, "Primative({:?})", b)
+            BramaPrimative::Number(number) => write!(f, "{:?}", number),
+            BramaPrimative::FuncNativeCall(func) => write!(f, "func ({:p})", &func),
+            BramaPrimative::Bool(b) => write!(f, "{:?}", b),
+            BramaPrimative::List(b) => write!(f, "{:?}", b),
+            BramaPrimative::Atom(b) => write!(f, "{:?}", b),
+            BramaPrimative::Text(b) => write!(f, "{:?}", b)
         }
     }
 }
