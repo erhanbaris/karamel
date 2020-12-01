@@ -8,6 +8,8 @@ edition = "2018"
 
 [features]
 dumpExecutionOpcode = []
-default = ["dumpExecutionOpcode"]
+dumpMemory = []
+dumpOpcodes = []
+default = ["dumpOpcodes", "dumpMemory", "dumpExecutionOpcode"]
 
 [dependencies]

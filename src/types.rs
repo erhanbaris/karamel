@@ -276,16 +276,6 @@ impl CharTraits for char {
 }
 
 impl BramaTokenType {
-    pub fn is_bool(&self) -> bool {
-        if self.is_keyword() {
-            return match self {
-                BramaTokenType::Keyword(BramaKeywordType::True) => true,
-                BramaTokenType::Keyword(BramaKeywordType::False) => true,
-                _ => false
-            }
-        }
-        return false;        
-    }
 
     pub fn is_symbol(&self) -> bool {
         return match self {
@@ -294,6 +284,7 @@ impl BramaTokenType {
         }
     }
 
+    #[allow(dead_code)]
     pub fn is_keyword(&self) -> bool {
         return match self {
             BramaTokenType::Keyword(_) => true,

@@ -83,6 +83,7 @@ impl VmByte {
         }.encode()
     }
 
+    #[allow(dead_code)]
     pub fn decode(&self) -> VmData {
         let VmByte(bits) = *self;
 
