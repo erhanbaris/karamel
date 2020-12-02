@@ -3,6 +3,7 @@ use crate::compiler::*;
 use crate::vm::debug_helpers::{dump_opcode_header, dump_opcode};
 use std::rc::Rc;
 use std::mem;
+use std::ops::Deref;
 
 pub fn run_vm<S>(options: &mut BramaCompilerOption<S>) where S: Storage
 {
@@ -34,23 +35,26 @@ pub fn run_vm<S>(options: &mut BramaCompilerOption<S>) where S: Storage
             
             match opcode {
                 VmOpCode::Addition => {
+                    mem_index -= 1;
                     let right = stack[mem_index].deref();
+
                     mem_index -= 1;
-                    
                     let left = stack[mem_index].deref();
-                    mem_index -= 1;
 
                     stack[mem_index] = match (&*left, &*right) {
                         (BramaPrimative::Number(l_value),  BramaPrimative::Number(r_value)) => VmObject::from(l_value + r_value),
                         (BramaPrimative::Text(l_value),    BramaPrimative::Text(r_value))   => VmObject::from(Rc::new((&**l_value).to_owned() + &**r_value)),
                         _ => empty_primative
                     };
+
+                    println!("{:?} = {:?} + {:?}", stack[mem_index].deref(), left.deref(), right.deref());
                     mem_index += 1;
                 },
 
                 VmOpCode::Load => {
                     let tmp = options.opcodes[index + 1] as usize;
                     stack[mem_index] = memory[tmp];
+                    println!("-- {:?}, {}", stack[mem_index].deref(), mem_index);
                     index     += 1;
                     mem_index += 1;
                 },
@@ -290,6 +294,11 @@ pub fn run_vm<S>(options: &mut BramaCompilerOption<S>) where S: Storage
             }
 
             index += 1;
+        }
+
+
+        for i in 0..10 {
+            println!("{:?}", stack[i].deref());
         }
     }
 
