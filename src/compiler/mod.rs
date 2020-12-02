@@ -46,63 +46,48 @@ pub trait Storage {
     fn dump(&self);
 }
 
-pub struct VmByte(pub u32);
-pub struct VmData {
-    pub opcode: VmOpCode,
-    pub target: u8,
-    pub a: u8,
-    pub b: u8
-}
-
-impl VmData {
-    pub fn encode(&self) -> VmByte {
-        VmByte((self.opcode as u32) |
-            (self.target as u32) << 8 |
-            (self.a as u32) << 16 |
-            (self.b as u32) << 24)
-    }
-}
-
+pub struct VmByte(pub u8);
 impl fmt::Debug for VmByte {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{:?}", self.decode_as_tuple())
+        write!(f, "{:?}", self.decode_opcode())
     }
 }
 
 impl VmByte {
     pub fn none() -> VmByte {
-        Self::new(VmOpCode::None, 0, 0, 0)
+        Self::new_opcode(VmOpCode::None)
     }
 
-    pub fn new(opcode: VmOpCode, target: u8, a: u8, b: u8) -> VmByte {
-        VmData {
-            target,
-            opcode,
-            a,
-            b
-        }.encode()
+    pub fn new_opcode(opcode: VmOpCode) -> VmByte {
+        VmByte(opcode as u8)
     }
 
     #[allow(dead_code)]
-    pub fn decode(&self) -> VmData {
+    pub fn decode_opcode(&self) -> VmOpCode {
         let VmByte(bits) = *self;
-
-        VmData {
-            opcode: unsafe { mem::transmute::<_, VmOpCode>((bits & 0xff) as u8) },
-            target: (bits >> 8) as u8,
-            a: (bits >> 16) as u8,
-            b: (bits >> 24) as u8
-        }
+        unsafe { mem::transmute::<_, VmOpCode>((bits & 0xff) as u8) }
     }
+}
 
-    pub fn decode_as_tuple(&self) -> (VmOpCode, usize, usize, usize) {
-        let VmByte(bits) = *self;
-        let opcode = unsafe { mem::transmute::<_, VmOpCode>((bits & 0xff) as u8) };
-        let target = (bits >> 8) as u8;
-        let a = (bits >> 16) as u8;
-        let b = (bits >> 24) as u8;
+trait VmByteDecode {
+    fn encode(&self) -> VmByte;
+}
 
-        (opcode, target as usize, a as usize, b as usize)
+impl VmByteDecode for VmOpCode {
+    fn encode(&self) -> VmByte {
+        VmByte::new_opcode(*self)
+    }
+}
+
+impl VmByteDecode for u8 {
+    fn encode(&self) -> VmByte {
+        VmByte(*self)
+    }
+}
+
+impl VmOpCode {
+    pub fn encode(&self) -> VmByte {
+        VmByte(*self as u8)
     }
 }
 

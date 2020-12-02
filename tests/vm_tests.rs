@@ -73,26 +73,6 @@ mod tests {
         };
     }
 
-    #[test]
-    fn vmdata_1() {
-        let original_data = VmData {
-            opcode: VmOpCode::And,
-            target: 100,
-            a: 22,
-            b:99
-        };
-
-        let byte = original_data.encode();
-        let converted_data = byte.decode();
-        let (opcode, target, a, b) = byte.decode_as_tuple();
-
-        assert_eq!(converted_data.opcode, original_data.opcode);
-        assert_eq!(converted_data.target, original_data.target);
-        assert_eq!(converted_data.a, original_data.a);
-        assert_eq!(converted_data.b, original_data.b);
-
-        assert_eq!((opcode, target as u8, a as u8, b as u8), (original_data.opcode, original_data.target, original_data.a, original_data.b));
-    }
 
     test_last_memory!(vm_1, "10 + 10", BramaPrimative::Number(20.0));
     test_last_memory!(vm_2, "10 + 20 + 30", BramaPrimative::Number(60.0));

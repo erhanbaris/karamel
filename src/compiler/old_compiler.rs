@@ -12,7 +12,7 @@ use std::marker::PhantomData;
 
 pub struct BramaCompilerOption<S>
 where S: Storage {
-    pub opcodes : Vec<u8>,
+    pub opcodes : Vec<VmByte>,
     pub storages: Vec<StaticStorage>,
     pub modules: ModuleCollection,
     pub _marker: PhantomData<S>
@@ -79,28 +79,34 @@ impl InterpreterCompiler {
 
         let result = storage.get_constant_location(primative);
         match result {
-            Some(index) => {
-                options.opcodes.push(VmOpCode::Load as u8);
-                options.opcodes.push(index as u8);
-                Ok(index)
-            },
+            Some(index) => Ok(index),
             _ => Err("Value not found in storage")
         }
     }
 
     fn generate_func_call<S>(&self, names: &Vec<String>, arguments: &Vec<Box<BramaAstType>>,  upper_ast: &BramaAstType, compiler_info: &mut CompileInfo, options: &mut BramaCompilerOption<S>, storage_index: usize) -> CompilerResult where S: Storage {
+        /* Save temp counter to restore back */
+        let temp_index             = options.storages[storage_index].get_temp_counter();
+
         /* Build arguments */
         for argument in arguments {
-            self.generate_opcode(argument, upper_ast, compiler_info, options, storage_index)?;
+            let position = self.generate_opcode(argument, upper_ast, compiler_info, options, storage_index)?;
+            if position < options.storages[0].get_constant_size() + options.storages[0].get_variable_size() {
+                let opcode = VmByte::new(VmOpCode::Load, position, 0, 0);
+                options.opcodes.push(opcode);
+            }
         }
 
         let func = options.modules.find_method(names);
         return match func {
             Some(function) => {
                 if let Some(location) = options.storages[storage_index].get_constant_location(Rc::new(BramaPrimative::FuncNativeCall(function))) {
-                    options.opcodes.push(VmOpCode::NativeCall as u8);
-                    options.opcodes.push(location as u8);
-                    options.opcodes.push((arguments.len() as u8) as u8);
+                    let target = options.storages[storage_index].get_free_temp_slot();
+                    let opcode = VmByte::new(VmOpCode::NativeCall, target as u8, arguments.len() as u8, location);
+                    options.opcodes.push(opcode);
+
+                    /* Restore temp counter */
+                    options.storages[storage_index].set_temp_counter(temp_index);
                     Ok(0 as u8)
                 } else {
                     Err("Function not found")
@@ -112,45 +118,43 @@ impl InterpreterCompiler {
 
     fn generate_symbol<S>(&self, variable: &String, _: &BramaAstType, _: &mut CompileInfo, options: &mut BramaCompilerOption<S>, storage_index: usize) -> CompilerResult where S: Storage {
         match options.storages.get_mut(storage_index).unwrap().get_variable_location(variable) {
-            Some(location) => {
-                options.opcodes.push(VmOpCode::Load as u8);
-                options.opcodes.push(location as u8);
-                Ok(location)
-            },
+            Some(location) => Ok(location),
             _ => return Err("Variable not found in storage")
         }
     }
 
     fn generate_control<S>(&self, left_ast: &BramaAstType, operator: &BramaOperatorType, right_ast: &BramaAstType, _: &BramaAstType, compiler_info: &mut CompileInfo, options: &mut BramaCompilerOption<S>, storage_index: usize) -> CompilerResult where S: Storage {
-        self.generate_opcode(left_ast, &BramaAstType::None, compiler_info, options, storage_index)?;
-        self.generate_opcode(right_ast, &BramaAstType::None, compiler_info, options, storage_index)?;
+        let left   = self.generate_opcode(left_ast, &BramaAstType::None, compiler_info, options, storage_index)?;
+        let right  = self.generate_opcode(right_ast, &BramaAstType::None, compiler_info, options, storage_index)?;
+        let target = options.storages[storage_index].get_free_temp_slot() as u8;
 
         let opcode = match operator {
-            BramaOperatorType::Or               => VmOpCode::Or as u8,
-            BramaOperatorType::And              => VmOpCode::And as u8,
-            BramaOperatorType::Equal            => VmOpCode::Equal as u8,
-            BramaOperatorType::NotEqual         => VmOpCode::NotEqual as u8,
-            BramaOperatorType::GreaterThan      => VmOpCode::GreaterThan as u8,
-            BramaOperatorType::LessThan         => VmOpCode::LessThan as u8,
-            BramaOperatorType::GreaterEqualThan => VmOpCode::GreaterEqualThan as u8,
-            BramaOperatorType::LessEqualThan    => VmOpCode::LessEqualThan as u8,
-            _ => VmOpCode::None as u8
+            BramaOperatorType::Or               => VmByte::new(VmOpCode::Or, target, left, right),
+            BramaOperatorType::And              => VmByte::new(VmOpCode::And, target, left, right),
+            BramaOperatorType::Equal            => VmByte::new(VmOpCode::Equal, target, left, right),
+            BramaOperatorType::NotEqual         => VmByte::new(VmOpCode::NotEqual, target, left, right),
+            BramaOperatorType::GreaterThan      => VmByte::new(VmOpCode::GreaterThan, target, left, right),
+            BramaOperatorType::LessThan         => VmByte::new(VmOpCode::LessThan, target, left, right),
+            BramaOperatorType::GreaterEqualThan => VmByte::new(VmOpCode::GreaterEqualThan, target, left, right),
+            BramaOperatorType::LessEqualThan    => VmByte::new(VmOpCode::LessEqualThan, target, left, right),
+            _ => VmByte::none()
         };
 
         options.opcodes.push(opcode);
-        Ok(0)
+        Ok(target)
     }
 
     fn generate_assignment<S>(&self, variable: Rc<String>, operator: &BramaOperatorType, expression_ast: &BramaAstType, compiler_info: &mut CompileInfo, options: &mut BramaCompilerOption<S>, storage_index: usize) -> CompilerResult where S: Storage {
-        options.storages.get_mut(storage_index).unwrap().add_variable(&*variable);
+        let target = options.storages.get_mut(storage_index).unwrap().add_variable(&*variable);
+        let source = self.generate_opcode(expression_ast, &BramaAstType::None, compiler_info, options, storage_index)?;
 
         let opcode = match operator {
-            BramaOperatorType::Assign               => VmOpCode::Store as u8,
-            BramaOperatorType::AssignAddition       => VmOpCode::AssignAddition as u8,
-            BramaOperatorType::AssignDivision       => VmOpCode::AssignDivision as u8,
-            BramaOperatorType::AssignMultiplication => VmOpCode::AssignMultiplication as u8,
-            BramaOperatorType::AssignSubtraction    => VmOpCode::AssignSubtraction as u8,
-            _ => VmOpCode::None as u8
+            BramaOperatorType::Assign               => VmByte::new(VmOpCode::Store,                 target, source, 0),
+            BramaOperatorType::AssignAddition       => VmByte::new(VmOpCode::AssignAddition,       target, source, 0),
+            BramaOperatorType::AssignDivision       => VmByte::new(VmOpCode::AssignDivision,       target, source, 0),
+            BramaOperatorType::AssignMultiplication => VmByte::new(VmOpCode::AssignMultiplication, target, source, 0),
+            BramaOperatorType::AssignSubtraction    => VmByte::new(VmOpCode::AssignSubtraction,    target, source, 0),
+            _ => VmByte::none()
         };
         
         options.opcodes.push(opcode);
@@ -158,48 +162,59 @@ impl InterpreterCompiler {
     }
 
     fn generate_binary<S>(&self, left_ast: &BramaAstType, operator: &BramaOperatorType, right_ast: &BramaAstType, _: &BramaAstType, compiler_info: &mut CompileInfo, options: &mut BramaCompilerOption<S>, storage_index: usize) -> CompilerResult where S: Storage { let left = self.generate_opcode(left_ast, &BramaAstType::None, compiler_info, options, storage_index)?;
-        self.generate_opcode(right_ast, &BramaAstType::None, compiler_info, options, storage_index)?;
+        let right  = self.generate_opcode(right_ast, &BramaAstType::None, compiler_info, options, storage_index)?;
+        let target = options.storages[storage_index].get_free_temp_slot();
+
         let opcode = match operator {
-            BramaOperatorType::Addition       => VmOpCode::Addition as u8,
-            BramaOperatorType::Subtraction    => VmOpCode::Subraction as u8,
-            BramaOperatorType::Multiplication => VmOpCode::Multiply as u8,
-            BramaOperatorType::Division       => VmOpCode::Division as u8,
-            _ => VmOpCode::None as u8
+            BramaOperatorType::Addition       => VmByte::new(VmOpCode::Addition, target, left, right),
+            BramaOperatorType::Subtraction    => VmByte::new(VmOpCode::Subraction, target, left, right),
+            BramaOperatorType::Multiplication => VmByte::new(VmOpCode::Multiply, target, left, right),
+            BramaOperatorType::Division       => VmByte::new(VmOpCode::Division, target, left, right),
+            _ => VmByte::none()
         };
 
         options.opcodes.push(opcode);
-        Ok(0)
+        Ok(target)
     }
 
     fn generate_prefix_unary<S>(&self, operator: &BramaOperatorType, expression: &BramaAstType, _: &BramaAstType, compiler_info: &mut CompileInfo, options: &mut BramaCompilerOption<S>, storage_index: usize) -> CompilerResult where S: Storage { 
-        self.generate_opcode(expression, &BramaAstType::None, compiler_info, options, storage_index)?;
+        let source           = self.generate_opcode(expression, &BramaAstType::None, compiler_info, options, storage_index)?;
+        let mut return_value = source;
         let opcode = match operator {
-            BramaOperatorType::Increment  => VmOpCode::Increment as u8,
-            BramaOperatorType::Deccrement => VmOpCode::Decrement as u8,
-            BramaOperatorType::Not        => VmOpCode::Not as u8,
+            BramaOperatorType::Increment  => VmByte::new(VmOpCode::Increment, source, 0, 0),
+            BramaOperatorType::Deccrement => VmByte::new(VmOpCode::Decrement, source, 0, 0),
+            BramaOperatorType::Not        => {
+                let target = options.storages[storage_index].get_free_temp_slot();
+                return_value = target;
+                VmByte::new(VmOpCode::Not, target, source, 0)
+            },
             _ => return Err("Unary operator not found")
         };
 
         options.opcodes.push(opcode);
-        Ok(0)
+        Ok(return_value)
     }
 
     fn generate_suffix_unary<S>(&self, operator: &BramaOperatorType, expression: &BramaAstType, _: &BramaAstType, compiler_info: &mut CompileInfo, options: &mut BramaCompilerOption<S>, storage_index: usize) -> CompilerResult where S: Storage { 
-        self.generate_opcode(expression, &BramaAstType::None, compiler_info, options, storage_index)?;
+        let source = self.generate_opcode(expression, &BramaAstType::None, compiler_info, options, storage_index)?;
+        let target = options.storages[storage_index].get_free_temp_slot();
+
+        options.opcodes.push(VmByte::new(VmOpCode::Move, target, source, 0));
 
         let opcode = match operator {
-            BramaOperatorType::Increment  => VmOpCode::Increment as u8,
-            BramaOperatorType::Deccrement => VmOpCode::Decrement as u8,
+            BramaOperatorType::Increment  => VmByte::new(VmOpCode::Increment, source, 0, 0),
+            BramaOperatorType::Deccrement => VmByte::new(VmOpCode::Decrement, source, 0, 0),
             _ => return Err("Unary operator not found")
         };
 
         options.opcodes.push(opcode);
-        Ok(0)
+        Ok(target)
     }
 
     fn generate_block<S>(&self, asts: &Vec<BramaAstType>, upper_ast: &BramaAstType, compiler_info: &mut CompileInfo, options: &mut BramaCompilerOption<S>, storage_index: usize) -> CompilerResult where S: Storage {
         for ast in asts {
             self.generate_opcode(&ast, upper_ast, compiler_info, options, storage_index)?;
+            options.storages[storage_index].reset_temp_counter();
         }
         Ok(0)
     }
