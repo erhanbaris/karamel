@@ -11,7 +11,8 @@ use crate::compiler::storage_builder::StorageBuilder;
 pub struct BramaCompilerOption {
     pub opcodes : Vec<u8>,
     pub storages: Vec<StaticStorage>,
-    pub modules: ModuleCollection
+    pub modules: ModuleCollection,
+    pub opcode_index: usize
 }
 
 impl  BramaCompilerOption {
@@ -19,8 +20,13 @@ impl  BramaCompilerOption {
         BramaCompilerOption {
             opcodes: Vec::new(),
             storages: vec![StaticStorage::new()],
-            modules: ModuleCollection::new()
+            modules: ModuleCollection::new(),
+            opcode_index: 0
         }
+    }
+
+    pub fn reset(&mut self) {
+        self.opcodes = Vec::new();
     }
 }
 
@@ -135,7 +141,9 @@ impl InterpreterCompiler {
     }
 
     fn generate_assignment(&self, variable: Rc<String>, operator: &BramaOperatorType, expression_ast: &BramaAstType, compiler_info: &mut CompileInfo, options: &mut BramaCompilerOption, storage_index: usize) -> CompilerResult {
-        options.storages.get_mut(storage_index).unwrap().add_variable(&*variable);
+        self.generate_opcode(expression_ast, &BramaAstType::None, compiler_info, options, storage_index)?;
+        
+        let location = options.storages.get_mut(storage_index).unwrap().add_variable(&*variable);
 
         let opcode = match operator {
             BramaOperatorType::Assign               => VmOpCode::Store as u8,
@@ -147,6 +155,7 @@ impl InterpreterCompiler {
         };
         
         options.opcodes.push(opcode);
+        options.opcodes.push(location);
         Ok(0)
     }
 

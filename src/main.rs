@@ -6,7 +6,7 @@ mod compiler;
 mod core;
 
 fn main() {
-    vm::executer::code_executer(&r#"100+200+300"#.to_string());
+    vm::executer::console_executer();
 }
 /*
 c = a(1) + a(2)

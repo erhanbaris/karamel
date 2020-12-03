@@ -10,6 +10,6 @@ edition = "2018"
 dumpExecutionOpcode = []
 dumpMemory = []
 dumpOpcodes = []
-default = ["dumpOpcodes", "dumpMemory", "dumpExecutionOpcode"]
+default = ["dumpOpcodes", "dumpExecutionOpcode"]
 
 [dependencies]

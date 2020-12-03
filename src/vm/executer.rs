@@ -39,12 +39,12 @@ fn console_welcome() {
     print!("-> ");
     io::stdout().flush().unwrap();
 }
-/*
+
 #[allow(dead_code)]
 pub fn console_executer() {
     console_welcome();
     
-    let mut compiler_options: BramaCompilerOption<DynamicStorage> = BramaCompilerOption::new();
+    let mut compiler_options: BramaCompilerOption = BramaCompilerOption::new();
     let mut line = String::new();
 
     loop {
@@ -61,20 +61,30 @@ pub fn console_executer() {
             return;
         }
 
-        let mut parser = Parser::new(&line);
+        let mut parser = Parser::new(&line.trim());
         match parser.parse() {
-            Err(_) => (),
+            Err(error) => {
+                println!("Err > {:?}", error);
+                return;
+            },
             _ => ()
         };
 
         let syntax = SyntaxParser::new(Box::new(parser.tokens().to_vec()));
         let syntax_result = syntax.parse();
 
-        if let Ok(ast) = syntax_result {
-            let opcode_compiler = InterpreterCompiler {};
-            
-            if let Ok(_) = opcode_compiler.compile(&ast, &mut compiler_options) {
-                run_vm(&compiler_options);
+        match syntax_result {
+            Ok(ast) => {
+                let opcode_compiler = InterpreterCompiler {};
+                compiler_options.reset();
+                
+                if let Ok(_) = opcode_compiler.compile(&ast, &mut compiler_options) {
+                    run_vm(&mut compiler_options);
+                }
+            },
+            Err((message, _, _)) => {
+                println!("Err > {:?}", message);
+                return;
             }
         }
 
@@ -82,4 +92,3 @@ pub fn console_executer() {
         io::stdout().flush().unwrap();
     }
 }
-*/
