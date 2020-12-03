@@ -5,7 +5,7 @@ use std::rc::Rc;
 use std::mem;
 use std::ops::Deref;
 
-pub fn run_vm<S>(options: &mut BramaCompilerOption<S>) where S: Storage
+pub fn run_vm(options: &mut BramaCompilerOption)
 {
     #[cfg(feature = "dumpOpcodes")] {
         /*println!("            OPCODE");

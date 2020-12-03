@@ -8,7 +8,7 @@ use std::io::Write;
 
 #[warn(dead_code)]
 pub fn code_executer(data: &String) {
-    let mut compiler_options: BramaCompilerOption<StaticStorage> = BramaCompilerOption::new();
+    let mut compiler_options: BramaCompilerOption = BramaCompilerOption::new();
 
     let mut parser = Parser::new(&data[..]);
     match parser.parse() {
