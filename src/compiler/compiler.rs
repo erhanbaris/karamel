@@ -145,16 +145,24 @@ impl InterpreterCompiler {
         
         let location = options.storages.get_mut(storage_index).unwrap().add_variable(&*variable);
 
-        let opcode = match operator {
-            BramaOperatorType::Assign               => VmOpCode::Store as u8,
-            BramaOperatorType::AssignAddition       => VmOpCode::AssignAddition as u8,
-            BramaOperatorType::AssignDivision       => VmOpCode::AssignDivision as u8,
-            BramaOperatorType::AssignMultiplication => VmOpCode::AssignMultiplication as u8,
-            BramaOperatorType::AssignSubtraction    => VmOpCode::AssignSubtraction as u8,
-            _ => VmOpCode::None as u8
-        };
+        if *operator != BramaOperatorType::Assign {
+
+            /* Load variable data to stack */
+            options.opcodes.push(VmOpCode::Load as u8);
+            options.opcodes.push(location);
+
+            let opcode = match operator {
+                BramaOperatorType::AssignAddition       => VmOpCode::Addition as u8,
+                BramaOperatorType::AssignDivision       => VmOpCode::Division as u8,
+                BramaOperatorType::AssignMultiplication => VmOpCode::Multiply as u8,
+                BramaOperatorType::AssignSubtraction    => VmOpCode::Subraction as u8,
+                _ => BramaOperatorType::None as u8
+            };
+
+            options.opcodes.push(opcode);
+        }
         
-        options.opcodes.push(opcode);
+        options.opcodes.push(VmOpCode::Store as u8);
         options.opcodes.push(location);
         Ok(0)
     }

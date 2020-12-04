@@ -28,7 +28,7 @@ mod tests {
                 };
 
                 let opcode_compiler  = InterpreterCompiler {};
-                let mut compiler_options: BramaCompilerOption<StaticStorage> = BramaCompilerOption::new();
+                let mut compiler_options: BramaCompilerOption = BramaCompilerOption::new();
 
                 if let Ok(_) = opcode_compiler.compile(&syntax_result.unwrap(), &mut compiler_options) {
                     let memory = compiler_options.storages[0].get_memory();

@@ -54,10 +54,6 @@ impl fmt::Debug for VmByte {
 }
 
 impl VmByte {
-    pub fn none() -> VmByte {
-        Self::new_opcode(VmOpCode::None)
-    }
-
     pub fn new_opcode(opcode: VmOpCode) -> VmByte {
         VmByte(opcode as u8)
     }
@@ -107,17 +103,12 @@ pub enum VmOpCode {
     LessThan,
     GreaterEqualThan,
     LessEqualThan,
-    AssignAddition,
-    AssignSubtraction,
-    AssignMultiplication,
-    AssignDivision,
     NativeCall,
 
     Increment,
     Decrement,
     Not,
 
-    Move,
     Load,
     Store
 }

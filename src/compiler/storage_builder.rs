@@ -5,6 +5,7 @@ use crate::compiler::Storage;
 use crate::compiler::ast::BramaAstType;
 use crate::compiler::value::BramaPrimative;
 use crate::compiler::BramaCompilerOption;
+use crate::types::BramaOperatorType;
 pub struct StorageBuilder;
 pub struct CompilerOption {
     pub max_stack: u8
@@ -63,10 +64,16 @@ impl StorageBuilder {
             
             BramaAstType::Assignment {
                 variable,
-                operator: _,
+                operator,
                 expression} =>  {
                 options.storages.get_mut(storage_index).unwrap().add_variable(&*variable);
                 self.get_temp_count_from_ast(expression, ast, options, storage_index, compiler_option);
+                
+                let size = match *operator {
+                    BramaOperatorType::Assign => 0,
+                    _ => 2
+                };
+                compiler_option.max_stack = max(size, compiler_option.max_stack);
                 0
             },
             

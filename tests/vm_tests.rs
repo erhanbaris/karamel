@@ -28,7 +28,7 @@ mod tests {
                 };
 
                 let opcode_compiler  = InterpreterCompiler {};
-                let mut compiler_options: BramaCompilerOption<StaticStorage> = BramaCompilerOption::new();
+                let mut compiler_options: BramaCompilerOption = BramaCompilerOption::new();
                 let ast = &syntax_result.unwrap();
 
                 if let Ok(_) = opcode_compiler.compile(ast, &mut compiler_options) {
@@ -59,7 +59,7 @@ mod tests {
                 };
 
                 let opcode_compiler  = InterpreterCompiler {};
-                let mut compiler_options: BramaCompilerOption<StaticStorage> = BramaCompilerOption::new();
+                let mut compiler_options: BramaCompilerOption = BramaCompilerOption::new();
                 let ast = &syntax_result.unwrap();
 
                 if let Ok(_) = opcode_compiler.compile(ast, &mut compiler_options) {

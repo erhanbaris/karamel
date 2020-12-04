@@ -23,7 +23,7 @@ pub fn greet(name: &str) {
 
 #[cfg(not(feature = "wasmBuild"))]
 fn main() {
-    vm::executer::code_executer(&r#"erhan=1
-baris=2
-toplam=erhan+baris"#.to_string());
+    vm::executer::code_executer(&r#"erhan=2
+erhan-=100
+erhan *1.3123"#.to_string());
 }

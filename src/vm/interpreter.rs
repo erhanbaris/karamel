@@ -28,7 +28,6 @@ pub fn run_vm(options: &mut BramaCompilerOption)
                 VmOpCode::Subraction | 
                 VmOpCode::Multiply => {
                     println!("| {:4} | {:15} | {:^5}", opcode_index, format!("{:?}", opcode), "");
-                    opcode_index += 2;
                 },
 
                 VmOpCode::Load |
@@ -54,7 +53,6 @@ pub fn run_vm(options: &mut BramaCompilerOption)
         let mut index     = options.opcode_index;
         let opcode_size   = options.opcodes.len();
         let mut mem_index: i16 = 0;
-        let opcode_index = 0;
         let mut stack: Vec<VmObject> = Vec::with_capacity(options.storages[0].get_temp_size() as usize);
 
         for _i in 0..options.storages[0].get_temp_size() {
@@ -65,16 +63,26 @@ pub fn run_vm(options: &mut BramaCompilerOption)
             let opcode = unsafe { mem::transmute::<u8, VmOpCode>(options.opcodes[index]) };
             
             match opcode {
-                VmOpCode::Addition => {
-                    let right = pop!(mem_index, stack);
+                VmOpCode::Subraction => {
                     let left  = pop!(mem_index, stack);
+                    let right = pop!(mem_index, stack);
+                    
+                    stack[mem_index as usize] = match (&*left, &*right) {
+                        (BramaPrimative::Number(l_value),  BramaPrimative::Number(r_value))   => VmObject::from(*l_value - *r_value),
+                        _ => empty_primative
+                    };
+                    mem_index += 1;
+                },
+
+                VmOpCode::Addition => {
+                    let left  = pop!(mem_index, stack);
+                    let right = pop!(mem_index, stack);
 
                     stack[mem_index as usize] = match (&*left, &*right) {
                         (BramaPrimative::Number(l_value),  BramaPrimative::Number(r_value)) => VmObject::from(l_value + r_value),
                         (BramaPrimative::Text(l_value),    BramaPrimative::Text(r_value))   => VmObject::from(Rc::new((&**l_value).to_owned() + &**r_value)),
                         _ => empty_primative
                     };
-                    index += 2;
                     mem_index += 1;
                 },
 
@@ -117,7 +125,6 @@ pub fn run_vm(options: &mut BramaCompilerOption)
                     };
 
                     stack[mem_index as usize] = VmObject::from(left_expression && right_expression);
-                    index += 2;
                     mem_index += 1;
                 },
 
@@ -146,52 +153,44 @@ pub fn run_vm(options: &mut BramaCompilerOption)
                     };
 
                     stack[mem_index as usize] = VmObject::from(left_expression || right_expression);
-                    index += 2;
                     mem_index += 1;
                 },
 
                 VmOpCode::Multiply => {
-                    let right = pop!(mem_index, stack);
                     let left  = pop!(mem_index, stack);
+                    let right = pop!(mem_index, stack);
                     stack[mem_index as usize] = match (&*left, &*right) {
                         (BramaPrimative::Number(l_value),  BramaPrimative::Number(r_value))   => VmObject::from(*l_value * *r_value),
                         (BramaPrimative::Text(l_value),    BramaPrimative::Number(r_value))   => VmObject::from((*l_value).repeat((*r_value) as usize)),
                         _ => empty_primative
                     };
-                    index += 2;
                     mem_index += 1;
                 },
 
-
-                /*
                 VmOpCode::Division => {
-                    
-                    let calculation = match (&*memory[left].deref(), &*memory[right].deref()) {
+                    let left  = pop!(mem_index, stack);
+                    let right = pop!(mem_index, stack);
+
+                    let calculation = match (&*left, &*right) {
                         (BramaPrimative::Number(l_value),  BramaPrimative::Number(r_value))   => (*l_value / *r_value),
                         _ => std::f64::NAN
                     };
 
-                    memory[target] = if calculation.is_nan() {
+                    stack[mem_index as usize] = if calculation.is_nan() {
                         empty_primative
                     }
                     else {
                         VmObject::from(calculation)
-                    }
-                },
-
-                VmOpCode::Subraction => {
-                    
-                    memory[target] = match (&*memory[tmp_index-2].deref(), &*memory[tmp_index-1].deref()) {
-                        (BramaPrimative::Number(l_value),  BramaPrimative::Number(r_value))   => VmObject::from(*l_value - *r_value),
-                        _ => empty_primative
                     };
 
-                    tmp_index -= 2;
+                    mem_index += 1;
                 },
 
                 VmOpCode::Equal => {
+                    let left  = pop!(mem_index, stack);
+                    let right = pop!(mem_index, stack);
                     
-                    memory[target] = match (&*memory[left].deref(), &*memory[right].deref()) {
+                    stack[mem_index as usize] = match (&*left, &*right) {
                         (BramaPrimative::Empty,               BramaPrimative::Empty)               => VmObject::from(true),
                         (BramaPrimative::Atom(l_value),       BramaPrimative::Atom(r_value))       => VmObject::from(*l_value == *r_value),
                         (BramaPrimative::Bool(l_value),       BramaPrimative::Bool(r_value))       => VmObject::from(*l_value == *r_value),
@@ -199,11 +198,15 @@ pub fn run_vm(options: &mut BramaCompilerOption)
                         (BramaPrimative::Text(l_value),       BramaPrimative::Text(r_value))       => VmObject::from(*l_value == *r_value),
                         _ => empty_primative
                     };
+                    mem_index += 1;
                 },
 
+
                 VmOpCode::NotEqual => {
+                    let left  = pop!(mem_index, stack);
+                    let right = pop!(mem_index, stack);
                     
-                    memory[target] = match (&*memory[left].deref(), &*memory[right].deref()) {
+                    stack[mem_index as usize] = match (&*left, &*right) {
                         (BramaPrimative::Empty,               BramaPrimative::Empty)               => VmObject::from(false),
                         (BramaPrimative::Atom(l_value),       BramaPrimative::Atom(r_value))       => VmObject::from(*l_value != *r_value),
                         (BramaPrimative::Bool(l_value),       BramaPrimative::Bool(r_value))       => VmObject::from(*l_value != *r_value),
@@ -211,53 +214,58 @@ pub fn run_vm(options: &mut BramaCompilerOption)
                         (BramaPrimative::Text(l_value),       BramaPrimative::Text(r_value))       => VmObject::from(*l_value != *r_value),
                         _ => empty_primative
                     };
+                    mem_index += 1;
                 },
 
                 VmOpCode::GreaterThan => {
+                    let left  = pop!(mem_index, stack);
+                    let right = pop!(mem_index, stack);
                     
-                    memory[target] = match (&*memory[left].deref(), &*memory[right].deref()) {
+                    stack[mem_index as usize] = match (&*left, &*right) {
                         (BramaPrimative::Number(l_value),  BramaPrimative::Number(r_value))   => VmObject::from(*l_value > *r_value),
                         _ => empty_primative
                     };
+                    mem_index += 1;
                 },
 
                 VmOpCode::GreaterEqualThan => {
+                    let left  = pop!(mem_index, stack);
+                    let right = pop!(mem_index, stack);
                     
-                    memory[target] = match (&*memory[left].deref(), &*memory[right].deref()) {
+                    stack[mem_index as usize] = match (&*left, &*right) {
                         (BramaPrimative::Number(l_value),  BramaPrimative::Number(r_value))   => VmObject::from(*l_value >= *r_value),
                         _ => empty_primative
                     };
+                    mem_index += 1;
                 },
 
                 VmOpCode::LessThan => {
+                    let left  = pop!(mem_index, stack);
+                    let right = pop!(mem_index, stack);
                     
-                    memory[target] = match (&*memory[left].deref(), &*memory[right].deref()) {
+                    stack[mem_index as usize] = match (&*left, &*right) {
                         (BramaPrimative::Number(l_value),  BramaPrimative::Number(r_value))   => VmObject::from(*l_value < *r_value),
                         _ => empty_primative
                     };
+                    mem_index += 1;
                 },
 
                 VmOpCode::LessEqualThan => {
+                    let left  = pop!(mem_index, stack);
+                    let right = pop!(mem_index, stack);
                     
-                    memory[target] = match (&*memory[left].deref(), &*memory[right].deref()) {
+                    stack[mem_index as usize] = match (&*left, &*right) {
                         (BramaPrimative::Number(l_value),  BramaPrimative::Number(r_value))   => VmObject::from(*l_value <= *r_value),
                         _ => empty_primative
                     };
+                    mem_index += 1;
                 },
 
-                VmOpCode::Move => {
-                    
-                    memory[target] = memory[left];
-                },
-
-                VmOpCode::Store => {
-                    
-                    memory[target] = memory[tmp_index + 1];
-                },
+                /*
 
                 VmOpCode::NativeCall => {
                     
-                    if let BramaPrimative::FuncNativeCall(func) = &*memory[right].deref() {
+                    if let BramaPrimative::FuncNativeCall(func) = &*right {
                         let end      = left as usize;
                         let mut args = Vec::new();
 
@@ -278,39 +286,6 @@ pub fn run_vm(options: &mut BramaCompilerOption)
                     }
                 },
 
-                VmOpCode::AssignAddition => {
-                    
-                    memory[target] = match (&*memory[target].deref(), &*memory[left].deref()) {
-                        (BramaPrimative::Number(l_value),     BramaPrimative::Number(r_value))     => VmObject::from(*l_value + *r_value),
-                        (BramaPrimative::Text(l_value),       BramaPrimative::Text(r_value))       => VmObject::from(Rc::new((&**l_value).to_owned() + &**r_value)),
-                        _ => empty_primative
-                    };
-                },
-
-                VmOpCode::AssignSubtraction => {
-                    
-                    memory[target] = match (&*memory[target].deref(), &*memory[left].deref()) {
-                        (BramaPrimative::Number(l_value), BramaPrimative::Number(r_value)) => VmObject::from(*l_value - *r_value),
-                        _ => empty_primative
-                    };
-                },
-
-                VmOpCode::AssignMultiplication => {
-                    
-                    memory[target] = match (&*memory[target].deref(), &*memory[left].deref()) {
-                        (BramaPrimative::Number(l_value), BramaPrimative::Number(r_value)) => VmObject::from(*l_value * *r_value),
-                        _ => empty_primative
-                    };
-                },
-
-                VmOpCode::AssignDivision => {
-                    
-                    memory[target] = match (&*memory[target].deref(), &*memory[left].deref()) {
-                        (BramaPrimative::Number(l_value), BramaPrimative::Number(r_value)) => VmObject::from(*l_value / *r_value),
-                        _ => empty_primative
-                    };
-                },
-
                 VmOpCode::Increment => {
                     
                     memory[target] = match &*memory[target].deref() {
@@ -329,7 +304,7 @@ pub fn run_vm(options: &mut BramaCompilerOption)
 
                 VmOpCode::Not => {
                     
-                    memory[target] = match &*memory[left].deref() {
+                    memory[target] = match &*left {
                         BramaPrimative::Number(value) => VmObject::from(!(*value > 0.0)),
                         BramaPrimative::Bool(value)   => VmObject::from(!*value),
                         _ => empty_primative
