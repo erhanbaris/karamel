@@ -1,9 +1,7 @@
 use crate::types::{VmObject};
 use crate::compiler::*;
-use crate::vm::debug_helpers::{dump_opcode_header, dump_opcode};
 use std::rc::Rc;
 use std::mem;
-use std::ops::Deref;
 
 
 macro_rules! pop {
@@ -16,12 +14,36 @@ macro_rules! pop {
 pub fn run_vm(options: &mut BramaCompilerOption)
 {
     #[cfg(feature = "dumpOpcodes")] {
-        /*println!("            OPCODE");
+        println!("            OPCODE");
         println!("---------------------------------------------");
-        for (index, item) in options.opcodes.iter().enumerate() {
-            let (opcode, target, left, right) = item.decode_as_tuple();
-            println!("| {:?} | {:15} | {:^5?} | {:^5?} | {:^3?}", index, format!("{:?}", opcode), target, left, right);
-        }*/
+        let opcode_size   = options.opcodes.len();
+        let mut opcode_index = 0;
+
+        while opcode_size > opcode_index {
+            let opcode = unsafe { mem::transmute::<u8, VmOpCode>(options.opcodes[opcode_index]) };
+            match opcode {
+                VmOpCode::Addition | 
+                VmOpCode::And | 
+                VmOpCode::Or |
+                VmOpCode::Subraction | 
+                VmOpCode::Multiply => {
+                    println!("| {:4} | {:15} | {:^5}", opcode_index, format!("{:?}", opcode), "");
+                    opcode_index += 2;
+                },
+
+                VmOpCode::Load |
+                VmOpCode::Store => {
+                    println!("| {:4} | {:15} | {:^5?}", opcode_index, format!("{:?}", opcode), options.opcodes[opcode_index + 1]);
+                    opcode_index += 1;
+                },
+
+                _ => {
+                    println!("| {:4} | {:15} | {:^5?}", opcode_index, format!("{:?}", opcode), "");
+                }
+            }
+
+            opcode_index += 1;
+        }
     }
 
     //dump_opcode_header();
@@ -32,9 +54,10 @@ pub fn run_vm(options: &mut BramaCompilerOption)
         let mut index     = options.opcode_index;
         let opcode_size   = options.opcodes.len();
         let mut mem_index: i16 = 0;
+        let opcode_index = 0;
         let mut stack: Vec<VmObject> = Vec::with_capacity(options.storages[0].get_temp_size() as usize);
 
-        for i in 0..options.storages[0].get_temp_size() {
+        for _i in 0..options.storages[0].get_temp_size() {
             stack.push(VmObject::from(0.0));
         }
 
@@ -51,6 +74,7 @@ pub fn run_vm(options: &mut BramaCompilerOption)
                         (BramaPrimative::Text(l_value),    BramaPrimative::Text(r_value))   => VmObject::from(Rc::new((&**l_value).to_owned() + &**r_value)),
                         _ => empty_primative
                     };
+                    index += 2;
                     mem_index += 1;
                 },
 
@@ -93,6 +117,7 @@ pub fn run_vm(options: &mut BramaCompilerOption)
                     };
 
                     stack[mem_index as usize] = VmObject::from(left_expression && right_expression);
+                    index += 2;
                     mem_index += 1;
                 },
 
@@ -121,6 +146,7 @@ pub fn run_vm(options: &mut BramaCompilerOption)
                     };
 
                     stack[mem_index as usize] = VmObject::from(left_expression || right_expression);
+                    index += 2;
                     mem_index += 1;
                 },
 
@@ -132,6 +158,7 @@ pub fn run_vm(options: &mut BramaCompilerOption)
                         (BramaPrimative::Text(l_value),    BramaPrimative::Number(r_value))   => VmObject::from((*l_value).repeat((*r_value) as usize)),
                         _ => empty_primative
                     };
+                    index += 2;
                     mem_index += 1;
                 },
 
@@ -320,7 +347,6 @@ pub fn run_vm(options: &mut BramaCompilerOption)
             println!("{:?}", stack[i as usize].deref());
         }
 
-        mem_index = 0;
         options.opcode_index = index;
     }
 

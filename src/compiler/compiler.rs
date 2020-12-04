@@ -159,7 +159,8 @@ impl InterpreterCompiler {
         Ok(0)
     }
 
-    fn generate_binary(&self, left_ast: &BramaAstType, operator: &BramaOperatorType, right_ast: &BramaAstType, _: &BramaAstType, compiler_info: &mut CompileInfo, options: &mut BramaCompilerOption, storage_index: usize) -> CompilerResult { let left = self.generate_opcode(left_ast, &BramaAstType::None, compiler_info, options, storage_index)?;
+    fn generate_binary(&self, left_ast: &BramaAstType, operator: &BramaOperatorType, right_ast: &BramaAstType, _: &BramaAstType, compiler_info: &mut CompileInfo, options: &mut BramaCompilerOption, storage_index: usize) -> CompilerResult { 
+        self.generate_opcode(left_ast, &BramaAstType::None, compiler_info, options, storage_index)?;
         self.generate_opcode(right_ast, &BramaAstType::None, compiler_info, options, storage_index)?;
         let opcode = match operator {
             BramaOperatorType::Addition       => VmOpCode::Addition as u8,

@@ -6,7 +6,7 @@ use crate::syntax::SyntaxParser;
 use std::io::{self};
 use std::io::Write;
 
-#[warn(dead_code)]
+#[allow(dead_code)]
 pub fn code_executer(data: &String) {
     let mut compiler_options: BramaCompilerOption = BramaCompilerOption::new();
 

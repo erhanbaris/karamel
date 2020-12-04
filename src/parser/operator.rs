@@ -58,7 +58,12 @@ impl TokenParser for OperatorParser {
             };
         }
 
+        if ch == '\r' {
+            return Ok(BramaTokenType::None);
+        }
+
         if operator_type == BramaOperatorType::None {
+            println!("'{}' not found", ch as usize);
             return Err(("Char not valid", tokinizer.line, tokinizer.column));
         }
 
