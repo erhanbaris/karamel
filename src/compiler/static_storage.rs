@@ -14,6 +14,7 @@ pub struct StaticStorage {
     pub temp_counter          : u8,
     pub variables             : HashMap<String, u8>,
     pub memory                : Rc<RefCell<Vec<VmObject>>>,
+    pub stack                : Rc<RefCell<Vec<VmObject>>>,
     pub total_const_variables : u8
 }
 
@@ -37,6 +38,7 @@ impl Storage for StaticStorage {
             temp_counter: 0,
             total_const_variables: 0,
             memory: Rc::new(RefCell::new(Vec::new())),
+            stack: Rc::new(RefCell::new(Vec::new())),
             variables: HashMap::new()
         }
     }
@@ -44,6 +46,7 @@ impl Storage for StaticStorage {
     fn build(&mut self) {
         self.constant_size = self.constants.len() as u8;
         let mut memory = self.memory.borrow_mut();
+        let mut stack  = self.stack.borrow_mut();
 
         /* Allocate memory */
         let memory_size = self.get_constant_size() + self.get_variable_size() + self.get_temp_size();
@@ -60,13 +63,13 @@ impl Storage for StaticStorage {
             index += 1;
         }
 
-        let start_index = self.get_temp_size();
-        for _ in 0..start_index {
-            memory.push(VmObject::convert(Rc::new(BramaPrimative::Empty)));
+        for _ in 0..self.temp_size {
+            stack.push(VmObject::convert(Rc::new(BramaPrimative::Empty)));
         }
     }
 
     fn get_memory(&mut self) -> Rc<RefCell<Vec<VmObject>>> { self.memory.clone() }
+    fn get_stack(&mut self) -> Rc<RefCell<Vec<VmObject>>> { self.stack.clone() }
     fn get_constant_size(&self) -> u8 { self.constant_size }
     fn get_variable_size(&self) -> u8 { self.variables.len() as u8 }
     fn get_temp_size(&self) -> u8     { self.temp_size }

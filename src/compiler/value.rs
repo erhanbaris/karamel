@@ -7,7 +7,7 @@ use crate::types::*;
 use crate::compiler::ast::BramaAstType;
 
 pub type NativeCallResult = Result<VmObject, (&'static str, u32, u32)>;
-pub type NativeCall       = fn(items: &Vec<VmObject>) -> NativeCallResult;
+pub type NativeCall       = fn(stack: &Vec<VmObject>, last_position: usize, arg_size: u8) -> NativeCallResult;
 
 pub const EMPTY_OBJECT: VmObject = VmObject(QNAN | EMPTY_FLAG);
 pub const TRUE_OBJECT: VmObject  = VmObject(QNAN | TRUE_FLAG);

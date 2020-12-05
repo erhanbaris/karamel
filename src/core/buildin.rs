@@ -50,7 +50,7 @@ impl Module for IoModule {
 }
 
 impl IoModule  {
-    pub fn print(arguments: &Vec<VmObject>) -> NativeCallResult {
+    pub fn print(arguments: &Vec<VmObject>, last_position: usize, total_args: u8) -> NativeCallResult {
         for arg in arguments {
             print!("{:?}", arg.deref());
         }
@@ -58,8 +58,8 @@ impl IoModule  {
         Ok(EMPTY_OBJECT)
     }
     
-    pub fn printline(arguments: &Vec<VmObject>) -> NativeCallResult {
-        for arg in arguments {
+    pub fn printline(arguments: &Vec<VmObject>, last_position: usize, total_args: u8) -> NativeCallResult {
+        for arg in arguments.iter().skip(last_position as usize - (total_args as usize - 1)).take(total_args as usize) {
             println!("{:?}", arg.deref());
         }
 
@@ -103,15 +103,15 @@ impl Module for NumModule {
 }
 
 impl NumModule  {
-    pub fn parse(arguments: &Vec<VmObject>) -> NativeCallResult {
-        if arguments.len() > 1 {
+    pub fn parse(arguments: &Vec<VmObject>, last_position: usize, total_args: u8) -> NativeCallResult {
+        if total_args > 1 {
             return Err(("More than 1 argument passed", 0, 0));
         }
 
-        let arg = arguments[0].deref();
+        let arg = arguments[last_position].deref();
 
         return match &*arg {
-            BramaPrimative::Number(_) => Ok(arguments[0]),
+            BramaPrimative::Number(_) => Ok(arguments[last_position]),
             BramaPrimative::Text(text) => {
                 match (*text).parse() {
                     Ok(num) => Ok(VmObject::native_convert(BramaPrimative::Number(num))),

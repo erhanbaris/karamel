@@ -23,6 +23,7 @@ pub trait Storage {
     fn build(&mut self);
     fn new() -> Self;
     fn get_memory(&mut self) -> Rc<RefCell<Vec<VmObject>>>;
+    fn get_stack(&mut self) -> Rc<RefCell<Vec<VmObject>>>;
     fn get_constant_size(&self) -> u8;
     fn get_variable_size(&self) -> u8;
     fn get_temp_size(&self) -> u8;
@@ -110,5 +111,8 @@ pub enum VmOpCode {
     Not,
 
     Load,
-    Store
+    Store,
+    FastStore,
+    CopyToStore,
+    Dublicate
 }

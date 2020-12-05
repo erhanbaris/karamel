@@ -141,10 +141,25 @@ impl InterpreterCompiler {
     }
 
     fn generate_assignment(&self, variable: Rc<String>, operator: &BramaOperatorType, expression_ast: &BramaAstType, compiler_info: &mut CompileInfo, options: &mut BramaCompilerOption, storage_index: usize) -> CompilerResult {
-        self.generate_opcode(expression_ast, &BramaAstType::None, compiler_info, options, storage_index)?;
-        
         let location = options.storages.get_mut(storage_index).unwrap().add_variable(&*variable);
+        let storage = &options.storages[storage_index];
+        
+        if let BramaAstType::Primative(primative) = expression_ast {
+            if *operator == BramaOperatorType::Assign {
+                let result = storage.get_constant_location(primative.clone());
+                let primative_location = match result {
+                    Some(index) => index as u8,
+                    _ => return Err("Value not found in storage")
+                };
 
+                options.opcodes.push(VmOpCode::FastStore as u8);
+                options.opcodes.push(location);
+                options.opcodes.push(primative_location);
+                return Ok(0);
+            }
+        }
+
+        self.generate_opcode(expression_ast, &BramaAstType::None, compiler_info, options, storage_index)?;
         if *operator != BramaOperatorType::Assign {
 
             /* Load variable data to stack */
@@ -164,6 +179,7 @@ impl InterpreterCompiler {
         
         options.opcodes.push(VmOpCode::Store as u8);
         options.opcodes.push(location);
+        
         Ok(0)
     }
 
@@ -183,29 +199,57 @@ impl InterpreterCompiler {
     }
 
     fn generate_prefix_unary(&self, operator: &BramaOperatorType, expression: &BramaAstType, _: &BramaAstType, compiler_info: &mut CompileInfo, options: &mut BramaCompilerOption, storage_index: usize) -> CompilerResult { 
-        self.generate_opcode(expression, &BramaAstType::None, compiler_info, options, storage_index)?;
-        let opcode = match operator {
-            BramaOperatorType::Increment  => VmOpCode::Increment as u8,
-            BramaOperatorType::Deccrement => VmOpCode::Decrement as u8,
-            BramaOperatorType::Not        => VmOpCode::Not as u8,
-            _ => return Err("Unary operator not found")
-        };
+        
+        if let BramaAstType::Symbol(variable) = expression {
+            let location = match options.storages.get_mut(storage_index).unwrap().get_variable_location(variable) {
+                Some(location) => location,
+                _ => return Err("Variable not found in storage")
+            };
 
-        options.opcodes.push(opcode);
-        Ok(0)
+            options.opcodes.push(VmOpCode::Load as u8);
+            options.opcodes.push(location);
+
+            let opcode = match operator {
+                BramaOperatorType::Increment  => VmOpCode::Increment as u8,
+                BramaOperatorType::Deccrement => VmOpCode::Decrement as u8,
+                BramaOperatorType::Not        => VmOpCode::Not as u8,
+                _ => return Err("Unary operator not found")
+            };
+    
+            options.opcodes.push(opcode);
+            options.opcodes.push(VmOpCode::CopyToStore as u8);
+            options.opcodes.push(location);
+            return Ok(0);
+        }
+
+        Err("Unary expression not valid")
     }
 
     fn generate_suffix_unary(&self, operator: &BramaOperatorType, expression: &BramaAstType, _: &BramaAstType, compiler_info: &mut CompileInfo, options: &mut BramaCompilerOption, storage_index: usize) -> CompilerResult { 
-        self.generate_opcode(expression, &BramaAstType::None, compiler_info, options, storage_index)?;
+        if let BramaAstType::Symbol(variable) = expression {
+            let location = match options.storages.get_mut(storage_index).unwrap().get_variable_location(variable) {
+                Some(location) => location,
+                _ => return Err("Variable not found in storage")
+            };
 
-        let opcode = match operator {
-            BramaOperatorType::Increment  => VmOpCode::Increment as u8,
-            BramaOperatorType::Deccrement => VmOpCode::Decrement as u8,
-            _ => return Err("Unary operator not found")
-        };
+            options.opcodes.push(VmOpCode::Load as u8);
+            options.opcodes.push(location);
+            options.opcodes.push(VmOpCode::Dublicate as u8);
 
-        options.opcodes.push(opcode);
-        Ok(0)
+            let opcode = match operator {
+                BramaOperatorType::Increment  => VmOpCode::Increment as u8,
+                BramaOperatorType::Deccrement => VmOpCode::Decrement as u8,
+                BramaOperatorType::Not        => VmOpCode::Not as u8,
+                _ => return Err("Unary operator not found")
+            };
+    
+            options.opcodes.push(opcode);
+            options.opcodes.push(VmOpCode::Store as u8);
+            options.opcodes.push(location);
+            return Ok(0);
+        }
+
+        Err("Unary expression not valid")
     }
 
     fn generate_block(&self, asts: &Vec<BramaAstType>, upper_ast: &BramaAstType, compiler_info: &mut CompileInfo, options: &mut BramaCompilerOption, storage_index: usize) -> CompilerResult {
