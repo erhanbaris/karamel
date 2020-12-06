@@ -7,12 +7,13 @@ pub mod block;
 pub mod assignment;
 pub mod func_call;
 pub mod newline;
+pub mod if_condition;
 
 use std::vec::Vec;
 use std::cell::Cell;
 
 use crate::types::*;
-use self::block::BlockParser;
+use self::block::MultiLineBlockParser;
 use crate::compiler::ast::BramaAstType;
 
 pub type ParseType = fn(parser: &SyntaxParser) -> AstResult;
@@ -21,7 +22,8 @@ pub struct SyntaxParser {
     pub tokens: Box<Vec<Token>>,
     pub index: Cell<usize>,
     pub backup_index: Cell<usize>,
-    pub indentation: Cell<usize>
+    pub indentation: Cell<usize>,
+    pub setable_indentation: Cell<bool>
 }
 
 pub trait SyntaxParserTrait {
@@ -34,12 +36,13 @@ impl SyntaxParser {
             tokens: tokens,
             index: Cell::new(0),
             backup_index: Cell::new(0),
-            indentation: Cell::new(0)
+            indentation: Cell::new(0),
+            setable_indentation: Cell::new(false)
         }
     }
 
     pub fn parse(&self) -> AstResult {
-        return match BlockParser::parse(&self) {
+        return match MultiLineBlockParser::parse(&self) {
             Ok(ast) => {
                 if let Ok(token) = self.next_token() {
                     println!("{:?}", token);
@@ -59,6 +62,19 @@ impl SyntaxParser {
         self.index.set(self.backup_index.get());
     }
 
+    pub fn set_indentation(&self, indentation: usize) {
+        self.indentation.set(indentation);
+        self.setable_indentation.set(true);
+    }
+
+    pub fn get_indentation(&self) -> usize {
+        self.indentation.get()
+    }
+
+    pub fn indentation_setable(&self) {
+        self.setable_indentation.set(true);
+    }
+
     pub fn peek_token(&self) -> Result<&Token, ()> {
         match self.tokens.get(self.index.get()) {
             Some(token) => Ok(token),
@@ -76,6 +92,32 @@ impl SyntaxParser {
     pub fn consume_token(&self) -> Option<&Token> {
         self.index.set(self.index.get() + 1);
         self.tokens.get(self.index.get())
+    }
+
+    fn match_keyword(&self, keyword: BramaKeywordType) -> bool {
+        let token = self.peek_token();
+        if token.is_err() { return false; }
+        return match token.unwrap().token_type {
+            BramaTokenType::Keyword(token_keyword) => {
+                if keyword == token_keyword {
+                    self.consume_token();
+                    return true;
+                }
+                return false;
+            },
+            _ => false
+        }
+    }
+
+    fn is_newline(&self) -> bool {
+        let token = self.peek_token();
+        if token.is_err() { return false; }
+        return match token.unwrap().token_type {
+            BramaTokenType::NewLine(_) => {
+                return true;
+            },
+            _ => false
+        }
     }
 
     fn check_operator(&self, operator: &BramaOperatorType) -> bool {
@@ -123,7 +165,24 @@ impl SyntaxParser {
             if let Ok(current_token) = self.peek_token() {
                 let success = match current_token.token_type {
                     BramaTokenType::WhiteSpace(size) => 0 == size,
-                    BramaTokenType::NewLine(size) => size as usize == self.indentation.get(),
+                    BramaTokenType::NewLine(size) => {
+
+                        /* If indentation can changeable */
+                        if self.setable_indentation.get() {
+
+                            /* Check indentation and update */
+                            if size > self.indentation.get() as u8 {
+                                self.indentation.set(size as usize);
+                                true
+                            }
+                            else {
+                                /* Indentation error */
+                                false
+                            }
+                        } else {
+                            size as usize == self.indentation.get()
+                        }
+                    },
                     _ => break
                 };
 

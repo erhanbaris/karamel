@@ -35,7 +35,10 @@ pub enum BramaAstType {
         operator: BramaOperatorType,
         expression: Box<BramaAstType>
     },
-    /*Loop,
-    IfStatement,*/
+    /*Loop,*/
+    IfStatement {
+        condition: Box<BramaAstType>,
+        body: Box<BramaAstType>
+    },
     Symbol(String)
 }
