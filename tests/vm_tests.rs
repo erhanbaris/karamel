@@ -162,4 +162,6 @@ erhan-=1"#, BramaPrimative::Number(10.0));
 erhan/=2"#, BramaPrimative::Number(5.0));
     test_variable_value!(vm_71, "erhan", r#"erhan=5
 erhan*=2"#, BramaPrimative::Number(10.0));
+    test_variable_value!(vm_72, "erhan", r#"erhan=9-3"#, BramaPrimative::Number(6.0));
+    test_variable_value!(vm_73, "erhan", r#"erhan=9/3"#, BramaPrimative::Number(3.0));
 }

@@ -32,7 +32,7 @@ impl StorageBuilder {
                 right} => {
                     let total =  self.get_temp_count_from_ast(left, ast, options, storage_index, compiler_option) + self.get_temp_count_from_ast(right, ast, options, storage_index, compiler_option);
                     compiler_option.max_stack = max(total, compiler_option.max_stack);
-                    1
+                    total
                 },
             
             BramaAstType::Control {
@@ -41,19 +41,19 @@ impl StorageBuilder {
                 right} => {
                     let total =  self.get_temp_count_from_ast(left, ast, options, storage_index, compiler_option) + self.get_temp_count_from_ast(right, ast, options, storage_index, compiler_option);
                     compiler_option.max_stack = max(total, compiler_option.max_stack);
-                    1
+                    total
                 },
             
             BramaAstType::PrefixUnary(_, inner_ast) => {
                 let total = self.get_temp_count_from_ast(inner_ast, ast, options, storage_index, compiler_option);
                 compiler_option.max_stack = max(total, compiler_option.max_stack);
-                1
+                total
             },
 
             BramaAstType::SuffixUnary(_, inner_ast) => {
                 let total = self.get_temp_count_from_ast(inner_ast, ast, options, storage_index, compiler_option) + 1;
                 compiler_option.max_stack = max(total, compiler_option.max_stack);
-                1
+                total
             },
             
             BramaAstType::Symbol(string) => {

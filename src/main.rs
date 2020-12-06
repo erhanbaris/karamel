@@ -23,5 +23,6 @@ pub fn greet(name: &str) {
 
 #[cfg(not(feature = "wasmBuild"))]
 fn main() {
-    vm::executer::code_executer(&r#"10 == 40.0 - 10"#.to_string());
+    vm::executer::code_executer(&r#"text = 1024
+result = text *2"#.to_string());
 }

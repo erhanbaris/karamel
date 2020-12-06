@@ -50,7 +50,7 @@ impl Module for IoModule {
 }
 
 impl IoModule  {
-    pub fn print(arguments: &Vec<VmObject>, last_position: usize, total_args: u8) -> NativeCallResult {
+    pub fn print(arguments: &Vec<VmObject>, _: usize, _: u8) -> NativeCallResult {
         for arg in arguments {
             print!("{:?}", arg.deref());
         }

@@ -7,21 +7,27 @@ use std::mem;
 macro_rules! pop {
     ($mem_index: expr, $stack: expr) => {{
         $mem_index -= 1;
-        $stack[$mem_index as usize].deref()
+        $stack[$mem_index].deref()
     }}
 }
 
 pub fn run_vm(options: &mut BramaCompilerOption)
 {
     #[cfg(feature = "dumpOpcodes")] {
-        println!("            OPCODE");
-        println!("---------------------------------------------");
+
+        println!("╔════════════════════════════════════════╗");
+        println!("║                  OPCODE                ║");
+        println!("╠══════╦═════════════════╦═══════╦═══════╣");
         let opcode_size   = options.opcodes.len();
         let mut opcode_index = 0;
 
         while opcode_size > opcode_index {
             let opcode = unsafe { mem::transmute::<u8, VmOpCode>(options.opcodes[opcode_index]) };
             match opcode {
+                VmOpCode::Division |
+                VmOpCode::Not |
+                VmOpCode::Equal |
+                VmOpCode::NotEqual |
                 VmOpCode::Dublicate |
                 VmOpCode::Increment |
                 VmOpCode::Decrement | 
@@ -29,30 +35,36 @@ pub fn run_vm(options: &mut BramaCompilerOption)
                 VmOpCode::And | 
                 VmOpCode::Or |
                 VmOpCode::Subraction | 
+                VmOpCode::GreaterEqualThan |
+                VmOpCode::GreaterThan | 
+                VmOpCode::LessEqualThan | 
+                VmOpCode::LessThan | 
                 VmOpCode::Multiply => {
-                    println!("| {:4} | {:15} | {:^5} | {:^5}", opcode_index, format!("{:?}", opcode), "", "");
+                    println!("║ {:4} ║ {:15} ║ {:^5} ║ {:^5} ║", opcode_index, format!("{:?}", opcode), "", "");
                 },
 
                 VmOpCode::CopyToStore |
                 VmOpCode::Load |
                 VmOpCode::Store => {
-                    println!("| {:4} | {:15} | {:^5?} | {:^5}", opcode_index, format!("{:?}", opcode), options.opcodes[opcode_index + 1], "");
+                    println!("║ {:4} ║ {:15} ║ {:^5?} ║ {:^5} ║", opcode_index, format!("{:?}", opcode), options.opcodes[opcode_index + 1], "");
+                    opcode_index += 1;
+                },
+
+                VmOpCode::None => {
+                    println!("║ {:4} ║ {:15} ║ {:^5?} ║ {:^5} ║", opcode_index, format!("{:?}", opcode), "", "");
                     opcode_index += 1;
                 },
 
                 VmOpCode::NativeCall |
                 VmOpCode::FastStore => {
-                    println!("| {:4} | {:15} | {:^5?} | {:^5}", opcode_index, format!("{:?}", opcode), options.opcodes[opcode_index + 1], options.opcodes[opcode_index + 2]);
+                    println!("║ {:4} ║ {:15} ║ {:^5?} ║ {:^5} ║", opcode_index, format!("{:?}", opcode), options.opcodes[opcode_index + 1], options.opcodes[opcode_index + 2]);
                     opcode_index += 2;
-                },
-
-                _ => {
-                    println!("| {:4} | {:15} | {:^5?}", opcode_index, format!("{:?}", opcode), "");
                 }
             }
 
             opcode_index += 1;
         }
+        println!("╚══════╩═════════════════╩═══════╩═══════╝");
     }
 
     //dump_opcode_header();
@@ -74,7 +86,7 @@ pub fn run_vm(options: &mut BramaCompilerOption)
                     let right = pop!(mem_index, stack);
                     let left  = pop!(mem_index, stack);
 
-                    stack[mem_index as usize] = match (&*left, &*right) {
+                    stack[mem_index] = match (&*left, &*right) {
                         (BramaPrimative::Number(l_value),  BramaPrimative::Number(r_value))   => VmObject::from(*l_value - *r_value),
                         _ => empty_primative
                     };
@@ -85,7 +97,7 @@ pub fn run_vm(options: &mut BramaCompilerOption)
                     let right = pop!(mem_index, stack);
                     let left  = pop!(mem_index, stack);
 
-                    stack[mem_index as usize] = match (&*left, &*right) {
+                    stack[mem_index] = match (&*left, &*right) {
                         (BramaPrimative::Number(l_value),  BramaPrimative::Number(r_value)) => VmObject::from(l_value + r_value),
                         (BramaPrimative::Text(l_value),    BramaPrimative::Text(r_value))   => VmObject::from(Rc::new((&**l_value).to_owned() + &**r_value)),
                         _ => empty_primative
@@ -95,7 +107,7 @@ pub fn run_vm(options: &mut BramaCompilerOption)
 
                 VmOpCode::Load => {
                     let tmp = options.opcodes[index + 1] as usize;
-                    stack[mem_index as usize] = memory[tmp];
+                    stack[mem_index] = memory[tmp];
                     index     += 1;
                     mem_index += 1;
                 },
@@ -103,7 +115,7 @@ pub fn run_vm(options: &mut BramaCompilerOption)
                 VmOpCode::Store => {
                     let tmp = options.opcodes[index + 1] as usize;
                     mem_index -= 1;
-                    memory[tmp] = stack[mem_index as usize];
+                    memory[tmp] = stack[mem_index];
                     index     += 1;
                 },
 
@@ -118,6 +130,14 @@ pub fn run_vm(options: &mut BramaCompilerOption)
                     let source      = options.opcodes[index + 2] as usize;
                     memory[destination as usize] = memory[source];
                     index     += 2;
+                },
+
+                VmOpCode::Not => {
+                    stack[mem_index - 1] = match &*stack[mem_index - 1].deref() {
+                        BramaPrimative::Bool(value) => VmObject::from(!*value),
+                        BramaPrimative::Number(value) => VmObject::from(*value <= 0.0),
+                        _ => empty_primative
+                    };
                 },
 
                 VmOpCode::Dublicate => {
@@ -149,7 +169,7 @@ pub fn run_vm(options: &mut BramaCompilerOption)
                         BramaPrimative::Empty             => false
                     };
 
-                    stack[mem_index as usize] = VmObject::from(left_expression && right_expression);
+                    stack[mem_index] = VmObject::from(left_expression && right_expression);
                     mem_index += 1;
                 },
 
@@ -177,14 +197,14 @@ pub fn run_vm(options: &mut BramaCompilerOption)
                         BramaPrimative::Empty             => false
                     };
 
-                    stack[mem_index as usize] = VmObject::from(left_expression || right_expression);
+                    stack[mem_index] = VmObject::from(left_expression || right_expression);
                     mem_index += 1;
                 },
 
                 VmOpCode::Multiply => {
                     let right = pop!(mem_index, stack);
                     let left  = pop!(mem_index, stack);
-                    stack[mem_index as usize] = match (&*left, &*right) {
+                    stack[mem_index] = match (&*left, &*right) {
                         (BramaPrimative::Number(l_value),  BramaPrimative::Number(r_value))   => VmObject::from(*l_value * *r_value),
                         (BramaPrimative::Text(l_value),    BramaPrimative::Number(r_value))   => VmObject::from((*l_value).repeat((*r_value) as usize)),
                         _ => empty_primative
@@ -201,7 +221,7 @@ pub fn run_vm(options: &mut BramaCompilerOption)
                         _ => std::f64::NAN
                     };
 
-                    stack[mem_index as usize] = if calculation.is_nan() {
+                    stack[mem_index] = if calculation.is_nan() {
                         empty_primative
                     }
                     else {
@@ -215,7 +235,7 @@ pub fn run_vm(options: &mut BramaCompilerOption)
                     let right = pop!(mem_index, stack);
                     let left  = pop!(mem_index, stack);
                     
-                    stack[mem_index as usize] = match (&*left, &*right) {
+                    stack[mem_index] = match (&*left, &*right) {
                         (BramaPrimative::Empty,               BramaPrimative::Empty)               => VmObject::from(true),
                         (BramaPrimative::Atom(l_value),       BramaPrimative::Atom(r_value))       => VmObject::from(*l_value == *r_value),
                         (BramaPrimative::Bool(l_value),       BramaPrimative::Bool(r_value))       => VmObject::from(*l_value == *r_value),
@@ -231,7 +251,7 @@ pub fn run_vm(options: &mut BramaCompilerOption)
                     let right = pop!(mem_index, stack);
                     let left  = pop!(mem_index, stack);
                     
-                    stack[mem_index as usize] = match (&*left, &*right) {
+                    stack[mem_index] = match (&*left, &*right) {
                         (BramaPrimative::Empty,               BramaPrimative::Empty)               => VmObject::from(false),
                         (BramaPrimative::Atom(l_value),       BramaPrimative::Atom(r_value))       => VmObject::from(*l_value != *r_value),
                         (BramaPrimative::Bool(l_value),       BramaPrimative::Bool(r_value))       => VmObject::from(*l_value != *r_value),
@@ -246,7 +266,7 @@ pub fn run_vm(options: &mut BramaCompilerOption)
                     let right = pop!(mem_index, stack);
                     let left  = pop!(mem_index, stack);
                     
-                    stack[mem_index as usize] = match (&*left, &*right) {
+                    stack[mem_index] = match (&*left, &*right) {
                         (BramaPrimative::Number(l_value),  BramaPrimative::Number(r_value))   => VmObject::from(*l_value > *r_value),
                         _ => empty_primative
                     };
@@ -257,7 +277,7 @@ pub fn run_vm(options: &mut BramaCompilerOption)
                     let right = pop!(mem_index, stack);
                     let left  = pop!(mem_index, stack);
                     
-                    stack[mem_index as usize] = match (&*left, &*right) {
+                    stack[mem_index] = match (&*left, &*right) {
                         (BramaPrimative::Number(l_value),  BramaPrimative::Number(r_value))   => VmObject::from(*l_value >= *r_value),
                         _ => empty_primative
                     };
@@ -268,7 +288,7 @@ pub fn run_vm(options: &mut BramaCompilerOption)
                     let right = pop!(mem_index, stack);
                     let left  = pop!(mem_index, stack);
                     
-                    stack[mem_index as usize] = match (&*left, &*right) {
+                    stack[mem_index] = match (&*left, &*right) {
                         (BramaPrimative::Number(l_value),  BramaPrimative::Number(r_value))   => VmObject::from(*l_value < *r_value),
                         _ => empty_primative
                     };
@@ -279,7 +299,7 @@ pub fn run_vm(options: &mut BramaCompilerOption)
                     let right = pop!(mem_index, stack);
                     let left  = pop!(mem_index, stack);
                     
-                    stack[mem_index as usize] = match (&*left, &*right) {
+                    stack[mem_index] = match (&*left, &*right) {
                         (BramaPrimative::Number(l_value),  BramaPrimative::Number(r_value))   => VmObject::from(*l_value <= *r_value),
                         _ => empty_primative
                     };
@@ -295,7 +315,7 @@ pub fn run_vm(options: &mut BramaCompilerOption)
                         match func(&stack, (mem_index-1) as usize, total_args) {
                             Ok(result) => {
                                 mem_index        -= total_args as usize;
-                                stack[mem_index as usize] = result;
+                                stack[mem_index] = result;
                                 mem_index        += 1;
                             },
                             Err((error, _, _)) => {
@@ -354,10 +374,16 @@ pub fn run_vm(options: &mut BramaCompilerOption)
             index += 1;
         }
 
-        println!("            STACK");
-        println!("---------------------------------------------");
-        for i in 0..mem_index {
-            println!("| {:?}", stack[i as usize].deref());
+        if mem_index > 0 {
+            println!("╔════════════════════════════════════════╗");
+            println!("║                  STACK                 ║");
+            println!("╠════════════════════════════════════════╣");
+            println!("║ Stack size: {:<10}                 ║", stack.len());
+            println!("╠════════════════════════════════════════╣");
+            for i in 0..mem_index {
+                println!("║ {:38} ║", format!("{:?}", stack[i as usize].deref()));
+            }
+            println!("╚════════════════════════════════════════╝");
         }
 
         options.opcode_index = index;
