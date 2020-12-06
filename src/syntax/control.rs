@@ -51,6 +51,7 @@ pub fn parse_control<T: SyntaxParserTrait>(parser: &SyntaxParser, operators: &[B
     };
     
     loop {
+        parser.backup();
         parser.clear_whitespaces();
         if let Some(operator) = parser.match_operator(operators) {
             parser.clear_whitespaces();
@@ -69,6 +70,7 @@ pub fn parse_control<T: SyntaxParserTrait>(parser: &SyntaxParser, operators: &[B
             });
         }        
         else {
+            parser.restore();
             break;
         }
     }

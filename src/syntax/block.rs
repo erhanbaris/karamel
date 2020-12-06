@@ -2,6 +2,7 @@ use crate::types::*;
 use crate::syntax::{SyntaxParser, SyntaxParserTrait};
 use crate::syntax::control::ExpressionParser;
 use crate::syntax::assignment::AssignmentParser;
+use crate::syntax::newline::NewlineParser;
 use crate::syntax::util::map_parser;
 use crate::compiler::ast::BramaAstType;
 
@@ -12,19 +13,15 @@ impl SyntaxParserTrait for BlockParser {
         let mut block_asts: Vec<BramaAstType> = Vec::new();
 
         loop {
-            let ast = map_parser(parser, &[AssignmentParser::parse, ExpressionParser::parse])?;
+            let ast = map_parser(parser, &[AssignmentParser::parse, ExpressionParser::parse, NewlineParser::parse])?;
             match ast {
-                BramaAstType::None => break,
-                _                  => block_asts.push(ast)
+                BramaAstType::None =>  break,
+                BramaAstType::NewLine =>  (),
+                _ => block_asts.push(ast)
             };
 
-            if let Ok(token) = parser.peek_token() {
-                match token.token_type {
-                    BramaTokenType::NewLine(_) => {
-                        parser.consume_newline();
-                    },
-                    _ => break
-                }
+            if let Ok(_) = parser.peek_token() {
+                parser.indentation_check()?;
             }
             else {
                 break;

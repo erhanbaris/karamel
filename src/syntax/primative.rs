@@ -62,6 +62,7 @@ impl PrimativeParser {
     }
 
     fn parse_list(parser: &SyntaxParser) -> AstResult {
+        parser.backup();
         if parser.match_operator(&[BramaOperatorType::SquareBracketStart]).is_some() {
             let mut ast_vec   = Vec::new();
             parser.clear_whitespaces();
@@ -93,10 +94,12 @@ impl PrimativeParser {
             return Ok(BramaAstType::Primative(Rc::new(BramaPrimative::List(ast_vec))));
         }
 
+        parser.restore();
         return Ok(BramaAstType::None);
     }
 
     fn parse_symbol(parser: &SyntaxParser) -> AstResult {
+        parser.backup();
         parser.clear_whitespaces();
         let token = parser.peek_token();
         if token.is_err() {
@@ -107,10 +110,12 @@ impl PrimativeParser {
             parser.consume_token();
             return Ok(BramaAstType::Symbol(symbol.to_string()));
         }
+        parser.restore();
         return Ok(BramaAstType::None);
     }
 
     fn parse_parenthesis(parser: &SyntaxParser) -> AstResult {
+        parser.backup();
         if parser.match_operator(&[BramaOperatorType::LeftParentheses]).is_some() {
             
             let ast = ExpressionParser::parse(parser);
@@ -125,6 +130,7 @@ impl PrimativeParser {
             return Ok(ast.unwrap());
         }
 
+        parser.restore();
         return Ok(BramaAstType::None);
     }
 }

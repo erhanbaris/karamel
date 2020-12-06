@@ -10,6 +10,7 @@ use crate::types::BramaOperatorType;
 #[derive(PartialEq)]
 pub enum BramaAstType {
     None,
+    NewLine,
     Block(Vec<BramaAstType>),
     FuncCall {
         names: Vec<String>,

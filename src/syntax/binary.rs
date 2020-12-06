@@ -34,6 +34,7 @@ pub fn parse_binary<T: SyntaxParserTrait>(parser: &SyntaxParser, operators: &[Br
     };
 
     loop {
+        parser.backup();
         parser.clear_whitespaces();
         if let Some(operator) = parser.match_operator(operators) {
             parser.clear_whitespaces();
@@ -52,6 +53,7 @@ pub fn parse_binary<T: SyntaxParserTrait>(parser: &SyntaxParser, operators: &[Br
             });
         }
         else {
+            parser.restore();
             break;
         }
     }

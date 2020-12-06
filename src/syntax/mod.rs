@@ -6,19 +6,22 @@ pub mod control;
 pub mod block;
 pub mod assignment;
 pub mod func_call;
+pub mod newline;
 
 use std::vec::Vec;
 use std::cell::Cell;
 
 use crate::types::*;
 use self::block::BlockParser;
+use crate::compiler::ast::BramaAstType;
 
 pub type ParseType = fn(parser: &SyntaxParser) -> AstResult;
 
 pub struct SyntaxParser {
     pub tokens: Box<Vec<Token>>,
     pub index: Cell<usize>,
-    pub backup_index: Cell<usize>
+    pub backup_index: Cell<usize>,
+    pub indentation: Cell<usize>
 }
 
 pub trait SyntaxParserTrait {
@@ -30,7 +33,8 @@ impl SyntaxParser {
         SyntaxParser {
             tokens: tokens,
             index: Cell::new(0),
-            backup_index: Cell::new(0)
+            backup_index: Cell::new(0),
+            indentation: Cell::new(0)
         }
     }
 
@@ -114,16 +118,18 @@ impl SyntaxParser {
         }
     }
 
-    pub fn consume_newline(&self) {
+    fn indentation_check(&self) -> AstResult {
         loop {
             if let Ok(current_token) = self.peek_token() {
-                let done = match current_token.token_type {
-                    BramaTokenType::NewLine(_) => false,
-                    _ => true
+                let success = match current_token.token_type {
+                    BramaTokenType::WhiteSpace(size) => 0 == size,
+                    BramaTokenType::NewLine(size) => size as usize == self.indentation.get(),
+                    _ => break
                 };
 
-                if done {
-                    break;
+                if !success {
+                    let token = self.peek_token().unwrap();
+                    return Err(("Indentation issue", token.line, token.column));
                 }
 
                 self.consume_token();
@@ -132,5 +138,7 @@ impl SyntaxParser {
                 break;
             }
         }
+
+        Ok(BramaAstType::None)
     }
 }

@@ -8,7 +8,7 @@ pub struct AssignmentParser;
 impl SyntaxParserTrait for AssignmentParser {
     fn parse(parser: &SyntaxParser) -> AstResult {
         parser.backup();
-        parser.clear_whitespaces();
+        parser.indentation_check()?;
         let token = parser.peek_token();
 
         if token.is_ok() {
