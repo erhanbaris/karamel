@@ -38,7 +38,8 @@ pub enum BramaAstType {
     /*Loop,*/
     IfStatement {
         condition: Box<BramaAstType>,
-        body: Box<BramaAstType>
+        body: Box<BramaAstType>,
+        else_body: Option<Box<BramaAstType>>
     },
     Symbol(String)
 }

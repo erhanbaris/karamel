@@ -3,11 +3,7 @@ extern crate tpd;
 #[cfg(test)]
 mod tests {
     use crate::tpd::parser::*;
-    use crate::tpd::compiler::*;
-    use crate::tpd::vm::*;
     use crate::tpd::syntax::*;
-
-    use std::rc::Rc;
 
     #[warn(unused_macros)]
     macro_rules! test_success {
@@ -15,7 +11,7 @@ mod tests {
             #[test]
             fn $name () {
                 let mut parser   = Parser::new($text);
-                let parse_result = parser.parse();
+                let _parse_result = parser.parse();
 
                 let syntax = SyntaxParser::new(Box::new(parser.tokens().to_vec()));
                 let parse_result = syntax.parse();
@@ -24,7 +20,7 @@ mod tests {
                     Ok(_) => {
                         assert_eq!(true, true);
                     },
-                    Err((message, l, c)) => {
+                    Err((_, _, _)) => {
                         assert_eq!(false, true);
                     }
                 };
@@ -38,7 +34,7 @@ mod tests {
             #[test]
             fn $name () {
                 let mut parser   = Parser::new($text);
-                let parse_result = parser.parse();
+                let _parse_result = parser.parse();
 
                 let syntax = SyntaxParser::new(Box::new(parser.tokens().to_vec()));
                 let parse_result = syntax.parse();
@@ -47,7 +43,7 @@ mod tests {
                     Ok(_) => {
                         assert_eq!(false, true);
                     },
-                    Err((message, l, c)) => {
+                    Err((_, _, _)) => {
                         assert_eq!(true, true);
                     }
                 };

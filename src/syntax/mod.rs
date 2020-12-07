@@ -8,6 +8,7 @@ pub mod assignment;
 pub mod func_call;
 pub mod newline;
 pub mod if_condition;
+pub mod statement;
 
 use std::vec::Vec;
 use std::cell::Cell;
@@ -64,7 +65,7 @@ impl SyntaxParser {
 
     pub fn set_indentation(&self, indentation: usize) {
         self.indentation.set(indentation);
-        self.setable_indentation.set(true);
+        self.setable_indentation.set(false);
     }
 
     pub fn get_indentation(&self) -> usize {
@@ -109,14 +110,12 @@ impl SyntaxParser {
         }
     }
 
-    fn is_newline(&self) -> bool {
+    fn get_newline(&self) -> (bool, usize) {
         let token = self.peek_token();
-        if token.is_err() { return false; }
+        if token.is_err() { return (false, 0); }
         return match token.unwrap().token_type {
-            BramaTokenType::NewLine(_) => {
-                return true;
-            },
-            _ => false
+            BramaTokenType::NewLine(size) => (true, size as usize),
+            _ => (false, 0)
         }
     }
 
@@ -172,7 +171,7 @@ impl SyntaxParser {
 
                             /* Check indentation and update */
                             if size > self.indentation.get() as u8 {
-                                self.indentation.set(size as usize);
+                                self.set_indentation(size as usize);
                                 true
                             }
                             else {

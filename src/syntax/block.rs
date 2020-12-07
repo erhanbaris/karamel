@@ -1,11 +1,10 @@
 use crate::types::*;
 use crate::syntax::{SyntaxParser, SyntaxParserTrait};
 use crate::syntax::control::ExpressionParser;
-use crate::syntax::assignment::AssignmentParser;
 use crate::syntax::newline::NewlineParser;
 use crate::syntax::util::map_parser;
 use crate::compiler::ast::BramaAstType;
-use crate::syntax::if_condition::IfConditiontParser;
+use crate::syntax::statement::StatementParser;
 
 struct BlockParser;
 pub struct SingleLineBlockParser;
@@ -28,9 +27,11 @@ impl SyntaxParserTrait for MultiLineBlockParser {
 impl BlockParser {
     fn parse(parser: &SyntaxParser, multiline: bool) -> AstResult {
         let mut block_asts: Vec<BramaAstType> = Vec::new();
+        let current_indentation = parser.get_indentation();
 
         loop {
-            let ast = map_parser(parser, &[AssignmentParser::parse, ExpressionParser::parse, IfConditiontParser::parse, NewlineParser::parse])?;
+            parser.indentation_check()?;
+            let ast = map_parser(parser, &[StatementParser::parse, ExpressionParser::parse, NewlineParser::parse])?;
             match ast {
                 BramaAstType::None =>  break,
                 BramaAstType::NewLine =>  (),
@@ -40,6 +41,11 @@ impl BlockParser {
             if !multiline { break; }
 
             if let Ok(_) = parser.peek_token() {
+                /* Indentation changed */
+                if current_indentation < parser.get_indentation() {
+                    break;
+                }
+
                 parser.indentation_check()?;
             }
             else {
