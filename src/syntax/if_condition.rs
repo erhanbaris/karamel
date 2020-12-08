@@ -29,7 +29,7 @@ impl SyntaxParserTrait for IfConditiontParser {
             let indentation = parser.get_indentation();
             parser.indentation_setable();
             let true_body = match parser.get_newline() {
-                (true, size) => MultiLineBlockParser::parse(parser),
+                (true, _) => MultiLineBlockParser::parse(parser),
                 (false, _) => SingleLineBlockParser::parse(parser)
             }?;
             parser.set_indentation(indentation);
@@ -66,6 +66,10 @@ impl SyntaxParserTrait for IfConditiontParser {
                 else {
                     break;
                 }
+
+                if let Err((_,_,_)) = parser.indentation_check() {
+                    break;
+                }
             }
 
             let assignment_ast = BramaAstType::IfStatement {
@@ -75,6 +79,8 @@ impl SyntaxParserTrait for IfConditiontParser {
             };
 
             println!("{:?}", assignment_ast);
+
+            parser.set_indentation(indentation);
             return Ok(assignment_ast);
         }
         

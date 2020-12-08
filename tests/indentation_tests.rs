@@ -60,5 +60,24 @@ mod tests {
     test_fail!(indentation_5, r#" 
 123"#);
     test_fail!(indentation_6, r#" 
- 123"#);
+123"#);
+test_success!(indentation_7, r#"eğer 1024 * 123:
+    erhan=123
+yada: 
+    erhan=1234"#);
+    test_success!(indentation_8, r#"eğer 1024 * 123:
+    erhan=123
+yada: 
+  erhan=1234
+"#);
+test_success!(indentation_9, r#"eğer 1024 * 123:
+    erhan=123
+yada: 
+    erhan=1234
+erhan=22"#);
+test_success!(indentation_10, r#"eğer 1024 * 123:
+ erhan=123
+yada: 
+ erhan=1234
+erhan=22"#);
 }

@@ -72,6 +72,20 @@ impl SyntaxParser {
         self.indentation.get()
     }
 
+    pub fn is_same_indentation(&self, indentation: usize) -> bool {
+        if let Err((_,_,_)) = self.indentation_check() {
+            return false;
+        }
+        else if indentation != self.get_indentation() {
+            return false;
+        }
+        else if self.peek_token().is_err() {
+            return false;
+        }
+
+        return true;
+    }
+
     pub fn indentation_setable(&self) {
         self.setable_indentation.set(true);
     }

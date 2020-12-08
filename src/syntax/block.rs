@@ -40,15 +40,7 @@ impl BlockParser {
 
             if !multiline { break; }
 
-            if let Ok(_) = parser.peek_token() {
-                /* Indentation changed */
-                if current_indentation < parser.get_indentation() {
-                    break;
-                }
-
-                parser.indentation_check()?;
-            }
-            else {
+            if !parser.is_same_indentation(current_indentation) {
                 break;
             }
         }
