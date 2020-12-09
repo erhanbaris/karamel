@@ -12,6 +12,7 @@ impl SyntaxParserTrait for IfConditiontParser {
         parser.indentation_check()?;
 
         if parser.match_keyword(BramaKeywordType::If) {
+            let indentation = parser.get_indentation();
             parser.clear_whitespaces();
 
             let expression = ExpressionParser::parse(parser);
@@ -26,10 +27,11 @@ impl SyntaxParserTrait for IfConditiontParser {
             }
 
             parser.clear_whitespaces();
-            let indentation = parser.get_indentation();
-            parser.indentation_setable();
             let true_body = match parser.get_newline() {
-                (true, _) => MultiLineBlockParser::parse(parser),
+                (true, _) => {
+                    parser.in_indication()?;
+                    MultiLineBlockParser::parse(parser)
+                },
                 (false, _) => SingleLineBlockParser::parse(parser)
             }?;
             parser.set_indentation(indentation);
@@ -40,8 +42,7 @@ impl SyntaxParserTrait for IfConditiontParser {
 
             let mut else_body: Option<Box<BramaAstType>> = None;
 
-            loop {
-                parser.indentation_check()?;
+            while parser.is_same_indentation(indentation) {
                 if parser.match_keyword(BramaKeywordType::Else) {
                     parser.clear_whitespaces();
                     if let None = parser.match_operator(&[BramaOperatorType::ColonMark]) {
@@ -50,8 +51,8 @@ impl SyntaxParserTrait for IfConditiontParser {
                     parser.clear_whitespaces();
                     
                     let body = match parser.get_newline() {
-                        (true, size)  => {
-                            parser.set_indentation(size);
+                        (true, _)  => {
+                            parser.in_indication()?;
                             MultiLineBlockParser::parse(parser)
                         },
                         (false, _) => SingleLineBlockParser::parse(parser)
@@ -61,6 +62,7 @@ impl SyntaxParserTrait for IfConditiontParser {
                         return Err(("If condition body not found", 0, 0));
                     }
 
+                    parser.set_indentation(indentation);
                     else_body = Some(Box::new(body))
                 }
                 else {
@@ -77,8 +79,6 @@ impl SyntaxParserTrait for IfConditiontParser {
                 body: Box::new(true_body),
                 else_body: else_body
             };
-
-            println!("{:?}", assignment_ast);
 
             parser.set_indentation(indentation);
             return Ok(assignment_ast);

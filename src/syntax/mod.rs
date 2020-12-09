@@ -213,4 +213,48 @@ impl SyntaxParser {
 
         Ok(BramaAstType::None)
     }
+
+    fn in_indication(&self) -> AstResult {
+        if self.next_token().is_err() {
+            return Ok(BramaAstType::None);
+        }
+
+        loop {
+            if let Ok(current_token) = self.peek_token() {
+                
+                let success = match current_token.token_type {
+                    BramaTokenType::NewLine(size) => {
+                        let token_type = &self.next_token().unwrap().token_type;
+                        if let BramaTokenType::NewLine(_) = token_type {
+                            /* If next token is newline, no need to check */
+                            true
+                        }
+                        else {
+                            /* Next token not a new line but space should be bigger than the current */
+                            if size > self.indentation.get() as u8 {
+                                self.set_indentation(size as usize);
+                                true
+                            }
+                            else {
+                                false
+                            }
+                        }
+                    },
+                    _ => break
+                };
+
+                if !success {
+                    let token = self.peek_token().unwrap();
+                    return Err(("Indentation issue", token.line, token.column));
+                }
+
+                self.consume_token();
+            }
+            else {
+                break;
+            }
+        }
+
+        Ok(BramaAstType::None)
+    }
 }
