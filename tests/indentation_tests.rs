@@ -87,4 +87,15 @@ test_success!(indentation_11, r#"eğer 1024 * 123:
 yada: 
     erhan=1234
 erhan=22"#);
+
+test_success!(indentation_12, r#"
+eğer 1024 * 123:
+    erhan=123
+
+    eğer doğru:
+        io::print('merhaba dünya')
+        erhan=123
+yada:
+    erhan=1234
+erhan=22"#);
 }

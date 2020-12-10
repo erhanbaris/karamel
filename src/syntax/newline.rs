@@ -9,10 +9,22 @@ impl SyntaxParserTrait for NewlineParser {
         let mut result = BramaAstType::None;
         loop {
             if let Ok(token) = parser.peek_token() {
-                if let BramaTokenType::NewLine(_) = token.token_type {
-                    parser.indentation_check()?;
-                    result = BramaAstType::NewLine;
-                    continue;
+                match token.token_type {
+                    BramaTokenType::NewLine(_) => {
+                        parser.indentation_check()?;
+                        result = BramaAstType::NewLine;
+                        parser.consume_token();
+                        continue;
+                    },
+                    BramaTokenType::WhiteSpace(_) => {
+                        result = BramaAstType::NewLine;
+                        parser.consume_token();
+                        continue;
+                    },
+                    _ => {
+                        result = BramaAstType::None;
+                        break;
+                    }
                 }
             }
             break;

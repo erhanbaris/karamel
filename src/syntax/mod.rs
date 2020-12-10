@@ -174,26 +174,23 @@ impl SyntaxParser {
     }
 
     fn indentation_check(&self) -> AstResult {
+        if self.next_token().is_err() {
+            return Ok(BramaAstType::None);
+        }
+
         loop {
             if let Ok(current_token) = self.peek_token() {
+                
                 let success = match current_token.token_type {
-                    BramaTokenType::WhiteSpace(size) => 0 == size,
                     BramaTokenType::NewLine(size) => {
-
-                        /* If indentation can changeable */
-                        if self.setable_indentation.get() {
-
-                            /* Check indentation and update */
-                            if size > self.indentation.get() as u8 {
-                                self.set_indentation(size as usize);
-                                true
-                            }
-                            else {
-                                /* Indentation error */
-                                false
-                            }
-                        } else {
-                            size as usize == self.indentation.get()
+                        let token_type = &self.next_token().unwrap().token_type;
+                        if let BramaTokenType::NewLine(_) = token_type {
+                            /* If next token is newline, no need to check */
+                            true
+                        }
+                        else {
+                            /* Next token not a new line but space should be bigger than the current */
+                            size == self.indentation.get() as u8 
                         }
                     },
                     _ => break
