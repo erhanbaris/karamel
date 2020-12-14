@@ -41,12 +41,26 @@ impl SyntaxParserTrait for IfConditiontParser {
             }
 
             let mut else_body: Option<Box<BramaAstType>> = None;
+            let mut else_if: Vec<(Box<BramaAstType>, Box<BramaAstType>)> = Vec::new();
 
             while parser.is_same_indentation(indentation) {
                 if parser.match_keyword(BramaKeywordType::Else) {
                     parser.clear_whitespaces();
+
+                    let else_condition = ExpressionParser::parse(parser)?;
+                    println!("{:?}", else_condition);
+
+                    if else_body.is_some() {
+                        return Err(("else is used", 0, 0));
+                    }
+
                     if let None = parser.match_operator(&[BramaOperatorType::ColonMark]) {
                         return Err(("':' missing", 0, 0));
+                    }
+                    else {
+                        if !else_body.is_none() {
+                            
+                        }
                     }
                     parser.clear_whitespaces();
                     
@@ -63,7 +77,13 @@ impl SyntaxParserTrait for IfConditiontParser {
                     }
 
                     parser.set_indentation(indentation);
-                    else_body = Some(Box::new(body))
+
+                    match else_condition {
+                        BramaAstType::None => else_body = Some(Box::new(body)),
+                        _                  => else_if.push((Box::new(else_condition), Box::new(body)))
+                    };
+
+                    
                 }
                 else {
                     break;
@@ -77,7 +97,8 @@ impl SyntaxParserTrait for IfConditiontParser {
             let assignment_ast = BramaAstType::IfStatement {
                 condition: Box::new(expression.unwrap()),
                 body: Box::new(true_body),
-                else_body: else_body
+                else_body: else_body,
+                else_if: else_if.to_vec()
             };
 
             parser.set_indentation(indentation);

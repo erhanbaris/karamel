@@ -193,6 +193,10 @@ impl SyntaxParser {
                             size == self.indentation.get() as u8 
                         }
                     },
+                    
+                    BramaTokenType::WhiteSpace(size) => {
+                        size == self.indentation.get() as u8 
+                    },
                     _ => break
                 };
 

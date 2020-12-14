@@ -67,7 +67,7 @@ impl InterpreterCompiler {
             BramaAstType::PrefixUnary (operator, expression)            => self.generate_prefix_unary(operator, expression, upper_ast, compiler_info, options, storage_index),
             BramaAstType::SuffixUnary (operator, expression)            => self.generate_suffix_unary(operator, expression, upper_ast, compiler_info, options, storage_index),
             BramaAstType::NewLine => Ok(0),
-            BramaAstType::IfStatement {condition: _, body: _, else_body: _} => Ok(0),
+            BramaAstType::IfStatement {condition: _, body: _, else_body: _, else_if: _} => Ok(0),
             BramaAstType::None => {
                 println!("{:?}", ast);
                 Err("Not implemented")

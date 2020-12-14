@@ -39,7 +39,8 @@ pub enum BramaAstType {
     IfStatement {
         condition: Box<BramaAstType>,
         body: Box<BramaAstType>,
-        else_body: Option<Box<BramaAstType>>
+        else_body: Option<Box<BramaAstType>>,
+        else_if: Vec<(Box<BramaAstType>, Box<BramaAstType>)>
     },
     Symbol(String)
 }
