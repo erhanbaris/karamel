@@ -45,6 +45,9 @@ impl SyntaxParser {
     pub fn parse(&self) -> AstResult {
         return match MultiLineBlockParser::parse(&self) {
             Ok(ast) => {
+                self.clear_whitespaces();
+                self.cleanup_newlines();
+
                 if let Ok(token) = self.next_token() {
                     println!("{:?}", token);
                     return Err(("Syntax error, undefined syntax", token.line, token.column));
@@ -84,10 +87,6 @@ impl SyntaxParser {
         }
 
         return true;
-    }
-
-    pub fn indentation_setable(&self) {
-        self.setable_indentation.set(true);
     }
 
     pub fn peek_token(&self) -> Result<&Token, ()> {
@@ -163,6 +162,41 @@ impl SyntaxParser {
 
                 if done {
                     break;
+                }
+
+                self.consume_token();
+            }
+            else {
+                break;
+            }
+        }
+    }
+
+    fn cleanup_newlines(&self) {
+        if self.next_token().is_err() {
+            return;
+        }
+
+        loop {
+            if let Ok(current_token) = self.peek_token() {
+                
+                let success = match current_token.token_type {
+                    BramaTokenType::NewLine(_) => {
+                        if self.next_token().is_err() {
+                            false
+                        }
+                        else {
+                            match &self.next_token().unwrap().token_type {
+                                BramaTokenType::NewLine(_) => true,
+                                _                          => false
+                            }
+                        }
+                    },
+                    _ => break
+                };
+
+                if !success {
+                    return;
                 }
 
                 self.consume_token();

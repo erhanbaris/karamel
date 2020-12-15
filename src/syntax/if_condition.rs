@@ -40,6 +40,8 @@ impl SyntaxParserTrait for IfConditiontParser {
                 return Err(("If condition body not found", 0, 0));
             }
 
+            parser.clear_whitespaces();
+
             let mut else_body: Option<Box<BramaAstType>> = None;
             let mut else_if: Vec<(Box<BramaAstType>, Box<BramaAstType>)> = Vec::new();
 

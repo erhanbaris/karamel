@@ -41,6 +41,7 @@ mod tests {
 
                 match parse_result {
                     Ok(_) => {
+                        println!("'{}'", $text);
                         assert_eq!(false, true);
                     },
                     Err((_, _, _)) => {
