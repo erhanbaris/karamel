@@ -39,7 +39,8 @@ impl BlockParser {
             };
 
             if !multiline { break; }
-
+            
+            parser.clear_whitespaces();
             if !parser.is_same_indentation(current_indentation) {
                 break;
             }

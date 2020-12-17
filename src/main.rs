@@ -23,11 +23,7 @@ pub fn greet(name: &str) {
 
 #[cfg(not(feature = "wasmBuild"))]
 fn main() {
-    vm::executer::code_executer(&r#"eğer 1024 * 123:   
-    erhan=123  
-
-yada: 
-
-    erhan=1234
-"#.to_string());
+    vm::executer::code_executer(&r#"eğer 1024 * 123:
+    erhan=123   
+    print()"#.to_string());
 }

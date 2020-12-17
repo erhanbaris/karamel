@@ -22,6 +22,7 @@ impl SyntaxParserTrait for IfConditiontParser {
                 Err(_) => return expression
             };
 
+            parser.clear_whitespaces();
             if let None = parser.match_operator(&[BramaOperatorType::ColonMark]) {
                 return Err(("':' missing", 0, 0));
             }

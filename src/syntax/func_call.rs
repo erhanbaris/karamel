@@ -44,22 +44,35 @@ impl SyntaxParserTrait for FuncCallParser {
                     let mut arguments = Vec::new();
 
                     /* Parse function call arguments */
-                    loop {
+                    let mut continue_to_parse = true;
+                    while continue_to_parse {
                         parser.clear_whitespaces();
                         
                         let expression = ExpressionParser::parse(parser);
                         match expression {
                             Err(_) => return expression,
-                            Ok(BramaAstType::None) => break,
-                            _ => arguments.push(Box::new(expression.unwrap()))
+                            _ => ()
                         };
                         
                         parser.clear_whitespaces();
+
                         match parser.match_operator(&[BramaOperatorType::RightParentheses, BramaOperatorType::Comma]) {
-                            Some(BramaOperatorType::RightParentheses) => break,  
-                            Some(BramaOperatorType::Comma)            => continue,
+                            Some(BramaOperatorType::RightParentheses) => continue_to_parse = false,  
+                            Some(BramaOperatorType::Comma)            => {
+                                if let Ok(BramaAstType::None) = expression {
+                                    return Err(("Syntax error, undefined syntax", 0, 0))
+                                }
+                                else {()}
+                            },
                             _ => return Err(("Right parantheses missing", 0, 0))
                         }
+
+
+                        match expression {
+                            Ok(BramaAstType::None) => (),
+                            Ok(data) => arguments.push(Box::new(data)),
+                            _ => (),
+                        };
                     }
 
                     let funccall_ast = BramaAstType::FuncCall {

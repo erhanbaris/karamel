@@ -15,7 +15,7 @@ impl PrimativeParser {
     fn parse_basic_primatives(parser: &SyntaxParser) -> AstResult {
         let token = parser.peek_token();
         if token.is_err() {
-            return Err(("Syntax error", 0, 0));
+            return Ok(BramaAstType::None);
         }
 
         let result = match &token.unwrap().token_type {
@@ -103,7 +103,7 @@ impl PrimativeParser {
         parser.clear_whitespaces();
         let token = parser.peek_token();
         if token.is_err() {
-            return Err(("Symbol parse issue", 0, 0));
+            return Ok(BramaAstType::None);
         }
 
         if let BramaTokenType::Symbol(symbol) = &token.unwrap().token_type {

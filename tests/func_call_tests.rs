@@ -57,6 +57,6 @@ mod tests {
                     Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Text(Rc::new("erhan".to_string())))))].to_vec()
     }));
 
-    test_compare!(func_call_7, "print(,2,'erhan')", Err(("Syntax error, undefined syntax", 0, 1)));
-    test_compare!(func_call_8, "print(", Err(("Symbol parse issue", 0, 0)));
+    test_compare!(func_call_7, "print(,2,'erhan')", Err(("Syntax error, undefined syntax", 0, 0)));
+    test_compare!(func_call_8, "print(", Err(("Right parantheses missing", 0, 0)));
 }
