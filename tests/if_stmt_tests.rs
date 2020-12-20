@@ -6,7 +6,7 @@ mod tests {
     use crate::tpd::parser::*;
     use crate::tpd::syntax::*;
     use crate::tpd::compiler::value::BramaPrimative;
-    use crate::tpd::compiler::ast::BramaAstType;
+    use crate::tpd::compiler::ast::{BramaAstType, BramaIfStatementElseItem};
     use std::rc::Rc;
 
     #[warn(unused_macros)]
@@ -120,4 +120,148 @@ yada :
     ].to_vec()))),
     else_if: Vec::new()
     }));
+
+    test_compare!(if_5, r#"eğer 1024 * 123:
+    erhan=123
+yada 1024 * 123 > 10_000_000:
+    erhan=12345
+yada:
+    erhan=1234
+"#, Ok(BramaAstType::IfStatement {
+    condition: Box::new(BramaAstType::Binary {
+        left: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(1024.0)))), 
+        operator: BramaOperatorType::Multiplication, 
+        right: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123.0))))
+    }),
+    body: Box::new(BramaAstType::Assignment {
+        variable: Rc::new("erhan".to_string()),
+        operator: BramaOperatorType::Assign,
+        expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123.0))))
+    }),
+    else_body: Some(Box::new(BramaAstType::Assignment {
+        variable: Rc::new("erhan".to_string()),
+        operator: BramaOperatorType::Assign,
+        expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(1234.0))))
+    })),
+    else_if: [Box::new(BramaIfStatementElseItem::new(Box::new(BramaAstType::Control {
+        left: Box::new(BramaAstType::Binary {
+            left: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(1024.0)))),
+            operator: BramaOperatorType::Multiplication,
+            right: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123.0))))
+        }),
+        operator: BramaOperatorType::GreaterThan,
+        right: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(10000000.0)))),
+    }), Box::new(BramaAstType::Assignment {
+        variable: Rc::new("erhan".to_string()),
+        operator: BramaOperatorType::Assign,
+        expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(12345.0))))
+    })))].to_vec()
+    }));
+
+    test_compare!(if_6, r#"eğer 1024 * 123:
+    erhan=123
+yada 1024 * 123 > 10_000_000:
+    erhan=12345
+yada 1024 * 123 < 10_000_000:
+    erhan=123456
+yada:
+    erhan=1234
+"#, Ok(BramaAstType::IfStatement {
+    condition: Box::new(BramaAstType::Binary {
+        left: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(1024.0)))), 
+        operator: BramaOperatorType::Multiplication, 
+        right: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123.0))))
+    }),
+    body: Box::new(BramaAstType::Assignment {
+        variable: Rc::new("erhan".to_string()),
+        operator: BramaOperatorType::Assign,
+        expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123.0))))
+    }),
+    else_body: Some(Box::new(BramaAstType::Assignment {
+        variable: Rc::new("erhan".to_string()),
+        operator: BramaOperatorType::Assign,
+        expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(1234.0))))
+    })),
+    else_if: [Box::new(BramaIfStatementElseItem::new(Box::new(BramaAstType::Control {
+        left: Box::new(BramaAstType::Binary {
+            left: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(1024.0)))),
+            operator: BramaOperatorType::Multiplication,
+            right: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123.0))))
+        }),
+        operator: BramaOperatorType::GreaterThan,
+        right: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(10000000.0)))),
+    }), Box::new(BramaAstType::Assignment {
+        variable: Rc::new("erhan".to_string()),
+        operator: BramaOperatorType::Assign,
+        expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(12345.0))))
+    }))),
+    Box::new(BramaIfStatementElseItem::new(Box::new(BramaAstType::Control {
+        left: Box::new(BramaAstType::Binary {
+            left: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(1024.0)))),
+            operator: BramaOperatorType::Multiplication,
+            right: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123.0))))
+        }),
+        operator: BramaOperatorType::LessThan,
+        right: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(10000000.0)))),
+    }), Box::new(BramaAstType::Assignment {
+        variable: Rc::new("erhan".to_string()),
+        operator: BramaOperatorType::Assign,
+        expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123456.0))))
+    })))].to_vec()
+    }));
+
+    test_compare!(if_7, r#"eğer 1024 * 123:
+    erhan=123
+yada 1024 * 123 > 10_000_000:
+    erhan=12345
+yada 1024 * 123 < 10_000_000:
+    erhan=123456
+yada:
+    erhan=1234
+yada:
+    erhan=1234
+"#, Err(("else is used", 0, 0)));
+
+test_compare!(if_8, r#"eğer 1024 * 123:
+    erhan=123
+yada:
+    erhan=1234
+yada 1024 * 123 > 10_000_000:
+    erhan=12345
+yada 1024 * 123 < 10_000_000:
+    erhan=123456
+"#, Err(("else is used", 0, 0)));
+
+
+
+test_compare!(if_9, r#"eğer 1024 * 123:
+    erhan=123
+yada 1024 * 123 > 10_000_000:
+    erhan=12345
+"#, Ok(BramaAstType::IfStatement {
+condition: Box::new(BramaAstType::Binary {
+    left: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(1024.0)))), 
+    operator: BramaOperatorType::Multiplication, 
+    right: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123.0))))
+}),
+body: Box::new(BramaAstType::Assignment {
+    variable: Rc::new("erhan".to_string()),
+    operator: BramaOperatorType::Assign,
+    expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123.0))))
+}),
+else_body: None,
+else_if: [Box::new(BramaIfStatementElseItem::new(Box::new(BramaAstType::Control {
+    left: Box::new(BramaAstType::Binary {
+        left: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(1024.0)))),
+        operator: BramaOperatorType::Multiplication,
+        right: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123.0))))
+    }),
+    operator: BramaOperatorType::GreaterThan,
+    right: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(10000000.0)))),
+}), Box::new(BramaAstType::Assignment {
+    variable: Rc::new("erhan".to_string()),
+    operator: BramaOperatorType::Assign,
+    expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(12345.0))))
+})))].to_vec()
+}));
 }

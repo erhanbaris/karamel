@@ -8,6 +8,24 @@ use crate::types::BramaOperatorType;
 #[derive(Clone)]
 #[derive(Debug)]
 #[derive(PartialEq)]
+pub struct BramaIfStatementElseItem {
+    condition: Box<BramaAstType>,
+    body: Box<BramaAstType>
+}
+
+impl BramaIfStatementElseItem {
+    pub fn new(condition: Box<BramaAstType>, body: Box<BramaAstType>) -> BramaIfStatementElseItem {
+        BramaIfStatementElseItem {
+            condition,
+            body,
+        }
+    }
+}
+
+#[repr(C)]
+#[derive(Clone)]
+#[derive(Debug)]
+#[derive(PartialEq)]
 pub enum BramaAstType {
     None,
     NewLine,
@@ -40,7 +58,7 @@ pub enum BramaAstType {
         condition: Box<BramaAstType>,
         body: Box<BramaAstType>,
         else_body: Option<Box<BramaAstType>>,
-        else_if: Vec<(Box<BramaAstType>, Box<BramaAstType>)>
+        else_if: Vec<Box<BramaIfStatementElseItem>>
     },
     Symbol(String)
 }

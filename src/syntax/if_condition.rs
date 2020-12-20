@@ -1,7 +1,7 @@
 use crate::types::*;
 use crate::syntax::{SyntaxParser, SyntaxParserTrait};
 use crate::syntax::control::ExpressionParser;
-use crate::compiler::ast::BramaAstType;
+use crate::compiler::ast::{BramaAstType, BramaIfStatementElseItem};
 use crate::syntax::block::{SingleLineBlockParser, MultiLineBlockParser};
 
 pub struct IfConditiontParser;
@@ -44,14 +44,13 @@ impl SyntaxParserTrait for IfConditiontParser {
             parser.clear_whitespaces();
 
             let mut else_body: Option<Box<BramaAstType>> = None;
-            let mut else_if: Vec<(Box<BramaAstType>, Box<BramaAstType>)> = Vec::new();
+            let mut else_if: Vec<Box<BramaIfStatementElseItem>> = Vec::new();
 
             while parser.is_same_indentation(indentation) {
                 if parser.match_keyword(BramaKeywordType::Else) {
                     parser.clear_whitespaces();
 
                     let else_condition = ExpressionParser::parse(parser)?;
-                    println!("{:?}", else_condition);
 
                     if else_body.is_some() {
                         return Err(("else is used", 0, 0));
@@ -62,7 +61,7 @@ impl SyntaxParserTrait for IfConditiontParser {
                     }
                     else {
                         if !else_body.is_none() {
-                            
+                            return Err(("Multiple else usage not valid", 0, 0));
                         }
                     }
                     parser.clear_whitespaces();
@@ -83,7 +82,7 @@ impl SyntaxParserTrait for IfConditiontParser {
 
                     match else_condition {
                         BramaAstType::None => else_body = Some(Box::new(body)),
-                        _                  => else_if.push((Box::new(else_condition), Box::new(body)))
+                        _                  => else_if.push(Box::new(BramaIfStatementElseItem::new(Box::new(else_condition), Box::new(body))))
                     };
 
                     
