@@ -131,7 +131,25 @@ impl StorageBuilder {
                 }*/
                 compiler_option.max_stack = max(1, compiler_option.max_stack);
                 1
-            }
+            },
+
+            BramaAstType::IfStatement {
+                condition, body, else_body, else_if} => {
+                    let mut total = self.get_temp_count_from_ast(condition, ast, options, storage_index, compiler_option);
+                    total = max(total, self.get_temp_count_from_ast(body, ast, options, storage_index, compiler_option));
+
+                    if let Some(else_) = else_body {
+                        total = max(total, self.get_temp_count_from_ast(else_, ast, options, storage_index, compiler_option));
+                    }
+
+                    for else_if_item in else_if {
+                        total = max(total, self.get_temp_count_from_ast(&else_if_item.condition, ast, options, storage_index, compiler_option));
+                        total = max(total, self.get_temp_count_from_ast(&else_if_item.body, ast, options, storage_index, compiler_option));
+                    }
+                    
+                    compiler_option.max_stack = max(0, total);
+                    total
+                }
             _ => 0
         };
         return temp_count;

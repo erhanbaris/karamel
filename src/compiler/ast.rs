@@ -9,8 +9,8 @@ use crate::types::BramaOperatorType;
 #[derive(Debug)]
 #[derive(PartialEq)]
 pub struct BramaIfStatementElseItem {
-    condition: Box<BramaAstType>,
-    body: Box<BramaAstType>
+    pub condition: Box<BramaAstType>,
+    pub body: Box<BramaAstType>
 }
 
 impl BramaIfStatementElseItem {
