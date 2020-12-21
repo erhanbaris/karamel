@@ -39,6 +39,7 @@ pub fn run_vm(options: &mut BramaCompilerOption)
                 VmOpCode::GreaterThan | 
                 VmOpCode::LessEqualThan | 
                 VmOpCode::LessThan | 
+                VmOpCode::Compare | 
                 VmOpCode::Multiply => {
                     println!("║ {:4} ║ {:15} ║ {:^5} ║ {:^5} ║", opcode_index, format!("{:?}", opcode), "", "");
                 },
@@ -341,33 +342,28 @@ pub fn run_vm(options: &mut BramaCompilerOption)
                     };
                 },
 
-                /*
+                VmOpCode::Compare => {
+                    let condition = pop!(mem_index, stack);
 
-                VmOpCode::Increment => {
-                    
-                    memory[target] = match &*memory[target].deref() {
-                        BramaPrimative::Number(value) => VmObject::from(*value + 1 as f64),
-                        _ => empty_primative
+                    let status = match &*condition {
+                        BramaPrimative::Empty => false,
+                        BramaPrimative::Atom(_) => true,
+                        BramaPrimative::Bool(l_value) => *l_value,
+                        BramaPrimative::Number(l_value) => *l_value > 0.0,
+                        BramaPrimative::Text(l_value) => (*l_value).len() > 0,
+                        _ => false
                     };
-                },
 
-                VmOpCode::Decrement => {
-                    
-                    memory[target] = match &*memory[target].deref() {
-                        BramaPrimative::Number(value) => VmObject::from(*value - 1 as f64),
-                        _ => empty_primative
-                    };
-                },
+                    if status {
+                        index += 2 as usize;
+                    }
+                    else {
+                        let high = options.opcodes[index];
+                        let low = options.opcodes[index + 1];
 
-                VmOpCode::Not => {
-                    
-                    memory[target] = match &*left {
-                        BramaPrimative::Number(value) => VmObject::from(!(*value > 0.0)),
-                        BramaPrimative::Bool(value)   => VmObject::from(!*value),
-                        _ => empty_primative
-                    };
+                        index += ((high as u16 * 256) + low as u16) as usize;
+                    }
                 },
-*/
                 _ => ()
             }
 

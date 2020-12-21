@@ -109,6 +109,7 @@ pub enum VmOpCode {
     Increment,
     Decrement,
     Not,
+    Compare,
 
     Load,
     Store,

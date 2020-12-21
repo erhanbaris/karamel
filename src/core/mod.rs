@@ -61,6 +61,8 @@ impl ModuleCollection
                     },
                     None => return None
                 }
+            } else {
+                return None;
             }
         }
     }

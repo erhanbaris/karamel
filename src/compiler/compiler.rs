@@ -5,7 +5,7 @@ use crate::types::*;
 use crate::compiler::*;
 use crate::core::*;
 use crate::compiler::value::BramaPrimative;
-use crate::compiler::ast::BramaAstType;
+use crate::compiler::ast::{BramaAstType, BramaIfStatementElseItem};
 use crate::compiler::storage_builder::StorageBuilder;
 
 pub struct BramaCompilerOption {
@@ -67,7 +67,7 @@ impl InterpreterCompiler {
             BramaAstType::PrefixUnary (operator, expression)            => self.generate_prefix_unary(operator, expression, upper_ast, compiler_info, options, storage_index),
             BramaAstType::SuffixUnary (operator, expression)            => self.generate_suffix_unary(operator, expression, upper_ast, compiler_info, options, storage_index),
             BramaAstType::NewLine => Ok(0),
-            BramaAstType::IfStatement {condition: _, body: _, else_body: _, else_if: _} => Ok(0),
+            BramaAstType::IfStatement {condition, body, else_body, else_if} => self.generate_if_condition(condition, body, else_body, else_if, upper_ast, compiler_info, options, storage_index),
             BramaAstType::None => {
                 println!("{:?}", ast);
                 Err("Not implemented")
@@ -101,7 +101,7 @@ impl InterpreterCompiler {
                 if let Some(location) = options.storages[storage_index].get_constant_location(Rc::new(BramaPrimative::FuncNativeCall(function))) {
                     options.opcodes.push(VmOpCode::NativeCall as u8);
                     options.opcodes.push(location as u8);
-                    options.opcodes.push((arguments.len() as u8) as u8);
+                    options.opcodes.push(arguments.len() as u8);
                     Ok(0 as u8)
                 } else {
                     Err("Function not found")
@@ -237,6 +237,43 @@ impl InterpreterCompiler {
     fn generate_not(&self, expression: &BramaAstType, compiler_info: &mut CompileInfo, options: &mut BramaCompilerOption, storage_index: usize) -> CompilerResult { 
         self.generate_opcode(expression, &BramaAstType::None, compiler_info, options, storage_index)?;
         options.opcodes.push(VmOpCode::Not as u8);
+        return Ok(0);
+    }
+
+    fn generate_if_condition(&self, condition: &BramaAstType, body: &BramaAstType, else_body: &Option<Box<BramaAstType>>, else_if: &Vec<Box<BramaIfStatementElseItem>>, upper_ast: &BramaAstType, compiler_info: &mut CompileInfo, options: &mut BramaCompilerOption, storage_index: usize) -> CompilerResult { 
+        
+        self.generate_opcode(condition, upper_ast, compiler_info, options, storage_index)?;
+        options.opcodes.push(VmOpCode::Compare as u8);
+        let jump_location = options.opcodes.len();
+
+        options.opcodes.push(0 as u8);
+        options.opcodes.push(0 as u8);
+
+        self.generate_opcode(body, upper_ast, compiler_info, options, storage_index)?;
+        
+        /*if let BramaAstType::Symbol(variable) = expression {
+            let location = match options.storages.get_mut(storage_index).unwrap().get_variable_location(variable) {
+                Some(location) => location,
+                _ => return Err("Variable not found in storage")
+            };
+
+            options.opcodes.push(VmOpCode::Load as u8);
+            options.opcodes.push(location);
+            options.opcodes.push(VmOpCode::Dublicate as u8);
+
+            let opcode = match operator {
+                BramaOperatorType::Increment  => VmOpCode::Increment as u8,
+                BramaOperatorType::Deccrement => VmOpCode::Decrement as u8,
+                BramaOperatorType::Not        => VmOpCode::Not as u8,
+                _ => return Err("Unary operator not found")
+            };
+    
+            options.opcodes.push(opcode);
+            options.opcodes.push(VmOpCode::Store as u8);
+            options.opcodes.push(location);
+            return Ok(0);
+        }*/
+
         return Ok(0);
     }
 
