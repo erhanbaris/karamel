@@ -39,9 +39,16 @@ pub fn run_vm(options: &mut BramaCompilerOption)
                 VmOpCode::GreaterThan | 
                 VmOpCode::LessEqualThan | 
                 VmOpCode::LessThan | 
-                VmOpCode::Compare | 
                 VmOpCode::Multiply => {
                     println!("║ {:4} ║ {:15} ║ {:^5} ║ {:^5} ║", opcode_index, format!("{:?}", opcode), "", "");
+                },
+
+                VmOpCode::Compare |
+                VmOpCode::Jump => {
+                    let location = ((options.opcodes[opcode_index+2] as u16 * 256) + options.opcodes[opcode_index+1] as u16) as usize;
+
+                    println!("║ {:4} ║ {:15} ║ {:^5?} ║ {:^5} ║", opcode_index, format!("{:?}", opcode), location + opcode_index + 1, "");
+                    opcode_index += 2;
                 },
 
                 VmOpCode::CopyToStore |
@@ -358,11 +365,14 @@ pub fn run_vm(options: &mut BramaCompilerOption)
                         index += 2 as usize;
                     }
                     else {
-                        let high = options.opcodes[index];
-                        let low = options.opcodes[index + 1];
-
-                        index += ((high as u16 * 256) + low as u16) as usize;
+                        let location = ((options.opcodes[index + 2] as u16 * 256) + options.opcodes[index + 1] as u16) as usize;
+                        index += location as usize;
                     }
+                },
+
+                VmOpCode::Jump => {
+                    let location = ((options.opcodes[index + 2] as u16 * 256) + options.opcodes[index + 1] as u16) as usize;
+                    index += location as usize;
                 },
                 _ => ()
             }
@@ -370,13 +380,13 @@ pub fn run_vm(options: &mut BramaCompilerOption)
             index += 1;
         }
 
-        if mem_index > 0 {
+        if stack.len() > 0 {
             println!("╔════════════════════════════════════════╗");
             println!("║                  STACK                 ║");
             println!("╠════════════════════════════════════════╣");
             println!("║ Stack size: {:<10}                 ║", stack.len());
             println!("╠════════════════════════════════════════╣");
-            for i in 0..mem_index {
+            for i in 0..stack.len() {
                 println!("║ {:38} ║", format!("{:?}", stack[i as usize].deref()));
             }
             println!("╚════════════════════════════════════════╝");

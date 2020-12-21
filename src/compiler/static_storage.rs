@@ -135,9 +135,9 @@ impl Storage for StaticStorage {
     }
 
     fn dump(&self) {
-        println!("-------------------------------");
-        println!("        MEMORY DUMP");
-        println!("-------------------------------");
+        println!("╔════════════════════════════════════════╗");
+        println!("║               MEMORY DUMP              ║");
+        println!("╠═══╦═════╦══════════════════════════════╣");
 
         let consts    = self.constant_size;
         let variables = self.constant_size as usize + self.variables.len();
@@ -152,14 +152,16 @@ impl Storage for StaticStorage {
                 last_type = 'T';
             }
 
-            println!("|{}| {:3?} | {:?}", last_type.to_string(), index, *item.deref());
+            println!("║ {} ║ {:3?} ║ {:28} ║", last_type.to_string(), index, format!("{:?}", *item.deref()));
         }
-        println!("-------------------------------");
-        println!("        VARIABLE DUMP");
-        println!("-------------------------------");
+
+        println!("╚════════════════════════════════════════╝");
+        println!("╔════════════════════════════════════════╗");
+        println!("║             VARIABLE DUMP              ║");
+        println!("╠════════════════════════════════════════╣");
         for (variable, value) in &self.variables {
-            println!("| {}  [{:?}]", variable, value);
+            println!("║ {}  {:31} ║", variable, format!("[{}]", value));
         }
-        println!("-------------------------------");
+        println!("╚════════════════════════════════════════╝");
     }
 }

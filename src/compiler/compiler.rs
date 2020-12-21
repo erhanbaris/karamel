@@ -244,35 +244,35 @@ impl InterpreterCompiler {
         
         self.generate_opcode(condition, upper_ast, compiler_info, options, storage_index)?;
         options.opcodes.push(VmOpCode::Compare as u8);
-        let jump_location = options.opcodes.len();
+        let if_failed_location = options.opcodes.len();
 
         options.opcodes.push(0 as u8);
         options.opcodes.push(0 as u8);
 
         self.generate_opcode(body, upper_ast, compiler_info, options, storage_index)?;
-        
-        /*if let BramaAstType::Symbol(variable) = expression {
-            let location = match options.storages.get_mut(storage_index).unwrap().get_variable_location(variable) {
-                Some(location) => location,
-                _ => return Err("Variable not found in storage")
-            };
 
-            options.opcodes.push(VmOpCode::Load as u8);
-            options.opcodes.push(location);
-            options.opcodes.push(VmOpCode::Dublicate as u8);
+        if let Some(_else_body) = else_body {
+            /* Has else, jump to end of the condition */
+            options.opcodes.push(VmOpCode::Jump as u8);
+            let jump_location = options.opcodes.len();
+            options.opcodes.push(0 as u8);
+            options.opcodes.push(0 as u8);
 
-            let opcode = match operator {
-                BramaOperatorType::Increment  => VmOpCode::Increment as u8,
-                BramaOperatorType::Deccrement => VmOpCode::Decrement as u8,
-                BramaOperatorType::Not        => VmOpCode::Not as u8,
-                _ => return Err("Unary operator not found")
-            };
-    
-            options.opcodes.push(opcode);
-            options.opcodes.push(VmOpCode::Store as u8);
-            options.opcodes.push(location);
-            return Ok(0);
-        }*/
+            let current_location = options.opcodes.len() - if_failed_location;
+            options.opcodes[if_failed_location]     = current_location as u8;
+            options.opcodes[if_failed_location + 1] = (current_location >> 8) as u8;
+
+            self.generate_opcode(_else_body, upper_ast, compiler_info, options, storage_index)?;
+
+            let current_location = options.opcodes.len() - jump_location;
+            options.opcodes[jump_location]     = current_location as u8;
+            options.opcodes[jump_location + 1] = (current_location >> 8) as u8;
+        }
+        else {
+            let current_location = options.opcodes.len() - if_failed_location;
+            options.opcodes[if_failed_location]     = current_location as u8;
+            options.opcodes[if_failed_location + 1] = (current_location >> 8) as u8;
+        }
 
         return Ok(0);
     }

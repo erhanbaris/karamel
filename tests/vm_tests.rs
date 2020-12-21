@@ -164,4 +164,28 @@ erhan/=2"#, BramaPrimative::Number(5.0));
 erhan*=2"#, BramaPrimative::Number(10.0));
     test_variable_value!(vm_72, "erhan", r#"erhan=9-3"#, BramaPrimative::Number(6.0));
     test_variable_value!(vm_73, "erhan", r#"erhan=9/3"#, BramaPrimative::Number(3.0));
+    test_variable_value!(vm_74, "erhan", r#"
+erhan=1
+eğer erhan == 1:
+    erhan=2"#, BramaPrimative::Number(2.0));
+    test_variable_value!(vm_75, "erhan", r#"
+erhan=1
+eğer erhan != 1:
+    erhan=2"#, BramaPrimative::Number(1.0));
+    test_variable_value!(vm_76, "baris", r#"
+erhan=1
+baris=2
+eğer erhan > 0:
+ erhan=2
+ baris=3"#, BramaPrimative::Number(3.0));
+ test_variable_value!(vm_77, "erhan", r#"
+erhan=1
+eğer doğru:
+  erhan=2"#, BramaPrimative::Number(2.0));
+ test_variable_value!(vm_78, "erhan", r#"
+erhan=1
+eğer yanlış:
+   erhan=2
+yada:
+  erhan=3"#, BramaPrimative::Number(3.0));
 }
