@@ -182,10 +182,18 @@ eğer erhan > 0:
 erhan=1
 eğer doğru:
   erhan=2"#, BramaPrimative::Number(2.0));
- test_variable_value!(vm_78, "erhan", r#"
+  test_variable_value!(vm_78, "erhan", r#"
 erhan=1
 eğer yanlış:
-   erhan=2
+    erhan=2
 yada:
-  erhan=3"#, BramaPrimative::Number(3.0));
+   erhan=3"#, BramaPrimative::Number(3.0));
+   test_variable_value!(vm_79, "erhan", r#"
+veri = 'erhan'
+eğer veri != 'erhan':
+    erhan = "oldu"
+    io::printline('Oldu')
+yada veri:
+    erhan = "olmadi"
+    io::printline('1 == 1')"#, BramaPrimative::Text(Rc::new("olmadi".to_string())));
 }

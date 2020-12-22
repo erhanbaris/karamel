@@ -24,10 +24,12 @@ pub fn greet(name: &str) {
 #[cfg(not(feature = "wasmBuild"))]
 fn main() {
     vm::executer::code_executer(&r#"
-veri = 'erhan'
-eğer veri != 'erhan':
-    io::printline('Oldu')
-yada veri:
-    io::printline('1 == 1')
+veri = gç::satıroku()
+eğer veri == 'selam':
+    gç::satıryaz('selam')
+yada veri == "güle güle":
+    gç::satıryaz('Görüşmek üzere')
+yada:
+    gç::satıryaz('Anlamadım')
 "#.to_string());
 } 

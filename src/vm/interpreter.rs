@@ -320,7 +320,7 @@ pub fn run_vm(options: &mut BramaCompilerOption)
                     if let BramaPrimative::FuncNativeCall(func) = *memory[func_location].deref() {
                         let total_args = options.opcodes[index + 2];
                         
-                        match func(&stack, (mem_index-1) as usize, total_args) {
+                        match func(&stack, mem_index, total_args) {
                             Ok(result) => {
                                 mem_index        -= total_args as usize;
                                 stack[mem_index] = result;
@@ -380,16 +380,18 @@ pub fn run_vm(options: &mut BramaCompilerOption)
             index += 1;
         }
 
-        if stack.len() > 0 {
-            println!("╔════════════════════════════════════════╗");
-            println!("║                  STACK                 ║");
-            println!("╠════════════════════════════════════════╣");
-            println!("║ Stack size: {:<10}                 ║", stack.len());
-            println!("╠════════════════════════════════════════╣");
-            for i in 0..stack.len() {
-                println!("║ {:38} ║", format!("{:?}", stack[i as usize].deref()));
+        #[cfg(feature = "dumpMemory")] {
+            if stack.len() > 0 {
+                println!("╔════════════════════════════════════════╗");
+                println!("║                  STACK                 ║");
+                println!("╠════════════════════════════════════════╣");
+                println!("║ Stack size: {:<10}                 ║", stack.len());
+                println!("╠════════════════════════════════════════╣");
+                for i in 0..stack.len() {
+                    println!("║ {:38} ║", format!("{:?}", stack[i as usize].deref()));
+                }
+                println!("╚════════════════════════════════════════╝");
             }
-            println!("╚════════════════════════════════════════╝");
         }
 
         options.opcode_index = index;

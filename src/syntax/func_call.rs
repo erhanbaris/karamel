@@ -30,7 +30,7 @@ impl SyntaxParserTrait for FuncCallParser {
                             }
                         }
                         else {
-                            return Err(("Colon mark required", 0, 0));
+                            break;
                         }
                     }
                     else {

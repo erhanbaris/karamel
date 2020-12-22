@@ -160,7 +160,7 @@ impl Storage for StaticStorage {
         println!("║             VARIABLE DUMP              ║");
         println!("╠════════════════════════════════════════╣");
         for (variable, value) in &self.variables {
-            println!("║ {}  {:31} ║", variable, format!("[{}]", value));
+            println!("║ {:38} ║", format!("{} [{}]", variable, value));
         }
         println!("╚════════════════════════════════════════╝");
     }

@@ -4,6 +4,8 @@ use crate::compiler::value::BramaPrimative;
 use crate::compiler::value::EMPTY_OBJECT;
 use std::collections::HashMap;
 use std::rc::Rc;
+use std::io::{self};
+
 
 #[derive(Clone)]
 pub struct IoModule {
@@ -19,13 +21,14 @@ impl Module for IoModule {
         let mut module = IoModule {
             methods: HashMap::new()
         };
-        module.methods.insert("print".to_string(), Self::print as NativeCall);
-        module.methods.insert("printline".to_string(), Self::printline as NativeCall);
+        module.methods.insert("satıroku".to_string(), Self::readline as NativeCall);
+        module.methods.insert("yaz".to_string(), Self::print as NativeCall);
+        module.methods.insert("satıryaz".to_string(), Self::printline as NativeCall);
         module
     }
 
     fn get_module_name(&self) -> String {
-        return "io".to_string();
+        return "gç".to_string();
     }
 
     fn get_method(&self, name: &String) -> Option<NativeCall> {
@@ -40,8 +43,9 @@ impl Module for IoModule {
     }
 
     fn get_methods(&self) -> Vec<(&'static str, NativeCall)> {
-        [("print", Self::print as NativeCall),
-        ("printline", Self::printline as NativeCall)].to_vec()
+        [("satıroku", Self::readline as NativeCall),
+         ("yaz", Self::print as NativeCall),
+         ("satıryaz", Self::printline as NativeCall)].to_vec()
     }
 
     fn get_modules(&self) -> HashMap<String, Rc<dyn Module>> {
@@ -50,6 +54,14 @@ impl Module for IoModule {
 }
 
 impl IoModule  {
+    pub fn readline(_: &Vec<VmObject>, _: usize, _: u8) -> NativeCallResult {        
+        let mut line = String::new();
+        match io::stdin().read_line(&mut line) {
+            Ok(_) => return Ok(VmObject::from(Rc::new(line.trim().to_string()))),
+            _ => return Ok(EMPTY_OBJECT)
+        }
+    }
+
     pub fn print(arguments: &Vec<VmObject>, _: usize, _: u8) -> NativeCallResult {
         for arg in arguments {
             print!("{:?}", arg.deref());
@@ -59,7 +71,7 @@ impl IoModule  {
     }
     
     pub fn printline(arguments: &Vec<VmObject>, last_position: usize, total_args: u8) -> NativeCallResult {
-        for arg in arguments.iter().skip(last_position as usize - (total_args as usize - 1)).take(total_args as usize) {
+        for arg in arguments.iter().skip((last_position as usize - 1) - (total_args as usize - 1)).take(total_args as usize) {
             println!("{:?}", arg.deref());
         }
 
@@ -74,12 +86,12 @@ impl Module for NumModule {
         let mut module = NumModule {
             methods: HashMap::new()
         };
-        module.methods.insert("parse".to_string(), Self::parse as NativeCall);
+        module.methods.insert("oku".to_string(), Self::parse as NativeCall);
         module
     }
 
     fn get_module_name(&self) -> String {
-        return "num".to_string();
+        return "sayı".to_string();
     }
 
     fn get_method(&self, name: &String) -> Option<NativeCall> {
@@ -94,7 +106,7 @@ impl Module for NumModule {
     }
 
     fn get_methods(&self) -> Vec<(&'static str, NativeCall)> {
-        [("parse", Self::parse as NativeCall)].to_vec()
+        [("oku", Self::parse as NativeCall)].to_vec()
     }
 
     fn get_modules(&self) -> HashMap<String, Rc<dyn Module>> {
@@ -108,10 +120,10 @@ impl NumModule  {
             return Err(("More than 1 argument passed", 0, 0));
         }
 
-        let arg = arguments[last_position].deref();
+        let arg = arguments[last_position - 1].deref();
 
         return match &*arg {
-            BramaPrimative::Number(_) => Ok(arguments[last_position]),
+            BramaPrimative::Number(_) => Ok(arguments[last_position - 1]),
             BramaPrimative::Text(text) => {
                 match (*text).parse() {
                     Ok(num) => Ok(VmObject::native_convert(BramaPrimative::Number(num))),
