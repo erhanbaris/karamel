@@ -23,12 +23,11 @@ pub fn greet(name: &str) {
 
 #[cfg(not(feature = "wasmBuild"))]
 fn main() {
-    vm::executer::code_executer(&r#"eğer 10 > 0:
-    erhan=123
+    vm::executer::code_executer(&r#"
+veri = 'erhan'
+eğer veri != 'erhan':
     io::printline('Oldu')
-yada:
-    erhan=321
-    io::printline('Olmadı')
-erhan+=1
-io::printline('erhan barış')"#.to_string());
+yada veri:
+    io::printline('1 == 1')
+"#.to_string());
 } 

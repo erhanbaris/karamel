@@ -244,12 +244,36 @@ impl InterpreterCompiler {
         
         self.generate_opcode(condition, upper_ast, compiler_info, options, storage_index)?;
         options.opcodes.push(VmOpCode::Compare as u8);
-        let if_failed_location = options.opcodes.len();
+        let mut if_failed_location = options.opcodes.len();
 
         options.opcodes.push(0 as u8);
         options.opcodes.push(0 as u8);
 
         self.generate_opcode(body, upper_ast, compiler_info, options, storage_index)?;
+
+        for else_if_item in else_if {
+            /* Has else, jump to end of the condition */
+            options.opcodes.push(VmOpCode::Jump as u8);
+            let jump_location = options.opcodes.len();
+            options.opcodes.push(0 as u8);
+            options.opcodes.push(0 as u8);
+
+            let current_location = options.opcodes.len() - if_failed_location;
+            options.opcodes[if_failed_location]     = current_location as u8;
+            options.opcodes[if_failed_location + 1] = (current_location >> 8) as u8;
+
+            self.generate_opcode(&else_if_item.condition, upper_ast, compiler_info, options, storage_index)?;
+            options.opcodes.push(VmOpCode::Compare as u8);
+            if_failed_location = options.opcodes.len();
+            options.opcodes.push(0 as u8);
+            options.opcodes.push(0 as u8);
+
+            self.generate_opcode(&else_if_item.body, upper_ast, compiler_info, options, storage_index)?;
+
+            let current_location = options.opcodes.len() - jump_location;
+            options.opcodes[jump_location]     = current_location as u8;
+            options.opcodes[jump_location + 1] = (current_location >> 8) as u8;
+        }
 
         if let Some(_else_body) = else_body {
             /* Has else, jump to end of the condition */
