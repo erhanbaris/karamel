@@ -91,7 +91,7 @@ impl PrimativeParser {
                 return Err(("Array not closed", 0, 0));
             }
 
-            return Ok(BramaAstType::Primative(Rc::new(BramaPrimative::List(ast_vec))));
+            return Ok(BramaAstType::List(ast_vec));
         }
 
         parser.restore();

@@ -24,12 +24,8 @@ pub fn greet(name: &str) {
 #[cfg(not(feature = "wasmBuild"))]
 fn main() {
     vm::executer::code_executer(&r#"
-veri = gç::satıroku()
-eğer veri == 'selam':
-    gç::satıryaz('selam')
-yada veri == "güle güle":
-    gç::satıryaz('Görüşmek üzere')
-yada:
-    gç::satıryaz('Anlamadım')
+erhan=[1,2,3, 'erhan']
+barış=[erhan, 1,2,3]
+gç::satıryaz(erhan[0] + erhan[1] + erhan[2])
 "#.to_string());
-} 
+}

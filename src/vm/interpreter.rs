@@ -359,7 +359,7 @@ pub fn run_vm(options: &mut BramaCompilerOption)
                         list.push(pop!(mem_index, stack));
                     }
                     
-                    stack[mem_index - 1] = VmObject::from(0.0);
+                    stack[mem_index] = VmObject::from(list);
                     mem_index += 1;
                     index     += 1;
                 },
@@ -402,10 +402,10 @@ pub fn run_vm(options: &mut BramaCompilerOption)
                         _ => 0.0 as u64
                     };
                     
-                    stack[mem_index] = match (&*object) {
+                    stack[mem_index] = match &*object {
                         BramaPrimative::List(value) => {
                             match (*value).get(indexer_value as usize) {
-                                Some(data) => VmObject::from(1985.0),
+                                Some(data) => VmObject::from(data.clone()),
                                 _ => empty_primative
                             }
                         }

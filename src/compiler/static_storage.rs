@@ -155,7 +155,7 @@ impl Storage for StaticStorage {
             println!("║ {} ║ {:3?} ║ {:28} ║", last_type.to_string(), index, format!("{:?}", *item.deref()));
         }
 
-        println!("╚════════════════════════════════════════╝");
+        println!("╚═══╩═════╩══════════════════════════════╝");
         println!("╔════════════════════════════════════════╗");
         println!("║             VARIABLE DUMP              ║");
         println!("╠════════════════════════════════════════╣");

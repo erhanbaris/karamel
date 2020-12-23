@@ -4,7 +4,6 @@ use std::mem::ManuallyDrop;
 use std::fmt;
 
 use crate::types::*;
-use crate::compiler::ast::BramaAstType;
 
 pub type NativeCallResult = Result<VmObject, (&'static str, u32, u32)>;
 pub type NativeCall       = fn(stack: &Vec<VmObject>, last_position: usize, arg_size: u8) -> NativeCallResult;
@@ -19,7 +18,7 @@ pub enum BramaPrimative {
     Empty,
     Number(f64),
     Bool(bool),
-    List(Vec<Box<BramaAstType>>),
+    List(Vec<Rc<BramaPrimative>>),
     Atom(u64),
     Text(Rc<String>),
     FuncNativeCall(NativeCall)
@@ -46,6 +45,18 @@ impl From<Rc<String>> for VmObject {
 impl From<String> for VmObject {
     fn from(source: String) -> Self {
         VmObject::convert(Rc::new(BramaPrimative::Text(Rc::new(source))))
+    }
+}
+
+impl From<Vec<Rc<BramaPrimative>>> for VmObject {
+    fn from(source: Vec<Rc<BramaPrimative>>) -> Self {
+        VmObject::convert(Rc::new(BramaPrimative::List(source)))
+    }
+}
+
+impl From<Rc<BramaPrimative>> for VmObject {
+    fn from(source: Rc<BramaPrimative>) -> Self {
+        VmObject::convert(source)
     }
 }
 
