@@ -11,7 +11,7 @@ macro_rules! pop {
     }}
 }
 
-pub fn run_vm(options: &mut BramaCompilerOption)
+pub fn run_vm(options: &mut BramaCompilerOption) -> Result<(), &'static str>
 {
     #[cfg(feature = "dumpOpcodes")] {
 
@@ -330,6 +330,7 @@ pub fn run_vm(options: &mut BramaCompilerOption)
                             },
                             Err((error, _, _)) => {
                                 println!("{:?}", error);
+                                return Err(error);
                             }
                         };
 
@@ -440,4 +441,6 @@ pub fn run_vm(options: &mut BramaCompilerOption)
     #[cfg(feature = "dumpMemory")] {
         options.storages[0].dump();
     }
+
+    Ok(())
 }

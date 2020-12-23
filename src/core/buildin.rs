@@ -16,6 +16,11 @@ pub struct NumModule {
     methods: HashMap<String, NativeCall>
 }
 
+#[derive(Clone)]
+pub struct DebugModule {
+    methods: HashMap<String, NativeCall>
+}
+
 impl Module for IoModule {
     fn new() -> IoModule where Self: Sized {
         let mut module = IoModule {
@@ -131,6 +136,65 @@ impl NumModule  {
                 }
             },
             _ => Ok(EMPTY_OBJECT)
+        };
+    }
+}
+
+
+impl Module for DebugModule {
+    fn new() -> DebugModule where Self: Sized {
+        let mut module = DebugModule {
+            methods: HashMap::new()
+        };
+        module.methods.insert("doğrula".to_string(), Self::assert as NativeCall);
+        module
+    }
+
+    fn get_module_name(&self) -> String {
+        return "hataayıklama".to_string();
+    }
+
+    fn get_method(&self, name: &String) -> Option<NativeCall> {
+        match self.methods.get(name) {
+            Some(method) => Some(*method),
+            None         => None
+        }
+    }
+
+    fn get_module(&self, _: &String) -> Option<Rc<dyn Module>> {
+        None
+    }
+
+    fn get_methods(&self) -> Vec<(&'static str, NativeCall)> {
+        [("doğrula", Self::assert as NativeCall)].to_vec()
+    }
+
+    fn get_modules(&self) -> HashMap<String, Rc<dyn Module>> {
+        HashMap::new()
+    }
+}
+
+impl DebugModule  {
+    pub fn assert(arguments: &Vec<VmObject>, last_position: usize, total_args: u8) -> NativeCallResult {
+        if total_args != 2 {
+            return Err(("2 argument required", 0, 0));
+        }
+
+        let left  = arguments[last_position - 1].deref();
+        let right = arguments[last_position - 2].deref();
+
+        let status = match (&*left, &*right) {
+            (BramaPrimative::Empty,               BramaPrimative::Empty)               => true,
+            (BramaPrimative::Atom(l_value),       BramaPrimative::Atom(r_value))       => *l_value == *r_value,
+            (BramaPrimative::Bool(l_value),       BramaPrimative::Bool(r_value))       => *l_value == *r_value,
+            (BramaPrimative::Number(l_value),     BramaPrimative::Number(r_value))     => *l_value == *r_value,
+            (BramaPrimative::Text(l_value),       BramaPrimative::Text(r_value))       => *l_value == *r_value,
+            _ => false
+        };
+
+        return match status {
+            false => Err(("Assert failed", 0, 0)),
+            true  => Ok(EMPTY_OBJECT)
         };
     }
 }

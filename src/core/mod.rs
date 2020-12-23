@@ -30,6 +30,7 @@ impl ModuleCollection
         };
         collection.add_module(Rc::new(buildin::IoModule::new()));
         collection.add_module(Rc::new(buildin::NumModule::new()));
+        collection.add_module(Rc::new(buildin::DebugModule::new()));
         collection
     }
 

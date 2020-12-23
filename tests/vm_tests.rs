@@ -16,14 +16,14 @@ mod tests {
             fn $name () {
                 let mut parser = Parser::new($text);
                 match parser.parse() {
-                    Err(_) => assert_eq!(true, false),
+                    Err(_) => assert!(false),
                     _ => ()
                 };
 
                 let syntax = SyntaxParser::new(Box::new(parser.tokens().to_vec()));
                 let syntax_result = syntax.parse();
                 match syntax_result {
-                    Err(_) => assert_eq!(true, false),
+                    Err(_) => assert!(false),
                     _ => ()
                 };
 
@@ -32,9 +32,12 @@ mod tests {
                 let ast = &syntax_result.unwrap();
 
                 if let Ok(_) = opcode_compiler.compile(ast, &mut compiler_options) {
-                    interpreter::run_vm(&mut compiler_options);
-                    let memory = compiler_options.storages[0].get_stack().borrow().first().unwrap().deref();
-                    assert_eq!(*memory, $result);
+                    if interpreter::run_vm(&mut compiler_options).is_ok() {
+                        let memory = compiler_options.storages[0].get_stack().borrow().first().unwrap().deref();
+                        assert_eq!(*memory, $result);
+                    } else {
+                        assert!(false);
+                    }
                 }
             }
         };
@@ -47,14 +50,14 @@ mod tests {
             fn $name () {
                 let mut parser = Parser::new($text);
                 match parser.parse() {
-                    Err(_) => assert_eq!(true, false),
+                    Err(_) => assert!(false),
                     _ => ()
                 };
 
                 let syntax = SyntaxParser::new(Box::new(parser.tokens().to_vec()));
                 let syntax_result = syntax.parse();
                 match syntax_result {
-                    Err(_) => assert_eq!(true, false),
+                    Err(_) => assert!(false),
                     _ => ()
                 };
 
@@ -63,12 +66,48 @@ mod tests {
                 let ast = &syntax_result.unwrap();
 
                 if let Ok(_) = opcode_compiler.compile(ast, &mut compiler_options) {
-                    interpreter::run_vm(&mut compiler_options);
-                    match compiler_options.storages[0].get_variable_value(&$variable.to_string()) {
-                        Some(ast) => assert_eq!(*ast, $result),
-                        None => assert!(false)
+                    if interpreter::run_vm(&mut compiler_options).is_ok() {
+                        match compiler_options.storages[0].get_variable_value(&$variable.to_string()) {
+                            Some(ast) => assert_eq!(*ast, $result),
+                            None => assert!(false)
+                        }
+                    } else {
+                        assert!(false)
                     }
                 }
+            }
+        };
+    }
+
+    #[warn(unused_macros)]
+    macro_rules! execute {
+        ($name:ident, $text:expr) => {
+            #[test]
+            fn $name () {
+                let mut parser = Parser::new($text);
+                match parser.parse() {
+                    Err(_) => assert!(false),
+                    _ => ()
+                };
+
+                let syntax = SyntaxParser::new(Box::new(parser.tokens().to_vec()));
+                let syntax_result = syntax.parse();
+                match syntax_result {
+                    Err(_) => assert!(false),
+                    _ => ()
+                };
+
+                let opcode_compiler  = InterpreterCompiler {};
+                let mut compiler_options: BramaCompilerOption = BramaCompilerOption::new();
+                let ast = &syntax_result.unwrap();
+
+                if let Ok(_) = opcode_compiler.compile(ast, &mut compiler_options) {
+                    if interpreter::run_vm(&mut compiler_options).is_ok() {
+                        assert!(true);
+                        return;
+                    }
+                }
+                assert!(false);
             }
         };
     }
@@ -196,4 +235,9 @@ eğer veri != 'erhan':
 yada veri:
     erhan = "olmadi"
     io::printline('1 == 1')"#, BramaPrimative::Text(Rc::new("olmadi".to_string())));
+
+    execute!(vm_80, r#"
+erhan=1
+barış=1
+hataayıklama::doğrula(erhan, barış)"#);
 }

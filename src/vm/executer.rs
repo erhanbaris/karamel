@@ -24,10 +24,14 @@ pub fn code_executer(data: &String) {
         Ok(ast) => {
             let opcode_compiler = InterpreterCompiler {};
 
-            match opcode_compiler.compile(&ast, &mut compiler_options) {
+            let execution_status = match opcode_compiler.compile(&ast, &mut compiler_options) {
                 Ok(_) => run_vm(&mut compiler_options),
-                Err(message) => println!("{:?}", message)
+                Err(message) => Err(message)
             };
+            
+            if let Err(message) = execution_status {
+                println!("{}", message);
+            }
         },
         Err((message, line, column)) => println!("[{}:{}] {}", line, column, message)
     }
@@ -79,7 +83,9 @@ pub fn console_executer() {
                 compiler_options.reset();
                 
                 if let Ok(_) = opcode_compiler.compile(&ast, &mut compiler_options) {
-                    run_vm(&mut compiler_options);
+                    if let Err(message) = run_vm(&mut compiler_options) {
+                        println!("{}", message);
+                    }
                 }
             },
             Err((message, _, _)) => {

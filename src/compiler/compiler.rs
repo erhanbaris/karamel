@@ -77,7 +77,7 @@ impl InterpreterCompiler {
         }
     }
 
-    fn generate_primative(&self, primative: Rc<BramaPrimative>, compiler_info: &mut CompileInfo, upper_ast: &BramaAstType, options: &mut BramaCompilerOption, storage_index: usize) -> CompilerResult {
+    fn generate_primative(&self, primative: Rc<BramaPrimative>, _: &mut CompileInfo, _: &BramaAstType, options: &mut BramaCompilerOption, storage_index: usize) -> CompilerResult {
         let storage = &options.storages[storage_index];
 
         let result = storage.get_constant_location(primative);
