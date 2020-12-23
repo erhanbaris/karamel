@@ -1,4 +1,4 @@
-use crate::types::{VmObject};
+use crate::types::{VmObject, StrTrait};
 use crate::compiler::*;
 use std::rc::Rc;
 use std::mem;
@@ -39,6 +39,7 @@ pub fn run_vm(options: &mut BramaCompilerOption)
                 VmOpCode::GreaterThan | 
                 VmOpCode::LessEqualThan | 
                 VmOpCode::LessThan | 
+                VmOpCode::GetItem | 
                 VmOpCode::Multiply => {
                     println!("║ {:4} ║ {:15} ║ {:^5} ║ {:^5} ║", opcode_index, format!("{:?}", opcode), "", "");
                 },
@@ -53,6 +54,7 @@ pub fn run_vm(options: &mut BramaCompilerOption)
 
                 VmOpCode::CopyToStore |
                 VmOpCode::Load |
+                VmOpCode::InitList |
                 VmOpCode::Store => {
                     println!("║ {:4} ║ {:15} ║ {:^5?} ║ {:^5} ║", opcode_index, format!("{:?}", opcode), options.opcodes[opcode_index + 1], "");
                     opcode_index += 1;
@@ -349,6 +351,19 @@ pub fn run_vm(options: &mut BramaCompilerOption)
                     };
                 },
 
+                VmOpCode::InitList => {
+                    let total_item = options.opcodes[index + 1] as usize;
+                    let mut list = Vec::with_capacity(total_item);
+
+                    for _ in 0..total_item {
+                        list.push(pop!(mem_index, stack));
+                    }
+                    
+                    stack[mem_index - 1] = VmObject::from(0.0);
+                    mem_index += 1;
+                    index     += 1;
+                },
+
                 VmOpCode::Compare => {
                     let condition = pop!(mem_index, stack);
 
@@ -374,7 +389,32 @@ pub fn run_vm(options: &mut BramaCompilerOption)
                     let location = ((options.opcodes[index + 2] as u16 * 256) + options.opcodes[index + 1] as u16) as usize;
                     index += location as usize;
                 },
-                _ => ()
+
+                VmOpCode::GetItem => {
+                    let indexer = pop!(mem_index, stack);
+                    let object  = pop!(mem_index, stack);
+
+                    let indexer_value = match &*indexer {
+                        BramaPrimative::Atom(atom) => *atom as u64,
+                        BramaPrimative::Bool(b) => 1.0 as u64,
+                        BramaPrimative::Number(number) => *number as u64,
+                        BramaPrimative::Text(text) => (**text).atom(),
+                        _ => 0.0 as u64
+                    };
+                    
+                    stack[mem_index] = match (&*object) {
+                        BramaPrimative::List(value) => {
+                            match (*value).get(indexer_value as usize) {
+                                Some(data) => VmObject::from(1985.0),
+                                _ => empty_primative
+                            }
+                        }
+                        _ => empty_primative
+                    };
+                    mem_index += 1;
+                },
+
+                VmOpCode::None => (),
             }
 
             index += 1;

@@ -122,15 +122,28 @@ impl StorageBuilder {
             },
 
             BramaAstType::Primative(primative) => {
-                options.storages.get_mut(storage_index).unwrap().add_constant(Rc::clone(primative));
-                /*if let BramaPrimative::List(list) = primative {
-                    let mut list_temp_count = 0;
+                if let BramaPrimative::List(list) = &*(primative.clone()) {
+                    let mut total_size = 0;
                     for array_item in list {
-                        list_temp_count = cmp::max(self.get_temp_count_from_ast(array_item, ast, options, storage_index), list_temp_count);
+                        total_size += self.get_temp_count_from_ast(&*array_item, ast, options, storage_index, compiler_option);
                     }
-                }*/
+                    compiler_option.max_stack = max(total_size, compiler_option.max_stack);
+                    return total_size
+                }
+                else {
+                    options.storages.get_mut(storage_index).unwrap().add_constant(Rc::clone(primative));
+                }
+
                 compiler_option.max_stack = max(1, compiler_option.max_stack);
                 1
+            },
+
+            BramaAstType::Indexer { body, indexer } => {
+                let body_size = self.get_temp_count_from_ast(body, ast, options, storage_index, compiler_option);
+                let indexer_size = self.get_temp_count_from_ast(indexer, ast, options, storage_index, compiler_option);
+
+                compiler_option.max_stack = max(indexer_size + body_size, compiler_option.max_stack);
+                indexer_size + body_size
             },
 
             BramaAstType::IfStatement {

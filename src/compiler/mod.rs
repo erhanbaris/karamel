@@ -109,13 +109,16 @@ pub enum VmOpCode {
     Increment,
     Decrement,
     Not,
-    
+
     Compare,
     Jump,
+
+    InitList,
 
     Load,
     Store,
     FastStore,
     CopyToStore,
-    Dublicate
+    Dublicate,
+    GetItem
 }

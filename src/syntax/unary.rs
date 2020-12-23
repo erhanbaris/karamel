@@ -3,8 +3,10 @@ use crate::syntax::{SyntaxParser, SyntaxParserTrait};
 use crate::syntax::util::map_parser;
 use crate::syntax::primative::PrimativeParser;
 use crate::syntax::func_call::FuncCallParser;
+use crate::syntax::util::is_ast_empty;
 use crate::compiler::ast::BramaAstType;
 use crate::compiler::value::BramaPrimative;
+use crate::syntax::control::ExpressionParser;
 
 use std::rc::Rc;
 
@@ -12,7 +14,24 @@ pub struct UnaryParser;
 
 impl SyntaxParserTrait for UnaryParser {
     fn parse(parser: &SyntaxParser) -> AstResult {
-        return map_parser(parser, &[Self::parse_prefix_unary, Self::parse_suffix_unary, FuncCallParser::parse, PrimativeParser::parse]);
+        let ast = map_parser(parser, &[Self::parse_prefix_unary, Self::parse_suffix_unary, FuncCallParser::parse, PrimativeParser::parse]);
+        
+        parser.backup();
+        parser.clear_whitespaces();
+        
+        if parser.match_operator(&[BramaOperatorType::SquareBracketStart]).is_some() {
+            parser.clear_whitespaces();
+
+            let indexer_ast = ExpressionParser::parse(parser);
+            parser.clear_whitespaces();
+
+            if parser.match_operator(&[BramaOperatorType::SquareBracketEnd]).is_some() && !is_ast_empty(&indexer_ast) {
+                return Ok(BramaAstType::Indexer { body: Box::new(ast.unwrap()), indexer: Box::new(indexer_ast.unwrap()) });   
+            }
+        }
+
+        parser.restore();
+        return ast;
     }
 }
 

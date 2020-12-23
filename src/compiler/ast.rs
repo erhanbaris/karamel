@@ -60,5 +60,6 @@ pub enum BramaAstType {
         else_body: Option<Box<BramaAstType>>,
         else_if: Vec<Box<BramaIfStatementElseItem>>
     },
-    Symbol(String)
+    Symbol(String),
+    Indexer { body: Box<BramaAstType>, indexer: Box<BramaAstType> }
 }

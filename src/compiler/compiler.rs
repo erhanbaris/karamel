@@ -7,6 +7,7 @@ use crate::core::*;
 use crate::compiler::value::BramaPrimative;
 use crate::compiler::ast::{BramaAstType, BramaIfStatementElseItem};
 use crate::compiler::storage_builder::StorageBuilder;
+use std::mem::discriminant;
 
 pub struct BramaCompilerOption {
     pub opcodes : Vec<u8>,
@@ -62,12 +63,13 @@ impl InterpreterCompiler {
             BramaAstType::Control { left, operator, right }             => self.generate_control(left, operator, right, upper_ast, compiler_info, options, storage_index),
             BramaAstType::Binary { left, operator, right }              => self.generate_binary(left, operator, right, upper_ast, compiler_info, options, storage_index),
             BramaAstType::Block(asts)                                   => self.generate_block(asts, upper_ast, compiler_info, options, storage_index),
-            BramaAstType::Primative(primative)                          => self.generate_primative(primative.clone(), compiler_info, options, storage_index),
+            BramaAstType::Primative(primative)                          => self.generate_primative(primative.clone(), compiler_info, upper_ast, options, storage_index),
             BramaAstType::FuncCall { names, arguments }                 => self.generate_func_call(names, arguments, upper_ast, compiler_info, options, storage_index),
             BramaAstType::PrefixUnary (operator, expression)            => self.generate_prefix_unary(operator, expression, upper_ast, compiler_info, options, storage_index),
             BramaAstType::SuffixUnary (operator, expression)            => self.generate_suffix_unary(operator, expression, upper_ast, compiler_info, options, storage_index),
             BramaAstType::NewLine => Ok(0),
             BramaAstType::IfStatement {condition, body, else_body, else_if} => self.generate_if_condition(condition, body, else_body, else_if, upper_ast, compiler_info, options, storage_index),
+            BramaAstType::Indexer {body, indexer} => self.generate_indexer(body, indexer, upper_ast, compiler_info, options, storage_index),
             BramaAstType::None => {
                 println!("{:?}", ast);
                 Err("Not implemented")
@@ -75,17 +77,29 @@ impl InterpreterCompiler {
         }
     }
 
-    fn generate_primative(&self, primative: Rc<BramaPrimative>, _: &mut CompileInfo, options: &mut BramaCompilerOption, storage_index: usize) -> CompilerResult {
-        let storage = &options.storages[storage_index];
-
-        let result = storage.get_constant_location(primative);
-        match result {
-            Some(index) => {
-                options.opcodes.push(VmOpCode::Load as u8);
-                options.opcodes.push(index as u8);
-                Ok(index)
+    fn generate_primative(&self, primative: Rc<BramaPrimative>, compiler_info: &mut CompileInfo, upper_ast: &BramaAstType, options: &mut BramaCompilerOption, storage_index: usize) -> CompilerResult {
+        match &*primative{
+            BramaPrimative::List(list) => {
+                 for item in list {
+                    self.generate_opcode(item, upper_ast, compiler_info, options, storage_index)?;
+                 }
+                 options.opcodes.push(VmOpCode::InitList as u8);
+                 options.opcodes.push(list.len() as u8);
+                 Ok(0)
             },
-            _ => Err("Value not found in storage")
+            _ => {
+                let storage = &options.storages[storage_index];
+
+                let result = storage.get_constant_location(primative);
+                match result {
+                    Some(index) => {
+                        options.opcodes.push(VmOpCode::Load as u8);
+                        options.opcodes.push(index as u8);
+                        Ok(index)
+                    },
+                    _ => Err("Value not found in storage")
+                }
+            }
         }
     }
 
@@ -147,17 +161,19 @@ impl InterpreterCompiler {
         let storage = &options.storages[storage_index];
         
         if let BramaAstType::Primative(primative) = expression_ast {
-            if *operator == BramaOperatorType::Assign {
-                let result = storage.get_constant_location(primative.clone());
-                let primative_location = match result {
-                    Some(index) => index as u8,
-                    _ => return Err("Value not found in storage")
-                };
+            if mem::discriminant(&**primative) != mem::discriminant(&BramaPrimative::List([].to_vec())) {
+                if *operator == BramaOperatorType::Assign {
+                    let result = storage.get_constant_location(primative.clone());
+                    let primative_location = match result {
+                        Some(index) => index as u8,
+                        _ => return Err("Value not found in storage")
+                    };
 
-                options.opcodes.push(VmOpCode::FastStore as u8);
-                options.opcodes.push(location);
-                options.opcodes.push(primative_location);
-                return Ok(0);
+                    options.opcodes.push(VmOpCode::FastStore as u8);
+                    options.opcodes.push(location);
+                    options.opcodes.push(primative_location);
+                    return Ok(0);
+                }
             }
         }
 
@@ -319,6 +335,14 @@ impl InterpreterCompiler {
         for exit_location in exit_locations {
             self.build_jump_location(options, exit_location);
         }
+
+        return Ok(0);
+    }
+
+    fn generate_indexer(&self, body: &BramaAstType, indexer: &BramaAstType, upper_ast: &BramaAstType, compiler_info: &mut CompileInfo, options: &mut BramaCompilerOption, storage_index: usize) -> CompilerResult {
+        self.generate_opcode(body, upper_ast, compiler_info, options, storage_index)?;
+        self.generate_opcode(indexer, upper_ast, compiler_info, options, storage_index)?;
+        options.opcodes.push(VmOpCode::GetItem as u8);
 
         return Ok(0);
     }
