@@ -32,7 +32,9 @@ yada:
 
 ## Fonksiyon tanımlama
 fn metod_1(a):
-  gç::yaz(a)
+&emsp;&emsp;  
+&emsp;&emsp;gç::yaz(a)
 
 fn merhaba_dünya:
-  gç::yaz('Merhaba dünya')
+&emsp;&emsp;  
+&emsp;&emsp;gç::yaz('Merhaba dünya')
