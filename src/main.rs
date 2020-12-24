@@ -3,7 +3,7 @@ mod parser;
 mod syntax;
 mod vm;
 mod compiler;
-mod core;
+mod buildin;
 
 #[cfg(feature = "wasmBuild")]
 use wasm_bindgen::prelude::*;

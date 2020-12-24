@@ -240,4 +240,28 @@ yada veri:
 erhan=1
 barış=1
 hataayıklama::doğrula(erhan, barış)"#);
+
+execute!(vm_81, r#"hataayıklama::doğrula([] == [])"#);
+execute!(vm_82, r#"hataayıklama::doğrula([1] != [])"#);
+execute!(vm_83, r#"hataayıklama::doğrula([0] != [1])"#);
+execute!(vm_84, r#"hataayıklama::doğrula([1,2,3] == [1,2,3])"#);
+execute!(vm_85, r#"
+a = 10 * 2
+b = 5 * 4
+hataayıklama::doğrula(a, b)"#);
+execute!(vm_86, r#"
+a = 'erhan'
+b = 'barış'
+hataayıklama::doğrula(a != b)"#);
+execute!(vm_87, r#"hataayıklama::doğrula(doğru ve doğru)"#);
+execute!(vm_88, r#"hataayıklama::doğrula(doğru or yanlış)"#);
+execute!(vm_89, r#"
+veri = 'erhan'
+eğer veri != 'erhan':
+    erhan = "oldu"
+yada veri:
+    erhan = "olmadi"
+hataayıklama::doğrula(erhan, 'olmadi')
+"#);
+execute!(vm_90, r#"hataayıklama::doğrula([1,2,3,[4,5]], [1,2,3,[4,5]])"#);
 }

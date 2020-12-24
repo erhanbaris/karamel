@@ -1,4 +1,6 @@
-pub mod buildin;
+pub mod debug;
+pub mod io;
+pub mod num;
 
 use std::collections::HashMap;
 use std::vec::Vec;
@@ -28,9 +30,9 @@ impl ModuleCollection
         let mut collection = ModuleCollection {
             modules: HashMap::new()
         };
-        collection.add_module(Rc::new(buildin::IoModule::new()));
-        collection.add_module(Rc::new(buildin::NumModule::new()));
-        collection.add_module(Rc::new(buildin::DebugModule::new()));
+        collection.add_module(Rc::new(io::IoModule::new()));
+        collection.add_module(Rc::new(num::NumModule::new()));
+        collection.add_module(Rc::new(debug::DebugModule::new()));
         collection
     }
 

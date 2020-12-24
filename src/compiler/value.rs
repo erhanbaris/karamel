@@ -24,6 +24,20 @@ pub enum BramaPrimative {
     FuncNativeCall(NativeCall)
 }
 
+impl BramaPrimative {
+    pub fn is_true(&self) -> bool {
+        match self {
+            BramaPrimative::Text(value)       => value.len() > 0,
+            BramaPrimative::Number(value)     => *value > 0.0,
+            BramaPrimative::Bool(value)       => *value,
+            BramaPrimative::Atom(_)           => true,
+            BramaPrimative::List(items)       => items.len() > 0,
+            BramaPrimative::FuncNativeCall(_) => true,
+            BramaPrimative::Empty             => false
+        }
+    }
+}
+
 impl From<f64> for VmObject {
     fn from(source: f64) -> Self {
         VmObject::convert(Rc::new(BramaPrimative::Number(source)))
@@ -83,15 +97,30 @@ impl Drop for BramaPrimative {
 impl PartialEq for BramaPrimative {
     fn eq(&self, other: &Self) -> bool {
         match (self, &other) {
-            (BramaPrimative::Bool(lvalue),  BramaPrimative::Bool(rvalue)) => lvalue == rvalue,
-            (BramaPrimative::Atom(lvalue),  BramaPrimative::Atom(rvalue)) => lvalue == rvalue,
-            (BramaPrimative::List(lvalue),  BramaPrimative::List(rvalue)) => lvalue == rvalue,
-            (BramaPrimative::Empty,         BramaPrimative::Empty)        => true,
-            (BramaPrimative::Number(n),     BramaPrimative::Number(m))    => if n.is_nan() && m.is_nan() { true } else { n == m },
-            (BramaPrimative::Text(lvalue),  BramaPrimative::Text(rvalue)) => lvalue == rvalue,
+            (BramaPrimative::Bool(lvalue),            BramaPrimative::Bool(rvalue)) => lvalue == rvalue,
+            (BramaPrimative::Atom(lvalue),            BramaPrimative::Atom(rvalue)) => lvalue == rvalue,
+            (BramaPrimative::Empty,                   BramaPrimative::Empty)        => true,
+            (BramaPrimative::Number(n),               BramaPrimative::Number(m))    => if n.is_nan() && m.is_nan() { true } else { n == m },
+            (BramaPrimative::Text(lvalue),            BramaPrimative::Text(rvalue)) => lvalue == rvalue,
             (BramaPrimative::FuncNativeCall(lvalue),  BramaPrimative::FuncNativeCall(rvalue)) => *lvalue as usize == *rvalue as usize,
+            (BramaPrimative::List(l_value),           BramaPrimative::List(r_value))       => {
+                if (*l_value).len() != (*r_value).len() {
+                    return false;
+                }
+
+                for i in 0..(*l_value).len() {
+                    if (*l_value)[i].clone() != (*r_value)[i].clone() {
+                        return false;
+                    }
+                }
+                return true;
+            },
             _ => false
         }
+    }
+
+    fn ne(&self, other: &Self) -> bool {
+        !(self == other)
     }
 }
 
