@@ -48,7 +48,8 @@ pub enum BramaKeywordType {
     GreaterEqualThan,
     LessEqualThan,
     Equal,
-    NotEqual
+    NotEqual,
+    Fn
 }
 
 impl BramaKeywordType {
@@ -105,7 +106,8 @@ pub static KEYWORDS: &'static [(&str, BramaKeywordType)] = &[
     ("büyükeşittir",  BramaKeywordType::GreaterEqualThan),
     ("küçüktür",      BramaKeywordType::LessThan),
     ("küçükeşittir",  BramaKeywordType::LessEqualThan),
-    ("değil",         BramaKeywordType::Not)
+    ("değil",         BramaKeywordType::Not),
+    ("fn",            BramaKeywordType::Fn)
 ];
 
 #[derive(Clone, Copy)]

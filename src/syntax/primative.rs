@@ -12,7 +12,7 @@ use crate::compiler::ast::{BramaAstType, BramaDictItem};
 pub struct PrimativeParser;
 
 impl PrimativeParser {
-    fn parse_basic_primatives(parser: &SyntaxParser) -> AstResult {
+    pub fn parse_basic_primatives(parser: &SyntaxParser) -> AstResult {
         parser.backup();
         parser.cleanup_whitespaces();
 
@@ -68,7 +68,7 @@ impl PrimativeParser {
         }
     }
 
-    fn parse_list(parser: &SyntaxParser) -> AstResult {
+    pub fn parse_list(parser: &SyntaxParser) -> AstResult {
         parser.backup();
         if parser.match_operator(&[BramaOperatorType::SquareBracketStart]).is_some() {
             let mut ast_vec   = Vec::new();
@@ -105,7 +105,7 @@ impl PrimativeParser {
         return Ok(BramaAstType::None);
     }
 
-    fn parse_dict(parser: &SyntaxParser) -> AstResult {
+    pub fn parse_dict(parser: &SyntaxParser) -> AstResult {
         parser.backup();
         if parser.match_operator(&[BramaOperatorType::CurveBracketStart]).is_some() {
             let mut dict_items   = Vec::new();
@@ -168,7 +168,7 @@ impl PrimativeParser {
         return Ok(BramaAstType::None);
     }
 
-    fn parse_symbol(parser: &SyntaxParser) -> AstResult {
+    pub fn parse_symbol(parser: &SyntaxParser) -> AstResult {
         parser.backup();
         parser.cleanup_whitespaces();
         let token = parser.peek_token();
@@ -184,7 +184,7 @@ impl PrimativeParser {
         return Ok(BramaAstType::None);
     }
 
-    fn parse_parenthesis(parser: &SyntaxParser) -> AstResult {
+    pub fn parse_parenthesis(parser: &SyntaxParser) -> AstResult {
         parser.backup();
         if parser.match_operator(&[BramaOperatorType::LeftParentheses]).is_some() {
             

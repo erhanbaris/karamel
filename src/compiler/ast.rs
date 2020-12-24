@@ -62,12 +62,16 @@ pub enum BramaAstType {
         operator: BramaOperatorType,
         expression: Box<BramaAstType>
     },
-    /*Loop,*/
     IfStatement {
         condition: Box<BramaAstType>,
         body: Box<BramaAstType>,
         else_body: Option<Box<BramaAstType>>,
         else_if: Vec<Box<BramaIfStatementElseItem>>
+    },
+    FunctionDefination {
+        name: String,
+        arguments: Vec<String>,
+        body: Box<BramaAstType>
     },
     Symbol(String),
     List(Vec<Box<BramaAstType>>),

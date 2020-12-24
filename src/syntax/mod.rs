@@ -9,6 +9,7 @@ pub mod func_call;
 pub mod newline;
 pub mod if_condition;
 pub mod statement;
+pub mod function_defination;
 
 use std::vec::Vec;
 use std::cell::Cell;

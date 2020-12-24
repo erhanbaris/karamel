@@ -71,6 +71,7 @@ impl InterpreterCompiler {
             BramaAstType::PrefixUnary (operator, expression)            => self.generate_prefix_unary(operator, expression, upper_ast, compiler_info, options, storage_index),
             BramaAstType::SuffixUnary (operator, expression)            => self.generate_suffix_unary(operator, expression, upper_ast, compiler_info, options, storage_index),
             BramaAstType::NewLine                                       => Ok(0),
+            BramaAstType::FunctionDefination{name, arguments, body}                                       => Ok(0),
             BramaAstType::IfStatement {condition, body, else_body, else_if} => self.generate_if_condition(condition, body, else_body, else_if, upper_ast, compiler_info, options, storage_index),
             BramaAstType::Indexer {body, indexer}                           => self.generate_indexer(body, indexer, upper_ast, compiler_info, options, storage_index),
             BramaAstType::None => {

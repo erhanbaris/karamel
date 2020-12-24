@@ -5,6 +5,7 @@ use crate::syntax::newline::NewlineParser;
 use crate::syntax::util::map_parser;
 use crate::compiler::ast::BramaAstType;
 use crate::syntax::statement::StatementParser;
+use crate::syntax::function_defination::FunctionDefinationParser;
 
 struct BlockParser;
 pub struct SingleLineBlockParser;
@@ -31,7 +32,7 @@ impl BlockParser {
 
         loop {
             parser.indentation_check()?;
-            let ast = map_parser(parser, &[StatementParser::parse, ExpressionParser::parse, NewlineParser::parse])?;
+            let ast = map_parser(parser, &[FunctionDefinationParser::parse, StatementParser::parse, ExpressionParser::parse, NewlineParser::parse])?;
             match ast {
                 BramaAstType::None =>  break,
                 BramaAstType::NewLine =>  (),

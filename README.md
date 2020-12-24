@@ -29,3 +29,10 @@ yada a == c:
 &emsp;&emsp;-  
 yada:  
 &emsp;&emsp;-
+
+## Fonksiyon tanımlama
+fn metod_1(a):
+  gç::yaz(a)
+
+fn merhaba_dünya:
+  gç::yaz('Merhaba dünya')
