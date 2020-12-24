@@ -14,14 +14,14 @@ impl SyntaxParserTrait for AssignmentParser {
         if token.is_ok() {
             if let BramaTokenType::Symbol(symbol) = &token.unwrap().token_type {
                 parser.consume_token();
-                parser.clear_whitespaces();
+                parser.cleanup_whitespaces();
 
                 if let Some(operator) = parser.match_operator(&[BramaOperatorType::Assign, 
                     BramaOperatorType::AssignAddition,
                     BramaOperatorType::AssignDivision,
                     BramaOperatorType::AssignMultiplication,
                     BramaOperatorType::AssignSubtraction]) {
-                    parser.clear_whitespaces();
+                    parser.cleanup_whitespaces();
                     
                     let expression = ExpressionParser::parse(parser);
                     match expression {

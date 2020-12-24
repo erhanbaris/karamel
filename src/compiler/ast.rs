@@ -13,6 +13,15 @@ pub struct BramaIfStatementElseItem {
     pub body: Box<BramaAstType>
 }
 
+#[repr(C)]
+#[derive(Clone)]
+#[derive(Debug)]
+#[derive(PartialEq)]
+pub struct BramaDictItem {
+    pub key: Rc<BramaPrimative>,
+    pub value: Rc<BramaAstType>
+}
+
 impl BramaIfStatementElseItem {
     pub fn new(condition: Box<BramaAstType>, body: Box<BramaAstType>) -> BramaIfStatementElseItem {
         BramaIfStatementElseItem {
@@ -62,5 +71,6 @@ pub enum BramaAstType {
     },
     Symbol(String),
     List(Vec<Box<BramaAstType>>),
+    Dict(Vec<Box<BramaDictItem>>),
     Indexer { body: Box<BramaAstType>, indexer: Box<BramaAstType> }
 }

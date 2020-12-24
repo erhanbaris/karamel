@@ -114,6 +114,7 @@ pub enum VmOpCode {
     Jump,
 
     InitList,
+    InitDict,
 
     Load,
     Store,

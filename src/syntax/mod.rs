@@ -45,11 +45,9 @@ impl SyntaxParser {
     pub fn parse(&self) -> AstResult {
         return match MultiLineBlockParser::parse(&self) {
             Ok(ast) => {
-                self.clear_whitespaces();
-                self.cleanup_newlines();
-
+                self.cleanup();
+                
                 if let Ok(token) = self.next_token() {
-                    println!("{:?}", token);
                     return Err(("Syntax error, undefined syntax", token.line, token.column));
                 }
                 Ok(ast)
@@ -152,7 +150,7 @@ impl SyntaxParser {
         return None;
     }
 
-    fn clear_whitespaces(&self) {
+    fn cleanup_whitespaces(&self) {
         loop {
             if let Ok(current_token) = self.peek_token() {
                 let done = match current_token.token_type {
@@ -198,6 +196,27 @@ impl SyntaxParser {
                 if !success {
                     return;
                 }
+
+                self.consume_token();
+            }
+            else {
+                break;
+            }
+        }
+    }
+
+    fn cleanup(&self) {
+        if self.next_token().is_err() {
+            return;
+        }
+
+        loop {
+            if let Ok(current_token) = self.peek_token() {                
+                match current_token.token_type {
+                    BramaTokenType::NewLine(_) =>  true,
+                    BramaTokenType::WhiteSpace(_) => true,
+                    _ => break
+                };
 
                 self.consume_token();
             }

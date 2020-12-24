@@ -57,8 +57,8 @@ impl IoModule  {
         }
     }
 
-    pub fn print(arguments: &Vec<VmObject>, _: usize, _: u8) -> NativeCallResult {
-        for arg in arguments {
+    pub fn print(arguments: &Vec<VmObject>, last_position: usize, total_args: u8) -> NativeCallResult {
+        for arg in arguments.iter().skip((last_position as usize - 1) - (total_args as usize - 1)).take(total_args as usize) {
             print!("{:?}", arg.deref());
         }
 

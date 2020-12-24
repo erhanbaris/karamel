@@ -2,7 +2,7 @@ use crate::types::{VmObject};
 use crate::compiler::*;
 use std::rc::Rc;
 use std::mem;
-
+use std::collections::HashMap;
 
 macro_rules! pop {
     ($mem_index: expr, $stack: expr) => {{
@@ -55,6 +55,7 @@ pub fn run_vm(options: &mut BramaCompilerOption) -> Result<(), &'static str>
                 VmOpCode::CopyToStore |
                 VmOpCode::Load |
                 VmOpCode::InitList |
+                VmOpCode::InitDict |
                 VmOpCode::Store => {
                     println!("║ {:4} ║ {:15} ║ {:^5?} ║ {:^5} ║", opcode_index, format!("{:?}", opcode), options.opcodes[opcode_index + 1], "");
                     opcode_index += 1;
@@ -306,6 +307,22 @@ pub fn run_vm(options: &mut BramaCompilerOption) -> Result<(), &'static str>
                     index     += 1;
                 },
 
+                VmOpCode::InitDict => {
+                    let total_item = options.opcodes[index + 1] as usize;
+                    let mut dict = HashMap::new();
+
+                    for _ in 0..total_item {
+                        let value = pop!(mem_index, stack);
+                        let key = pop!(mem_index, stack);
+                        
+                        dict.insert(key.get_text(), value);
+                    }
+                    
+                    stack[mem_index] = VmObject::from(dict);
+                    mem_index += 1;
+                    index     += 1;
+                },
+
                 VmOpCode::Compare => {
                     let condition = pop!(mem_index, stack);
 
@@ -344,6 +361,17 @@ pub fn run_vm(options: &mut BramaCompilerOption) -> Result<(), &'static str>
                             };
 
                             match (*value).get(indexer_value as usize) {
+                                Some(data) => VmObject::from(data.clone()),
+                                _ => empty_primative
+                            }
+                        },
+                        BramaPrimative::Dict(value) => {
+                            let indexer_value = match &*indexer {
+                                BramaPrimative::Text(text) => &*text,
+                                _ => return Err("Indexer must be string")
+                            };
+
+                            match (*value).get(&indexer_value.to_string()) {
                                 Some(data) => VmObject::from(data.clone()),
                                 _ => empty_primative
                             }

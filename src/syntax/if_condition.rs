@@ -13,7 +13,7 @@ impl SyntaxParserTrait for IfConditiontParser {
 
         if parser.match_keyword(BramaKeywordType::If) {
             let indentation = parser.get_indentation();
-            parser.clear_whitespaces();
+            parser.cleanup_whitespaces();
 
             let expression = ExpressionParser::parse(parser);
             match expression {
@@ -22,12 +22,12 @@ impl SyntaxParserTrait for IfConditiontParser {
                 Err(_) => return expression
             };
 
-            parser.clear_whitespaces();
+            parser.cleanup_whitespaces();
             if let None = parser.match_operator(&[BramaOperatorType::ColonMark]) {
                 return Err(("':' missing", 0, 0));
             }
 
-            parser.clear_whitespaces();
+            parser.cleanup_whitespaces();
             let true_body = match parser.get_newline() {
                 (true, _) => {
                     parser.in_indication()?;
@@ -41,14 +41,14 @@ impl SyntaxParserTrait for IfConditiontParser {
                 return Err(("If condition body not found", 0, 0));
             }
 
-            parser.clear_whitespaces();
+            parser.cleanup_whitespaces();
 
             let mut else_body: Option<Box<BramaAstType>> = None;
             let mut else_if: Vec<Box<BramaIfStatementElseItem>> = Vec::new();
 
             while parser.is_same_indentation(indentation) {
                 if parser.match_keyword(BramaKeywordType::Else) {
-                    parser.clear_whitespaces();
+                    parser.cleanup_whitespaces();
 
                     let else_condition = ExpressionParser::parse(parser)?;
 
@@ -64,7 +64,7 @@ impl SyntaxParserTrait for IfConditiontParser {
                             return Err(("Multiple else usage not valid", 0, 0));
                         }
                     }
-                    parser.clear_whitespaces();
+                    parser.cleanup_whitespaces();
                     
                     let body = match parser.get_newline() {
                         (true, _)  => {

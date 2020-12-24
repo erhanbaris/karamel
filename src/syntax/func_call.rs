@@ -8,7 +8,7 @@ pub struct FuncCallParser;
 impl SyntaxParserTrait for FuncCallParser {
     fn parse(parser: &SyntaxParser) -> AstResult {
         parser.backup();
-        parser.clear_whitespaces();
+        parser.cleanup_whitespaces();
         let token = parser.peek_token();
 
         if token.is_ok() {
@@ -38,7 +38,7 @@ impl SyntaxParserTrait for FuncCallParser {
                     }
                 }
 
-                parser.clear_whitespaces();
+                parser.cleanup_whitespaces();
 
                 if let Some(_) = parser.match_operator(&[BramaOperatorType::LeftParentheses]) {
                     let mut arguments = Vec::new();
@@ -46,7 +46,7 @@ impl SyntaxParserTrait for FuncCallParser {
                     /* Parse function call arguments */
                     let mut continue_to_parse = true;
                     while continue_to_parse {
-                        parser.clear_whitespaces();
+                        parser.cleanup_whitespaces();
                         
                         let expression = ExpressionParser::parse(parser);
                         match expression {
@@ -54,7 +54,7 @@ impl SyntaxParserTrait for FuncCallParser {
                             _ => ()
                         };
                         
-                        parser.clear_whitespaces();
+                        parser.cleanup_whitespaces();
 
                         match parser.match_operator(&[BramaOperatorType::RightParentheses, BramaOperatorType::Comma]) {
                             Some(BramaOperatorType::RightParentheses) => continue_to_parse = false,  

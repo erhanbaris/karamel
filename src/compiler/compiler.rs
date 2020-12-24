@@ -1,6 +1,8 @@
 use std::vec::Vec;
 use std::rc::Rc;
 
+use ast::BramaDictItem;
+
 use crate::types::*;
 use crate::compiler::*;
 use crate::buildin::*;
@@ -64,6 +66,7 @@ impl InterpreterCompiler {
             BramaAstType::Block(asts)                                   => self.generate_block(asts, upper_ast, compiler_info, options, storage_index),
             BramaAstType::Primative(primative)                          => self.generate_primative(primative.clone(), compiler_info, upper_ast, options, storage_index),
             BramaAstType::List(list)                                    => self.generate_list(list, compiler_info, upper_ast, options, storage_index),
+            BramaAstType::Dict(dict)                                    => self.generate_dict(dict, compiler_info, upper_ast, options, storage_index),
             BramaAstType::FuncCall { names, arguments }                 => self.generate_func_call(names, arguments, upper_ast, compiler_info, options, storage_index),
             BramaAstType::PrefixUnary (operator, expression)            => self.generate_prefix_unary(operator, expression, upper_ast, compiler_info, options, storage_index),
             BramaAstType::SuffixUnary (operator, expression)            => self.generate_suffix_unary(operator, expression, upper_ast, compiler_info, options, storage_index),
@@ -97,6 +100,16 @@ impl InterpreterCompiler {
         }
         options.opcodes.push(VmOpCode::InitList as u8);
         options.opcodes.push(list.len() as u8);
+        Ok(0)
+    }
+
+    fn generate_dict(&self, dict: &Vec<Box<BramaDictItem>>, compiler_info: &mut CompileInfo, upper_ast: &BramaAstType, options: &mut BramaCompilerOption, storage_index: usize) -> CompilerResult {
+        for item in dict.iter().rev() {
+            self.generate_primative(item.key.clone(), compiler_info, upper_ast, options, storage_index)?;
+            self.generate_opcode(&item.value, upper_ast, compiler_info, options, storage_index)?;
+        }
+        options.opcodes.push(VmOpCode::InitDict as u8);
+        options.opcodes.push(dict.len() as u8);
         Ok(0)
     }
 

@@ -136,6 +136,17 @@ impl StorageBuilder {
                 return total_size
             },
 
+            BramaAstType::Dict(dict) => {
+                let mut total_size = 1;
+                for dict_item in dict {
+                    options.storages.get_mut(storage_index).unwrap().add_constant(dict_item.key.clone());
+                    total_size += self.get_temp_count_from_ast(&dict_item.value, ast, options, storage_index, compiler_option);
+                    total_size += 1;
+                }
+                compiler_option.max_stack = max(total_size, compiler_option.max_stack);
+                return total_size
+            },
+
             BramaAstType::Indexer { body, indexer } => {
                 let body_size = self.get_temp_count_from_ast(body, ast, options, storage_index, compiler_option);
                 let indexer_size = self.get_temp_count_from_ast(indexer, ast, options, storage_index, compiler_option);

@@ -2,6 +2,7 @@ use std::vec::Vec;
 use std::rc::Rc;
 use std::mem::ManuallyDrop;
 use std::fmt;
+use std::collections::HashMap;
 
 use crate::types::*;
 
@@ -19,6 +20,7 @@ pub enum BramaPrimative {
     Number(f64),
     Bool(bool),
     List(Vec<Rc<BramaPrimative>>),
+    Dict(HashMap<String, Rc<BramaPrimative>>),
     Atom(u64),
     Text(Rc<String>),
     FuncNativeCall(NativeCall)
@@ -33,7 +35,15 @@ impl BramaPrimative {
             BramaPrimative::Atom(_)           => true,
             BramaPrimative::List(items)       => items.len() > 0,
             BramaPrimative::FuncNativeCall(_) => true,
+            BramaPrimative::Dict(items) => items.len() > 0,
             BramaPrimative::Empty             => false
+        }
+    }
+
+    pub fn get_text(&self) -> String {
+        match self {
+            BramaPrimative::Text(value) => value.to_string(),
+            _ => "".to_string()
         }
     }
 }
@@ -74,6 +84,12 @@ impl From<Rc<BramaPrimative>> for VmObject {
     }
 }
 
+impl From<HashMap<String, Rc<BramaPrimative>>> for VmObject {
+    fn from(source: HashMap<String, Rc<BramaPrimative>>) -> Self {
+        VmObject::convert(Rc::new(BramaPrimative::Dict(source)))
+    }
+}
+
 impl fmt::Debug for BramaPrimative {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -82,6 +98,7 @@ impl fmt::Debug for BramaPrimative {
             BramaPrimative::FuncNativeCall(func) => write!(f, "func ({:p})", &func),
             BramaPrimative::Bool(b) => write!(f, "{:?}", b),
             BramaPrimative::List(b) => write!(f, "{:?}", b),
+            BramaPrimative::Dict(b) => write!(f, "{:?}", b),
             BramaPrimative::Atom(b) => write!(f, "{:?}", b),
             BramaPrimative::Text(b) => write!(f, "{:?}", b)
         }
@@ -111,6 +128,23 @@ impl PartialEq for BramaPrimative {
                 for i in 0..(*l_value).len() {
                     if (*l_value)[i].clone() != (*r_value)[i].clone() {
                         return false;
+                    }
+                }
+                return true;
+            },
+            (BramaPrimative::Dict(l_value),           BramaPrimative::Dict(r_value))       => {
+                if (*l_value).len() != (*r_value).len() {
+                    return false;
+                }
+
+                for (key, l_item) in l_value {
+                    match r_value.get(key) {
+                        Some(r_item) => {
+                            if l_item != r_item {
+                                return false;
+                            }
+                        },
+                        None => return false
                     }
                 }
                 return true;

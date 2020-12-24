@@ -264,4 +264,39 @@ yada veri:
 hataayıklama::doğrula(erhan, 'olmadi')
 "#);
 execute!(vm_90, r#"hataayıklama::doğrula([1,2,3,[4,5]], [1,2,3,[4,5]])"#);
+execute!(vm_91, r#"
+veri={
+    'veri1' : '1', 
+    'veri2' : 2
+}
+
+hataayıklama::doğrula(veri['veri1'], '1')
+hataayıklama::doğrula(veri['veri2'], 2)
+"#);
+execute!(vm_92, r#"
+veri1 = {
+    'veri1' : '1', 
+    'veri2' : 2
+}
+
+veri2 = {
+    'veri1' : '1', 
+    'veri2' : 2
+}
+
+hataayıklama::doğrula(veri1 == veri2)
+"#);
+execute!(vm_93, r#"
+veri1 = {
+    'veri1' : '1', 
+    'veri2' : 2
+}
+
+veri2 = {
+    'veri1' : '2', 
+    'veri2' : 2
+}
+
+hataayıklama::doğrula(veri1 != veri2)
+"#);
 }

@@ -7,7 +7,7 @@
  - Bool (*doğru*, *yanlış*)
  - Atom (*:bilgi*, *:başarılı*, *:hatalı*)
  - Liste (*[1,2,3]*, *[]*, *[:kayıt_başarılı, 'Kullanıcı Bilgisi']*)
- - Sözlük (*(ad:'erhan', soyad:'barış')*)
+ - Sözlük (*{'ad':'erhan', 'soyad':'barış'}*)
 
 ### Döngü
 döngü 'a'..'z' kadar a kullan:  

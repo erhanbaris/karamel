@@ -14,24 +14,24 @@ pub struct UnaryParser;
 
 impl SyntaxParserTrait for UnaryParser {
     fn parse(parser: &SyntaxParser) -> AstResult {
-        let ast = map_parser(parser, &[Self::parse_prefix_unary, Self::parse_suffix_unary, FuncCallParser::parse, PrimativeParser::parse]);
+        let ast = map_parser(parser, &[Self::parse_prefix_unary, Self::parse_suffix_unary, FuncCallParser::parse, PrimativeParser::parse])?;
         
         parser.backup();
-        parser.clear_whitespaces();
+        parser.cleanup_whitespaces();
         
         if parser.match_operator(&[BramaOperatorType::SquareBracketStart]).is_some() {
-            parser.clear_whitespaces();
+            parser.cleanup_whitespaces();
 
             let indexer_ast = ExpressionParser::parse(parser);
-            parser.clear_whitespaces();
+            parser.cleanup_whitespaces();
 
             if parser.match_operator(&[BramaOperatorType::SquareBracketEnd]).is_some() && !is_ast_empty(&indexer_ast) {
-                return Ok(BramaAstType::Indexer { body: Box::new(ast.unwrap()), indexer: Box::new(indexer_ast.unwrap()) });   
+                return Ok(BramaAstType::Indexer { body: Box::new(ast), indexer: Box::new(indexer_ast.unwrap()) });   
             }
         }
 
         parser.restore();
-        return ast;
+        return Ok(ast);
     }
 }
 
@@ -42,7 +42,7 @@ impl UnaryParser {
             Ok(token) => {
                 if token.token_type.is_symbol() {
                     parser.consume_token();
-                    parser.clear_whitespaces();
+                    parser.cleanup_whitespaces();
 
                     if let Some(operator) = parser.match_operator(&[
                         BramaOperatorType::Increment,
@@ -65,7 +65,7 @@ impl UnaryParser {
             BramaOperatorType::Increment,
             BramaOperatorType::Deccrement,
             BramaOperatorType::Not]) {
-            parser.clear_whitespaces();
+            parser.cleanup_whitespaces();
 
             let mut unary_ast = BramaAstType::None;
             let token         = &parser.peek_token().unwrap();

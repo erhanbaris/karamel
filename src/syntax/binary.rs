@@ -35,9 +35,9 @@ pub fn parse_binary<T: SyntaxParserTrait>(parser: &SyntaxParser, operators: &[Br
 
     loop {
         parser.backup();
-        parser.clear_whitespaces();
+        parser.cleanup_whitespaces();
         if let Some(operator) = parser.match_operator(operators) {
-            parser.clear_whitespaces();
+            parser.cleanup_whitespaces();
             
             let right_expr = T::parse(parser);
             match right_expr {

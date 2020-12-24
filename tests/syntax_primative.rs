@@ -6,7 +6,7 @@ mod tests {
     use crate::tpd::types::*;
     use crate::tpd::syntax::*;
     use crate::tpd::compiler::value::BramaPrimative;
-    use crate::tpd::compiler::ast::BramaAstType;
+    use crate::tpd::compiler::ast::*;
     use std::rc::Rc;
 
     #[warn(unused_macros)]
@@ -67,6 +67,40 @@ mod tests {
     test_success!(atom_2, ":dünya", Ok(BramaAstType::Primative(Rc::new(BramaPrimative::Atom("dünya".atom())))));
     test_success!(atom_3, ":_", Ok(BramaAstType::Primative(Rc::new(BramaPrimative::Atom("_".atom())))));
     test_success!(atom_4, ":__1__", Ok(BramaAstType::Primative(Rc::new(BramaPrimative::Atom("__1__".atom())))));
+
+    test_success!(dict_1, "{}", Ok(BramaAstType::Dict([].to_vec())));
+    test_success!(dict_2, "{'1':1}", Ok(BramaAstType::Dict([Box::new(BramaDictItem {
+        key: Rc::new(BramaPrimative::Text(Rc::new("1".to_string()))),
+        value: Rc::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(1.0))))
+    })].to_vec())));
+    test_success!(dict_3, r#"{
+        '1' : 1, 
+        '2': 2
+}"#, Ok(BramaAstType::Dict([Box::new(BramaDictItem {
+        key: Rc::new(BramaPrimative::Text(Rc::new("1".to_string()))),
+        value: Rc::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(1.0))))
+    }),
+    Box::new(BramaDictItem {
+        key: Rc::new(BramaPrimative::Text(Rc::new("2".to_string()))),
+        value: Rc::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(2.0))))
+    })].to_vec())));
+    test_success!(dict_4, r#"{
+        '1': 1, 
+        '2': 2,
+        '1': 2
+}"#, Ok(BramaAstType::Dict([Box::new(BramaDictItem {
+        key: Rc::new(BramaPrimative::Text(Rc::new("1".to_string()))),
+        value: Rc::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(1.0))))
+    }),
+    Box::new(BramaDictItem {
+        key: Rc::new(BramaPrimative::Text(Rc::new("2".to_string()))),
+        value: Rc::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(2.0))))
+    }),
+    Box::new(BramaDictItem {
+        key: Rc::new(BramaPrimative::Text(Rc::new("1".to_string()))),
+        value: Rc::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(2.0))))
+    })].to_vec())));
+    
 
     test_success!(list_1, "[]", Ok(BramaAstType::List([].to_vec())));
     test_success!(list_2, "[1]", Ok(BramaAstType::List([Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(1.0))))].to_vec())));
