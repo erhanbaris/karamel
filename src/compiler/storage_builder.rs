@@ -5,6 +5,7 @@ use crate::compiler::Storage;
 use crate::compiler::ast::BramaAstType;
 use crate::compiler::value::BramaPrimative;
 use crate::compiler::BramaCompilerOption;
+use crate::compiler::static_storage::StaticStorage;
 use crate::types::BramaOperatorType;
 pub struct StorageBuilder;
 pub struct CompilerOption {
@@ -24,7 +25,7 @@ impl StorageBuilder {
         options.storages[0].build();
     }
 
-    fn get_temp_count_from_ast(&self, ast: &BramaAstType, _: &BramaAstType, options: &mut BramaCompilerOption, storage_index: usize, compiler_option: &mut CompilerOption) -> u8 {
+    fn get_temp_count_from_ast(&self, ast: &BramaAstType, upper_ast: &BramaAstType, options: &mut BramaCompilerOption, storage_index: usize, compiler_option: &mut CompilerOption) -> u8 {
         let temp_count = match ast {
             BramaAstType::Binary {
                 left,
@@ -153,6 +154,18 @@ impl StorageBuilder {
 
                 compiler_option.max_stack = max(indexer_size + body_size, compiler_option.max_stack);
                 indexer_size + body_size
+            },
+
+            BramaAstType::FunctionDefination { name, arguments, body } => {
+                /* Create new storage for new function */
+                let mut function_compiler_option = CompilerOption { max_stack: 0 };
+                let storage_index = options.storages.len();
+                options.storages.push(StaticStorage::new());
+                self.get_temp_count_from_ast(body, ast, options, storage_index, &mut function_compiler_option);
+                
+                options.storages[storage_index].set_temp_size(function_compiler_option.max_stack);
+                options.storages[storage_index].build();
+                0
             },
 
             BramaAstType::IfStatement {

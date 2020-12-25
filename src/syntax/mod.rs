@@ -10,6 +10,7 @@ pub mod newline;
 pub mod if_condition;
 pub mod statement;
 pub mod function_defination;
+pub mod function_return;
 
 use std::vec::Vec;
 use std::cell::Cell;
@@ -18,6 +19,8 @@ use crate::types::*;
 use self::block::MultiLineBlockParser;
 use crate::compiler::ast::BramaAstType;
 
+use bitflags::bitflags;
+
 pub type ParseType = fn(parser: &SyntaxParser) -> AstResult;
 
 pub struct SyntaxParser {
@@ -25,7 +28,15 @@ pub struct SyntaxParser {
     pub index: Cell<usize>,
     pub backup_index: Cell<usize>,
     pub indentation: Cell<usize>,
-    pub setable_indentation: Cell<bool>
+    pub flags: Cell<SyntaxFlag>
+}
+
+bitflags! {
+    pub struct SyntaxFlag: u32 {
+        const NONE                = 0b00000000;
+        const FUNCTION_DEFINATION = 0b00000001;
+        const LOOP                = 0b00000010;
+    }
 }
 
 pub trait SyntaxParserTrait {
@@ -39,7 +50,7 @@ impl SyntaxParser {
             index: Cell::new(0),
             backup_index: Cell::new(0),
             indentation: Cell::new(0),
-            setable_indentation: Cell::new(false)
+            flags: Cell::new(SyntaxFlag::NONE)
         }
     }
 
@@ -67,7 +78,6 @@ impl SyntaxParser {
 
     pub fn set_indentation(&self, indentation: usize) {
         self.indentation.set(indentation);
-        self.setable_indentation.set(false);
     }
 
     pub fn get_indentation(&self) -> usize {
@@ -161,41 +171,6 @@ impl SyntaxParser {
 
                 if done {
                     break;
-                }
-
-                self.consume_token();
-            }
-            else {
-                break;
-            }
-        }
-    }
-
-    fn cleanup_newlines(&self) {
-        if self.next_token().is_err() {
-            return;
-        }
-
-        loop {
-            if let Ok(current_token) = self.peek_token() {
-                
-                let success = match current_token.token_type {
-                    BramaTokenType::NewLine(_) => {
-                        if self.next_token().is_err() {
-                            false
-                        }
-                        else {
-                            match &self.next_token().unwrap().token_type {
-                                BramaTokenType::NewLine(_) => true,
-                                _                          => false
-                            }
-                        }
-                    },
-                    _ => break
-                };
-
-                if !success {
-                    return;
                 }
 
                 self.consume_token();

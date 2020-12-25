@@ -108,4 +108,34 @@ test_compare!(func_def_13, r#"
 fn test(1):
   a=1
 "#, Err(("Argument must be a text", 0, 0)));
+test_compare!(func_def_14, r#"
+test=1
+döndür test
+"#, Err(("return must be used in function", 0, 0)));
+test_compare!(func_def_15, r#"
+fn test():
+    erhan=123
+    return erhan"#, Ok(BramaAstType::FunctionDefination {
+    name: "test".to_string(),
+    arguments: [].to_vec(),
+    body: Box::new(BramaAstType::Block([BramaAstType::Assignment {
+        variable: Rc::new("erhan".to_string()),
+        operator: BramaOperatorType::Assign,
+        expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123.0))))
+    },
+    BramaAstType::Return(Box::new(BramaAstType::Symbol("erhan".to_string())))].to_vec()))
+}));
+test_compare!(func_def_16, r#"
+fn test():
+    erhan=123
+    return"#, Ok(BramaAstType::FunctionDefination {
+    name: "test".to_string(),
+    arguments: [].to_vec(),
+    body: Box::new(BramaAstType::Block([BramaAstType::Assignment {
+        variable: Rc::new("erhan".to_string()),
+        operator: BramaOperatorType::Assign,
+        expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123.0))))
+    },
+    BramaAstType::Return(Box::new(BramaAstType::None))].to_vec()))
+}));
 }

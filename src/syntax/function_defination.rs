@@ -1,5 +1,5 @@
 use crate::types::*;
-use crate::syntax::{SyntaxParser, SyntaxParserTrait};
+use crate::syntax::{SyntaxParser, SyntaxParserTrait, SyntaxFlag};
 use crate::syntax::primative::PrimativeParser;
 use crate::compiler::ast::{BramaAstType};
 use crate::syntax::block::{SingleLineBlockParser, MultiLineBlockParser};
@@ -13,6 +13,8 @@ impl SyntaxParserTrait for FunctionDefinationParser {
 
         if parser.match_keyword(BramaKeywordType::Fn) {
             let indentation = parser.get_indentation();
+            let parser_flags  = parser.flags.get();
+
             parser.cleanup_whitespaces();
 
             let mut arguments = Vec::new();
@@ -57,6 +59,7 @@ impl SyntaxParserTrait for FunctionDefinationParser {
             }
 
             parser.cleanup_whitespaces();
+            parser.flags.set(parser_flags | SyntaxFlag::FUNCTION_DEFINATION);
 
             let body = match parser.get_newline() {
                 (true, _) => {
@@ -65,7 +68,9 @@ impl SyntaxParserTrait for FunctionDefinationParser {
                 },
                 (false, _) => SingleLineBlockParser::parse(parser)
             }?;
+            
             parser.set_indentation(indentation);
+            parser.flags.set(parser_flags);
 
             if body == BramaAstType::None {
                 return Err(("Function condition body not found", 0, 0));

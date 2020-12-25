@@ -71,7 +71,8 @@ impl InterpreterCompiler {
             BramaAstType::PrefixUnary (operator, expression)            => self.generate_prefix_unary(operator, expression, upper_ast, compiler_info, options, storage_index),
             BramaAstType::SuffixUnary (operator, expression)            => self.generate_suffix_unary(operator, expression, upper_ast, compiler_info, options, storage_index),
             BramaAstType::NewLine                                       => Ok(0),
-            BramaAstType::FunctionDefination{name, arguments, body}                                       => Ok(0),
+            BramaAstType::Return(_)                                       => Ok(0),
+            BramaAstType::FunctionDefination{name, arguments, body}                                       => self.generate_function_defination(name, arguments, body, upper_ast, compiler_info, options, storage_index),
             BramaAstType::IfStatement {condition, body, else_body, else_if} => self.generate_if_condition(condition, body, else_body, else_if, upper_ast, compiler_info, options, storage_index),
             BramaAstType::Indexer {body, indexer}                           => self.generate_indexer(body, indexer, upper_ast, compiler_info, options, storage_index),
             BramaAstType::None => {
@@ -288,6 +289,10 @@ impl InterpreterCompiler {
         let current_location = options.opcodes.len() - jump_location;
         options.opcodes[jump_location]     = current_location as u8;
         options.opcodes[jump_location + 1] = (current_location >> 8) as u8;
+    }
+
+    fn generate_function_defination(&self, name: &String, arguments: &Vec<String>, body: &BramaAstType, upper_ast: &BramaAstType, compiler_info: &mut CompileInfo, options: &mut BramaCompilerOption, storage_index: usize) -> CompilerResult {
+        return Ok(0);
     }
 
     fn generate_if_condition(&self, condition: &BramaAstType, body: &BramaAstType, else_body: &Option<Box<BramaAstType>>, else_if: &Vec<Box<BramaIfStatementElseItem>>, upper_ast: &BramaAstType, compiler_info: &mut CompileInfo, options: &mut BramaCompilerOption, storage_index: usize) -> CompilerResult {

@@ -76,5 +76,6 @@ pub enum BramaAstType {
     Symbol(String),
     List(Vec<Box<BramaAstType>>),
     Dict(Vec<Box<BramaDictItem>>),
-    Indexer { body: Box<BramaAstType>, indexer: Box<BramaAstType> }
+    Indexer { body: Box<BramaAstType>, indexer: Box<BramaAstType> },
+    Return(Box<BramaAstType>)
 }

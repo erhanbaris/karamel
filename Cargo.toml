@@ -15,6 +15,8 @@ default = ["dumpOpcodes", "dumpMemory", "dumpExecutionOpcode"]
 
 [dependencies]
 wasm-bindgen = "0.2"
+bitflags = "1.2"
+
 
 [lib]
 crate-type = ["cdylib", "rlib"]
