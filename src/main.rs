@@ -1,3 +1,6 @@
+#[macro_use]
+extern crate bitflags;
+
 mod types;
 mod parser;
 mod syntax;
@@ -24,8 +27,14 @@ pub fn greet(name: &str) {
 #[cfg(not(feature = "wasmBuild"))]
 fn main() {
     vm::executer::code_executer(&r#"
-erhan=[1,2,3, 'erhan']
-barış=[erhan, 1,2,3]
-gç::satıryaz(erhan[0] + erhan[1] + erhan[2])
+fn test:
+    gç::satıryaz("123")
+    erhan=123
+    gç::satıryaz(1024 * 12)
+    gç::satıryaz(erhan)
+
+gç::satıryaz('Oncesi')
+test()
+gç::satıryaz('Sonrası')
 "#.to_string());
 }

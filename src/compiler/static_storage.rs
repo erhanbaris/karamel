@@ -6,7 +6,6 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 
-#[derive(PartialEq, Debug)]
 pub struct StaticStorage {
     pub constants             : Vec<VmObject>,
     pub constant_size         : u8,
@@ -14,8 +13,9 @@ pub struct StaticStorage {
     pub temp_counter          : u8,
     pub variables             : HashMap<String, u8>,
     pub memory                : Rc<RefCell<Vec<VmObject>>>,
-    pub stack                : Rc<RefCell<Vec<VmObject>>>,
-    pub total_const_variables : u8
+    pub stack                 : Rc<RefCell<Vec<VmObject>>>,
+    pub total_const_variables : u8,
+    pub functions             : HashMap<String, Rc<FunctionInformation>>
 }
 
 
@@ -39,7 +39,8 @@ impl Storage for StaticStorage {
             total_const_variables: 0,
             memory: Rc::new(RefCell::new(Vec::new())),
             stack: Rc::new(RefCell::new(Vec::new())),
-            variables: HashMap::new()
+            variables: HashMap::new(),
+            functions: HashMap::new()
         }
     }
 
@@ -85,6 +86,10 @@ impl Storage for StaticStorage {
     fn inc_temp_counter(&mut self)    { self.temp_counter += 1; }
     fn reset_temp_counter(&mut self)  { self.temp_counter = 0; }
 
+    fn add_function(&mut self, name: &String, information: Rc<FunctionInformation>) {
+        self.functions.insert(name.to_string(), information);
+    }
+
     fn add_constant(&mut self, value: Rc<BramaPrimative>) {
         let has = self.constants.iter().any(|x| {
             *x.deref() == *value
@@ -111,6 +116,13 @@ impl Storage for StaticStorage {
             },
             _ => ()
         };
+    }
+
+    fn get_function(&self, name: &String) -> Option<Rc<FunctionInformation>> {
+        if self.functions.contains_key(name) {
+            return Some(self.functions.get(name).unwrap().clone());
+        }
+        return None;
     }
 
     fn get_variable_location(&self, name: &String) -> Option<u8> {

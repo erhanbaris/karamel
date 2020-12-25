@@ -1,5 +1,4 @@
 use crate::types::*;
-use crate::syntax::util::*;
 use crate::syntax::{SyntaxParser, SyntaxParserTrait, SyntaxFlag};
 use crate::compiler::ast::BramaAstType;
 use crate::syntax::control::ExpressionParser;

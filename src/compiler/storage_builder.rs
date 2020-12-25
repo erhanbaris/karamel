@@ -1,7 +1,10 @@
 use std::rc::Rc;
 use std::cmp::max;
+use std::cell::Cell;
+use std::cell::RefCell;
 
 use crate::compiler::Storage;
+use crate::compiler::FunctionInformation;
 use crate::compiler::ast::BramaAstType;
 use crate::compiler::value::BramaPrimative;
 use crate::compiler::BramaCompilerOption;
@@ -25,7 +28,7 @@ impl StorageBuilder {
         options.storages[0].build();
     }
 
-    fn get_temp_count_from_ast(&self, ast: &BramaAstType, upper_ast: &BramaAstType, options: &mut BramaCompilerOption, storage_index: usize, compiler_option: &mut CompilerOption) -> u8 {
+    fn get_temp_count_from_ast(&self, ast: &BramaAstType, _: &BramaAstType, options: &mut BramaCompilerOption, storage_index: usize, compiler_option: &mut CompilerOption) -> u8 {
         let temp_count = match ast {
             BramaAstType::Binary {
                 left,
@@ -122,6 +125,12 @@ impl StorageBuilder {
                 1 /* Variables */
             },
 
+            BramaAstType::Return(expression) => {
+                self.get_temp_count_from_ast(expression, ast, options, storage_index, compiler_option);
+                compiler_option.max_stack = max(1, compiler_option.max_stack);
+                1
+            },
+
             BramaAstType::Primative(primative) => {
                 options.storages.get_mut(storage_index).unwrap().add_constant(Rc::clone(primative));
                 compiler_option.max_stack = max(1, compiler_option.max_stack);
@@ -159,12 +168,20 @@ impl StorageBuilder {
             BramaAstType::FunctionDefination { name, arguments, body } => {
                 /* Create new storage for new function */
                 let mut function_compiler_option = CompilerOption { max_stack: 0 };
-                let storage_index = options.storages.len();
+                let new_storage_index = options.storages.len();
+                let function_information = Rc::new(FunctionInformation {
+                    name: name.to_string(),
+                    opcode_location: Cell::new(0),
+                    used_locations: RefCell::new(Vec::new()),
+                    storage_index: new_storage_index as u16
+                });
+
+                options.storages[storage_index].add_function(name, function_information);
                 options.storages.push(StaticStorage::new());
-                self.get_temp_count_from_ast(body, ast, options, storage_index, &mut function_compiler_option);
+                self.get_temp_count_from_ast(body, ast, options, new_storage_index, &mut function_compiler_option);
                 
-                options.storages[storage_index].set_temp_size(function_compiler_option.max_stack);
-                options.storages[storage_index].build();
+                options.storages[new_storage_index].set_temp_size(function_compiler_option.max_stack + arguments.len() as u8);
+                options.storages[new_storage_index].build();
                 0
             },
 

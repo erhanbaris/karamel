@@ -12,10 +12,18 @@ pub use self::value::*;
 use crate::types::*;
 
 use std::cell::RefCell;
+use std::cell::Cell;
 use std::rc::Rc;
 use std::vec::Vec;
 use std::mem;
 use std::fmt;
+
+pub struct FunctionInformation {
+    pub name: String,
+    pub opcode_location: Cell<u16>,
+    pub used_locations: RefCell<Vec<u16>>,
+    pub storage_index: u16
+}
 
 pub trait Storage {
 
@@ -35,10 +43,12 @@ pub trait Storage {
     fn inc_temp_counter(&mut self);
     fn reset_temp_counter(&mut self);
 
+    fn add_function(&mut self, name: &String, information: Rc<FunctionInformation>);
     fn add_variable(&mut self, name: &String) -> u8;
     fn set_variable_value(&mut self, name: &String, object: VmObject);
     fn add_constant(&mut self, object: Rc<BramaPrimative>);
 
+    fn get_function(&self, name: &String) -> Option<Rc<FunctionInformation>>;
     fn get_variable_location(&self, name: &String) -> Option<u8>;
     fn get_variable_value(&self, name: &String) -> Option<Rc<BramaPrimative>>;
 
@@ -104,7 +114,11 @@ pub enum VmOpCode {
     LessThan,
     GreaterEqualThan,
     LessEqualThan,
+
+    Func,
     NativeCall,
+    Call,
+    Return,
 
     Increment,
     Decrement,

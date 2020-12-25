@@ -61,20 +61,41 @@ impl SyntaxParserTrait for FunctionDefinationParser {
             parser.cleanup_whitespaces();
             parser.flags.set(parser_flags | SyntaxFlag::FUNCTION_DEFINATION);
 
-            let body = match parser.get_newline() {
+            let mut body = match parser.get_newline() {
                 (true, _) => {
                     parser.in_indication()?;
                     MultiLineBlockParser::parse(parser)
                 },
                 (false, _) => SingleLineBlockParser::parse(parser)
             }?;
-            
+
+            let has_return = match &body {
+                BramaAstType::Return(_) => true,
+                BramaAstType::Block(blocks) => {
+                    if let BramaAstType::Return(_) = blocks[blocks.len() - 1] {
+                        true
+                    } else {
+                        false
+                    }
+                },
+                BramaAstType::None => return Err(("Function condition body not found", 0, 0)),
+                _ => false
+            };
+
+            if !has_return {
+                body = match body {
+                    BramaAstType::Block(mut blocks) => {
+                        blocks.push(BramaAstType::Return(Box::new(BramaAstType::None)));
+                        BramaAstType::Block(blocks)
+                    },
+                    _ => {
+                        BramaAstType::Block([body, BramaAstType::Return(Box::new(BramaAstType::None))].to_vec())
+                    }
+                }
+            }
+
             parser.set_indentation(indentation);
             parser.flags.set(parser_flags);
-
-            if body == BramaAstType::None {
-                return Err(("Function condition body not found", 0, 0));
-            }
 
             let function_defination_ast = BramaAstType::FunctionDefination {
                 name: name.to_string(),
