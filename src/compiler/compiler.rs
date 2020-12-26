@@ -18,6 +18,13 @@ pub struct BramaCompilerOption {
     pub functions_compiled: bool
 }
 
+pub struct FunctionDefine {
+    name: String,
+    arguments: Vec<String>,
+    body: Rc<BramaAstType>,
+    storage_index: usize
+}
+
 impl  BramaCompilerOption {
     pub fn new() -> BramaCompilerOption {
         BramaCompilerOption {
@@ -54,9 +61,9 @@ impl Compiler for InterpreterCompiler {
         
         /* First part of the codes are functions */
 
-        /*let mut functions = Vec::new();
-        self.find_function_definations(ast, &mut functions);*/
-        self.generate_functions(ast, options, 0)?;
+        let mut functions = Vec::new();
+        self.find_function_definations(ast, &mut functions, options, 0);
+        self.generate_functions(&functions, options)?;
         options.functions_compiled = true;
         
         /* If there are no function defination, remove previous opcodes */
@@ -93,46 +100,41 @@ impl Compiler for InterpreterCompiler {
 }
 
 impl InterpreterCompiler {
-    /*fn find_function_definations(&self, ast: &BramaAstType, functions: &mut Vec<BramaAstType>) {
+    fn find_function_definations(&self, ast: &BramaAstType, functions: &mut Vec<FunctionDefine>, options: &mut BramaCompilerOption, storage_index: usize) {
         match ast {
             BramaAstType::FunctionDefination { name, arguments, body  } => {
-                functions.push(BramaAstType::FunctionDefination{
-                    name: name.to_string(),
-                    arguments: arguments.to_vec(),
-                    body: body
-                });
-                self.find_function_definations(body, functions);
-            },
-            BramaAstType::Block(blocks) => {
-                for block in blocks {
-                    self.find_function_definations(&block, functions);
-                }
-            },
-            _ => ()
-        };
-    }*/
 
-    fn generate_functions(&self, ast: &BramaAstType, options: &mut BramaCompilerOption, storage_index: usize) -> CompilerResult {
-        match ast {
-            BramaAstType::FunctionDefination { name, arguments: _, body } => {
                 if let Some(information) = options.storages[storage_index].get_function(name) {
-                    options.opcodes.push(VmOpCode::Func as u8);
-                    (*information).opcode_location.set(options.opcodes.len() as u16);
-                    options.opcodes.push(information.storage_index as u8);
-                    options.opcodes.push((information.storage_index >> 8) as u8);
-
-                    self.generate_opcode(body, ast, options, information.storage_index as usize)?;
-                } else {
-                    return Err("Storage not found");
+                    functions.push(FunctionDefine {
+                        name: name.to_string(),
+                        arguments: arguments.to_vec(),
+                        body: body.clone(),
+                        storage_index: storage_index
+                    });
+                    self.find_function_definations(body, functions, options, information.storage_index as usize);
                 }
             },
             BramaAstType::Block(blocks) => {
                 for block in blocks {
-                    self.generate_functions(&block, options, storage_index)?;
+                    self.find_function_definations(&block, functions, options, storage_index);
                 }
             },
             _ => ()
         };
+    }
+
+    fn generate_functions(&self, functions: &Vec<FunctionDefine>, options: &mut BramaCompilerOption) -> CompilerResult {
+        
+        for function in functions {
+            if let Some(information) = options.storages[function.storage_index].get_function(&function.name) {
+                options.opcodes.push(VmOpCode::Func as u8);
+                (*information).opcode_location.set(options.opcodes.len() as u16);
+                options.opcodes.push(information.storage_index as u8);
+                options.opcodes.push((information.storage_index >> 8) as u8);
+
+                self.generate_opcode(&function.body, &function.body, options, information.storage_index as usize)?;
+            } 
+        }
 
         Ok(0)
     }
@@ -155,12 +157,7 @@ impl InterpreterCompiler {
             BramaAstType::IfStatement {condition, body, else_body, else_if} => self.generate_if_condition(condition, body, else_body, else_if, upper_ast, options, storage_index),
             BramaAstType::Indexer {body, indexer}                           => self.generate_indexer(body, indexer, upper_ast, options, storage_index),
             BramaAstType::None => self.generate_none(options, storage_index),
-            BramaAstType::FunctionDefination{name: _, arguments: _, body: _} => {
-                if options.functions_compiled == false {
-                    return self.generate_functions(ast, options, storage_index);
-                }
-                Ok(0)
-            }
+            BramaAstType::FunctionDefination{name: _, arguments: _, body: _} => Ok(0)
         }
     }
 

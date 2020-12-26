@@ -3,6 +3,7 @@ use crate::syntax::{SyntaxParser, SyntaxParserTrait, SyntaxFlag};
 use crate::syntax::primative::PrimativeParser;
 use crate::compiler::ast::{BramaAstType};
 use crate::syntax::block::{SingleLineBlockParser, MultiLineBlockParser};
+use std::rc::Rc;
 
 pub struct FunctionDefinationParser;
 
@@ -99,7 +100,7 @@ impl SyntaxParserTrait for FunctionDefinationParser {
 
             let function_defination_ast = BramaAstType::FunctionDefination {
                 name: name.to_string(),
-                body: Box::new(body),
+                body: Rc::new(body),
                 arguments: arguments.to_vec()
             };
 

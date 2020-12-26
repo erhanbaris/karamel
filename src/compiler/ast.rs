@@ -72,7 +72,7 @@ pub enum BramaAstType {
     FunctionDefination {
         name: String,
         arguments: Vec<String>,
-        body: Box<BramaAstType>
+        body: Rc<BramaAstType>
     },
     Symbol(String),
     List(Vec<Box<BramaAstType>>),

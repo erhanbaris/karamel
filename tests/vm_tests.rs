@@ -346,5 +346,15 @@ fn test_2:
     döndür test_1()
 hataayıklama::doğrula(test_2() + " barış", 'erhan barış')
 "#);
+execute!(vm_102, r#"
+fn test:
+    fn test_erhan:
+        döndür 'erhan'
 
+    fn test_barış:
+        döndür 'barış'
+
+    döndür test_erhan() + " " + test_barış()
+hataayıklama::doğrula(test(), 'erhan barış')
+"#);
 }
