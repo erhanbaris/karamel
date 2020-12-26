@@ -16,9 +16,14 @@ impl SyntaxParserTrait for FunctionReturnParser {
             }
 
             parser.cleanup_whitespaces();
+
+            let parser_flags  = parser.flags.get();
+            parser.flags.set(parser_flags | SyntaxFlag::IN_RETURN);
             
             let ast = ExpressionParser::parse(parser)?;
             let return_ast = BramaAstType::Return(Box::new(ast));
+            parser.flags.set(parser_flags);
+
             return Ok(return_ast);
         }
 

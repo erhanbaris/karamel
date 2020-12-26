@@ -25,6 +25,7 @@ impl StorageBuilder {
         let mut compiler_option = CompilerOption { max_stack: 0 };
         self.get_temp_count_from_ast(ast, &BramaAstType::None, options, 0, &mut compiler_option);
         options.storages[0].set_temp_size(compiler_option.max_stack);
+        options.storages[0].set_parent_index(usize::MAX);
         options.storages[0].build();
     }
 
@@ -71,7 +72,9 @@ impl StorageBuilder {
                 operator,
                 expression} =>  {
                 options.storages.get_mut(storage_index).unwrap().add_variable(&*variable);
-                self.get_temp_count_from_ast(expression, ast, options, storage_index, compiler_option);
+                
+                let stack_size = self.get_temp_count_from_ast(expression, ast, options, storage_index, compiler_option);
+                compiler_option.max_stack = max(stack_size, compiler_option.max_stack);
                 
                 let size = match *operator {
                     BramaOperatorType::Assign => 0,
@@ -105,7 +108,7 @@ impl StorageBuilder {
 ║   Function Pointer   ║
 ╚══════════════════════╝
  */
-            BramaAstType::FuncCall{ names, arguments } => {
+            BramaAstType::FuncCall{ names, arguments, assign_to_temp } => {
 
                 /* Need to allocate space for function arguments */
                 let mut max_temp = 0 as u8;
@@ -121,8 +124,14 @@ impl StorageBuilder {
                     /* Add function pointer to consts */
                     options.storages.get_mut(storage_index).unwrap().add_constant(Rc::new(BramaPrimative::FuncNativeCall(function)));
                 }
-
-                1 /* Variables */
+                
+                /* Variables */
+                if *assign_to_temp {
+                    max_temp + 1
+                }
+                else {
+                    max_temp
+                }
             },
 
             BramaAstType::Return(expression) => {
@@ -180,6 +189,7 @@ impl StorageBuilder {
                 options.storages.push(StaticStorage::new());
                 self.get_temp_count_from_ast(body, ast, options, new_storage_index, &mut function_compiler_option);
                 
+                options.storages[new_storage_index].set_parent_index(storage_index);
                 options.storages[new_storage_index].set_temp_size(function_compiler_option.max_stack + arguments.len() as u8);
                 options.storages[new_storage_index].build();
                 0
@@ -201,7 +211,12 @@ impl StorageBuilder {
                     
                     compiler_option.max_stack = max(0, total);
                     total
-                }
+                },
+
+                BramaAstType::None => {
+                    options.storages.get_mut(storage_index).unwrap().add_constant(Rc::new(BramaPrimative::Empty));
+                    1
+                },
             _ => 0
         };
         return temp_count;

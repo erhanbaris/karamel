@@ -37,7 +37,8 @@ pub trait Storage {
     fn get_temp_size(&self) -> u8;
     fn get_free_temp_slot(&mut self) -> u8;
     fn set_temp_size(&mut self, value: u8);
-
+    fn set_parent_index(&mut self, parent_index: usize);
+    fn get_parent_index(&self) -> usize;
     fn get_temp_counter(&self) -> u8;
     fn set_temp_counter(&mut self, counter: u8);
     fn inc_temp_counter(&mut self);

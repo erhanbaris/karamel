@@ -31,44 +31,48 @@ fn test():
     erhan=123"#, Ok(BramaAstType::FunctionDefination {
         name: "test".to_string(),
         arguments: [].to_vec(),
-        body: Box::new(BramaAstType::Assignment {
+        body: Box::new(BramaAstType::Block([BramaAstType::Assignment {
             variable: Rc::new("erhan".to_string()),
             operator: BramaOperatorType::Assign,
             expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123.0))))
-        })
+        },
+        BramaAstType::Return(Box::new(BramaAstType::None))].to_vec()))
     }));
     test_compare!(func_def_2, r#"
 fn test(a):
     erhan=123"#, Ok(BramaAstType::FunctionDefination {
         name: "test".to_string(),
         arguments: ["a".to_string()].to_vec(),
-        body: Box::new(BramaAstType::Assignment {
+        body: Box::new(BramaAstType::Block([BramaAstType::Assignment {
             variable: Rc::new("erhan".to_string()),
             operator: BramaOperatorType::Assign,
             expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123.0))))
-        })
+        },
+        BramaAstType::Return(Box::new(BramaAstType::None))].to_vec()))
     }));
     test_compare!(func_def_3, r#"
 fn test(a, b    ,   c):
     erhan=123"#, Ok(BramaAstType::FunctionDefination {
         name: "test".to_string(),
         arguments: ["a".to_string(), "b".to_string(), "c".to_string()].to_vec(),
-        body: Box::new(BramaAstType::Assignment {
+        body: Box::new(BramaAstType::Block([BramaAstType::Assignment {
             variable: Rc::new("erhan".to_string()),
             operator: BramaOperatorType::Assign,
             expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123.0))))
-        })
+        },
+        BramaAstType::Return(Box::new(BramaAstType::None))].to_vec()))
     }));
     test_compare!(func_def_4, r#"
 fn test:
     erhan=123"#, Ok(BramaAstType::FunctionDefination {
             name: "test".to_string(),
             arguments: [].to_vec(),
-            body: Box::new(BramaAstType::Assignment {
+            body: Box::new(BramaAstType::Block([BramaAstType::Assignment {
                 variable: Rc::new("erhan".to_string()),
                 operator: BramaOperatorType::Assign,
                 expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123.0))))
-            })
+            },
+            BramaAstType::Return(Box::new(BramaAstType::None))].to_vec()))
         }));
         test_compare!(func_def_6, r#"
 fn test   :
@@ -78,11 +82,12 @@ fn test   :
         erhan=123"#, Ok(BramaAstType::FunctionDefination {
                 name: "test".to_string(),
                 arguments: [].to_vec(),
-                body: Box::new(BramaAstType::Assignment {
+                body: Box::new(BramaAstType::Block([BramaAstType::Assignment {
                     variable: Rc::new("erhan".to_string()),
                     operator: BramaOperatorType::Assign,
                     expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123.0))))
-                })
+                },
+                BramaAstType::Return(Box::new(BramaAstType::None))].to_vec()))
             }));
             test_compare!(func_def_7, r#"
 fn test

@@ -14,7 +14,8 @@ pub struct BramaCompilerOption {
     pub opcodes : Vec<u8>,
     pub storages: Vec<StaticStorage>,
     pub modules: ModuleCollection,
-    pub opcode_index: usize
+    pub opcode_index: usize,
+    pub functions_compiled: bool
 }
 
 impl  BramaCompilerOption {
@@ -23,7 +24,8 @@ impl  BramaCompilerOption {
             opcodes: Vec::new(),
             storages: vec![StaticStorage::new()],
             modules: ModuleCollection::new(),
-            opcode_index: 0
+            opcode_index: 0,
+            functions_compiled: false
         }
     }
 
@@ -51,7 +53,11 @@ impl Compiler for InterpreterCompiler {
         options.opcodes.push(0 as u8);
         
         /* First part of the codes are functions */
+
+        /*let mut functions = Vec::new();
+        self.find_function_definations(ast, &mut functions);*/
         self.generate_functions(ast, options, 0)?;
+        options.functions_compiled = true;
         
         /* If there are no function defination, remove previous opcodes */
         if options.opcodes.len() == 3 {
@@ -87,6 +93,25 @@ impl Compiler for InterpreterCompiler {
 }
 
 impl InterpreterCompiler {
+    /*fn find_function_definations(&self, ast: &BramaAstType, functions: &mut Vec<BramaAstType>) {
+        match ast {
+            BramaAstType::FunctionDefination { name, arguments, body  } => {
+                functions.push(BramaAstType::FunctionDefination{
+                    name: name.to_string(),
+                    arguments: arguments.to_vec(),
+                    body: body
+                });
+                self.find_function_definations(body, functions);
+            },
+            BramaAstType::Block(blocks) => {
+                for block in blocks {
+                    self.find_function_definations(&block, functions);
+                }
+            },
+            _ => ()
+        };
+    }*/
+
     fn generate_functions(&self, ast: &BramaAstType, options: &mut BramaCompilerOption, storage_index: usize) -> CompilerResult {
         match ast {
             BramaAstType::FunctionDefination { name, arguments: _, body } => {
@@ -122,17 +147,19 @@ impl InterpreterCompiler {
             BramaAstType::Primative(primative)                          => self.generate_primative(primative.clone(), upper_ast, options, storage_index),
             BramaAstType::List(list)                                    => self.generate_list(list, upper_ast, options, storage_index),
             BramaAstType::Dict(dict)                                    => self.generate_dict(dict, upper_ast, options, storage_index),
-            BramaAstType::FuncCall { names, arguments }                 => self.generate_func_call(names, arguments, upper_ast, options, storage_index),
+            BramaAstType::FuncCall { names, arguments, assign_to_temp }                 => self.generate_func_call(names, arguments, *assign_to_temp, upper_ast, options, storage_index),
             BramaAstType::PrefixUnary (operator, expression)            => self.generate_prefix_unary(operator, expression, upper_ast, options, storage_index),
             BramaAstType::SuffixUnary (operator, expression)            => self.generate_suffix_unary(operator, expression, upper_ast, options, storage_index),
             BramaAstType::NewLine                                       => Ok(0),
             BramaAstType::Return(expression)                                       => self.generate_return(expression, upper_ast, options, storage_index),
-            BramaAstType::FunctionDefination{name: _, arguments: _, body: _}                                       => Ok(0),
             BramaAstType::IfStatement {condition, body, else_body, else_if} => self.generate_if_condition(condition, body, else_body, else_if, upper_ast, options, storage_index),
             BramaAstType::Indexer {body, indexer}                           => self.generate_indexer(body, indexer, upper_ast, options, storage_index),
-            BramaAstType::None => {
-                println!("{:?}", ast);
-                Err("Not implemented")
+            BramaAstType::None => self.generate_none(options, storage_index),
+            BramaAstType::FunctionDefination{name: _, arguments: _, body: _} => {
+                if options.functions_compiled == false {
+                    return self.generate_functions(ast, options, storage_index);
+                }
+                Ok(0)
             }
         }
     }
@@ -141,6 +168,20 @@ impl InterpreterCompiler {
         let storage = &options.storages[storage_index];
 
         let result = storage.get_constant_location(primative);
+        match result {
+            Some(index) => {
+                options.opcodes.push(VmOpCode::Load as u8);
+                options.opcodes.push(index as u8);
+                Ok(index)
+            },
+            _ => Err("Value not found in storage")
+        }
+    }
+
+    fn generate_none(&self, options: &mut BramaCompilerOption, storage_index: usize) -> CompilerResult {
+        let storage = &options.storages[storage_index];
+
+        let result = storage.get_constant_location(Rc::new(BramaPrimative::Empty));
         match result {
             Some(index) => {
                 options.opcodes.push(VmOpCode::Load as u8);
@@ -170,7 +211,7 @@ impl InterpreterCompiler {
         Ok(0)
     }
 
-    fn generate_func_call(&self, names: &Vec<String>, arguments: &Vec<Box<BramaAstType>>,  upper_ast: &BramaAstType, options: &mut BramaCompilerOption, storage_index: usize) -> CompilerResult {
+    fn generate_func_call(&self, names: &Vec<String>, arguments: &Vec<Box<BramaAstType>>, assign_to_temp: bool,  upper_ast: &BramaAstType, options: &mut BramaCompilerOption, storage_index: usize) -> CompilerResult {
         /* Build arguments */
         for argument in arguments {
             self.generate_opcode(argument, upper_ast, options, storage_index)?;
@@ -183,6 +224,7 @@ impl InterpreterCompiler {
                     options.opcodes.push(VmOpCode::NativeCall as u8);
                     options.opcodes.push(location as u8);
                     options.opcodes.push(arguments.len() as u8);
+                    options.opcodes.push(assign_to_temp as u8);
                     return Ok(0 as u8)
                 } else {
                     ()
@@ -191,25 +233,36 @@ impl InterpreterCompiler {
             None => ()
         };
 
-        let normal_func = options.storages[storage_index].get_function(&names.join("::"));
-        return match normal_func {
-            Some(function) => {
-                options.opcodes.push(VmOpCode::Call as u8);
-                function.used_locations.borrow_mut().push(options.opcodes.len() as u16);
-                options.opcodes.push(0 as u8);
-                options.opcodes.push(0 as u8);
+        /* Search function */
+        let mut search_storage_index = storage_index;
+        loop {
+            let normal_func = options.storages[search_storage_index].get_function(&names.join("::"));
+            let search_result = match normal_func {
+                Some(function) => {
+                    options.opcodes.push(VmOpCode::Call as u8);
+                    function.used_locations.borrow_mut().push(options.opcodes.len() as u16);
+                    options.opcodes.push(0 as u8);
+                    options.opcodes.push(0 as u8);
+                    options.opcodes.push(assign_to_temp as u8);
+                    Some(0)
+                },
+                None => None
+            };
+
+            if let Some(_) = search_result {
                 return Ok(0 as u8)
-            },
-            None => Err("Function not found")
-        };
+            }
+
+            if options.storages[search_storage_index].get_parent_index() == usize::MAX {
+                return Err("Function not found");
+            }
+
+            search_storage_index = options.storages[search_storage_index].get_parent_index();
+        }
     }
 
     fn generate_return(&self, expression: &BramaAstType, upper_ast: &BramaAstType, options: &mut BramaCompilerOption, storage_index: usize) -> CompilerResult {
-        match expression {
-            BramaAstType::None => 0,
-            _ => self.generate_opcode(expression, upper_ast, options, storage_index)?
-        };
-        
+        self.generate_opcode(expression, upper_ast, options, storage_index)?;
         options.opcodes.push(VmOpCode::Return as u8);
         Ok(0)
     }

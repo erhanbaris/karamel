@@ -41,7 +41,8 @@ pub enum BramaAstType {
     Block(Vec<BramaAstType>),
     FuncCall {
         names: Vec<String>,
-        arguments: Vec<Box<BramaAstType>>
+        arguments: Vec<Box<BramaAstType>>,
+        assign_to_temp: bool
     },
     Primative(Rc<BramaPrimative>),
     Binary {

@@ -27,14 +27,10 @@ pub fn greet(name: &str) {
 #[cfg(not(feature = "wasmBuild"))]
 fn main() {
     vm::executer::code_executer(&r#"
-fn test:
-    gç::satıryaz("123")
-    erhan=123
-    gç::satıryaz(1024 * 12)
-    gç::satıryaz(erhan)
-
-gç::satıryaz('Oncesi')
-test()
-gç::satıryaz('Sonrası')
+fn test_2:
+    fn test_1:
+        döndür 1024
+    döndür test_1()
+hataayıklama::doğrula(test_2(), 1024)
 "#.to_string());
 }

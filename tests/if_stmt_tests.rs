@@ -80,7 +80,8 @@ yada:
     },
     BramaAstType::FuncCall {
         names: ["print".to_string()].to_vec(),
-        arguments: [Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(1.0))))].to_vec()
+        arguments: [Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(1.0))))].to_vec(),
+        assign_to_temp: false
     }
     ].to_vec())),
     else_body:None,
@@ -105,7 +106,8 @@ yada :
     },
     BramaAstType::FuncCall {
         names: ["print".to_string()].to_vec(),
-        arguments: [Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(1.0))))].to_vec()
+        arguments: [Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(1.0))))].to_vec(),
+        assign_to_temp: false
     }
     ].to_vec())),
     else_body: Some(Box::new(BramaAstType::Block([BramaAstType::Assignment {
@@ -115,7 +117,8 @@ yada :
     },
     BramaAstType::FuncCall {
         names: ["print".to_string()].to_vec(),
-        arguments: [Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(2.0))))].to_vec()
+        arguments: [Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(2.0))))].to_vec(),
+        assign_to_temp: false
     }
     ].to_vec()))),
     else_if: Vec::new()

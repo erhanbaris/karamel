@@ -36,6 +36,10 @@ bitflags! {
         const NONE                = 0b00000000;
         const FUNCTION_DEFINATION = 0b00000001;
         const LOOP                = 0b00000010;
+        const IN_ASSIGNMENT       = 0b00000100;
+        const IN_EXPRESSION       = 0b00001000;
+        const IN_FUNCTION_ARG     = 0b00010000;
+        const IN_RETURN           = 0b00100000;
     }
 }
 

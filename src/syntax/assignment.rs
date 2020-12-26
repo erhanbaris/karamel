@@ -1,5 +1,5 @@
 use crate::types::*;
-use crate::syntax::{SyntaxParser, SyntaxParserTrait};
+use crate::syntax::{SyntaxParser, SyntaxParserTrait, SyntaxFlag};
 use crate::syntax::control::ExpressionParser;
 use crate::compiler::ast::BramaAstType;
 
@@ -22,6 +22,9 @@ impl SyntaxParserTrait for AssignmentParser {
                     BramaOperatorType::AssignMultiplication,
                     BramaOperatorType::AssignSubtraction]) {
                     parser.cleanup_whitespaces();
+
+                    let parser_flags  = parser.flags.get();
+                    parser.flags.set(parser_flags | SyntaxFlag::IN_ASSIGNMENT);
                     
                     let expression = ExpressionParser::parse(parser);
                     match expression {
@@ -29,6 +32,8 @@ impl SyntaxParserTrait for AssignmentParser {
                         Ok(_) => (),
                         Err(_) => return expression
                     };
+
+                    parser.flags.set(parser_flags);
 
                     let assignment_ast = BramaAstType::Assignment {
                         variable: symbol.clone(),

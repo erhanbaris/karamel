@@ -299,4 +299,52 @@ veri2 = {
 
 hataayıklama::doğrula(veri1 != veri2)
 "#);
+execute!(vm_94, r#"
+fn test:
+    döndür 10
+hataayıklama::doğrula(test() == 10)
+"#);
+execute!(vm_95, r#"
+fn test:
+    döndür 10
+hataayıklama::doğrula(test() * 10, 100)
+"#);
+execute!(vm_96, r#"
+fn test:
+    döndür 10
+hataayıklama::doğrula(test() + test(), 20)
+"#);
+execute!(vm_97, r#"
+fn test:
+    döndür
+hataayıklama::doğrula(test(), yok)
+"#);
+execute!(vm_98, r#"
+fn test:
+    döndür yok
+hataayıklama::doğrula(test(), yok)
+"#);
+execute!(vm_99, r#"
+fn test_1:
+    döndür 'erhan'
+
+fn test_2:
+    döndür test_1()
+hataayıklama::doğrula(test_2(), 'erhan')
+"#);
+execute!(vm_100, r#"
+fn test_1:
+    döndür 'erhan'
+fn test_2:
+    döndür test_1()
+hataayıklama::doğrula(test_2() + " barış", 'erhan barış')
+"#);
+execute!(vm_101, r#"
+fn test_2:
+    fn test_1:
+        döndür 'erhan'
+    döndür test_1()
+hataayıklama::doğrula(test_2() + " barış", 'erhan barış')
+"#);
+
 }

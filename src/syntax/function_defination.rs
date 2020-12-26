@@ -13,7 +13,6 @@ impl SyntaxParserTrait for FunctionDefinationParser {
 
         if parser.match_keyword(BramaKeywordType::Fn) {
             let indentation = parser.get_indentation();
-            let parser_flags  = parser.flags.get();
 
             parser.cleanup_whitespaces();
 
@@ -59,6 +58,7 @@ impl SyntaxParserTrait for FunctionDefinationParser {
             }
 
             parser.cleanup_whitespaces();
+            let parser_flags  = parser.flags.get();
             parser.flags.set(parser_flags | SyntaxFlag::FUNCTION_DEFINATION);
 
             let mut body = match parser.get_newline() {

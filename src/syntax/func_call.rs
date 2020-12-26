@@ -1,5 +1,5 @@
 use crate::types::*;
-use crate::syntax::{SyntaxParser, SyntaxParserTrait};
+use crate::syntax::{SyntaxParser, SyntaxParserTrait, SyntaxFlag};
 use crate::syntax::control::ExpressionParser;
 use crate::compiler::ast::BramaAstType;
 
@@ -43,6 +43,9 @@ impl SyntaxParserTrait for FuncCallParser {
                 if let Some(_) = parser.match_operator(&[BramaOperatorType::LeftParentheses]) {
                     let mut arguments = Vec::new();
 
+                    let parser_flags  = parser.flags.get();
+                    parser.flags.set(parser_flags | SyntaxFlag::IN_FUNCTION_ARG);
+
                     /* Parse function call arguments */
                     let mut continue_to_parse = true;
                     while continue_to_parse {
@@ -75,12 +78,17 @@ impl SyntaxParserTrait for FuncCallParser {
                         };
                     }
 
-                    let funccall_ast = BramaAstType::FuncCall {
+                    parser.flags.set(parser_flags);
+                    let func_call_ast = BramaAstType::FuncCall {
                         names: name_collection.to_vec(),
-                        arguments: arguments
+                        arguments: arguments,
+                        assign_to_temp: parser.flags.get().contains(SyntaxFlag::IN_EXPRESSION) 
+                                     || parser.flags.get().contains(SyntaxFlag::IN_ASSIGNMENT)
+                                     || parser.flags.get().contains(SyntaxFlag::IN_FUNCTION_ARG)
+                                     || parser.flags.get().contains(SyntaxFlag::IN_RETURN)
                     };
 
-                    return Ok(funccall_ast);
+                    return Ok(func_call_ast);
                 }
             }
         }

@@ -15,7 +15,8 @@ pub struct StaticStorage {
     pub memory                : Rc<RefCell<Vec<VmObject>>>,
     pub stack                 : Rc<RefCell<Vec<VmObject>>>,
     pub total_const_variables : u8,
-    pub functions             : HashMap<String, Rc<FunctionInformation>>
+    pub functions             : HashMap<String, Rc<FunctionInformation>>,
+    pub parent_index          : usize
 }
 
 
@@ -40,7 +41,8 @@ impl Storage for StaticStorage {
             memory: Rc::new(RefCell::new(Vec::new())),
             stack: Rc::new(RefCell::new(Vec::new())),
             variables: HashMap::new(),
-            functions: HashMap::new()
+            functions: HashMap::new(),
+            parent_index: 0
         }
     }
 
@@ -74,6 +76,10 @@ impl Storage for StaticStorage {
     fn get_constant_size(&self) -> u8 { self.constant_size }
     fn get_variable_size(&self) -> u8 { self.variables.len() as u8 }
     fn get_temp_size(&self) -> u8     { self.temp_size }
+    fn set_parent_index(&mut self, parent_index: usize) {
+        self.parent_index = parent_index;
+    }
+    fn get_parent_index(&self) -> usize { self.parent_index }
     fn set_temp_size(&mut self, value: u8) { self.temp_size = value; }
     fn get_free_temp_slot(&mut self) -> u8 { 
         let index = self.temp_counter;
@@ -173,6 +179,16 @@ impl Storage for StaticStorage {
         println!("╠════════════════════════════════════════╣");
         for (variable, value) in &self.variables {
             println!("║ {:38} ║", format!("{} [{}]", variable, value));
+        }
+        println!("╚════════════════════════════════════════╝");
+
+        println!("╔════════════════════════════════════════╗");
+        println!("║                  STACK                 ║");
+        println!("╠════════════════════════════════════════╣");
+        println!("║ Stack size: {:<10}                 ║", self.stack.borrow().len());
+        println!("╠════════════════════════════════════════╣");
+        for item in self.stack.borrow().iter() {
+            println!("║ {:38} ║", format!("{:?}", item.deref()));
         }
         println!("╚════════════════════════════════════════╝");
     }

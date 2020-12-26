@@ -1,6 +1,7 @@
 use crate::types::*;
-use crate::syntax::{SyntaxParser, SyntaxParserTrait};
+use crate::syntax::{SyntaxParser, SyntaxParserTrait, SyntaxFlag};
 use crate::syntax::unary::UnaryParser;
+use crate::syntax::util::update_functions_for_temp_return;
 use crate::compiler::ast::BramaAstType;
 
 pub struct ModuloParser;
@@ -26,18 +27,26 @@ impl SyntaxParserTrait for AddSubtractParser {
 }
 
 pub fn parse_binary<T: SyntaxParserTrait>(parser: &SyntaxParser, operators: &[BramaOperatorType]) -> AstResult {
-    let mut left_expr = T::parse(parser);
+    let mut functions_updated_for_temp = false;
+    let mut left_expr = T::parse(parser)?;
     match left_expr {
-        Ok(BramaAstType::None) => return left_expr,
-        Ok(_) => (),
-        Err(_) => return left_expr
+        BramaAstType::None => return Ok(left_expr),
+        _ => ()
     };
 
     loop {
         parser.backup();
         parser.cleanup_whitespaces();
+        
         if let Some(operator) = parser.match_operator(operators) {
+            if !functions_updated_for_temp {
+                update_functions_for_temp_return(&mut left_expr);
+                functions_updated_for_temp = true;
+            }
+            
             parser.cleanup_whitespaces();
+            let parser_flags  = parser.flags.get();
+            parser.flags.set(parser_flags | SyntaxFlag::IN_EXPRESSION);
             
             let right_expr = T::parse(parser);
             match right_expr {
@@ -46,11 +55,12 @@ pub fn parse_binary<T: SyntaxParserTrait>(parser: &SyntaxParser, operators: &[Br
                 Err(_) => return right_expr
             };
 
-            left_expr = Ok(BramaAstType::Binary {
-                left: Box::new(left_expr.unwrap()),
+            parser.flags.set(parser_flags);
+            left_expr = BramaAstType::Binary {
+                left: Box::new(left_expr),
                 operator: operator,
                 right: Box::new(right_expr.unwrap())
-            });
+            };
         }
         else {
             parser.restore();
@@ -58,5 +68,5 @@ pub fn parse_binary<T: SyntaxParserTrait>(parser: &SyntaxParser, operators: &[Br
         }
     }
 
-    return left_expr;
+    return Ok(left_expr);
 }
