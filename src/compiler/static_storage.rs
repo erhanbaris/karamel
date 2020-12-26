@@ -1,7 +1,7 @@
 use crate::types::*;
 use crate::compiler::*;
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -11,11 +11,11 @@ pub struct StaticStorage {
     pub constant_size         : u8,
     pub temp_size             : u8,
     pub temp_counter          : u8,
-    pub variables             : HashMap<String, u8>,
+    pub variables             : Vec<(String, u8)>,
     pub memory                : Rc<RefCell<Vec<VmObject>>>,
     pub stack                 : Rc<RefCell<Vec<VmObject>>>,
     pub total_const_variables : u8,
-    pub functions             : HashMap<String, Rc<FunctionInformation>>,
+    pub functions             : BTreeMap<String, Rc<FunctionInformation>>,
     pub parent_index          : usize
 }
 
@@ -40,8 +40,8 @@ impl Storage for StaticStorage {
             total_const_variables: 0,
             memory: Rc::new(RefCell::new(Vec::new())),
             stack: Rc::new(RefCell::new(Vec::new())),
-            variables: HashMap::new(),
-            functions: HashMap::new(),
+            variables: Vec::new(),
+            functions: BTreeMap::new(),
             parent_index: 0
         }
     }
@@ -106,12 +106,15 @@ impl Storage for StaticStorage {
         };
     }
 
-    fn add_variable(&mut self, name: &String) -> u8 { 
-        if !self.variables.contains_key(&name[..]) {
-            self.variables.insert(name.to_string(), 0);
+    fn add_variable(&mut self, name: &String) -> u8 {
+        let result = self.variables.iter().position(|(key, _)| key == name);
+        match result {
+            Some(location) => self.variables[location].1,
+            _ => {
+                self.variables.push((name.to_string(), 0));
+                0
+            }
         }
-
-        return self.get_variable_location(name).unwrap();
     }
 
     fn set_variable_value(&mut self, name: &String, object: VmObject) {
@@ -132,10 +135,11 @@ impl Storage for StaticStorage {
     }
 
     fn get_variable_location(&self, name: &String) -> Option<u8> {
-        if self.variables.contains_key(name) {
-            return Some(*self.variables.get(name).unwrap());
+        let result = self.variables.iter().position(|(key, _)| key == name);
+        match result {
+            Some(location) => Some(self.variables[location].1),
+            _ => None
         }
-        return None;
     }
 
     fn get_variable_value(&self, name: &String) -> Option<Rc<BramaPrimative>> {

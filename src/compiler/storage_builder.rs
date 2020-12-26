@@ -108,23 +108,25 @@ impl StorageBuilder {
 ║   Function Pointer   ║
 ╚══════════════════════╝
  */
-            BramaAstType::FuncCall{ names, arguments, assign_to_temp } => {
+            BramaAstType::FuncCall { names, arguments, assign_to_temp } => {
 
                 /* Need to allocate space for function arguments */
                 let mut max_temp = 0 as u8;
-                
+
                 /* Native function call */
                 if let Some(function) = options.modules.find_method(&names) {
-                    for arg in arguments {
-                        max_temp += self.get_temp_count_from_ast(arg, ast, options, storage_index, compiler_option);
-                    }
-
-                    compiler_option.max_stack = max(max_temp, compiler_option.max_stack);
-
                     /* Add function pointer to consts */
                     options.storages.get_mut(storage_index).unwrap().add_constant(Rc::new(BramaPrimative::FuncNativeCall(function)));
                 }
-                
+
+                /* Build arguments */
+                for arg in arguments {
+                    max_temp += self.get_temp_count_from_ast(arg, ast, options, storage_index, compiler_option);
+                }
+
+                compiler_option.max_stack = max(max_temp, compiler_option.max_stack);
+
+
                 /* Variables */
                 if *assign_to_temp {
                     max_temp + 1
@@ -187,10 +189,16 @@ impl StorageBuilder {
 
                 options.storages[storage_index].add_function(name, function_information);
                 options.storages.push(StaticStorage::new());
+
+                for argument in arguments {
+                    options.storages[new_storage_index].add_variable(argument);
+                }
+                
                 self.get_temp_count_from_ast(body, ast, options, new_storage_index, &mut function_compiler_option);
                 
+                function_compiler_option.max_stack = max(arguments.len() as u8, function_compiler_option.max_stack);
                 options.storages[new_storage_index].set_parent_index(storage_index);
-                options.storages[new_storage_index].set_temp_size(function_compiler_option.max_stack + arguments.len() as u8);
+                options.storages[new_storage_index].set_temp_size(function_compiler_option.max_stack as u8);
                 options.storages[new_storage_index].build();
                 0
             },

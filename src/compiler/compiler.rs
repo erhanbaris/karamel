@@ -131,6 +131,12 @@ impl InterpreterCompiler {
                 (*information).opcode_location.set(options.opcodes.len() as u16);
                 options.opcodes.push(information.storage_index as u8);
                 options.opcodes.push((information.storage_index >> 8) as u8);
+                options.opcodes.push(function.arguments.len() as u8);
+
+                if function.arguments.len() > 0 {
+                    options.opcodes.push(VmOpCode::InitArguments as u8);
+                    options.opcodes.push(function.arguments.len() as u8);
+                }
 
                 self.generate_opcode(&function.body, &function.body, options, information.storage_index as usize)?;
             } 
@@ -240,6 +246,7 @@ impl InterpreterCompiler {
                     function.used_locations.borrow_mut().push(options.opcodes.len() as u16);
                     options.opcodes.push(0 as u8);
                     options.opcodes.push(0 as u8);
+                    options.opcodes.push(arguments.len() as u8);
                     options.opcodes.push(assign_to_temp as u8);
                     Some(0)
                 },

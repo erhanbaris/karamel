@@ -357,4 +357,37 @@ fn test:
     döndür test_erhan() + " " + test_barış()
 hataayıklama::doğrula(test(), 'erhan barış')
 "#);
+execute!(vm_103, r#"
+fn test(a, b):
+    döndür a
+data = test(123, 321)
+hataayıklama::doğrula(123, data)
+"#);
+execute!(vm_104, r#"
+my_list = {
+    'ad': 'erhan',
+    'soyad': 'barış',
+    'doğum tarihi': 1985
+}
+
+fn read_data(list, key):
+    döndür list[key]
+
+adı          = read_data(my_list, 'ad')
+soyadı       = read_data(my_list, 'soyad')
+doğum_tarihi = read_data(my_list, 'doğum tarihi')
+
+hataayıklama::doğrula(adı,         'erhan')
+hataayıklama::doğrula(soyadı,      'barış')
+hataayıklama::doğrula(doğum_tarihi, 1985)
+"#);
+execute!(vm_105, r#"
+fn test(list):
+    döndür list['ad']
+
+data = test({
+    'ad': 'erhan'
+})
+hataayıklama::doğrula("erhan", data)
+"#);
 }

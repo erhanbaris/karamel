@@ -17,7 +17,8 @@ struct Scope {
     stack: Vec<VmObject>, 
     location: usize,
     mem_index: usize,
-    call_return_assign_to_temp: bool
+    call_return_assign_to_temp: bool,
+    const_size: u8
 }
 
 pub fn run_vm(options: &mut BramaCompilerOption) -> Result<(), &'static str>
@@ -65,9 +66,10 @@ pub fn run_vm(options: &mut BramaCompilerOption) -> Result<(), &'static str>
                     let location = ((options.opcodes[opcode_index+2] as u16 * 256) + options.opcodes[opcode_index+1] as u16) as usize;
 
                     println!("║ {:4} ║ {:15} ║ {:^5?} ║ {:^5} ║", opcode_index, format!("{:?}", opcode), location + opcode_index + 1, "");
-                    opcode_index += 2;
+                    opcode_index += 3;
                 },
 
+                VmOpCode::InitArguments |
                 VmOpCode::CopyToStore |
                 VmOpCode::Load |
                 VmOpCode::InitList |
@@ -82,10 +84,15 @@ pub fn run_vm(options: &mut BramaCompilerOption) -> Result<(), &'static str>
                     println!("║ {:4} ║ {:15} ║ {:^5} ║ {:^5} ║", opcode_index, format!("{:?}", opcode), "", "");
                 },
 
-                VmOpCode::Call |
-                VmOpCode::NativeCall => {
+                VmOpCode::Call => {
                     let location = ((options.opcodes[opcode_index+2] as u16 * 256) + options.opcodes[opcode_index+1] as u16) as usize;
                     println!("║ {:4} ║ {:15} ║ {:^5?} ║ {:^5} ║", opcode_index, format!("{:?}", opcode), location, options.opcodes[opcode_index + 3]);
+                    opcode_index += 4;
+                },
+                
+                VmOpCode::NativeCall => {
+                    let location = (options.opcodes[opcode_index+1] as u16) as usize;
+                    println!("║ {:4} ║ {:15} ║ {:^5?} ║ {:^5} ║", opcode_index, format!("{:?}", opcode), location, options.opcodes[opcode_index + 2]);
                     opcode_index += 3;
                 },
 
@@ -109,12 +116,13 @@ pub fn run_vm(options: &mut BramaCompilerOption) -> Result<(), &'static str>
         let mut mem_index: usize = 0;
         let mut scopes_index: usize = 0;
 
-        scopes.resize(32, Scope { call_return_assign_to_temp: false, mem_index: 0, location: 0, memory: Vec::new(), stack: Vec::new()});
+        scopes.resize(32, Scope { const_size: 0, call_return_assign_to_temp: false, mem_index: 0, location: 0, memory: Vec::new(), stack: Vec::new()});
         scopes[scopes_index] = Scope {
             memory: options.storages[0].get_memory().borrow().to_vec(),
             stack: options.storages[0].get_stack().borrow().to_vec(),
             location: 0,
             mem_index: 0,
+            const_size: 0,
             call_return_assign_to_temp: false
         };
 
@@ -291,14 +299,28 @@ pub fn run_vm(options: &mut BramaCompilerOption) -> Result<(), &'static str>
 
                 VmOpCode::Call => {
                     let location = ((options.opcodes[index + 2] as u16 * 256) + options.opcodes[index + 1] as u16) as usize;
-                    let call_return_assign_to_temp = options.opcodes[index + 3] != 0;
-                    let old_index = index + 3;
+                    let argument_size  = options.opcodes[index + 3];
+                    let call_return_assign_to_temp = options.opcodes[index + 4] != 0;
+                    let old_index = index + 4;
                     index = location as usize;
                     scopes_index += 1;
                     let storage_location = ((options.opcodes[index + 1] as u16 * 256) + options.opcodes[index] as u16) as usize;
 
+                    if argument_size != options.opcodes[index + 2] {
+                        return Err("Function argument error")
+                    }
+
+                    let mut args: Vec<VmObject> = Vec::with_capacity(argument_size as usize);
+
+                    if argument_size > 0 {
+                        for _ in 0..argument_size {
+                            mem_index -= 1;
+                            args.push(scope.stack[mem_index]);
+                        }
+                    }
+
                     if scopes.len() <= scopes_index {
-                        scopes.resize(scopes.len() * 2, Scope { call_return_assign_to_temp: false, mem_index: 0, location: 0, memory: Vec::new(), stack: Vec::new()});
+                        scopes.resize(scopes.len() * 2, Scope { const_size: 0, call_return_assign_to_temp: false, mem_index: 0, location: 0, memory: Vec::new(), stack: Vec::new()});
                     }
 
                     scopes[scopes_index] = Scope {
@@ -306,13 +328,21 @@ pub fn run_vm(options: &mut BramaCompilerOption) -> Result<(), &'static str>
                         stack: options.storages[storage_location].get_stack().borrow().to_vec(),
                         location: old_index,
                         mem_index: mem_index,
+                        const_size: options.storages[storage_location].get_constant_size(),
                         call_return_assign_to_temp: call_return_assign_to_temp
                     };
 
                     scope     = &mut scopes[scopes_index];
                     mem_index = 0;
 
-                    index += 1;
+                    if argument_size > 0 {
+                        for _ in 0..argument_size {
+                            scope.stack[mem_index] = args[mem_index];
+                            mem_index += 1;
+                        }
+                    }
+
+                    index += 2;
                 },
 
                 VmOpCode::Return => {
@@ -427,7 +457,7 @@ pub fn run_vm(options: &mut BramaCompilerOption) -> Result<(), &'static str>
                 VmOpCode::GetItem => {
                     let indexer = pop!(mem_index, scope.stack);
                     let object  = pop!(mem_index, scope.stack);
-                    
+
                     scope.stack[mem_index] = match &*object {
                         BramaPrimative::List(value) => {
                             let indexer_value = match &*indexer {
@@ -456,6 +486,17 @@ pub fn run_vm(options: &mut BramaCompilerOption) -> Result<(), &'static str>
                     mem_index += 1;
                 },
 
+                VmOpCode::InitArguments => {
+                    let size = options.opcodes[index + 1] as usize;
+                    let const_size = scope.const_size as usize;
+                    for i in 0..size {
+                        mem_index -= 1;
+                        scope.memory[i + const_size] = scope.stack[mem_index];
+                        //println!("{:?}", scope.memory[i].deref());
+                    }
+
+                    index += 1;
+                },
                 VmOpCode::Func => (),
                 VmOpCode::None => (),
             }

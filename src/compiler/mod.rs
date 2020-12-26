@@ -117,6 +117,7 @@ pub enum VmOpCode {
     LessEqualThan,
 
     Func,
+    InitArguments,
     NativeCall,
     Call,
     Return,
