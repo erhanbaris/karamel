@@ -82,7 +82,7 @@ impl SyntaxParserTrait for FuncCallParser {
                     let func_call_ast = BramaAstType::FuncCall {
                         names: name_collection.to_vec(),
                         arguments: arguments,
-                        assign_to_temp: parser.flags.get().contains(SyntaxFlag::IN_EXPRESSION) 
+                        assign_to_temp: parser.flags.get().contains(SyntaxFlag::IN_EXPRESSION)
                                      || parser.flags.get().contains(SyntaxFlag::IN_ASSIGNMENT)
                                      || parser.flags.get().contains(SyntaxFlag::IN_FUNCTION_ARG)
                                      || parser.flags.get().contains(SyntaxFlag::IN_RETURN)

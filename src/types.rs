@@ -117,7 +117,9 @@ pub static KEYWORDS: &'static [(&str, BramaKeywordType)] = &[
     ("küçükeşittir",  BramaKeywordType::LessEqualThan),
     ("değil",         BramaKeywordType::Not),
     ("fn",            BramaKeywordType::Fn),
-    ("döndür",        BramaKeywordType::Return)
+    ("döndür",        BramaKeywordType::Return),
+    ("kır",         BramaKeywordType::Break),
+    ("devamet",      BramaKeywordType::Continue),
 ];
 
 #[derive(Clone, Copy)]
@@ -167,7 +169,6 @@ pub enum BramaOperatorType {
 #[derive(Debug)]
 #[derive(PartialEq)]
 pub enum BramaTokenType {
-    None,
     Integer(i64),
     Double(f64),
     Symbol(Rc<String>),
@@ -314,6 +315,13 @@ impl BramaTokenType {
         return match self {
             BramaTokenType::Symbol(string) => string.to_string(),
             _ => String::from("")
+        }
+    }
+
+    pub fn get_keyword(&self) -> BramaKeywordType {
+        return match self {
+            BramaTokenType::Keyword(keyword) => *keyword,
+            _ => BramaKeywordType::None
         }
     }
 }

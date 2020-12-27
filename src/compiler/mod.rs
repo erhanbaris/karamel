@@ -93,11 +93,6 @@ impl VmByteDecode for u8 {
     }
 }
 
-impl VmOpCode {
-    pub fn encode(&self) -> VmByte {
-        VmByte(*self as u8)
-    }
-}
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[repr(u8)]

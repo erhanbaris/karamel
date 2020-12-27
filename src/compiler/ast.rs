@@ -78,5 +78,8 @@ pub enum BramaAstType {
     List(Vec<Box<BramaAstType>>),
     Dict(Vec<Box<BramaDictItem>>),
     Indexer { body: Box<BramaAstType>, indexer: Box<BramaAstType> },
-    Return(Box<BramaAstType>)
+    Return(Box<BramaAstType>),
+    Break,
+    Continue,
+    EndlessLoop(Box<BramaAstType>)
 }

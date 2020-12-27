@@ -1,4 +1,3 @@
-#[macro_use]
 extern crate bitflags;
 extern crate termion;
 
@@ -28,10 +27,10 @@ pub fn greet(name: &str) {
 
 #[cfg(not(feature = "wasmBuild"))]
 fn main() {
-    let result = vm::executer::code_executer(&r#"eğer 1024 * 123:
-    erhan=123  
-yada: 
-  erhan=1234
+    let result = vm::executer::code_executer(&r#"sonsuz:
+    erhan=123   
+    print(1)
+    kır
 "#.to_string());
     match result {
         Ok(_) => println!("Sucess"),
