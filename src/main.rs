@@ -1,5 +1,7 @@
 #[macro_use]
 extern crate bitflags;
+extern crate termion;
+
 
 mod types;
 mod parser;
@@ -26,15 +28,14 @@ pub fn greet(name: &str) {
 
 #[cfg(not(feature = "wasmBuild"))]
 fn main() {
-    vm::executer::code_executer(&r#"
-fn test:
-    fn test_erhan:
-        döndür 'erhan'
-
-    fn test_barış:
-        döndür 'barış'
-
-    döndür test_erhan() + " " + test_barış()
-hataayıklama::doğrula(test(), 'erhan barış')
+    let result = vm::executer::code_executer(&r#"eğer 1024 * 123:
+    erhan=123  
+yada: 
+  erhan=1234
 "#.to_string());
+    match result {
+        Ok(_) => println!("Sucess"),
+        Err(error) => println!("Fail ({})", error)
+    };
 }
+

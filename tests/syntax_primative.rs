@@ -56,7 +56,7 @@ mod tests {
     test_success!(test_2, "\"merhaba dünya\"", Ok(BramaAstType::Primative(Rc::new(BramaPrimative::Text(Rc::new("merhaba dünya".to_string()))))));
     test_success!(test_3, "'merhaba dünya", Err(("Missing string deliminator", 0, 14)));
     test_success!(test_4, "\"merhaba dünya", Err(("Missing string deliminator", 0, 14)));
-    test_success!(test_5, "merhaba dünya'", Err(("Missing string deliminator", 0, 1)));
+    test_success!(test_5, "merhaba dünya'", Err(("Missing string deliminator", 0, 14)));
 
     test_success!(bool_1, "true", Ok(BramaAstType::Primative(Rc::new(BramaPrimative::Bool(true)))));
     test_success!(bool_2, "doğru", Ok(BramaAstType::Primative(Rc::new(BramaPrimative::Bool(true)))));

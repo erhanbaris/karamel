@@ -63,8 +63,9 @@ impl SyntaxParser {
             Ok(ast) => {
                 self.cleanup();
                 
-                if let Ok(token) = self.next_token() {
-                    return Err(("Syntax error, undefined syntax", token.line, token.column));
+                if let Ok(token) = self.peek_token() {
+                    println!("We forget this : {:?}", token);
+                    return Err(("Syntax error, undefined syntax", token.line, token.start));
                 }
                 Ok(ast)
             },
@@ -84,6 +85,15 @@ impl SyntaxParser {
         self.indentation.set(indentation);
     }
 
+    pub fn update_indentation(&self) {
+        match self.peek_token() {
+            Ok(token) => {
+                self.indentation.set(token.end as usize);
+            },
+            _ => ()
+        }
+    }
+
     pub fn get_indentation(&self) -> usize {
         self.indentation.get()
     }
@@ -96,6 +106,10 @@ impl SyntaxParser {
             return false;
         }
         else if self.peek_token().is_err() {
+            return false;
+        }
+        else if self.peek_token().unwrap().start != indentation as u32 {
+            println!("{:?}", self.peek_token().unwrap());
             return false;
         }
 
@@ -186,7 +200,7 @@ impl SyntaxParser {
     }
 
     fn cleanup(&self) {
-        if self.next_token().is_err() {
+        if self.peek_token().is_err() {
             return;
         }
 
@@ -235,7 +249,7 @@ impl SyntaxParser {
 
                 if !success {
                     let token = self.peek_token().unwrap();
-                    return Err(("Indentation issue", token.line, token.column));
+                    return Err(("Indentation issue", token.line, token.start));
                 }
 
                 self.consume_token();
@@ -279,7 +293,7 @@ impl SyntaxParser {
 
                 if !success {
                     let token = self.peek_token().unwrap();
-                    return Err(("Indentation issue", token.line, token.column));
+                    return Err(("Indentation issue", token.line, token.start));
                 }
 
                 self.consume_token();

@@ -33,6 +33,7 @@ impl BlockParser {
         loop {
             parser.indentation_check()?;
             let ast = map_parser(parser, &[FunctionDefinationParser::parse, StatementParser::parse, ExpressionParser::parse, NewlineParser::parse])?;
+    
             match ast {
                 BramaAstType::None =>  break,
                 BramaAstType::NewLine =>  (),
@@ -41,7 +42,7 @@ impl BlockParser {
 
             if !multiline { break; }
             
-            parser.cleanup_whitespaces();
+            parser.cleanup();
             if !parser.is_same_indentation(current_indentation) {
                 break;
             }

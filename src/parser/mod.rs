@@ -63,7 +63,7 @@ impl<'a> Parser<'a> {
         symbol_parser.init_parser();
 
         while self.tokinizer.is_end() == false {
-            let status: Result<BramaTokenType, (&'static str, u32, u32)>;
+            let status: Result<(), (&'static str, u32, u32)>;
 
             if line_parser.check(&mut self.tokinizer) {
                 status = line_parser.parse(&mut self.tokinizer);
@@ -90,19 +90,7 @@ impl<'a> Parser<'a> {
                 status = operator_parser.parse(&mut self.tokinizer);
             }
 
-            if status.is_ok() {
-                let token_type = status.ok().unwrap();
-                if token_type != BramaTokenType::None {
-                    let token = Token {
-                        line: self.tokinizer.line,
-                        column: self.tokinizer.column,
-                        token_type: token_type
-                    };
-
-                    self.tokinizer.add_token(token);
-                }
-            }
-            else {
+            if status.is_err() {
                 let (err_message, line, column) = status.err().unwrap();
                 return Err((err_message, line, column))
             }

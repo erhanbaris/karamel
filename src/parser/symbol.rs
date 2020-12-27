@@ -20,10 +20,11 @@ impl TokenParser for SymbolParser {
         return ch.is_symbol();
     }
 
-    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<BramaTokenType, (&'static str, u32, u32)> {
+    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<(), (&'static str, u32, u32)> {
         let mut ch: char;
         let start             = tokinizer.index as usize;
         let mut end           = start;
+        let start_column = tokinizer.column;
 
         while !tokinizer.is_end() {
             ch = tokinizer.get_char();
@@ -44,12 +45,15 @@ impl TokenParser for SymbolParser {
                 None => &BramaKeywordType::None
             };
 
-            return match keyword.to_operator() {
-                BramaOperatorType::None => Ok(BramaTokenType::Keyword(*keyword)),
-                _                       => Ok(BramaTokenType::Operator(keyword.to_operator()))
-            }
+            let token_type = match keyword.to_operator() {
+                BramaOperatorType::None => BramaTokenType::Keyword(*keyword),
+                _                       => BramaTokenType::Operator(keyword.to_operator())
+            };
+            tokinizer.add_token(start_column as u32, token_type);
+            return Ok(());
         }
 
-        return Ok(BramaTokenType::Symbol(Rc::new(tokinizer.data[start..end].to_string())));
+        tokinizer.add_token(start_column as u32, BramaTokenType::Symbol(Rc::new(tokinizer.data[start..end].to_string())));
+        return Ok(());
     }
 }

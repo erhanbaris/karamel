@@ -11,12 +11,13 @@ impl TokenParser for TextParser {
         return ch == self.tag;
     }
 
-    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<BramaTokenType, (&'static str, u32, u32)> {
+    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<(), (&'static str, u32, u32)> {
         tokinizer.increase_index();
 
         let mut ch: char      = '\0';
         let mut ch_next: char;
         let start             = tokinizer.index as usize;
+        let start_column = tokinizer.column;
         let mut end           = start;
 
         while !tokinizer.is_end() {
@@ -42,6 +43,7 @@ impl TokenParser for TextParser {
             return Err(("Missing string deliminator", tokinizer.line, tokinizer.column));
         }
 
-        return Ok(BramaTokenType::Text(Rc::new(tokinizer.data[start..end].to_string())));
+        tokinizer.add_token(start_column, BramaTokenType::Text(Rc::new(tokinizer.data[start..end].to_string())));
+        return Ok(());
     }
 }

@@ -166,19 +166,21 @@ impl TokenParser for NumberParser {
         return ch == '.' || (ch >= '0' && ch <= '9');
     }
 
-    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<BramaTokenType, (&'static str, u32, u32)> {
+    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<(), (&'static str, u32, u32)> {
+        let start_column = tokinizer.column;
         let number_system = self.detect_number_system(tokinizer);
 
-        let result = match number_system {
-            BramaNumberSystem::Binary      => Ok(self.parse_binary(tokinizer)),
-            BramaNumberSystem::Octal       => Ok(self.parse_octal(tokinizer)),
-            BramaNumberSystem::Decimal     => Ok(self.parse_decimal(tokinizer)),
-            BramaNumberSystem::Hexadecimal => Ok(self.parse_hex(tokinizer))
+        let token_type = match number_system {
+            BramaNumberSystem::Binary      => self.parse_binary(tokinizer),
+            BramaNumberSystem::Octal       => self.parse_octal(tokinizer),
+            BramaNumberSystem::Decimal     => self.parse_decimal(tokinizer),
+            BramaNumberSystem::Hexadecimal => self.parse_hex(tokinizer)
         };
+        tokinizer.add_token(start_column, token_type);
         
         if tokinizer.get_char().is_alphabetic() && !tokinizer.get_char().is_whitespace() {
             return Err(("Number parser error", tokinizer.line, tokinizer.column));
         }
-        return result;
+        return Ok(());
     }
 }

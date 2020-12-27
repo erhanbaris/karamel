@@ -50,7 +50,10 @@ pub enum BramaKeywordType {
     Equal,
     NotEqual,
     Fn,
-    Return
+    Return,
+    Endless,
+    Break,
+    Continue
 }
 
 impl BramaKeywordType {
@@ -90,12 +93,16 @@ pub static KEYWORDS: &'static [(&str, BramaKeywordType)] = &[
     ("less",      BramaKeywordType::LessThan),
     ("lessequal",  BramaKeywordType::LessEqualThan),
     ("return",        BramaKeywordType::Return),
+    ("endless",       BramaKeywordType::Endless),
+    ("break",         BramaKeywordType::Break),
+    ("continue",      BramaKeywordType::Continue),
 
     ("doğru",  BramaKeywordType::True),
     ("yanlış", BramaKeywordType::False),
     ("kullan", BramaKeywordType::Use),
     ("kadar",  BramaKeywordType::Until),
     ("döngü",  BramaKeywordType::Loop),
+    ("sonsuz",  BramaKeywordType::Endless),
     ("eğer",   BramaKeywordType::If),
     ("yada",   BramaKeywordType::Else),
     ("ve",     BramaKeywordType::And),
@@ -185,7 +192,8 @@ pub enum BramaNumberSystem {
 #[derive(Debug, Clone)]
 pub struct Token {
     pub line      : u32,
-    pub column    : u32,
+    pub start    : u32,
+    pub end    : u32,
     pub token_type: BramaTokenType
 }
 
@@ -222,8 +230,13 @@ impl Tokinizer<'_> {
         };
     }
 
-    pub fn add_token(&mut self, token: Token) {
-        self.column = 0;
+    pub fn add_token(&mut self, start: u32, token_type: BramaTokenType) {
+        let token = Token {
+            line: self.line,
+            start: start,
+            end: self.column,
+            token_type: token_type
+        };
         self.tokens.push(token);
     }
 
@@ -246,7 +259,7 @@ impl Tokinizer<'_> {
 
 pub trait TokenParser {
     fn check(&self, tokinizer: &mut Tokinizer) -> bool;
-    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<BramaTokenType, (&'static str, u32, u32)>;
+    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<(), (&'static str, u32, u32)>;
 }
 
 pub trait CharTraits {

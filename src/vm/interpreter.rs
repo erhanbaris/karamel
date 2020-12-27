@@ -309,7 +309,6 @@ pub fn run_vm(options: &mut BramaCompilerOption) -> Result<(), &'static str>
                     if argument_size != options.opcodes[index + 2] {
                         return Err("Function argument error")
                     }
-
                     let mut args: Vec<VmObject> = Vec::with_capacity(argument_size as usize);
 
                     if argument_size > 0 {
@@ -503,6 +502,7 @@ pub fn run_vm(options: &mut BramaCompilerOption) -> Result<(), &'static str>
 
             index += 1;
         }
+
         
         for (index, item) in scopes[0].stack.iter().enumerate() {
             options.storages[0].get_stack().borrow_mut()[index] = *item;
@@ -511,7 +511,7 @@ pub fn run_vm(options: &mut BramaCompilerOption) -> Result<(), &'static str>
         for (index, item) in scopes[0].memory.iter().enumerate() {
             options.storages[0].get_memory().borrow_mut()[index] = *item;
         }
-
+        
         #[cfg(feature = "dumpMemory")] {
             options.storages[0].dump();
         }

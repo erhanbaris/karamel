@@ -7,14 +7,14 @@ use std::io::{self};
 use std::io::Write;
 
 #[allow(dead_code)]
-pub fn code_executer(data: &String) {
+pub fn code_executer(data: &String) -> Result<(), &'static str> {
     let mut compiler_options: BramaCompilerOption = BramaCompilerOption::new();
 
     let mut parser = Parser::new(&data[..]);
     match parser.parse() {
         Err((message, line, column)) => {
             println!("[{:?}:{:?}] {:?}", line, column, message);
-            return ();
+            return Err(message);
         },
         _ => ()
     };
@@ -28,12 +28,12 @@ pub fn code_executer(data: &String) {
                 Ok(_) => run_vm(&mut compiler_options),
                 Err(message) => Err(message)
             };
-            
-            if let Err(message) = execution_status {
-                println!("{}", message);
-            }
+            execution_status
         },
-        Err((message, line, column)) => println!("[{}:{}] {}", line, column, message)
+        Err((message, line, column)) => {
+            println!("[{}:{}] {}", line, column, message);
+            Err(message)
+        }
     }
 }
 

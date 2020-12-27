@@ -390,4 +390,77 @@ data = test({
 })
 hataayıklama::doğrula("erhan", data)
 "#);
+execute!(vm_106, r#"
+fn test(a):
+    fn __test_1(a):
+        fn __test_2(a):
+            return a
+        return __test_2(a)
+    return __test_1(a)
+hataayıklama::doğrula(test("erhan"), 'erhan')
+"#);
+execute!(vm_107, r#"
+fn Fibonacci(n):
+    eğer n <= 1:
+        döndür n
+    yada:
+        döndür(Fibonacci(n-1) + Fibonacci(n-2))
+hataayıklama::doğrula(Fibonacci(10), 55)
+hataayıklama::doğrula(Fibonacci(20), 6765)
+"#);
+
+    #[test]
+    fn test_files_executer() {
+        use std::env;
+        use std::fs;
+        use std::path::Path;
+        use termion::{color, style};
+
+        let mut test_status = true;
+        let current_dir = env::current_dir().unwrap();
+        let paths = fs::read_dir(Path::new(&current_dir).join("test_files")).unwrap();
+
+        for path in paths {
+            match path {
+                Ok(_path) => {
+                    let is_file = match _path.metadata() {
+                        Ok(metadata) => metadata.is_file(),
+                        _ => false
+                    };
+                    
+                    let is_pass = _path.path().file_name().unwrap().to_str().unwrap().starts_with("pass_");
+
+                    if is_file {
+                        match _path.path().to_str() {
+                            Some(__path) => {
+                                let file_content = fs::read_to_string(__path).unwrap();
+                                match executer::code_executer(&file_content) {
+                                    Ok(_) => {
+                                        if !is_pass {
+                                            println!("{}{}# {} failed ({}){}", color::Fg(color::Red), style::Bold, __path, "Not failed", style::Reset);
+                                            test_status = false;
+                                        } else {
+                                            println!("{}# {} passed{}",  color::Fg(color::Green), __path, style::Reset);
+                                        }
+                                    },
+                                    Err(error) => {
+                                        if is_pass {
+                                            println!("{}{}# {} failed ({}){}", color::Fg(color::Red), style::Bold, __path, error, style::Reset);
+                                            test_status = false;
+                                        } else {
+                                            println!("{}# {} passed{}",  color::Fg(color::Green), __path, style::Reset);
+                                        }
+                                    }
+                                }
+                            },
+                            _ => ()
+                        }
+                    }
+                },
+                _ => ()
+            };
+        }
+
+        assert_eq!(true, test_status);
+    }
 }

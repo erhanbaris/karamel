@@ -8,10 +8,11 @@ impl TokenParser for LineParser {
         return ch.is_new_line();
     }
 
-    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<BramaTokenType, (&'static str, u32, u32)> {
+    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<(), (&'static str, u32, u32)> {
         tokinizer.increase_index();
 
-        let mut whitespace_count: u8 = 0;
+        let mut whitespace_count: u32 = 0;
+        let start_column = tokinizer.column;
         let mut ch                   = tokinizer.get_char();
 
         while !tokinizer.is_end() && ch == ' ' {
@@ -19,7 +20,11 @@ impl TokenParser for LineParser {
             whitespace_count += 1;
             ch = tokinizer.get_char();
         }
+
         tokinizer.increate_line();
-        return Ok(BramaTokenType::NewLine(whitespace_count));
+        tokinizer.add_token(start_column, BramaTokenType::NewLine(whitespace_count as u8));
+        tokinizer.column = whitespace_count;
+
+        return Ok(());
     }
 }

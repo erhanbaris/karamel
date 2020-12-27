@@ -8,9 +8,10 @@ impl TokenParser for WhitespaceParser {
         return ch == ' ';
     }
 
-    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<BramaTokenType, (&'static str, u32, u32)> {
+    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<(), (&'static str, u32, u32)> {
         let mut whitespace_count: u8 = 0;
         let mut ch                   = tokinizer.get_char();
+        let start_column = tokinizer.column;
 
         while !tokinizer.is_end() && ch == ' ' {
             tokinizer.increase_index();
@@ -18,6 +19,7 @@ impl TokenParser for WhitespaceParser {
             ch = tokinizer.get_char();
         }
 
-        return Ok(BramaTokenType::WhiteSpace(whitespace_count));
+        tokinizer.add_token(start_column, BramaTokenType::WhiteSpace(whitespace_count));
+        return Ok(());
     }
 }

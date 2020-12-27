@@ -87,7 +87,7 @@ impl SyntaxParserTrait for FuncCallParser {
                                      || parser.flags.get().contains(SyntaxFlag::IN_FUNCTION_ARG)
                                      || parser.flags.get().contains(SyntaxFlag::IN_RETURN)
                     };
-
+                    
                     return Ok(func_call_ast);
                 }
             }
