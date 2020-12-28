@@ -10,6 +10,7 @@ edition = "2018"
 dumpExecutionOpcode = []
 dumpMemory = []
 dumpOpcodes = []
+liveOpcodeView = []
 wasmBuild = []
 default = ["dumpOpcodes", "dumpMemory", "dumpExecutionOpcode"]
 
@@ -17,7 +18,15 @@ default = ["dumpOpcodes", "dumpMemory", "dumpExecutionOpcode"]
 wasm-bindgen = "0.2"
 bitflags = "1.2"
 termion = "*"
+log-update = "*"
 
 
 [lib]
 crate-type = ["cdylib", "rlib"]
+
+
+[[test]]
+name = "tpd-tests"
+edition = "2018"
+path = "tests/mod.rs"
+required-features = []

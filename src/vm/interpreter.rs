@@ -3,6 +3,9 @@ use crate::compiler::*;
 use std::rc::Rc;
 use std::mem;
 use std::collections::HashMap;
+use std::io::stdout;
+use log_update::LogUpdate;
+use std::io::{self, Write};
 
 macro_rules! pop {
     ($mem_index: expr, $stack: expr) => {{
@@ -21,90 +24,123 @@ struct Scope {
     const_size: u8
 }
 
-pub fn run_vm(options: &mut BramaCompilerOption) -> Result<(), &'static str>
+#[cfg(feature = "dumpOpcodes")]
+pub fn dump_opcode<W: Write>(index: usize, options: &mut BramaCompilerOption, log_update: &mut LogUpdate<W>) {
+    use termion::{color, style};
+    use std::{thread, time};
+
+    let mut buffer = String::new();
+
+    fn build_arrow(index: usize, opcode_index: usize, opcode_length: usize, buffer: &mut String, data: &String) { 
+        if index >= opcode_index && index <= opcode_index + opcode_length {
+            buffer.push_str(&format!("{}║{:3}{}{}\r\n", color::Fg(color::Green), " > " , data, style::Reset));
+        } else {
+            buffer.push_str(&format!("║{:3}{}\r\n", "", data));
+        }
+    }
+
+    buffer.push_str("╔════════════════════════════════════════════╗\r\n");
+    buffer.push_str("║                    OPCODE                  ║\r\n");
+    buffer.push_str("╠═══╦══════╦═════════════════╦═══════╦═══════╣\r\n");
+    let opcode_size   = options.opcodes.len();
+    let mut opcode_index = 0;
+
+    while opcode_size > opcode_index {
+        let opcode = unsafe { mem::transmute::<u8, VmOpCode>(options.opcodes[opcode_index]) };
+        match opcode {
+            VmOpCode::Division |
+            VmOpCode::Not |
+            VmOpCode::Equal |
+            VmOpCode::NotEqual |
+            VmOpCode::Dublicate |
+            VmOpCode::Increment |
+            VmOpCode::Decrement | 
+            VmOpCode::Addition | 
+            VmOpCode::And | 
+            VmOpCode::Or |
+            VmOpCode::Subraction | 
+            VmOpCode::GreaterEqualThan |
+            VmOpCode::GreaterThan | 
+            VmOpCode::LessEqualThan | 
+            VmOpCode::LessThan | 
+            VmOpCode::GetItem | 
+            VmOpCode::Multiply => {
+                let data = format!("║ {:4} ║ {:15} ║ {:^5} ║ {:^5} ║", opcode_index, format!("{:?}", opcode), "", "").to_string();
+                build_arrow(index, opcode_index, 0, &mut buffer, &data);
+            },
+
+            VmOpCode::Compare => {
+                let location = opcode_index + ((options.opcodes[opcode_index+2] as u16 * 256) + options.opcodes[opcode_index+1] as u16) as usize;
+                let data = format!("║ {:4} ║ {:15} ║ {:^5?} ║ {:^5} ║", opcode_index, format!("{:?}", opcode), location, "");
+                build_arrow(index, opcode_index, 0, &mut buffer, &data);
+                opcode_index += 2;
+            },
+
+            VmOpCode::Jump => {
+                let location = ((options.opcodes[opcode_index+2] as u16 * 256) + options.opcodes[opcode_index+1] as u16) as usize;
+                let data = format!("║ {:4} ║ {:15} ║ {:^5?} ║ {:^5} ║", opcode_index, format!("{:?}", opcode), location + 1, "");
+                build_arrow(index, opcode_index, 0, &mut buffer, &data);
+                opcode_index += 2;
+            },
+
+            VmOpCode::Func => {
+                let location = ((options.opcodes[opcode_index+2] as u16 * 256) + options.opcodes[opcode_index+1] as u16) as usize;
+                let data = format!("║ {:4} ║ {:15} ║ {:^5?} ║ {:^5} ║", opcode_index, format!("{:?}", opcode), location + opcode_index + 1, "");
+                build_arrow(index, opcode_index, 3, &mut buffer, &data);
+                opcode_index += 3;
+            },
+
+            VmOpCode::InitArguments |
+            VmOpCode::CopyToStore |
+            VmOpCode::Load |
+            VmOpCode::InitList |
+            VmOpCode::InitDict |
+            VmOpCode::Store => {
+                let data = format!("║ {:4} ║ {:15} ║ {:^5?} ║ {:^5} ║", opcode_index, format!("{:?}", opcode), options.opcodes[opcode_index + 1], "");
+                build_arrow(index, opcode_index, 1, &mut buffer, &data);
+                opcode_index += 1;
+            },
+
+            VmOpCode::None |
+            VmOpCode::Return => {
+                let data = format!("║ {:4} ║ {:15} ║ {:^5} ║ {:^5} ║", opcode_index, format!("{:?}", opcode), "", "").to_string();
+                build_arrow(index, opcode_index, 0, &mut buffer, &data);
+            },
+
+            VmOpCode::Call => {
+                let location = ((options.opcodes[opcode_index+2] as u16 * 256) + options.opcodes[opcode_index+1] as u16) as usize;
+                let data = format!("║ {:4} ║ {:15} ║ {:^5?} ║ {:^5} ║", opcode_index, format!("{:?}", opcode), location, options.opcodes[opcode_index + 3]);
+                build_arrow(index, opcode_index, 4, &mut buffer, &data);
+                opcode_index += 4;
+            },
+            
+            VmOpCode::NativeCall => {
+                let location = (options.opcodes[opcode_index+1] as u16) as usize;
+                let data = format!("║ {:4} ║ {:15} ║ {:^5?} ║ {:^5} ║", opcode_index, format!("{:?}", opcode), location, options.opcodes[opcode_index + 2]);
+                build_arrow(index, opcode_index, 3, &mut buffer, &data);
+                opcode_index += 3;
+            },
+
+            VmOpCode::FastStore => {
+                let data = format!("║ {:4} ║ {:15} ║ {:^5?} ║ {:^5} ║", opcode_index, format!("{:?}", opcode), options.opcodes[opcode_index + 1], options.opcodes[opcode_index + 2]);
+                build_arrow(index, opcode_index, 2, &mut buffer, &data);
+                opcode_index += 2;
+            }
+        }
+
+        opcode_index += 1;
+    }
+    buffer.push_str("╚═══╩══════╩═════════════════╩═══════╩═══════╝\r\n");
+    log_update.render(&format!("{}", buffer)).unwrap();
+    io::stdout().flush().unwrap();
+    thread::sleep(time::Duration::from_millis(1));
+}
+
+pub fn run_vm(options: &mut BramaCompilerOption) -> Result<(), String>
 {
     #[cfg(feature = "dumpOpcodes")] {
-
-        println!("╔════════════════════════════════════════╗");
-        println!("║                  OPCODE                ║");
-        println!("╠══════╦═════════════════╦═══════╦═══════╣");
-        let opcode_size   = options.opcodes.len();
-        let mut opcode_index = 0;
-
-        while opcode_size > opcode_index {
-            let opcode = unsafe { mem::transmute::<u8, VmOpCode>(options.opcodes[opcode_index]) };
-            match opcode {
-                VmOpCode::Division |
-                VmOpCode::Not |
-                VmOpCode::Equal |
-                VmOpCode::NotEqual |
-                VmOpCode::Dublicate |
-                VmOpCode::Increment |
-                VmOpCode::Decrement | 
-                VmOpCode::Addition | 
-                VmOpCode::And | 
-                VmOpCode::Or |
-                VmOpCode::Subraction | 
-                VmOpCode::GreaterEqualThan |
-                VmOpCode::GreaterThan | 
-                VmOpCode::LessEqualThan | 
-                VmOpCode::LessThan | 
-                VmOpCode::GetItem | 
-                VmOpCode::Multiply => {
-                    println!("║ {:4} ║ {:15} ║ {:^5} ║ {:^5} ║", opcode_index, format!("{:?}", opcode), "", "");
-                },
-
-                VmOpCode::Compare |
-                VmOpCode::Jump => {
-                    let location = ((options.opcodes[opcode_index+2] as u16 * 256) + options.opcodes[opcode_index+1] as u16) as usize;
-
-                    println!("║ {:4} ║ {:15} ║ {:^5?} ║ {:^5} ║", opcode_index, format!("{:?}", opcode), location + opcode_index + 1, "");
-                    opcode_index += 2;
-                },
-
-                VmOpCode::Func => {
-                    let location = ((options.opcodes[opcode_index+2] as u16 * 256) + options.opcodes[opcode_index+1] as u16) as usize;
-
-                    println!("║ {:4} ║ {:15} ║ {:^5?} ║ {:^5} ║", opcode_index, format!("{:?}", opcode), location + opcode_index + 1, "");
-                    opcode_index += 3;
-                },
-
-                VmOpCode::InitArguments |
-                VmOpCode::CopyToStore |
-                VmOpCode::Load |
-                VmOpCode::InitList |
-                VmOpCode::InitDict |
-                VmOpCode::Store => {
-                    println!("║ {:4} ║ {:15} ║ {:^5?} ║ {:^5} ║", opcode_index, format!("{:?}", opcode), options.opcodes[opcode_index + 1], "");
-                    opcode_index += 1;
-                },
-
-                VmOpCode::None |
-                VmOpCode::Return => {
-                    println!("║ {:4} ║ {:15} ║ {:^5} ║ {:^5} ║", opcode_index, format!("{:?}", opcode), "", "");
-                },
-
-                VmOpCode::Call => {
-                    let location = ((options.opcodes[opcode_index+2] as u16 * 256) + options.opcodes[opcode_index+1] as u16) as usize;
-                    println!("║ {:4} ║ {:15} ║ {:^5?} ║ {:^5} ║", opcode_index, format!("{:?}", opcode), location, options.opcodes[opcode_index + 3]);
-                    opcode_index += 4;
-                },
-                
-                VmOpCode::NativeCall => {
-                    let location = (options.opcodes[opcode_index+1] as u16) as usize;
-                    println!("║ {:4} ║ {:15} ║ {:^5?} ║ {:^5} ║", opcode_index, format!("{:?}", opcode), location, options.opcodes[opcode_index + 2]);
-                    opcode_index += 3;
-                },
-
-                VmOpCode::FastStore => {
-                    println!("║ {:4} ║ {:15} ║ {:^5?} ║ {:^5} ║", opcode_index, format!("{:?}", opcode), options.opcodes[opcode_index + 1], options.opcodes[opcode_index + 2]);
-                    opcode_index += 2;
-                }
-            }
-
-            opcode_index += 1;
-        }
-        println!("╚══════╩═════════════════╩═══════╩═══════╝");
+        let mut log_update = LogUpdate::new(stdout()).unwrap();
+        dump_opcode(0, options, &mut log_update);
     }
 
     //dump_opcode_header();
@@ -130,6 +166,9 @@ pub fn run_vm(options: &mut BramaCompilerOption) -> Result<(), &'static str>
 
         while opcode_size > index {
             let opcode = unsafe { mem::transmute::<u8, VmOpCode>(options.opcodes[index]) };
+            #[cfg(feature = "liveOpcodeView")] {
+                dump_opcode(index, options, &mut log_update);
+            }
             
             match opcode {
                 VmOpCode::Subraction => {
@@ -307,7 +346,7 @@ pub fn run_vm(options: &mut BramaCompilerOption) -> Result<(), &'static str>
                     let storage_location = ((options.opcodes[index + 1] as u16 * 256) + options.opcodes[index] as u16) as usize;
 
                     if argument_size != options.opcodes[index + 2] {
-                        return Err("Function argument error")
+                        return Err("Function argument error".to_string())
                     }
                     let mut args: Vec<VmObject> = Vec::with_capacity(argument_size as usize);
 
@@ -450,7 +489,8 @@ pub fn run_vm(options: &mut BramaCompilerOption) -> Result<(), &'static str>
 
                 VmOpCode::Jump => {
                     let location = ((options.opcodes[index + 2] as u16 * 256) + options.opcodes[index + 1] as u16) as usize;
-                    index += location as usize;
+                    index = location as usize;
+                    continue;
                 },
 
                 VmOpCode::GetItem => {
@@ -461,7 +501,7 @@ pub fn run_vm(options: &mut BramaCompilerOption) -> Result<(), &'static str>
                         BramaPrimative::List(value) => {
                             let indexer_value = match &*indexer {
                                 BramaPrimative::Number(number) => *number as u64,
-                                _ => return Err("Indexer must be number")
+                                _ => return Err("Indexer must be number".to_string())
                             };
 
                             match (*value).get(indexer_value as usize) {
@@ -472,7 +512,7 @@ pub fn run_vm(options: &mut BramaCompilerOption) -> Result<(), &'static str>
                         BramaPrimative::Dict(value) => {
                             let indexer_value = match &*indexer {
                                 BramaPrimative::Text(text) => &*text,
-                                _ => return Err("Indexer must be string")
+                                _ => return Err("Indexer must be string".to_string())
                             };
 
                             match (*value).get(&indexer_value.to_string()) {

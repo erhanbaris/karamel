@@ -45,7 +45,7 @@ impl Module for NumModule {
 impl NumModule  {
     pub fn parse(arguments: &Vec<VmObject>, last_position: usize, total_args: u8) -> NativeCallResult {
         if total_args > 1 {
-            return Err(("More than 1 argument passed", 0, 0));
+            return Err(("More than 1 argument passed".to_string(), 0, 0));
         }
 
         let arg = arguments[last_position - 1].deref();
@@ -55,7 +55,7 @@ impl NumModule  {
             BramaPrimative::Text(text) => {
                 match (*text).parse() {
                     Ok(num) => Ok(VmObject::native_convert(BramaPrimative::Number(num))),
-                    _ => Err(("More than 1 argument passed", 0, 0))
+                    _ => Err(("More than 1 argument passed".to_string(), 0, 0))
                 }
             },
             _ => Ok(EMPTY_OBJECT)

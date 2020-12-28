@@ -1,6 +1,6 @@
 extern crate bitflags;
 extern crate termion;
-
+extern crate log_update;
 
 mod types;
 mod parser;
@@ -24,7 +24,6 @@ pub fn greet(name: &str) {
     alert(&format!("Hello, {}!", name));
 }
 
-
 #[cfg(not(feature = "wasmBuild"))]
 fn main() {
     let result = vm::executer::code_executer(&r#"sonsuz:
@@ -33,7 +32,7 @@ fn main() {
     kır
 "#.to_string());
     match result {
-        Ok(_) => println!("Sucess"),
+        Ok(_) => println!("Success"),
         Err(error) => println!("Fail ({})", error)
     };
 }

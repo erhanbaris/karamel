@@ -44,15 +44,21 @@ impl Module for DebugModule {
 
 impl DebugModule  {
     pub fn assert(arguments: &Vec<VmObject>, last_position: usize, total_args: u8) -> NativeCallResult {
-        let status = match total_args {
-            1 => arguments[last_position - 1].deref().is_true(),
-            2 => arguments[last_position - 1].deref() == arguments[last_position - 2].deref(),
-            _ => false
-        };
-
-        return match status {
-            false => Err(("Assert failed", 0, 0)),
-            true  => Ok(EMPTY_OBJECT)
+        match total_args {
+            1 => {
+                return match arguments[last_position - 1].deref().is_true() {
+                    false => Err(("Assert failed".to_string(), 0, 0)),
+                    true  => Ok(EMPTY_OBJECT)
+                }
+            },
+            2 => {
+                let status = arguments[last_position - 2].deref() == arguments[last_position - 1].deref();
+                return match status {
+                    false => Err((format!("Assert failed (left: {:?}, right: {:?})", arguments[last_position - 2].deref(), arguments[last_position - 1].deref()).to_string(), 0, 0)),
+                    true  => Ok(EMPTY_OBJECT)
+                };
+            },
+            _ => return Err(("Assert failed".to_string(), 0, 0))
         };
     }
 }

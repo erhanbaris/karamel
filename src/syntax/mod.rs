@@ -102,7 +102,6 @@ impl SyntaxParser {
             return false;
         }
         else if self.peek_token().unwrap().start != indentation as u32 {
-            println!("{:?}", self.peek_token().unwrap());
             return false;
         }
 

@@ -6,7 +6,7 @@ use std::collections::HashMap;
 
 use crate::types::*;
 
-pub type NativeCallResult = Result<VmObject, (&'static str, u32, u32)>;
+pub type NativeCallResult = Result<VmObject, (String, u32, u32)>;
 pub type NativeCall       = fn(stack: &Vec<VmObject>, last_position: usize, arg_size: u8) -> NativeCallResult;
 
 pub const EMPTY_OBJECT: VmObject = VmObject(QNAN | EMPTY_FLAG);

@@ -10,17 +10,10 @@
  - Sözlük (*{'ad':'erhan', 'soyad':'barış'}*)
 
 ### Döngü
-döngü 'a'..'z' kadar a kullan:  
-&emsp;&emsp;-  
-loop 'a'..'z' until a use:  
-&emsp;&emsp;-  
+sonsuz:  
+&emsp;&emsp;gç::satıryaz("Sonsuza kadar devam")  
 
-döngü:  
-&emsp;&emsp;-  
-loop:  
-&emsp;&emsp;-
-
-Döngü kontrolü için *devam*, *continue*, *bırak*, *break*.
+Döngü kontrolü için *devamet*, *continue*, *kır*, *break*.
 
 ### Sorgulama
 eğer a == b:  

@@ -15,7 +15,9 @@ pub struct BramaCompilerOption {
     pub storages: Vec<StaticStorage>,
     pub modules: ModuleCollection,
     pub opcode_index: usize,
-    pub functions_compiled: bool
+    pub functions_compiled: bool,
+    pub loop_breaks: Vec<usize>,
+    pub loop_continues: Vec<usize>
 }
 
 pub struct FunctionDefine {
@@ -32,7 +34,9 @@ impl  BramaCompilerOption {
             storages: vec![StaticStorage::new()],
             modules: ModuleCollection::new(),
             opcode_index: 0,
-            functions_compiled: false
+            functions_compiled: false,
+            loop_breaks: Vec::new(),
+            loop_continues: Vec::new()
         }
     }
 
@@ -72,7 +76,7 @@ impl Compiler for InterpreterCompiler {
         }
         else {
             /* Prepare jump code for main function */
-            let current_location = options.opcodes.len() - 1;
+            let current_location = options.opcodes.len();
             options.opcodes[1] = current_location as u8;
             options.opcodes[2] = (current_location >> 8) as u8;
             functions_compiled = true;
@@ -148,23 +152,23 @@ impl InterpreterCompiler {
     fn generate_opcode(&self, ast: &BramaAstType, upper_ast: &BramaAstType, options: &mut BramaCompilerOption, storage_index: usize) -> CompilerResult {
         match ast {
             BramaAstType::Assignment { variable, operator, expression } => self.generate_assignment(variable.clone(), operator, expression, options, storage_index),
-            BramaAstType::Symbol(variable)                              => self.generate_symbol(variable, upper_ast, options, storage_index),
-            BramaAstType::Control { left, operator, right }             => self.generate_control(left, operator, right, upper_ast, options, storage_index),
-            BramaAstType::Binary { left, operator, right }              => self.generate_binary(left, operator, right, upper_ast, options, storage_index),
-            BramaAstType::Block(asts)                                   => self.generate_block(asts, upper_ast, options, storage_index),
-            BramaAstType::Primative(primative)                          => self.generate_primative(primative.clone(), upper_ast, options, storage_index),
-            BramaAstType::List(list)                                    => self.generate_list(list, upper_ast, options, storage_index),
-            BramaAstType::Dict(dict)                                    => self.generate_dict(dict, upper_ast, options, storage_index),
-            BramaAstType::FuncCall { names, arguments, assign_to_temp }                 => self.generate_func_call(names, arguments, *assign_to_temp, upper_ast, options, storage_index),
-            BramaAstType::PrefixUnary (operator, expression)            => self.generate_prefix_unary(operator, expression, upper_ast, options, storage_index),
-            BramaAstType::SuffixUnary (operator, expression)            => self.generate_suffix_unary(operator, expression, upper_ast, options, storage_index),
-            BramaAstType::NewLine                                       => Ok(0),
-            BramaAstType::EndlessLoop(_)                                       => Ok(0),
-            BramaAstType::Break                                       => Ok(0),
-            BramaAstType::Continue                                       => Ok(0),
-            BramaAstType::Return(expression)                                       => self.generate_return(expression, upper_ast, options, storage_index),
+            BramaAstType::Symbol(variable) => self.generate_symbol(variable, upper_ast, options, storage_index),
+            BramaAstType::Control { left, operator, right } => self.generate_control(left, operator, right, upper_ast, options, storage_index),
+            BramaAstType::Binary { left, operator, right } => self.generate_binary(left, operator, right, upper_ast, options, storage_index),
+            BramaAstType::Block(asts) => self.generate_block(asts, upper_ast, options, storage_index),
+            BramaAstType::Primative(primative) => self.generate_primative(primative.clone(), upper_ast, options, storage_index),
+            BramaAstType::List(list) => self.generate_list(list, upper_ast, options, storage_index),
+            BramaAstType::Dict(dict) => self.generate_dict(dict, upper_ast, options, storage_index),
+            BramaAstType::FuncCall { names, arguments, assign_to_temp } => self.generate_func_call(names, arguments, *assign_to_temp, upper_ast, options, storage_index),
+            BramaAstType::PrefixUnary (operator, expression) => self.generate_prefix_unary(operator, expression, upper_ast, options, storage_index),
+            BramaAstType::SuffixUnary (operator, expression) => self.generate_suffix_unary(operator, expression, upper_ast, options, storage_index),
+            BramaAstType::NewLine => Ok(0),
+            BramaAstType::EndlessLoop(expression) => self.generate_endlessloop(expression, upper_ast, options, storage_index),
+            BramaAstType::Break => self.generate_break(upper_ast, options, storage_index),
+            BramaAstType::Continue => self.generate_continue(upper_ast, options, storage_index),
+            BramaAstType::Return(expression) => self.generate_return(expression, upper_ast, options, storage_index),
             BramaAstType::IfStatement {condition, body, else_body, else_if} => self.generate_if_condition(condition, body, else_body, else_if, upper_ast, options, storage_index),
-            BramaAstType::Indexer {body, indexer}                           => self.generate_indexer(body, indexer, upper_ast, options, storage_index),
+            BramaAstType::Indexer {body, indexer} => self.generate_indexer(body, indexer, upper_ast, options, storage_index),
             BramaAstType::None => self.generate_none(options, storage_index),
             BramaAstType::FunctionDefination{name: _, arguments: _, body: _} => Ok(0)
         }
@@ -268,9 +272,61 @@ impl InterpreterCompiler {
         }
     }
 
+    fn generate_break(&self, _: &BramaAstType, options: &mut BramaCompilerOption, _: usize) -> CompilerResult {       
+        options.opcodes.push(VmOpCode::Jump as u8);
+        options.loop_breaks.push(options.opcodes.len());
+        options.opcodes.push(0);
+        options.opcodes.push(0);
+        Ok(0)
+    }
+
+    fn generate_continue(&self, _: &BramaAstType, options: &mut BramaCompilerOption, _: usize) -> CompilerResult {       
+        options.opcodes.push(VmOpCode::Jump as u8);
+        options.loop_continues.push(options.opcodes.len());
+        options.opcodes.push(0);
+        options.opcodes.push(0);
+        Ok(0)
+    }
+
     fn generate_return(&self, expression: &BramaAstType, upper_ast: &BramaAstType, options: &mut BramaCompilerOption, storage_index: usize) -> CompilerResult {
         self.generate_opcode(expression, upper_ast, options, storage_index)?;
         options.opcodes.push(VmOpCode::Return as u8);
+        Ok(0)
+    }
+
+    fn generate_endlessloop(&self, expression: &BramaAstType, upper_ast: &BramaAstType, options: &mut BramaCompilerOption, storage_index: usize) -> CompilerResult {
+        /* Backup loop informations */
+        let loop_breaks = options.loop_breaks.to_vec();
+        let loop_continues = options.loop_continues.to_vec();
+        
+        let start_location = options.opcodes.len(); 
+        self.generate_opcode(expression, upper_ast, options, storage_index)?;
+
+        /* 
+        1. ... Endless loop start location
+        2. ...
+        3. ...
+        4. ...
+        5. Jump to  1.*/
+        options.opcodes.push(VmOpCode::Jump as u8);
+        options.opcodes.push(start_location as u8);
+        options.opcodes.push((start_location >> 8) as u8);
+
+        let current_location = options.opcodes.len(); 
+
+        for break_info in &options.loop_breaks {
+            options.opcodes[*break_info]     = current_location as u8;
+            options.opcodes[*break_info + 1] = (current_location >> 8) as u8;
+        } 
+
+        for continue_info in &options.loop_continues {
+            options.opcodes[*continue_info]     = start_location as u8;
+            options.opcodes[*continue_info + 1] = (start_location >> 8) as u8;
+        } 
+
+        options.loop_breaks = loop_breaks.to_vec();
+        options.loop_continues = loop_continues.to_vec();
+
         Ok(0)
     }
 
@@ -423,6 +479,12 @@ impl InterpreterCompiler {
     }
 
     fn build_jump_location(&self, options: &mut BramaCompilerOption, jump_location: usize) {
+        let current_location = options.opcodes.len();
+        options.opcodes[jump_location]     = current_location as u8;
+        options.opcodes[jump_location + 1] = (current_location >> 8) as u8;
+    }
+
+    fn build_compare_location(&self, options: &mut BramaCompilerOption, jump_location: usize) {
         let current_location = options.opcodes.len() - jump_location;
         options.opcodes[jump_location]     = current_location as u8;
         options.opcodes[jump_location + 1] = (current_location >> 8) as u8;
@@ -460,7 +522,7 @@ impl InterpreterCompiler {
 
         for else_if_item in else_if {
             /* Previous conditon should jump to this location */
-            self.build_jump_location(options, if_failed_location);
+            self.build_compare_location(options, if_failed_location);
 
             /* Build condition */
             self.generate_opcode(&else_if_item.condition, upper_ast, options, storage_index)?;
@@ -474,11 +536,11 @@ impl InterpreterCompiler {
         }
 
         if let Some(_else_body) = else_body {
-            self.build_jump_location(options, if_failed_location);
+            self.build_compare_location(options, if_failed_location);
             self.generate_opcode(_else_body, upper_ast, options, storage_index)?;
         }
         else {
-            self.build_jump_location(options, if_failed_location);
+            self.build_compare_location(options, if_failed_location);
         }
 
         for exit_location in exit_locations {
