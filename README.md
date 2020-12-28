@@ -10,24 +10,39 @@
  - Sözlük (*{'ad':'erhan', 'soyad':'barış'}*)
 
 ### Döngü
-sonsuz:  
-&emsp;&emsp;gç::satıryaz("Sonsuza kadar devam")  
+```
+kayıt = 10
+toplam = 0
+döngü kayıt iken:
+    gç::satıryaz(kayıt)
+    kayıt -= 1
+    toplam += 1
+hataayıklama::doğrula(toplam, 10)
+hataayıklama::doğrula(kayıt, 0)
+```
+
+```
+sonsuz:
+    gç::satıryaz("Sonsuza kadar devam")
+```
 
 Döngü kontrolü için *devamet*, *continue*, *kır*, *break*.
 
 ### Sorgulama
+```
 eğer a == b:  
-&emsp;&emsp;-  
+    gç::satıryaz('a eşittir b')
 yada a == c:  
-&emsp;&emsp;-  
+    gç::satıryaz('a eşittir c')
 yada:  
-&emsp;&emsp;-
+    gç::satıryaz('a hiçbirine eşit değil')
+```
 
 ## Fonksiyon tanımlama
+```
 fn metod_1(a):
-&emsp;&emsp;  
-&emsp;&emsp;gç::yaz(a)
+    gç::yaz(a)
 
 fn merhaba_dünya:
-&emsp;&emsp;  
-&emsp;&emsp;gç::yaz('Merhaba dünya')
+    gç::yaz('Merhaba dünya')
+```

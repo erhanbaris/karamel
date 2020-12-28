@@ -23,10 +23,3 @@ log-update = "*"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
-
-
-[[test]]
-name = "tpd-tests"
-edition = "2018"
-path = "tests/mod.rs"
-required-features = []

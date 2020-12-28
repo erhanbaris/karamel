@@ -53,7 +53,9 @@ pub enum BramaKeywordType {
     Return,
     Endless,
     Break,
-    Continue
+    Continue,
+    WhileStartPart,
+    WhileEndPart
 }
 
 impl BramaKeywordType {
@@ -86,23 +88,25 @@ pub static KEYWORDS: &'static [(&str, BramaKeywordType)] = &[
     ("or",     BramaKeywordType::Or),
     ("empty",  BramaKeywordType::Empty),
     ("not",    BramaKeywordType::Not),
-    ("equal",       BramaKeywordType::Equal),
-    ("notequal",  BramaKeywordType::NotEqual),
-    ("greater",      BramaKeywordType::GreaterThan),
+    ("equal",         BramaKeywordType::Equal),
+    ("notequal",      BramaKeywordType::NotEqual),
+    ("greater",       BramaKeywordType::GreaterThan),
     ("greaterequal",  BramaKeywordType::GreaterEqualThan),
-    ("less",      BramaKeywordType::LessThan),
-    ("lessequal",  BramaKeywordType::LessEqualThan),
+    ("less",          BramaKeywordType::LessThan),
+    ("lessequal",     BramaKeywordType::LessEqualThan),
     ("return",        BramaKeywordType::Return),
     ("endless",       BramaKeywordType::Endless),
     ("break",         BramaKeywordType::Break),
     ("continue",      BramaKeywordType::Continue),
+    ("do",            BramaKeywordType::WhileStartPart),
+    ("while",         BramaKeywordType::WhileEndPart),
 
     ("doğru",  BramaKeywordType::True),
     ("yanlış", BramaKeywordType::False),
     ("kullan", BramaKeywordType::Use),
     ("kadar",  BramaKeywordType::Until),
     ("döngü",  BramaKeywordType::Loop),
-    ("sonsuz",  BramaKeywordType::Endless),
+    ("sonsuz", BramaKeywordType::Endless),
     ("eğer",   BramaKeywordType::If),
     ("yada",   BramaKeywordType::Else),
     ("ve",     BramaKeywordType::And),
@@ -118,8 +122,10 @@ pub static KEYWORDS: &'static [(&str, BramaKeywordType)] = &[
     ("değil",         BramaKeywordType::Not),
     ("fn",            BramaKeywordType::Fn),
     ("döndür",        BramaKeywordType::Return),
-    ("kır",         BramaKeywordType::Break),
-    ("devamet",      BramaKeywordType::Continue),
+    ("kır",           BramaKeywordType::Break),
+    ("devamet",       BramaKeywordType::Continue),
+    ("döngü",         BramaKeywordType::WhileStartPart),
+    ("iken",          BramaKeywordType::WhileEndPart)
 ];
 
 #[derive(Clone, Copy)]

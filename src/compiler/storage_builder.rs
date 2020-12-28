@@ -147,6 +147,13 @@ impl StorageBuilder {
                 0
             },
 
+            BramaAstType::WhileLoop { control, body } => {
+                self.get_temp_count_from_ast(control, ast, options, storage_index, compiler_option);
+                self.get_temp_count_from_ast(body, ast, options, storage_index, compiler_option);
+                compiler_option.max_stack = max(1, compiler_option.max_stack);
+                1
+            },
+
             BramaAstType::Primative(primative) => {
                 options.storages.get_mut(storage_index).unwrap().add_constant(Rc::clone(primative));
                 compiler_option.max_stack = max(1, compiler_option.max_stack);

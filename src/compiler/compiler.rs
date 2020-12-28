@@ -163,6 +163,7 @@ impl InterpreterCompiler {
             BramaAstType::PrefixUnary (operator, expression) => self.generate_prefix_unary(operator, expression, upper_ast, options, storage_index),
             BramaAstType::SuffixUnary (operator, expression) => self.generate_suffix_unary(operator, expression, upper_ast, options, storage_index),
             BramaAstType::NewLine => Ok(0),
+            BramaAstType::WhileLoop { control, body } => self.generate_whileloop(control, body, upper_ast, options, storage_index),
             BramaAstType::EndlessLoop(expression) => self.generate_endlessloop(expression, upper_ast, options, storage_index),
             BramaAstType::Break => self.generate_break(upper_ast, options, storage_index),
             BramaAstType::Continue => self.generate_continue(upper_ast, options, storage_index),
@@ -291,6 +292,47 @@ impl InterpreterCompiler {
     fn generate_return(&self, expression: &BramaAstType, upper_ast: &BramaAstType, options: &mut BramaCompilerOption, storage_index: usize) -> CompilerResult {
         self.generate_opcode(expression, upper_ast, options, storage_index)?;
         options.opcodes.push(VmOpCode::Return as u8);
+        Ok(0)
+    }
+
+    fn generate_whileloop(&self, control: &BramaAstType, body: &BramaAstType, upper_ast: &BramaAstType, options: &mut BramaCompilerOption, storage_index: usize) -> CompilerResult {
+        /* Backup loop informations */
+        let loop_breaks = options.loop_breaks.to_vec();
+        let loop_continues = options.loop_continues.to_vec();
+        
+        let start_location = options.opcodes.len(); 
+        self.generate_opcode(control, upper_ast, options, storage_index)?;
+        options.opcodes.push(VmOpCode::Compare as u8);
+        let compare_location = options.opcodes.len();
+
+        options.opcodes.push(0 as u8);
+        options.opcodes.push(0 as u8);
+
+        self.generate_opcode(body, upper_ast, options, storage_index)?;
+
+        options.opcodes.push(VmOpCode::Jump as u8);
+        options.opcodes.push(start_location as u8);
+        options.opcodes.push((start_location >> 8) as u8);
+
+        let current_location = options.opcodes.len(); 
+
+        for break_info in &options.loop_breaks {
+            options.opcodes[*break_info]     = current_location as u8;
+            options.opcodes[*break_info + 1] = (current_location >> 8) as u8;
+        } 
+
+        for continue_info in &options.loop_continues {
+            options.opcodes[*continue_info]     = start_location as u8;
+            options.opcodes[*continue_info + 1] = (start_location >> 8) as u8;
+        } 
+
+        options.loop_breaks    = loop_breaks.to_vec();
+        options.loop_continues = loop_continues.to_vec();
+
+        let end_location = current_location - compare_location;
+        options.opcodes[compare_location]     = end_location as u8;
+        options.opcodes[compare_location + 1] = (end_location >> 8) as u8;
+
         Ok(0)
     }
 

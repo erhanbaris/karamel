@@ -133,13 +133,13 @@ pub fn dump_opcode<W: Write>(index: usize, options: &mut BramaCompilerOption, lo
     buffer.push_str("╚═══╩══════╩═════════════════╩═══════╩═══════╝\r\n");
     log_update.render(&format!("{}", buffer)).unwrap();
     io::stdout().flush().unwrap();
-    thread::sleep(time::Duration::from_millis(1));
+    thread::sleep(time::Duration::from_millis(10));
 }
 
 pub fn run_vm(options: &mut BramaCompilerOption) -> Result<(), String>
 {
+    let mut log_update = LogUpdate::new(stdout()).unwrap();
     #[cfg(feature = "dumpOpcodes")] {
-        let mut log_update = LogUpdate::new(stdout()).unwrap();
         dump_opcode(0, options, &mut log_update);
     }
 

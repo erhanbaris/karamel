@@ -26,10 +26,16 @@ pub fn greet(name: &str) {
 
 #[cfg(not(feature = "wasmBuild"))]
 fn main() {
-    let result = vm::executer::code_executer(&r#"sonsuz:
-    erhan=123   
-    print(1)
-    kır
+    let result = vm::executer::code_executer(&r#"
+kayıt = 10
+toplam = 0
+döngü kayıt iken:
+    gç::satıryaz('doğru')
+    gç::satıryaz(kayıt)
+    kayıt -= 1
+    toplam += 1
+hataayıklama::doğrula(toplam, 10)
+hataayıklama::doğrula(kayıt, 0)
 "#.to_string());
     match result {
         Ok(_) => println!("Success"),

@@ -81,5 +81,9 @@ pub enum BramaAstType {
     Return(Box<BramaAstType>),
     Break,
     Continue,
-    EndlessLoop(Box<BramaAstType>)
+    EndlessLoop(Box<BramaAstType>),
+    WhileLoop {
+        control: Box<BramaAstType>,
+        body: Box<BramaAstType>
+    }
 }
