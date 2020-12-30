@@ -8,7 +8,7 @@ use std::io::Write;
 
 #[allow(dead_code)]
 pub fn code_executer(data: &String) -> Result<(), String> {
-    let mut compiler_options: BramaCompilerOption = BramaCompilerOption::new();
+    let mut compiler_options: BramaCompiler = BramaCompiler::new();
 
     let mut parser = Parser::new(&data[..]);
     match parser.parse() {
@@ -25,7 +25,7 @@ pub fn code_executer(data: &String) -> Result<(), String> {
             let opcode_compiler = InterpreterCompiler {};
 
             let execution_status = match opcode_compiler.compile(&ast, &mut compiler_options) {
-                Ok(_) => run_vm(&mut compiler_options),
+                Ok(_) => unsafe { run_vm(&mut compiler_options) },
                 Err(message) => Err(message.to_string())
             };
             execution_status
@@ -48,7 +48,7 @@ fn console_welcome() {
 pub fn console_executer() {
     console_welcome();
     
-    let mut compiler_options: BramaCompilerOption = BramaCompilerOption::new();
+    let mut compiler_options: BramaCompiler = BramaCompiler::new();
     let mut line = String::new();
 
     loop {
@@ -83,7 +83,7 @@ pub fn console_executer() {
                 compiler_options.reset();
                 
                 if let Ok(_) = opcode_compiler.compile(&ast, &mut compiler_options) {
-                    if let Err(message) = run_vm(&mut compiler_options) {
+                    if let Err(message) = unsafe { run_vm(&mut compiler_options) } {
                         println!("{}", message);
                     }
                 }

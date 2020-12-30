@@ -1,5 +1,6 @@
 use std::vec::Vec;
 use std::rc::Rc;
+use std::ptr;
 
 use ast::BramaDictItem;
 
@@ -10,14 +11,40 @@ use crate::compiler::value::BramaPrimative;
 use crate::compiler::ast::{BramaAstType, BramaIfStatementElseItem};
 use crate::compiler::storage_builder::StorageBuilder;
 
-pub struct BramaCompilerOption {
+#[derive(Clone)]
+pub struct Scope {
+    pub memory: Vec<VmObject>, 
+    pub stack: Vec<VmObject>, 
+    pub location: usize,
+    pub memory_index: usize,
+    pub call_return_assign_to_temp: bool,
+    pub const_size: u8
+}
+
+impl Scope {
+    pub fn empty() -> Scope {
+        Scope { 
+            const_size: 0, 
+            call_return_assign_to_temp: false, 
+            memory_index: 0, 
+            location: 0, 
+            memory: Vec::new(), 
+            stack: Vec::new()
+        }
+    }
+}
+
+pub struct BramaCompiler {
     pub opcodes : Vec<u8>,
     pub storages: Vec<StaticStorage>,
     pub modules: ModuleCollection,
     pub opcode_index: usize,
     pub functions_compiled: bool,
     pub loop_breaks: Vec<usize>,
-    pub loop_continues: Vec<usize>
+    pub loop_continues: Vec<usize>,
+    pub scopes: Vec<Scope>,
+    pub current_scope: *mut Scope,
+    pub scope_index: usize
 }
 
 pub struct FunctionDefine {
@@ -27,17 +54,27 @@ pub struct FunctionDefine {
     storage_index: usize
 }
 
-impl  BramaCompilerOption {
-    pub fn new() -> BramaCompilerOption {
-        BramaCompilerOption {
+impl  BramaCompiler {
+    pub fn new() -> BramaCompiler {
+        let mut compiler = BramaCompiler {
             opcodes: Vec::new(),
             storages: vec![StaticStorage::new()],
             modules: ModuleCollection::new(),
             opcode_index: 0,
             functions_compiled: false,
             loop_breaks: Vec::new(),
-            loop_continues: Vec::new()
+            loop_continues: Vec::new(),
+            scopes: Vec::new(),
+            current_scope: ptr::null_mut(),
+            scope_index: 0
+        };
+
+        for _ in 0..32{
+            compiler.scopes.push(Scope::empty());
         }
+        
+        compiler.current_scope = &mut compiler.scopes[0] as *mut Scope;
+        compiler
     }
 
     pub fn reset(&mut self) {
@@ -47,13 +84,13 @@ impl  BramaCompilerOption {
 
 pub trait Compiler
 {
-    fn compile(&self, ast: &BramaAstType, options: &mut BramaCompilerOption) -> CompilerResult;
+    fn compile(&self, ast: &BramaAstType, options: &mut BramaCompiler) -> CompilerResult;
 }
 
 
 pub struct InterpreterCompiler;
 impl Compiler for InterpreterCompiler {   
-    fn compile(&self, ast: &BramaAstType, options: &mut BramaCompilerOption) -> CompilerResult {
+    fn compile(&self, ast: &BramaAstType, options: &mut BramaCompiler) -> CompilerResult {
         let storage_builder: StorageBuilder = StorageBuilder::new();
         storage_builder.prepare_variable_store(ast, options);
         let mut functions_compiled = false;
@@ -85,7 +122,7 @@ impl Compiler for InterpreterCompiler {
         /* Generate main function code */
         self.generate_opcode(ast, &BramaAstType::None, options, 0)?;
 
-        /* Fix function referances */
+        /* Fix function references */
         if functions_compiled {
             for storage in &options.storages {
                 for (_, function) in &storage.functions {
@@ -104,7 +141,7 @@ impl Compiler for InterpreterCompiler {
 }
 
 impl InterpreterCompiler {
-    fn find_function_definations(&self, ast: &BramaAstType, functions: &mut Vec<FunctionDefine>, options: &mut BramaCompilerOption, storage_index: usize) {
+    fn find_function_definations(&self, ast: &BramaAstType, functions: &mut Vec<FunctionDefine>, options: &mut BramaCompiler, storage_index: usize) {
         match ast {
             BramaAstType::FunctionDefination { name, arguments, body  } => {
 
@@ -127,7 +164,7 @@ impl InterpreterCompiler {
         };
     }
 
-    fn generate_functions(&self, functions: &Vec<FunctionDefine>, options: &mut BramaCompilerOption) -> CompilerResult {
+    fn generate_functions(&self, functions: &Vec<FunctionDefine>, options: &mut BramaCompiler) -> CompilerResult {
         
         for function in functions {
             if let Some(information) = options.storages[function.storage_index].get_function(&function.name) {
@@ -149,7 +186,7 @@ impl InterpreterCompiler {
         Ok(0)
     }
 
-    fn generate_opcode(&self, ast: &BramaAstType, upper_ast: &BramaAstType, options: &mut BramaCompilerOption, storage_index: usize) -> CompilerResult {
+    fn generate_opcode(&self, ast: &BramaAstType, upper_ast: &BramaAstType, options: &mut BramaCompiler, storage_index: usize) -> CompilerResult {
         match ast {
             BramaAstType::Assignment { variable, operator, expression } => self.generate_assignment(variable.clone(), operator, expression, options, storage_index),
             BramaAstType::Symbol(variable) => self.generate_symbol(variable, upper_ast, options, storage_index),
@@ -175,7 +212,7 @@ impl InterpreterCompiler {
         }
     }
 
-    fn generate_primative(&self, primative: Rc<BramaPrimative>, _: &BramaAstType, options: &mut BramaCompilerOption, storage_index: usize) -> CompilerResult {
+    fn generate_primative(&self, primative: Rc<BramaPrimative>, _: &BramaAstType, options: &mut BramaCompiler, storage_index: usize) -> CompilerResult {
         let storage = &options.storages[storage_index];
 
         let result = storage.get_constant_location(primative);
@@ -189,7 +226,7 @@ impl InterpreterCompiler {
         }
     }
 
-    fn generate_none(&self, options: &mut BramaCompilerOption, storage_index: usize) -> CompilerResult {
+    fn generate_none(&self, options: &mut BramaCompiler, storage_index: usize) -> CompilerResult {
         let storage = &options.storages[storage_index];
 
         let result = storage.get_constant_location(Rc::new(BramaPrimative::Empty));
@@ -203,7 +240,7 @@ impl InterpreterCompiler {
         }
     }
 
-    fn generate_list(&self, list: &Vec<Box<BramaAstType>>, upper_ast: &BramaAstType, options: &mut BramaCompilerOption, storage_index: usize) -> CompilerResult {
+    fn generate_list(&self, list: &Vec<Box<BramaAstType>>, upper_ast: &BramaAstType, options: &mut BramaCompiler, storage_index: usize) -> CompilerResult {
         for item in list.iter().rev() {
             self.generate_opcode(item, upper_ast, options, storage_index)?;
         }
@@ -212,7 +249,7 @@ impl InterpreterCompiler {
         Ok(0)
     }
 
-    fn generate_dict(&self, dict: &Vec<Box<BramaDictItem>>, upper_ast: &BramaAstType, options: &mut BramaCompilerOption, storage_index: usize) -> CompilerResult {
+    fn generate_dict(&self, dict: &Vec<Box<BramaDictItem>>, upper_ast: &BramaAstType, options: &mut BramaCompiler, storage_index: usize) -> CompilerResult {
         for item in dict.iter().rev() {
             self.generate_primative(item.key.clone(), upper_ast, options, storage_index)?;
             self.generate_opcode(&item.value, upper_ast, options, storage_index)?;
@@ -222,7 +259,7 @@ impl InterpreterCompiler {
         Ok(0)
     }
 
-    fn generate_func_call(&self, names: &Vec<String>, arguments: &Vec<Box<BramaAstType>>, assign_to_temp: bool,  upper_ast: &BramaAstType, options: &mut BramaCompilerOption, storage_index: usize) -> CompilerResult {
+    fn generate_func_call(&self, names: &Vec<String>, arguments: &Vec<Box<BramaAstType>>, assign_to_temp: bool,  upper_ast: &BramaAstType, options: &mut BramaCompiler, storage_index: usize) -> CompilerResult {
         /* Build arguments */
         for argument in arguments {
             self.generate_opcode(argument, upper_ast, options, storage_index)?;
@@ -273,7 +310,7 @@ impl InterpreterCompiler {
         }
     }
 
-    fn generate_break(&self, _: &BramaAstType, options: &mut BramaCompilerOption, _: usize) -> CompilerResult {       
+    fn generate_break(&self, _: &BramaAstType, options: &mut BramaCompiler, _: usize) -> CompilerResult {       
         options.opcodes.push(VmOpCode::Jump as u8);
         options.loop_breaks.push(options.opcodes.len());
         options.opcodes.push(0);
@@ -281,7 +318,7 @@ impl InterpreterCompiler {
         Ok(0)
     }
 
-    fn generate_continue(&self, _: &BramaAstType, options: &mut BramaCompilerOption, _: usize) -> CompilerResult {       
+    fn generate_continue(&self, _: &BramaAstType, options: &mut BramaCompiler, _: usize) -> CompilerResult {       
         options.opcodes.push(VmOpCode::Jump as u8);
         options.loop_continues.push(options.opcodes.len());
         options.opcodes.push(0);
@@ -289,13 +326,13 @@ impl InterpreterCompiler {
         Ok(0)
     }
 
-    fn generate_return(&self, expression: &BramaAstType, upper_ast: &BramaAstType, options: &mut BramaCompilerOption, storage_index: usize) -> CompilerResult {
+    fn generate_return(&self, expression: &BramaAstType, upper_ast: &BramaAstType, options: &mut BramaCompiler, storage_index: usize) -> CompilerResult {
         self.generate_opcode(expression, upper_ast, options, storage_index)?;
         options.opcodes.push(VmOpCode::Return as u8);
         Ok(0)
     }
 
-    fn generate_whileloop(&self, control: &BramaAstType, body: &BramaAstType, upper_ast: &BramaAstType, options: &mut BramaCompilerOption, storage_index: usize) -> CompilerResult {
+    fn generate_whileloop(&self, control: &BramaAstType, body: &BramaAstType, upper_ast: &BramaAstType, options: &mut BramaCompiler, storage_index: usize) -> CompilerResult {
         /* Backup loop informations */
         let loop_breaks = options.loop_breaks.to_vec();
         let loop_continues = options.loop_continues.to_vec();
@@ -336,7 +373,7 @@ impl InterpreterCompiler {
         Ok(0)
     }
 
-    fn generate_endlessloop(&self, expression: &BramaAstType, upper_ast: &BramaAstType, options: &mut BramaCompilerOption, storage_index: usize) -> CompilerResult {
+    fn generate_endlessloop(&self, expression: &BramaAstType, upper_ast: &BramaAstType, options: &mut BramaCompiler, storage_index: usize) -> CompilerResult {
         /* Backup loop informations */
         let loop_breaks = options.loop_breaks.to_vec();
         let loop_continues = options.loop_continues.to_vec();
@@ -372,18 +409,31 @@ impl InterpreterCompiler {
         Ok(0)
     }
 
-    fn generate_symbol(&self, variable: &String, _: &BramaAstType, options: &mut BramaCompilerOption, storage_index: usize) -> CompilerResult {
+    fn generate_symbol(&self, variable: &String, _: &BramaAstType, options: &mut BramaCompiler, storage_index: usize) -> CompilerResult {
         match options.storages.get_mut(storage_index).unwrap().get_variable_location(variable) {
+            /* Variable found */
             Some(location) => {
                 options.opcodes.push(VmOpCode::Load as u8);
                 options.opcodes.push(location as u8);
                 Ok(location)
             },
-            _ => return Err("Variable not found in storage")
+            /* Variable not found, lets check for function */
+            None => {
+                let storage = &options.storages[storage_index];                
+                let result = storage.get_function_constant(variable.to_string());
+                match result {
+                    Some(index) => {
+                        options.opcodes.push(VmOpCode::Load as u8);
+                        options.opcodes.push(index as u8);
+                        Ok(0)
+                    },
+                    _ => return Err("Value not found in storage")
+                }
+            }
         }
     }
 
-    fn generate_control(&self, left_ast: &BramaAstType, operator: &BramaOperatorType, right_ast: &BramaAstType, _: &BramaAstType, options: &mut BramaCompilerOption, storage_index: usize) -> CompilerResult {
+    fn generate_control(&self, left_ast: &BramaAstType, operator: &BramaOperatorType, right_ast: &BramaAstType, _: &BramaAstType, options: &mut BramaCompiler, storage_index: usize) -> CompilerResult {
         self.generate_opcode(left_ast, &BramaAstType::None, options, storage_index)?;
         self.generate_opcode(right_ast, &BramaAstType::None, options, storage_index)?;
 
@@ -403,7 +453,7 @@ impl InterpreterCompiler {
         Ok(0)
     }
 
-    fn generate_assignment(&self, variable: Rc<String>, operator: &BramaOperatorType, expression_ast: &BramaAstType, options: &mut BramaCompilerOption, storage_index: usize) -> CompilerResult {
+    fn generate_assignment(&self, variable: Rc<String>, operator: &BramaOperatorType, expression_ast: &BramaAstType, options: &mut BramaCompiler, storage_index: usize) -> CompilerResult {
         let location = options.storages.get_mut(storage_index).unwrap().add_variable(&*variable);
         let storage = &options.storages[storage_index];
         
@@ -451,7 +501,7 @@ impl InterpreterCompiler {
         Ok(0)
     }
 
-    fn generate_binary(&self, left_ast: &BramaAstType, operator: &BramaOperatorType, right_ast: &BramaAstType, _: &BramaAstType, options: &mut BramaCompilerOption, storage_index: usize) -> CompilerResult { 
+    fn generate_binary(&self, left_ast: &BramaAstType, operator: &BramaOperatorType, right_ast: &BramaAstType, _: &BramaAstType, options: &mut BramaCompiler, storage_index: usize) -> CompilerResult { 
         self.generate_opcode(left_ast, &BramaAstType::None, options, storage_index)?;
         self.generate_opcode(right_ast, &BramaAstType::None, options, storage_index)?;
         let opcode = match operator {
@@ -466,7 +516,7 @@ impl InterpreterCompiler {
         Ok(0)
     }
 
-    fn generate_prefix_unary(&self, operator: &BramaOperatorType, expression: &BramaAstType, _: &BramaAstType, options: &mut BramaCompilerOption, storage_index: usize) -> CompilerResult { 
+    fn generate_prefix_unary(&self, operator: &BramaOperatorType, expression: &BramaAstType, _: &BramaAstType, options: &mut BramaCompiler, storage_index: usize) -> CompilerResult { 
         
         if *operator == BramaOperatorType::Not { 
             return self.generate_not(expression, options, storage_index);
@@ -497,20 +547,20 @@ impl InterpreterCompiler {
         Err("Unary expression not valid")
     }
 
-    fn generate_not(&self, expression: &BramaAstType, options: &mut BramaCompilerOption, storage_index: usize) -> CompilerResult { 
+    fn generate_not(&self, expression: &BramaAstType, options: &mut BramaCompiler, storage_index: usize) -> CompilerResult { 
         self.generate_opcode(expression, &BramaAstType::None, options, storage_index)?;
         options.opcodes.push(VmOpCode::Not as u8);
         return Ok(0);
     }
 
-    fn create_exit_jump(&self, options: &mut BramaCompilerOption, exit_locations: &mut Vec<usize>) {
+    fn create_exit_jump(&self, options: &mut BramaCompiler, exit_locations: &mut Vec<usize>) {
         options.opcodes.push(VmOpCode::Jump as u8);
         exit_locations.push(options.opcodes.len());
         options.opcodes.push(0 as u8);
         options.opcodes.push(0 as u8);
     }
 
-    fn create_compare(&self, options: &mut BramaCompilerOption) -> usize {
+    fn create_compare(&self, options: &mut BramaCompiler) -> usize {
         options.opcodes.push(VmOpCode::Compare as u8);
         let compare_location = options.opcodes.len();
 
@@ -520,19 +570,19 @@ impl InterpreterCompiler {
         return compare_location;
     }
 
-    fn build_jump_location(&self, options: &mut BramaCompilerOption, jump_location: usize) {
+    fn build_jump_location(&self, options: &mut BramaCompiler, jump_location: usize) {
         let current_location = options.opcodes.len();
         options.opcodes[jump_location]     = current_location as u8;
         options.opcodes[jump_location + 1] = (current_location >> 8) as u8;
     }
 
-    fn build_compare_location(&self, options: &mut BramaCompilerOption, jump_location: usize) {
+    fn build_compare_location(&self, options: &mut BramaCompiler, jump_location: usize) {
         let current_location = options.opcodes.len() - jump_location;
         options.opcodes[jump_location]     = current_location as u8;
         options.opcodes[jump_location + 1] = (current_location >> 8) as u8;
     }
 
-    fn generate_if_condition(&self, condition: &BramaAstType, body: &BramaAstType, else_body: &Option<Box<BramaAstType>>, else_if: &Vec<Box<BramaIfStatementElseItem>>, upper_ast: &BramaAstType, options: &mut BramaCompilerOption, storage_index: usize) -> CompilerResult {
+    fn generate_if_condition(&self, condition: &BramaAstType, body: &BramaAstType, else_body: &Option<Box<BramaAstType>>, else_if: &Vec<Box<BramaIfStatementElseItem>>, upper_ast: &BramaAstType, options: &mut BramaCompiler, storage_index: usize) -> CompilerResult {
         /*
         ╔════════════════════╗
         ║   IF CONDITION     ║
@@ -592,7 +642,7 @@ impl InterpreterCompiler {
         return Ok(0);
     }
 
-    fn generate_indexer(&self, body: &BramaAstType, indexer: &BramaAstType, upper_ast: &BramaAstType, options: &mut BramaCompilerOption, storage_index: usize) -> CompilerResult {
+    fn generate_indexer(&self, body: &BramaAstType, indexer: &BramaAstType, upper_ast: &BramaAstType, options: &mut BramaCompiler, storage_index: usize) -> CompilerResult {
         self.generate_opcode(body, upper_ast, options, storage_index)?;
         self.generate_opcode(indexer, upper_ast, options, storage_index)?;
         options.opcodes.push(VmOpCode::GetItem as u8);
@@ -600,7 +650,7 @@ impl InterpreterCompiler {
         return Ok(0);
     }
 
-    fn generate_suffix_unary(&self, operator: &BramaOperatorType, expression: &BramaAstType, _: &BramaAstType, options: &mut BramaCompilerOption, storage_index: usize) -> CompilerResult { 
+    fn generate_suffix_unary(&self, operator: &BramaOperatorType, expression: &BramaAstType, _: &BramaAstType, options: &mut BramaCompiler, storage_index: usize) -> CompilerResult { 
         if let BramaAstType::Symbol(variable) = expression {
             let location = match options.storages.get_mut(storage_index).unwrap().get_variable_location(variable) {
                 Some(location) => location,
@@ -627,7 +677,7 @@ impl InterpreterCompiler {
         Err("Unary expression not valid")
     }
 
-    fn generate_block(&self, asts: &Vec<BramaAstType>, upper_ast: &BramaAstType, options: &mut BramaCompilerOption, storage_index: usize) -> CompilerResult {
+    fn generate_block(&self, asts: &Vec<BramaAstType>, upper_ast: &BramaAstType, options: &mut BramaCompiler, storage_index: usize) -> CompilerResult {
         for ast in asts {
             self.generate_opcode(&ast, upper_ast, options, storage_index)?;
         }

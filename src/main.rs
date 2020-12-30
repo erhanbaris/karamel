@@ -2,6 +2,7 @@ extern crate bitflags;
 extern crate termion;
 extern crate log_update;
 
+mod macros;
 mod types;
 mod parser;
 mod syntax;
@@ -27,15 +28,12 @@ pub fn greet(name: &str) {
 #[cfg(not(feature = "wasmBuild"))]
 fn main() {
     let result = vm::executer::code_executer(&r#"
-kayıt = 10
-toplam = 0
-döngü kayıt iken:
-    gç::satıryaz('doğru')
-    gç::satıryaz(kayıt)
-    kayıt -= 1
-    toplam += 1
-hataayıklama::doğrula(toplam, 10)
-hataayıklama::doğrula(kayıt, 0)
+fn test():
+    erhan=123
+erhan = test
+ee = erhan
+
+gç::satıryaz(ee)
 "#.to_string());
     match result {
         Ok(_) => println!("Success"),

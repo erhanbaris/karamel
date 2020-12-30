@@ -16,6 +16,7 @@ pub struct StaticStorage {
     pub stack                 : Rc<RefCell<Vec<VmObject>>>,
     pub total_const_variables : u8,
     pub functions             : BTreeMap<String, Rc<FunctionInformation>>,
+    pub function_references   : Vec<FunctionReference>,
     pub parent_index          : usize
 }
 
@@ -42,7 +43,8 @@ impl Storage for StaticStorage {
             stack: Rc::new(RefCell::new(Vec::new())),
             variables: Vec::new(),
             functions: BTreeMap::new(),
-            parent_index: 0
+            parent_index: 0,
+            function_references: Vec::new()
         }
     }
 
@@ -52,13 +54,16 @@ impl Storage for StaticStorage {
         let mut stack  = self.stack.borrow_mut();
 
         /* Allocate memory */
-        let memory_size = self.get_constant_size() + self.get_variable_size() + self.get_temp_size();
+        let memory_size = self.get_constant_size() 
+                        + self.get_variable_size() 
+                        + self.get_temp_size();
+        
         memory.reserve(memory_size.into());
 
         /* Move all constants informations to memory location */
         memory.append(&mut self.constants);
 
-        /*  Allocate variable memory and update referances */
+        /*  Allocate variable memory and update references */
         let mut index = self.get_constant_size();
         for (_, value) in self.variables.iter_mut() {
             memory.push(VmObject::convert(Rc::new(BramaPrimative::Empty)));
@@ -154,6 +159,18 @@ impl Storage for StaticStorage {
             Some(number) => Some(number as u8),
             _ => None
         };
+    }
+
+    fn get_function_constant(&self, name: String) -> Option<u8> {
+        for (index, item) in self.memory.borrow().iter().enumerate() {
+            if let BramaPrimative::Function(reference) = &*item.deref() {
+                if reference.name == name {
+                    return Some(index as u8);
+                }
+            }
+        }
+
+        None
     }
 
     fn dump(&self) {

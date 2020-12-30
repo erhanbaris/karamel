@@ -7,7 +7,8 @@ use crate::compiler::Storage;
 use crate::compiler::FunctionInformation;
 use crate::compiler::ast::BramaAstType;
 use crate::compiler::value::BramaPrimative;
-use crate::compiler::BramaCompilerOption;
+use crate::compiler::value::FunctionReference;
+use crate::compiler::BramaCompiler;
 use crate::compiler::static_storage::StaticStorage;
 use crate::types::BramaOperatorType;
 pub struct StorageBuilder;
@@ -21,7 +22,7 @@ impl StorageBuilder {
         }
     }
 
-    pub fn prepare_variable_store(&self, ast: &BramaAstType, options: &mut BramaCompilerOption) {
+    pub fn prepare_variable_store(&self, ast: &BramaAstType, options: &mut BramaCompiler) {
         let mut compiler_option = CompilerOption { max_stack: 0 };
         self.get_temp_count_from_ast(ast, &BramaAstType::None, options, 0, &mut compiler_option);
         options.storages[0].set_temp_size(compiler_option.max_stack);
@@ -29,7 +30,7 @@ impl StorageBuilder {
         options.storages[0].build();
     }
 
-    fn get_temp_count_from_ast(&self, ast: &BramaAstType, _: &BramaAstType, options: &mut BramaCompilerOption, storage_index: usize, compiler_option: &mut CompilerOption) -> u8 {
+    fn get_temp_count_from_ast(&self, ast: &BramaAstType, _: &BramaAstType, options: &mut BramaCompiler, storage_index: usize, compiler_option: &mut CompilerOption) -> u8 {
         let temp_count = match ast {
             BramaAstType::Binary {
                 left,
@@ -62,8 +63,16 @@ impl StorageBuilder {
             },
             
             BramaAstType::Symbol(string) => {
-                options.storages.get_mut(storage_index).unwrap().add_variable(&string);
-                compiler_option.max_stack = max(1, compiler_option.max_stack);
+                if let Some(function) = options.modules.find_method(&[string.to_string()].to_vec()) {
+                    let reference = FunctionReference::native_function(function, string.to_string(), [].to_vec(), "".to_string());
+                    options.storages.get_mut(storage_index).unwrap().add_constant(reference);
+                } else if let Some(function) = options.storages[storage_index].get_function(string) {
+                    let reference = FunctionReference::opcode_function(function.name.to_string(), [].to_vec(), "".to_string());
+                    options.storages.get_mut(storage_index).unwrap().add_constant(reference);
+                } else {
+                    options.storages.get_mut(storage_index).unwrap().add_variable(&string);
+                    compiler_option.max_stack = max(1, compiler_option.max_stack);
+                }
                 1
             },
             

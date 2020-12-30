@@ -28,11 +28,11 @@ mod tests {
                 };
 
                 let opcode_compiler  = InterpreterCompiler {};
-                let mut compiler_options: BramaCompilerOption = BramaCompilerOption::new();
+                let mut compiler_options: BramaCompiler = BramaCompiler::new();
                 let ast = &syntax_result.unwrap();
 
                 if let Ok(_) = opcode_compiler.compile(ast, &mut compiler_options) {
-                    if interpreter::run_vm(&mut compiler_options).is_ok() {
+                    if unsafe { interpreter::run_vm(&mut compiler_options).is_ok() } {
                         let memory = compiler_options.storages[0].get_stack().borrow().first().unwrap().deref();
                         assert_eq!(*memory, $result);
                     } else {
@@ -62,11 +62,11 @@ mod tests {
                 };
 
                 let opcode_compiler  = InterpreterCompiler {};
-                let mut compiler_options: BramaCompilerOption = BramaCompilerOption::new();
+                let mut compiler_options: BramaCompiler = BramaCompiler::new();
                 let ast = &syntax_result.unwrap();
 
                 if let Ok(_) = opcode_compiler.compile(ast, &mut compiler_options) {
-                    if interpreter::run_vm(&mut compiler_options).is_ok() {
+                    if unsafe { interpreter::run_vm(&mut compiler_options).is_ok() } {
                         match compiler_options.storages[0].get_variable_value(&$variable.to_string()) {
                             Some(ast) => assert_eq!(*ast, $result),
                             None => assert!(false)
@@ -98,11 +98,11 @@ mod tests {
                 };
 
                 let opcode_compiler  = InterpreterCompiler {};
-                let mut compiler_options: BramaCompilerOption = BramaCompilerOption::new();
+                let mut compiler_options: BramaCompiler = BramaCompiler::new();
                 let ast = &syntax_result.unwrap();
 
                 if let Ok(_) = opcode_compiler.compile(ast, &mut compiler_options) {
-                    if interpreter::run_vm(&mut compiler_options).is_ok() {
+                    if unsafe { interpreter::run_vm(&mut compiler_options).is_ok() } {
                         assert!(true);
                         return;
                     }
