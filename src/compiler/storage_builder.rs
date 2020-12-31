@@ -67,7 +67,7 @@ impl StorageBuilder {
                     let reference = FunctionReference::native_function(function, string.to_string(), [].to_vec(), "".to_string());
                     options.storages.get_mut(storage_index).unwrap().add_constant(reference);
                 } else if let Some(function) = options.storages[storage_index].get_function(string) {
-                    let reference = FunctionReference::opcode_function(function.name.to_string(), [].to_vec(), "".to_string());
+                    let reference = FunctionReference::opcode_function(0, function.name.to_string(), [].to_vec(), "".to_string());
                     options.storages.get_mut(storage_index).unwrap().add_constant(reference);
                 } else {
                     options.storages.get_mut(storage_index).unwrap().add_variable(&string);
@@ -125,7 +125,9 @@ impl StorageBuilder {
                 /* Native function call */
                 if let Some(function) = options.modules.find_method(&names) {
                     /* Add function pointer to consts */
-                    options.storages.get_mut(storage_index).unwrap().add_constant(Rc::new(BramaPrimative::FuncNativeCall(function)));
+                    let reference = FunctionReference::native_function(function, names[names.len() - 1].to_string(), names[0..(names.len()-1)].to_vec(), "".to_string());
+                    options.storages.get_mut(storage_index).unwrap().add_constant(reference);
+
                 }
 
                 /* Build arguments */

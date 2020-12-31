@@ -161,16 +161,35 @@ impl Storage for StaticStorage {
         };
     }
 
-    fn get_function_constant(&self, name: String) -> Option<u8> {
+    fn get_function_constant(&self, name: String, module_path: Vec<String>, framework: String) -> Option<u8> {
+        
         for (index, item) in self.memory.borrow().iter().enumerate() {
             if let BramaPrimative::Function(reference) = &*item.deref() {
-                if reference.name == name {
+                if reference.name        == name && 
+                   reference.module_path == module_path && 
+                   reference.framework   == framework {
                     return Some(index as u8);
                 }
             }
         }
 
         None
+    }
+
+    fn update_constant(&self, index: u8, object: VmObject) {
+        self.memory.borrow_mut()[index as usize] = object;
+    }
+
+    fn get_function_constants(&self) -> Vec<(u8, VmObject)> {
+        let mut items = Vec::new();
+
+        for (index, item) in self.memory.borrow().iter().enumerate() {
+            if let BramaPrimative::Function(_) = &*item.deref() {
+                items.push((index as u8, *item));
+            }
+        }
+
+        return items;
     }
 
     fn dump(&self) {

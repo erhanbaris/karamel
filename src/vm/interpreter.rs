@@ -53,6 +53,8 @@ pub unsafe fn dump_opcode<W: Write>(index: usize, options: &mut BramaCompiler, l
                 build_arrow(index, opcode_index, 0, &mut buffer, &data);
             },
 
+            
+            VmOpCode::CallStack |
             VmOpCode::Compare => {
                 let location = opcode_index + ((options.opcodes[opcode_index+2] as u16 * 256) + options.opcodes[opcode_index+1] as u16) as usize;
                 let data = format!("║ {:4} ║ {:15} ║ {:^5?} ║ {:^5} ║", opcode_index, format!("{:?}", opcode), location, "");
@@ -92,19 +94,12 @@ pub unsafe fn dump_opcode<W: Write>(index: usize, options: &mut BramaCompiler, l
             },
 
             VmOpCode::Call => {
-                let location = ((options.opcodes[opcode_index+2] as u16 * 256) + options.opcodes[opcode_index+1] as u16) as usize;
-                let data = format!("║ {:4} ║ {:15} ║ {:^5?} ║ {:^5} ║", opcode_index, format!("{:?}", opcode), location, options.opcodes[opcode_index + 3]);
-                build_arrow(index, opcode_index, 4, &mut buffer, &data);
-                opcode_index += 4;
-            },
-            
-            VmOpCode::NativeCall => {
                 let location = (options.opcodes[opcode_index+1] as u16) as usize;
                 let data = format!("║ {:4} ║ {:15} ║ {:^5?} ║ {:^5} ║", opcode_index, format!("{:?}", opcode), location, options.opcodes[opcode_index + 2]);
                 build_arrow(index, opcode_index, 3, &mut buffer, &data);
                 opcode_index += 3;
             },
-
+            
             VmOpCode::FastStore => {
                 let data = format!("║ {:4} ║ {:15} ║ {:^5?} ║ {:^5} ║", opcode_index, format!("{:?}", opcode), options.opcodes[opcode_index + 1], options.opcodes[opcode_index + 2]);
                 build_arrow(index, opcode_index, 2, &mut buffer, &data);
@@ -117,17 +112,15 @@ pub unsafe fn dump_opcode<W: Write>(index: usize, options: &mut BramaCompiler, l
     buffer.push_str("╚═══╩══════╩═════════════════╩═══════╩═══════╝\r\n");
     log_update.render(&format!("{}", buffer)).unwrap();
     io::stdout().flush().unwrap();
-    thread::sleep(time::Duration::from_millis(10));
+    thread::sleep(time::Duration::from_millis(500));
 }
 
 pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<(), String>
 {
+    let mut log_update = LogUpdate::new(stdout()).unwrap();
     #[cfg(feature = "dumpOpcodes")] {
-        let mut log_update = LogUpdate::new(stdout()).unwrap();
         dump_opcode(0, options, &mut log_update);
     }
-
-    //dump_opcode_header();
     {
         let empty_primative: VmObject  = VmObject::convert(Rc::new(BramaPrimative::Empty));
         let opcode_size   = options.opcodes.len();
@@ -144,7 +137,7 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<(), String>
         while opcode_size > options.opcode_index {
             let opcode = mem::transmute::<u8, VmOpCode>(options.opcodes[options.opcode_index]);
             #[cfg(feature = "liveOpcodeView")] {
-                dump_opcode(index, options, &mut log_update);
+                dump_opcode(options.opcode_index, options, &mut log_update);
             }
             
             match opcode {
@@ -314,50 +307,26 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<(), String>
                 },
 
                 VmOpCode::Call => {
-                    let location = ((options.opcodes[options.opcode_index + 2] as u16 * 256) + options.opcodes[options.opcode_index + 1] as u16) as usize;
-                    let argument_size  = options.opcodes[options.opcode_index + 3];
-                    let call_return_assign_to_temp = options.opcodes[options.opcode_index + 4] != 0;
-                    let old_index = options.opcode_index + 4;
-                    options.opcode_index = location as usize;
-                    options.scope_index += 1;
-                    let storage_location = ((options.opcodes[options.opcode_index + 1] as u16 * 256) + options.opcodes[options.opcode_index] as u16) as usize;
-
-                    if argument_size != options.opcodes[options.opcode_index + 2] {
-                        return Err("Function argument error".to_string())
+                    let func_location = options.opcodes[options.opcode_index + 1] as usize;
+                    options.opcode_index += 1;
+                    
+                    if let BramaPrimative::Function(reference) = &*(*options.current_scope).memory[func_location].deref() {
+                        reference.execute(options);
                     }
-                    let mut args: Vec<VmObject> = Vec::with_capacity(argument_size as usize);
-
-                    if argument_size > 0 {
-                        for _ in 0..argument_size {
-                            dec_memory_index!(options, 1);
-                            args.push((*options.current_scope).stack[get_memory_index!(options)]);
-                        }
+                    else {
+                        return Err("Not callable".to_string());
                     }
+                },
 
-                    if options.scopes.len() <= options.scope_index {
-                        options.scopes.resize(options.scopes.len() * 2, Scope::empty());
+                VmOpCode::CallStack => {
+                    let function = pop!(options);
+                    
+                    if let BramaPrimative::Function(reference) = &*function {
+                        reference.execute(options);
                     }
-
-                    options.scopes[options.scope_index] = Scope {
-                        memory: options.storages[storage_location].get_memory().borrow().to_vec(),
-                        stack: options.storages[storage_location].get_stack().borrow().to_vec(),
-                        location: old_index,
-                        memory_index: get_memory_index!(options),
-                        const_size: options.storages[storage_location].get_constant_size(),
-                        call_return_assign_to_temp: call_return_assign_to_temp
-                    };
-
-                    options.current_scope = &mut options.scopes[options.scope_index] as *mut Scope;
-                    (*options.current_scope).memory_index = 0;
-
-                    if argument_size > 0 {
-                        for _ in 0..argument_size {
-                            (*options.current_scope).stack[get_memory_index!(options)] = args[get_memory_index!(options)];
-                            inc_memory_index!(options, 1);
-                        }
+                    else {
+                        return Err("Not callable".to_string());
                     }
-
-                    options.opcode_index += 2;
                 },
 
                 VmOpCode::Return => {
@@ -370,32 +339,6 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<(), String>
                     if call_return_assign_to_temp {
                         (*options.current_scope).stack[get_memory_index!(options)] = return_value;
                         inc_memory_index!(options, 1);
-                    }
-                },
-
-                VmOpCode::NativeCall => {
-                    let func_location = options.opcodes[options.opcode_index + 1] as usize;
-                    
-                    if let BramaPrimative::FuncNativeCall(func) = *(*options.current_scope).memory[func_location].deref() {
-                        let total_args = options.opcodes[options.opcode_index + 2];
-                        let call_return_assign_to_temp = options.opcodes[options.opcode_index + 3] != 0;
-                        
-                        match func(&(*options.current_scope).stack, get_memory_index!(options), total_args) {
-                            Ok(result) => {
-                                dec_memory_index!(options, total_args as usize);
-
-                                if call_return_assign_to_temp {
-                                    (*options.current_scope).stack[get_memory_index!(options)] = result;
-                                    inc_memory_index!(options, 1);
-                                }
-                            },
-                            Err((error, _, _)) => {
-                                println!("{:?}", error);
-                                return Err(error);
-                            }
-                        };
-
-                        options.opcode_index += 3;
                     }
                 },
 

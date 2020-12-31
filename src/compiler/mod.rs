@@ -54,7 +54,9 @@ pub trait Storage {
     fn get_variable_value(&self, name: &String) -> Option<Rc<BramaPrimative>>;
 
     fn get_constant_location(&self, object: Rc<BramaPrimative>) -> Option<u8>;
-    fn get_function_constant(&self, name: String) -> Option<u8>;
+    fn get_function_constant(&self, name: String, module_path: Vec<String>, framework: String) -> Option<u8>;
+    fn get_function_constants(&self) -> Vec<(u8, VmObject)>;
+    fn update_constant(&self, index: u8, object: VmObject);
 
     fn dump(&self);
 }
@@ -114,8 +116,8 @@ pub enum VmOpCode {
 
     Func,
     InitArguments,
-    NativeCall,
     Call,
+    CallStack,
     Return,
 
     Increment,

@@ -19,15 +19,15 @@ pub struct FunctionReference {
 #[derive(Clone)]
 pub enum FunctionType {
     Native(NativeCall),
-    Opcode
+    Opcode(u16)
 }
 
 impl FunctionReference {
-    pub fn execute(reference: &FunctionReference, compiler: &mut BramaCompiler) -> NativeCallResult{
+    pub fn execute(&self, compiler: &mut BramaCompiler) -> NativeCallResult{
         unsafe {
-            match reference.callback {
+            match self.callback {
                 FunctionType::Native(func) => FunctionReference::native_function_call(func, compiler),
-                FunctionType::Opcode => FunctionReference::opcode_function_call(compiler)
+                FunctionType::Opcode(location) => FunctionReference::opcode_function_call(location, compiler)
             }
         }
     }
@@ -42,9 +42,9 @@ impl FunctionReference {
         return Rc::new(BramaPrimative::Function(reference));
     }
 
-    pub fn opcode_function(name: String, module_path: Vec<String>, framework: String) -> Rc<BramaPrimative> {
+    pub fn opcode_function(location: u16, name: String, module_path: Vec<String>, framework: String) -> Rc<BramaPrimative> {
         let reference = FunctionReference {
-            callback: FunctionType::Opcode,
+            callback: FunctionType::Opcode(location),
             framework: framework,
             module_path: module_path,
             name: name
@@ -52,11 +52,9 @@ impl FunctionReference {
         return Rc::new(BramaPrimative::Function(reference));
     }
 
-    unsafe fn native_function_call(func: NativeCall, compiler: &mut BramaCompiler) -> NativeCallResult {
-        let _func_location = compiler.opcodes[compiler.opcode_index + 1] as usize;
-                    
-        let total_args = compiler.opcodes[compiler.opcode_index + 2];
-        let call_return_assign_to_temp = compiler.opcodes[compiler.opcode_index + 3] != 0;
+    unsafe fn native_function_call(func: NativeCall, compiler: &mut BramaCompiler) -> NativeCallResult {            
+        let total_args = compiler.opcodes[compiler.opcode_index + 1];
+        let call_return_assign_to_temp = compiler.opcodes[compiler.opcode_index + 2] != 0;
         
         match func(&(*compiler.current_scope).stack, get_memory_index!(compiler), total_args) {
             Ok(result) => {
@@ -67,7 +65,7 @@ impl FunctionReference {
                     inc_memory_index!(compiler, 1);
                 }
 
-                compiler.opcode_index += 3;
+                compiler.opcode_index += 2;
                 return Ok(result);
             },
             Err((error, l, c)) => {
@@ -77,16 +75,15 @@ impl FunctionReference {
         };
     }
 
-    fn opcode_function_call(options: &mut BramaCompiler) -> NativeCallResult {
-        let location = ((options.opcodes[options.opcode_index + 2] as u16 * 256) + options.opcodes[options.opcode_index + 1] as u16) as usize;
-        let argument_size  = options.opcodes[options.opcode_index + 3];
-        let call_return_assign_to_temp = options.opcodes[options.opcode_index + 4] != 0;
-        let old_index = options.opcode_index + 4;
+    fn opcode_function_call(location: u16, options: &mut BramaCompiler) -> NativeCallResult {
+        let argument_size  = options.opcodes[options.opcode_index + 1];
+        let call_return_assign_to_temp = options.opcodes[options.opcode_index + 2] != 0;
+        let old_index = options.opcode_index + 2;
         options.opcode_index = location as usize;
         options.scope_index += 1;
         let storage_location = ((options.opcodes[options.opcode_index + 1] as u16 * 256) + options.opcodes[options.opcode_index] as u16) as usize;
 
-        if argument_size != options.opcodes[options.opcode_index + 2] {
+        if argument_size != options.opcodes[options.opcode_index + 1] {
             return Err(("Function argument error".to_string(), 0, 0));
         }
         let mut args: Vec<VmObject> = Vec::with_capacity(argument_size as usize);
@@ -149,7 +146,6 @@ pub enum BramaPrimative {
     Dict(HashMap<String, Rc<BramaPrimative>>),
     Atom(u64),
     Text(Rc<String>),
-    FuncNativeCall(NativeCall),
     Function(FunctionReference)
 }
 
@@ -161,7 +157,6 @@ impl BramaPrimative {
             BramaPrimative::Bool(value)       => *value,
             BramaPrimative::Atom(_)           => true,
             BramaPrimative::List(items)       => items.len() > 0,
-            BramaPrimative::FuncNativeCall(_) => true,
             BramaPrimative::Dict(items) => items.len() > 0,
             BramaPrimative::Empty             => false,
             BramaPrimative::Function(_) => true
@@ -223,7 +218,6 @@ impl fmt::Debug for BramaPrimative {
         match self {
             BramaPrimative::Empty => write!(f, "Empty"),
             BramaPrimative::Number(number) => write!(f, "{:?}", number),
-            BramaPrimative::FuncNativeCall(func) => write!(f, "func ({:p})", &func),
             BramaPrimative::Bool(b) => write!(f, "{:?}", b),
             BramaPrimative::List(b) => write!(f, "{:?}", b),
             BramaPrimative::Dict(b) => write!(f, "{:?}", b),
@@ -248,7 +242,6 @@ impl PartialEq for BramaPrimative {
             (BramaPrimative::Empty,                   BramaPrimative::Empty)        => true,
             (BramaPrimative::Number(n),               BramaPrimative::Number(m))    => if n.is_nan() && m.is_nan() { true } else { n == m },
             (BramaPrimative::Text(lvalue),            BramaPrimative::Text(rvalue)) => lvalue == rvalue,
-            (BramaPrimative::FuncNativeCall(lvalue),  BramaPrimative::FuncNativeCall(rvalue)) => *lvalue as usize == *rvalue as usize,
             (BramaPrimative::List(l_value),           BramaPrimative::List(r_value))       => {
                 if (*l_value).len() != (*r_value).len() {
                     return false;

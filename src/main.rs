@@ -28,12 +28,12 @@ pub fn greet(name: &str) {
 #[cfg(not(feature = "wasmBuild"))]
 fn main() {
     let result = vm::executer::code_executer(&r#"
-fn test():
-    erhan=123
-erhan = test
-ee = erhan
+fn test_1:
+    döndür 'erhan'
 
-gç::satıryaz(ee)
+fn test_2:
+    döndür test_1()
+hataayıklama::doğrula(test_2(), 'erhan')
 "#.to_string());
     match result {
         Ok(_) => println!("Success"),
