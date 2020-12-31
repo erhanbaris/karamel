@@ -288,32 +288,42 @@ impl InterpreterCompiler {
             self.generate_opcode(argument, upper_ast, options, storage_index)?;
         }
 
-        let function_search = options.storages[storage_index].get_function_constant(names[names.len()-1].to_string(), names[0..(names.len()-1)].to_vec(), "".to_string());
-        match function_search {
-            Some(constant_address) => {
-                options.opcodes.push(VmOpCode::Call as u8);
-                options.opcodes.push(constant_address as u8);
-                options.opcodes.push(arguments.len() as u8);
-                options.opcodes.push(assign_to_temp as u8);
-                Ok(0 as u8)
-            },
-            None => {
-                match options.storages.get_mut(storage_index).unwrap().get_variable_location(&names[0].to_string()) {
-                    /* Variable found */
-                    Some(location) => {
-                        options.opcodes.push(VmOpCode::Load as u8);
-                        options.opcodes.push(location as u8);
-                    },
-                    /* Variable not found, lets check for function */
-                    None => return Err("Value not found in storage")
-                }
+        /* Search function */
+        let mut search_storage_index = storage_index;
+        loop {
+            let function_search = options.storages[search_storage_index].get_function_constant(names[names.len()-1].to_string(), names[0..(names.len()-1)].to_vec(), "".to_string());
+            match function_search {
+                Some(constant_address) => {
+                    options.opcodes.push(VmOpCode::Call as u8);
+                    options.opcodes.push(constant_address as u8);
+                    options.opcodes.push(arguments.len() as u8);
+                    options.opcodes.push(assign_to_temp as u8);
+                    return Ok(0 as u8);
+                },
+                None => {
+                    match options.storages.get_mut(search_storage_index).unwrap().get_variable_location(&names[0].to_string()) {
+                        /* Variable found */
+                        Some(location) => {
+                            options.opcodes.push(VmOpCode::Load as u8);
+                            options.opcodes.push(location as u8);
 
-                options.opcodes.push(VmOpCode::CallStack as u8);
-                options.opcodes.push(arguments.len() as u8);
-                options.opcodes.push(assign_to_temp as u8);
-                Ok(0 as u8)
+                            options.opcodes.push(VmOpCode::CallStack as u8);
+                            options.opcodes.push(arguments.len() as u8);
+                            options.opcodes.push(assign_to_temp as u8);
+                            return Ok(0 as u8);
+                        },
+                        /* Variable not found, lets check for function */
+                        None => ()
+                    };
+                }
+            };
+
+            if options.storages[search_storage_index].get_parent_index() == usize::MAX {
+                return Err("Function not found");
             }
-        }        
+
+            search_storage_index = options.storages[search_storage_index].get_parent_index();
+        }
     }
 
     fn generate_break(&self, _: &BramaAstType, options: &mut BramaCompiler, _: usize) -> CompilerResult {       

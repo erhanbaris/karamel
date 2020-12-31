@@ -127,7 +127,7 @@ impl StorageBuilder {
                     /* Add function pointer to consts */
                     let reference = FunctionReference::native_function(function, names[names.len() - 1].to_string(), names[0..(names.len()-1)].to_vec(), "".to_string());
                     options.storages.get_mut(storage_index).unwrap().add_constant(reference);
-
+                
                 }
 
                 /* Build arguments */
