@@ -317,6 +317,23 @@ impl InterpreterCompiler {
             _ => ()
         };
 
+        match options.storages[storage_index].get_variable_location(&names[0].to_string()) {
+            /* Variable found */
+            Some(location) => {
+                options.opcodes.push(VmOpCode::Load as u8);
+                options.opcodes.push(location as u8);
+
+                options.opcodes.push(VmOpCode::CallStack as u8);
+                options.opcodes.push(arguments.len() as u8);
+                options.opcodes.push(assign_to_temp as u8);
+                return Ok(0 as u8);
+            },
+            /* Variable not found, lets check for function */
+            None => {
+                
+            }
+        };
+
         return Err("Function not found");
 
         /* Search function */

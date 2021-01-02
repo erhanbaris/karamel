@@ -58,16 +58,16 @@ impl StorageBuilder {
             },
             
             BramaAstType::Symbol(string) => {
-                /*if let Some(function) = options.modules.find_method(&[string.to_string()].to_vec()) {
-                    let reference = FunctionReference::native_function(function, string.to_string(), [].to_vec(), "".to_string());
-                    options.storages.get_mut(storage_index).unwrap().add_constant(reference);
-                } else if let Some(function) = options.storages[storage_index].get_function(string) {
-                    let reference = FunctionReference::opcode_function(0, function.name.to_string(), [].to_vec(), "".to_string());
-                    options.storages.get_mut(storage_index).unwrap().add_constant(reference);
-                } else*/ {
-                    options.storages.get_mut(storage_index).unwrap().add_variable(&string);
-                    compiler_option.max_stack = max(1, compiler_option.max_stack);
-                }
+                let function_search = options.find_function(string.to_string(), [].to_vec(), "".to_string(), storage_index);
+                match function_search {
+                    Some(reference) => {
+                        options.storages.get_mut(storage_index).unwrap().add_constant(Rc::new(BramaPrimative::Function(reference)));
+                    },
+                    None => {
+                        options.storages.get_mut(storage_index).unwrap().add_variable(&string);
+                        compiler_option.max_stack = max(1, compiler_option.max_stack);
+                    }
+                };
                 1
             },
             
@@ -130,9 +130,7 @@ impl StorageBuilder {
                     Some(reference) => {
                         options.storages.get_mut(storage_index).unwrap().add_constant(Rc::new(BramaPrimative::Function(reference)));
                     },
-                    None =>  {
-                        println!("function_search return None");
-                    }
+                    None => () // It can be assigned function pointer
                 };
 
 

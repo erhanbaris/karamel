@@ -112,7 +112,9 @@ pub unsafe fn dump_opcode<W: Write>(index: usize, options: &mut BramaCompiler, l
     buffer.push_str("╚═══╩══════╩═════════════════╩═══════╩═══════╝\r\n");
     log_update.render(&format!("{}", buffer)).unwrap();
     io::stdout().flush().unwrap();
-    thread::sleep(time::Duration::from_millis(500));
+    #[cfg(feature = "liveOpcodeView")] {
+        thread::sleep(time::Duration::from_millis(500));
+    }
 }
 
 pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<(), String>
@@ -325,6 +327,7 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<(), String>
                         reference.execute(options)?;
                     }
                     else {
+                        println!("{:?}", &*function);
                         return Err("Not callable".to_string());
                     }
                 },
