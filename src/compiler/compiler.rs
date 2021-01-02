@@ -1,15 +1,16 @@
 use std::vec::Vec;
 use std::rc::Rc;
+
 use std::ptr;
 
 use ast::BramaDictItem;
-
-use crate::types::*;
+use crate::{types::*};
 use crate::compiler::*;
 use crate::buildin::*;
 use crate::compiler::value::BramaPrimative;
 use crate::compiler::ast::{BramaAstType, BramaIfStatementElseItem};
 use crate::compiler::storage_builder::StorageBuilder;
+use crate::compiler::function::{FunctionReference, FunctionType};
 
 #[derive(Clone)]
 pub struct Scope {
@@ -34,24 +35,23 @@ impl Scope {
     }
 }
 
+pub struct FunctionDefine {
+    arguments: Vec<String>,
+    body: Rc<BramaAstType>,
+    reference: Rc<FunctionReference>
+}
+
 pub struct BramaCompiler {
     pub opcodes : Vec<u8>,
     pub storages: Vec<StaticStorage>,
     pub modules: ModuleCollection,
     pub opcode_index: usize,
-    pub functions_compiled: bool,
     pub loop_breaks: Vec<usize>,
     pub loop_continues: Vec<usize>,
     pub scopes: Vec<Scope>,
     pub current_scope: *mut Scope,
-    pub scope_index: usize
-}
-
-pub struct FunctionDefine {
-    name: String,
-    arguments: Vec<String>,
-    body: Rc<BramaAstType>,
-    storage_index: usize
+    pub scope_index: usize,
+    pub functions : Vec<Rc<FunctionReference>>,
 }
 
 impl  BramaCompiler {
@@ -61,12 +61,12 @@ impl  BramaCompiler {
             storages: vec![StaticStorage::new()],
             modules: ModuleCollection::new(),
             opcode_index: 0,
-            functions_compiled: false,
             loop_breaks: Vec::new(),
             loop_continues: Vec::new(),
             scopes: Vec::new(),
             current_scope: ptr::null_mut(),
-            scope_index: 0
+            scope_index: 0,
+            functions: Vec::new()
         };
 
         for _ in 0..32{
@@ -75,6 +75,56 @@ impl  BramaCompiler {
         
         compiler.current_scope = &mut compiler.scopes[0] as *mut Scope;
         compiler
+    }
+
+    pub fn prepare_modules(&mut self) {
+        let mut functions = Vec::new();
+
+        for (_, module) in &self.modules.modules {
+            for (function_name, function_pointer) in module.get_methods() {
+                let reference = FunctionReference::native_function(function_pointer, function_name.to_string(), [module.get_module_name()].to_vec(), "".to_string());
+                functions.push(reference);
+            }
+        }
+
+        for reference in functions {
+            self.add_function(reference);
+        }
+    }
+
+    pub fn add_function(&mut self, information: Rc<FunctionReference>) {
+        self.functions.push(information);
+    }
+
+    pub fn find_function(&self, name: String, module_path: Vec<String>, framework: String, start_storage_index: usize) -> Option<Rc<FunctionReference>> {
+        let mut search_storage = start_storage_index;
+        loop {
+
+            /* Search function with storage */
+            let function_location = self.functions.iter().position(|function_reference| {
+                return match function_reference.callback {
+                    FunctionType::Native(_) =>
+                    function_reference.module_path   == module_path && 
+                        function_reference.name          == name && 
+                        function_reference.framework     == framework,
+                    FunctionType::Opcode => 
+                    function_reference.name          == name && 
+                        function_reference.module_path   == module_path && 
+                        function_reference.framework     == framework &&
+                        function_reference.defined_storage_index == search_storage
+                };
+            });
+
+            match function_location {
+                Some(location) => return Some(self.functions[location].clone()),
+                _ => ()
+            };
+            
+            search_storage = match self.storages[search_storage].get_parent_location() {
+                Some(location) => location as usize,
+                None => return None
+            };
+        }
     }
 
     pub fn reset(&mut self) {
@@ -92,44 +142,20 @@ pub struct InterpreterCompiler;
 impl Compiler for InterpreterCompiler {   
     fn compile(&self, ast: &BramaAstType, options: &mut BramaCompiler) -> CompilerResult {
         let storage_builder: StorageBuilder = StorageBuilder::new();
+        /* Save all function information */
+        options.prepare_modules();
         storage_builder.prepare_variable_store(ast, options);
-        let mut functions_compiled = false;
 
         /* Jump over all function definations to main function */
         options.opcodes.push(VmOpCode::Jump as u8);
         options.opcodes.push(0 as u8);
         options.opcodes.push(0 as u8);
-        
-        /* First part of the codes are functions */
 
+        /* First part of the codes are functions */
         let mut functions = Vec::new();
         self.find_function_definations(ast, &mut functions, options, 0);
-        self.generate_functions(&functions, options)?;
+        self.generate_functions(&mut functions, options)?;
 
-        /* Update all opcode references */
-        /* Loop all storages */
-        for storage in options.storages.iter_mut() {
-            
-            /* Update function referred location. Look one by one each constants */
-            for (constant_index, function_reference) in storage.get_function_constants() {
-                if let BramaPrimative::Function(reference) = &*function_reference.deref() {
-                    
-                    match storage.get_function(&reference.name) {
-                        Some(func_information) => {
-                            /* Update opcode function location at opcode array */
-                            let mut new_reference = reference.clone();
-                            new_reference.callback = FunctionType::Opcode(func_information.opcode_location.get() as u16);
-                            let new_object = BramaPrimative::Function(new_reference);
-                            storage.update_constant(constant_index, VmObject::from(Rc::new(new_object)));
-                        },
-                        _ => ()
-                    };
-                }
-            }
-        }
-
-        options.functions_compiled = true;
-        
         /* If there are no function defination, remove previous opcodes */
         if options.opcodes.len() == 3 {
             options.opcodes.clear();
@@ -139,26 +165,11 @@ impl Compiler for InterpreterCompiler {
             let current_location = options.opcodes.len();
             options.opcodes[1] = current_location as u8;
             options.opcodes[2] = (current_location >> 8) as u8;
-            functions_compiled = true;
         }
 
         /* Generate main function code */
         self.generate_opcode(ast, &BramaAstType::None, options, 0)?;
 
-        /* Fix function references */
-        if functions_compiled {
-            for storage in &options.storages {
-                for (_, function) in &storage.functions {
-                    let first     = function.opcode_location.get() as u8;
-                    let second  = (function.opcode_location.get() >> 8) as u8;
-
-                    for location in function.used_locations.borrow().iter() {
-                        options.opcodes[*location as usize]        = first;
-                        options.opcodes[(*location + 1)  as usize] = second;
-                    }
-                }
-            }
-        }
         Ok(0)
     }
 }
@@ -167,16 +178,20 @@ impl InterpreterCompiler {
     fn find_function_definations(&self, ast: &BramaAstType, functions: &mut Vec<FunctionDefine>, options: &mut BramaCompiler, storage_index: usize) {
         match ast {
             BramaAstType::FunctionDefination { name, arguments, body  } => {
+                let search = options.find_function(name.to_string(), Vec::new(), "".to_string(), storage_index);
+                match search {
+                    Some(reference) => {
+                        functions.push(FunctionDefine {
+                            arguments: arguments.to_vec(),
+                            body: body.clone(),
+                            reference: reference.clone()
+                        });
 
-                if let Some(information) = options.storages[storage_index].get_function(name) {
-                    functions.push(FunctionDefine {
-                        name: name.to_string(),
-                        arguments: arguments.to_vec(),
-                        body: body.clone(),
-                        storage_index: storage_index
-                    });
-                    self.find_function_definations(body, functions, options, information.storage_index as usize);
-                }
+                        self.find_function_definations(body, functions, options, reference.storage_index);
+                    },
+
+                    None => println!("Nope nope")
+                };
             },
             BramaAstType::Block(blocks) => {
                 for block in blocks {
@@ -187,23 +202,18 @@ impl InterpreterCompiler {
         };
     }
 
-    fn generate_functions(&self, functions: &Vec<FunctionDefine>, options: &mut BramaCompiler) -> CompilerResult {
-        
+    fn generate_functions(&self, functions: &mut Vec<FunctionDefine>, options: &mut BramaCompiler) -> CompilerResult {
         for function in functions {
-            if let Some(information) = options.storages[function.storage_index].get_function(&function.name) {
-                options.opcodes.push(VmOpCode::Func as u8);
-                (*information).opcode_location.set(options.opcodes.len() as u16);
-                options.opcodes.push(information.storage_index as u8);
-                options.opcodes.push((information.storage_index >> 8) as u8);
+            options.opcodes.push(VmOpCode::Func as u8);
+            (*function.reference).opcode_location.set(options.opcodes.len());
+            options.opcodes.push(function.arguments.len() as u8);
+
+            if function.arguments.len() > 0 {
+                options.opcodes.push(VmOpCode::InitArguments as u8);
                 options.opcodes.push(function.arguments.len() as u8);
+            }
 
-                if function.arguments.len() > 0 {
-                    options.opcodes.push(VmOpCode::InitArguments as u8);
-                    options.opcodes.push(function.arguments.len() as u8);
-                }
-
-                self.generate_opcode(&function.body, &function.body, options, information.storage_index as usize)?;
-            } 
+            self.generate_opcode(&function.body, &function.body, options, function.reference.storage_index as usize)?;
         }
 
         Ok(0)
@@ -288,10 +298,32 @@ impl InterpreterCompiler {
             self.generate_opcode(argument, upper_ast, options, storage_index)?;
         }
 
+        let function_search = options.find_function(names[names.len()-1].to_string(), names[0..(names.len()-1)].to_vec(), "".to_string(), storage_index);
+
+        match function_search {
+            Some(function_ref) => {
+                let search_location = options.storages[storage_index].get_constant_location(Rc::new(BramaPrimative::Function(function_ref)));
+                match search_location {
+                    Some(location) => {
+                        options.opcodes.push(VmOpCode::Call as u8);
+                        options.opcodes.push(location as u8);
+                        options.opcodes.push(arguments.len() as u8);
+                        options.opcodes.push(assign_to_temp as u8);
+                        return Ok(0 as u8);
+                    },
+                    _ => return Err("Function not found")
+                }
+            },
+            _ => ()
+        };
+
+        return Err("Function not found");
+
         /* Search function */
-        let mut search_storage_index = storage_index;
+        /*
+        let mut search_storage = &options.storages[storage_index];
         loop {
-            let function_search = options.storages[search_storage_index].get_function_constant(names[names.len()-1].to_string(), names[0..(names.len()-1)].to_vec(), "".to_string());
+            let function_search = search_storage.get_function_constant(names[names.len()-1].to_string(), names[0..(names.len()-1)].to_vec(), "".to_string());
             match function_search {
                 Some(constant_address) => {
                     options.opcodes.push(VmOpCode::Call as u8);
@@ -301,7 +333,7 @@ impl InterpreterCompiler {
                     return Ok(0 as u8);
                 },
                 None => {
-                    match options.storages.get_mut(search_storage_index).unwrap().get_variable_location(&names[0].to_string()) {
+                    match search_storage.get_variable_location(&names[0].to_string()) {
                         /* Variable found */
                         Some(location) => {
                             options.opcodes.push(VmOpCode::Load as u8);
@@ -313,17 +345,30 @@ impl InterpreterCompiler {
                             return Ok(0 as u8);
                         },
                         /* Variable not found, lets check for function */
-                        None => ()
+                        None => {
+                            let normal_func = search_storage.get_function(&names.join("::"));
+                            match normal_func {
+                                Some(function) => {
+                                    options.opcodes.push(VmOpCode::Load as u8);
+                                    options.opcodes.push(function.opcode_location.get() as u8);
+
+                                    options.opcodes.push(VmOpCode::CallStack as u8);
+                                    options.opcodes.push(arguments.len() as u8);
+                                    options.opcodes.push(assign_to_temp as u8);
+                                    return Ok(0 as u8);
+                                },
+                                None => ()
+                            };
+                        }
                     };
                 }
             };
 
-            if options.storages[search_storage_index].get_parent_index() == usize::MAX {
-                return Err("Function not found");
-            }
-
-            search_storage_index = options.storages[search_storage_index].get_parent_index();
-        }
+            search_storage = match search_storage.get_parent_location() {
+                Some(location) => &options.storages[location as usize],
+                None => return Err("Function not found")
+            };
+        }*/
     }
 
     fn generate_break(&self, _: &BramaAstType, options: &mut BramaCompiler, _: usize) -> CompilerResult {       

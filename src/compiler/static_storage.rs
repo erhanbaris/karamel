@@ -1,12 +1,11 @@
 use crate::types::*;
 use crate::compiler::*;
-
-use std::collections::BTreeMap;
 use std::cell::RefCell;
 use std::rc::Rc;
 
 
 pub struct StaticStorage {
+    pub index                 : usize,
     pub constants             : Vec<VmObject>,
     pub constant_size         : u8,
     pub temp_size             : u8,
@@ -15,11 +14,8 @@ pub struct StaticStorage {
     pub memory                : Rc<RefCell<Vec<VmObject>>>,
     pub stack                 : Rc<RefCell<Vec<VmObject>>>,
     pub total_const_variables : u8,
-    pub functions             : BTreeMap<String, Rc<FunctionInformation>>,
-    pub function_references   : Vec<FunctionReference>,
-    pub parent_index          : usize
+    pub parent_location       : Option<usize>
 }
-
 
 /*
 ### STORAGE STRUCTURE ###
@@ -31,9 +27,10 @@ pub struct StaticStorage {
   TEMP VALUES
 -------------------------
 */
-impl Storage for StaticStorage {
-    fn new() -> StaticStorage {
+impl StaticStorage {
+    pub fn new() -> StaticStorage {
         StaticStorage {
+            index: 0,
             constants: Vec::new(),
             constant_size: 0,
             temp_size: 0,
@@ -42,13 +39,11 @@ impl Storage for StaticStorage {
             memory: Rc::new(RefCell::new(Vec::new())),
             stack: Rc::new(RefCell::new(Vec::new())),
             variables: Vec::new(),
-            functions: BTreeMap::new(),
-            parent_index: 0,
-            function_references: Vec::new()
+            parent_location: None
         }
     }
 
-    fn build(&mut self) {
+    pub fn build(&mut self) {
         self.constant_size = self.constants.len() as u8;
         let mut memory = self.memory.borrow_mut();
         let mut stack  = self.stack.borrow_mut();
@@ -75,33 +70,22 @@ impl Storage for StaticStorage {
             stack.push(VmObject::convert(Rc::new(BramaPrimative::Empty)));
         }
     }
-
-    fn get_memory(&mut self) -> Rc<RefCell<Vec<VmObject>>> { self.memory.clone() }
-    fn get_stack(&mut self) -> Rc<RefCell<Vec<VmObject>>> { self.stack.clone() }
-    fn get_constant_size(&self) -> u8 { self.constant_size }
-    fn get_variable_size(&self) -> u8 { self.variables.len() as u8 }
-    fn get_temp_size(&self) -> u8     { self.temp_size }
-    fn set_parent_index(&mut self, parent_index: usize) {
-        self.parent_index = parent_index;
+    pub fn get_memory(&mut self) -> Rc<RefCell<Vec<VmObject>>> { self.memory.clone() }
+    pub fn get_stack(&mut self) -> Rc<RefCell<Vec<VmObject>>> { self.stack.clone() }
+    pub fn get_constant_size(&self) -> u8 { self.constant_size }
+    pub fn get_variable_size(&self) -> u8 { self.variables.len() as u8 }
+    pub fn get_temp_size(&self) -> u8     { self.temp_size }
+    
+    pub fn set_parent_location(&mut self, parent_location: usize) {
+        self.parent_location = Some(parent_location);
     }
-    fn get_parent_index(&self) -> usize { self.parent_index }
-    fn set_temp_size(&mut self, value: u8) { self.temp_size = value; }
-    fn get_free_temp_slot(&mut self) -> u8 { 
-        let index = self.temp_counter;
-        self.temp_counter += 1;
-        return self.get_constant_size() + self.get_variable_size() + index;
+    pub fn get_parent_location(&self) -> Option<usize> {
+        self.parent_location
     }
+    
+    pub fn set_temp_size(&mut self, value: u8) { self.temp_size = value; }
 
-    fn get_temp_counter(&self) -> u8 { self.temp_counter }
-    fn set_temp_counter(&mut self, counter: u8) { self.temp_counter = counter; }
-    fn inc_temp_counter(&mut self)    { self.temp_counter += 1; }
-    fn reset_temp_counter(&mut self)  { self.temp_counter = 0; }
-
-    fn add_function(&mut self, name: &String, information: Rc<FunctionInformation>) {
-        self.functions.insert(name.to_string(), information);
-    }
-
-    fn add_constant(&mut self, value: Rc<BramaPrimative>) {
+    pub fn add_constant(&mut self, value: Rc<BramaPrimative>) {
         let has = self.constants.iter().any(|x| {
             *x.deref() == *value
         });
@@ -111,7 +95,7 @@ impl Storage for StaticStorage {
         };
     }
 
-    fn add_variable(&mut self, name: &String) -> u8 {
+    pub fn add_variable(&mut self, name: &String) -> u8 {
         let result = self.variables.iter().position(|(key, _)| key == name);
         match result {
             Some(location) => self.variables[location].1,
@@ -122,7 +106,7 @@ impl Storage for StaticStorage {
         }
     }
 
-    fn set_variable_value(&mut self, name: &String, object: VmObject) {
+    pub fn set_variable_value(&mut self, name: &String, object: VmObject) {
         match self.get_variable_location(name) {
             Some(location) => {
                 let mut memory = self.memory.borrow_mut();
@@ -132,14 +116,7 @@ impl Storage for StaticStorage {
         };
     }
 
-    fn get_function(&self, name: &String) -> Option<Rc<FunctionInformation>> {
-        if self.functions.contains_key(name) {
-            return Some(self.functions.get(name).unwrap().clone());
-        }
-        return None;
-    }
-
-    fn get_variable_location(&self, name: &String) -> Option<u8> {
+    pub fn get_variable_location(&self, name: &String) -> Option<u8> {
         let result = self.variables.iter().position(|(key, _)| key == name);
         match result {
             Some(location) => Some(self.variables[location].1),
@@ -147,21 +124,21 @@ impl Storage for StaticStorage {
         }
     }
 
-    fn get_variable_value(&self, name: &String) -> Option<Rc<BramaPrimative>> {
+    pub fn get_variable_value(&self, name: &String) -> Option<Rc<BramaPrimative>> {
         match self.get_variable_location(name) {
             Some(loc) => Some(self.memory.borrow_mut()[loc as usize].deref()),
             _ => None
         }
     }
 
-    fn get_constant_location(&self, value: Rc<BramaPrimative>) -> Option<u8> {
-        return match self.memory.borrow_mut().iter().position(|x| { return *x.deref() == *value; }) {
+    pub fn get_constant_location(&self, value: Rc<BramaPrimative>) -> Option<u8> {
+        return match self.memory.borrow().iter().position(|x| { return *x.deref() == *value; }) {
             Some(number) => Some(number as u8),
             _ => None
         };
     }
 
-    fn get_function_constant(&self, name: String, module_path: Vec<String>, framework: String) -> Option<u8> {
+    pub fn get_function_constant(&self, name: String, module_path: Vec<String>, framework: String) -> Option<u8> {
         
         for (index, item) in self.memory.borrow().iter().enumerate() {
             if let BramaPrimative::Function(reference) = &*item.deref() {
@@ -176,23 +153,7 @@ impl Storage for StaticStorage {
         None
     }
 
-    fn update_constant(&self, index: u8, object: VmObject) {
-        self.memory.borrow_mut()[index as usize] = object;
-    }
-
-    fn get_function_constants(&self) -> Vec<(u8, VmObject)> {
-        let mut items = Vec::new();
-
-        for (index, item) in self.memory.borrow().iter().enumerate() {
-            if let BramaPrimative::Function(_) = &*item.deref() {
-                items.push((index as u8, *item));
-            }
-        }
-
-        return items;
-    }
-
-    fn dump(&self) {
+    pub fn dump(&self) {
         println!("╔════════════════════════════════════════╗");
         println!("║               MEMORY DUMP              ║");
         println!("╠═══╦═════╦══════════════════════════════╣");

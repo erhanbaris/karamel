@@ -30,10 +30,9 @@ fn main() {
     let result = vm::executer::code_executer(&r#"
 fn test_1:
     döndür 'erhan'
-
 fn test_2:
     döndür test_1()
-hataayıklama::doğrula(test_2(), 'erhan')
+hataayıklama::doğrula(test_2() + " barış", 'erhan barış')
 "#.to_string());
     match result {
         Ok(_) => println!("Success"),

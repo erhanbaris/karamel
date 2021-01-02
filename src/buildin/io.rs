@@ -1,6 +1,7 @@
-use crate::{buildin::{Module, NativeCall, NativeCallResult}};
+use crate::compiler::function::{NativeCallResult, NativeCall};
 use crate::types::VmObject;
 use crate::compiler::value::EMPTY_OBJECT;
+use crate::buildin::Module;
 use std::collections::HashMap;
 use std::rc::Rc;
 use std::io::{self};

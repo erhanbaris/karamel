@@ -1,13 +1,9 @@
 use std::rc::Rc;
 use std::cmp::max;
-use std::cell::Cell;
-use std::cell::RefCell;
 
-use crate::compiler::Storage;
-use crate::compiler::FunctionInformation;
-use crate::compiler::ast::BramaAstType;
+use crate::{compiler::ast::BramaAstType};
 use crate::compiler::value::BramaPrimative;
-use crate::compiler::value::FunctionReference;
+use crate::compiler::function::FunctionReference;
 use crate::compiler::BramaCompiler;
 use crate::compiler::static_storage::StaticStorage;
 use crate::types::BramaOperatorType;
@@ -26,7 +22,6 @@ impl StorageBuilder {
         let mut compiler_option = CompilerOption { max_stack: 0 };
         self.get_temp_count_from_ast(ast, &BramaAstType::None, options, 0, &mut compiler_option);
         options.storages[0].set_temp_size(compiler_option.max_stack);
-        options.storages[0].set_parent_index(usize::MAX);
         options.storages[0].build();
     }
 
@@ -63,13 +58,13 @@ impl StorageBuilder {
             },
             
             BramaAstType::Symbol(string) => {
-                if let Some(function) = options.modules.find_method(&[string.to_string()].to_vec()) {
+                /*if let Some(function) = options.modules.find_method(&[string.to_string()].to_vec()) {
                     let reference = FunctionReference::native_function(function, string.to_string(), [].to_vec(), "".to_string());
                     options.storages.get_mut(storage_index).unwrap().add_constant(reference);
                 } else if let Some(function) = options.storages[storage_index].get_function(string) {
                     let reference = FunctionReference::opcode_function(0, function.name.to_string(), [].to_vec(), "".to_string());
                     options.storages.get_mut(storage_index).unwrap().add_constant(reference);
-                } else {
+                } else*/ {
                     options.storages.get_mut(storage_index).unwrap().add_variable(&string);
                     compiler_option.max_stack = max(1, compiler_option.max_stack);
                 }
@@ -122,20 +117,23 @@ impl StorageBuilder {
                 /* Need to allocate space for function arguments */
                 let mut max_temp = 0 as u8;
 
-                /* Native function call */
-                if let Some(function) = options.modules.find_method(&names) {
-                    /* Add function pointer to consts */
-                    let reference = FunctionReference::native_function(function, names[names.len() - 1].to_string(), names[0..(names.len()-1)].to_vec(), "".to_string());
-                    options.storages.get_mut(storage_index).unwrap().add_constant(reference);
-                
-                }
-
                 /* Build arguments */
                 for arg in arguments {
                     max_temp += self.get_temp_count_from_ast(arg, ast, options, storage_index, compiler_option);
                 }
 
                 compiler_option.max_stack = max(max_temp, compiler_option.max_stack);
+
+
+                let function_search = options.find_function(names[names.len() - 1].to_string(), names[0..(names.len()-1)].to_vec(), "".to_string(), storage_index);
+                match function_search {
+                    Some(reference) => {
+                        options.storages.get_mut(storage_index).unwrap().add_constant(Rc::new(BramaPrimative::Function(reference)));
+                    },
+                    None =>  {
+                        println!("function_search return None");
+                    }
+                };
 
 
                 /* Variables */
@@ -203,15 +201,13 @@ impl StorageBuilder {
                 /* Create new storage for new function */
                 let mut function_compiler_option = CompilerOption { max_stack: 0 };
                 let new_storage_index = options.storages.len();
-                let function_information = Rc::new(FunctionInformation {
-                    name: name.to_string(),
-                    opcode_location: Cell::new(0),
-                    used_locations: RefCell::new(Vec::new()),
-                    storage_index: new_storage_index as u16
-                });
-
-                options.storages[storage_index].add_function(name, function_information);
+                let function = FunctionReference::opcode_function(name.to_string(), arguments.to_vec(), Vec::new(), "".to_string(), new_storage_index, storage_index);
+                
+                //options.storages[storage_index].add_constant(function);
+                options.add_function(function.clone());
                 options.storages.push(StaticStorage::new());
+                options.storages[new_storage_index].set_parent_location(storage_index);
+                options.storages[storage_index].add_constant(Rc::new(BramaPrimative::Function(function.clone())));
 
                 for argument in arguments {
                     options.storages[new_storage_index].add_variable(argument);
@@ -220,7 +216,6 @@ impl StorageBuilder {
                 self.get_temp_count_from_ast(body, ast, options, new_storage_index, &mut function_compiler_option);
                 
                 function_compiler_option.max_stack = max(arguments.len() as u8, function_compiler_option.max_stack);
-                options.storages[new_storage_index].set_parent_index(storage_index);
                 options.storages[new_storage_index].set_temp_size(function_compiler_option.max_stack as u8);
                 options.storages[new_storage_index].build();
                 0

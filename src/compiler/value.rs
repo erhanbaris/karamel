@@ -4,133 +4,8 @@ use std::mem::ManuallyDrop;
 use std::fmt;
 use std::collections::HashMap;
 
-use crate::{inc_memory_index, dec_memory_index, get_memory_index};
 use crate::types::*;
-use crate::compiler::{Storage, BramaCompiler, Scope};
-
-#[derive(Clone)]
-pub struct FunctionReference {
-    pub callback: FunctionType,
-    pub framework: String,
-    pub module_path: Vec<String>,
-    pub name: String
-}
-
-#[derive(Clone)]
-pub enum FunctionType {
-    Native(NativeCall),
-    Opcode(u16)
-}
-
-impl FunctionReference {
-    pub fn execute(&self, compiler: &mut BramaCompiler) -> NativeCallResult{
-        unsafe {
-            match self.callback {
-                FunctionType::Native(func) => FunctionReference::native_function_call(func, compiler),
-                FunctionType::Opcode(location) => FunctionReference::opcode_function_call(location, compiler)
-            }
-        }
-    }
-
-    pub fn native_function(func: NativeCall, name: String, module_path: Vec<String>, framework: String) -> Rc<BramaPrimative> {
-        let reference = FunctionReference {
-            callback: FunctionType::Native(func),
-            framework: framework,
-            module_path: module_path,
-            name: name
-        };
-        return Rc::new(BramaPrimative::Function(reference));
-    }
-
-    pub fn opcode_function(location: u16, name: String, module_path: Vec<String>, framework: String) -> Rc<BramaPrimative> {
-        let reference = FunctionReference {
-            callback: FunctionType::Opcode(location),
-            framework: framework,
-            module_path: module_path,
-            name: name
-        };
-        return Rc::new(BramaPrimative::Function(reference));
-    }
-
-    unsafe fn native_function_call(func: NativeCall, compiler: &mut BramaCompiler) -> NativeCallResult {            
-        let total_args = compiler.opcodes[compiler.opcode_index + 1];
-        let call_return_assign_to_temp = compiler.opcodes[compiler.opcode_index + 2] != 0;
-        
-        match func(&(*compiler.current_scope).stack, get_memory_index!(compiler), total_args) {
-            Ok(result) => {
-                dec_memory_index!(compiler, total_args as usize);
-
-                if call_return_assign_to_temp {
-                    (*compiler.current_scope).stack[get_memory_index!(compiler)] = result;
-                    inc_memory_index!(compiler, 1);
-                }
-
-                compiler.opcode_index += 2;
-                return Ok(result);
-            },
-            Err((error, l, c)) => {
-                println!("{:?}", error);
-                return Err((error, l, c));
-            }
-        };
-    }
-
-    fn opcode_function_call(location: u16, options: &mut BramaCompiler) -> NativeCallResult {
-        let argument_size  = options.opcodes[options.opcode_index + 1];
-        let call_return_assign_to_temp = options.opcodes[options.opcode_index + 2] != 0;
-        let old_index = options.opcode_index + 2;
-        options.opcode_index = location as usize;
-        options.scope_index += 1;
-        let storage_location = ((options.opcodes[options.opcode_index + 1] as u16 * 256) + options.opcodes[options.opcode_index] as u16) as usize;
-
-        if argument_size != options.opcodes[options.opcode_index + 1] {
-            return Err(("Function argument error".to_string(), 0, 0));
-        }
-        let mut args: Vec<VmObject> = Vec::with_capacity(argument_size as usize);
-
-        if argument_size > 0 {
-            for _ in 0..argument_size {
-                unsafe {
-                    dec_memory_index!(options, 1);
-                    args.push((*options.current_scope).stack[get_memory_index!(options)]);
-                }
-            }
-        }
-
-        if options.scopes.len() <= options.scope_index {
-            options.scopes.resize(options.scopes.len() * 2, Scope::empty());
-        }
-
-        unsafe {
-            options.scopes[options.scope_index] = Scope {
-                memory: options.storages[storage_location].get_memory().borrow().to_vec(),
-                stack: options.storages[storage_location].get_stack().borrow().to_vec(),
-                location: old_index,
-                memory_index: get_memory_index!(options),
-                const_size: options.storages[storage_location].get_constant_size(),
-                call_return_assign_to_temp: call_return_assign_to_temp
-            };
-
-            options.current_scope = &mut options.scopes[options.scope_index] as *mut Scope;
-            (*options.current_scope).memory_index = 0;
-        }
-
-        if argument_size > 0 {
-            for _ in 0..argument_size {
-                unsafe {
-                    (*options.current_scope).stack[get_memory_index!(options)] = args[get_memory_index!(options)];
-                    inc_memory_index!(options, 1);
-                }
-            }
-        }
-
-        options.opcode_index += 2;
-        return Ok(VmObject::convert(Rc::new(BramaPrimative::Empty)));
-    }
-}
-
-pub type NativeCallResult = Result<VmObject, (String, u32, u32)>;
-pub type NativeCall       = fn(stack: &Vec<VmObject>, last_position: usize, arg_size: u8) -> NativeCallResult;
+use crate::compiler::function::FunctionReference;
 
 pub const EMPTY_OBJECT: VmObject = VmObject(QNAN | EMPTY_FLAG);
 pub const TRUE_OBJECT: VmObject  = VmObject(QNAN | TRUE_FLAG);
@@ -146,7 +21,7 @@ pub enum BramaPrimative {
     Dict(HashMap<String, Rc<BramaPrimative>>),
     Atom(u64),
     Text(Rc<String>),
-    Function(FunctionReference)
+    Function(Rc<FunctionReference>)
 }
 
 impl BramaPrimative {
@@ -170,6 +45,7 @@ impl BramaPrimative {
         }
     }
 }
+
 
 impl From<f64> for VmObject {
     fn from(source: f64) -> Self {
