@@ -80,9 +80,14 @@ impl  BramaCompiler {
     pub fn prepare_modules(&mut self) {
         let mut functions = Vec::new();
 
-        for (_, module) in &self.modules.modules {
+        for (module_name, module) in &self.modules.modules {
+            let mut module_path = Vec::new();
+            if module.get_module_name().len() > 0 {
+                module_path = [module.get_module_name()].to_vec();
+            }
+
             for (function_name, function_pointer) in module.get_methods() {
-                let reference = FunctionReference::native_function(function_pointer, function_name.to_string(), [module.get_module_name()].to_vec(), "".to_string());
+                let reference = FunctionReference::native_function(function_pointer, function_name.to_string(), module_path.to_vec(), "".to_string());
                 functions.push(reference);
             }
         }

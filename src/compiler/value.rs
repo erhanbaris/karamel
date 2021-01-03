@@ -6,6 +6,7 @@ use std::collections::HashMap;
 
 use crate::types::*;
 use crate::compiler::function::FunctionReference;
+use crate::compiler::GetType;
 
 pub const EMPTY_OBJECT: VmObject = VmObject(QNAN | EMPTY_FLAG);
 pub const TRUE_OBJECT: VmObject  = VmObject(QNAN | TRUE_FLAG);
@@ -42,6 +43,21 @@ impl BramaPrimative {
         match self {
             BramaPrimative::Text(value) => value.to_string(),
             _ => "".to_string()
+        }
+    }
+}
+
+impl GetType for BramaPrimative {
+    fn get_type(&self) -> String {
+        match self {
+            BramaPrimative::Text(_)     => "yazı".to_string(),
+            BramaPrimative::Number(_)   => "sayı".to_string(),
+            BramaPrimative::Bool(_)     => "bool".to_string(),
+            BramaPrimative::Atom(_)     => "atom".to_string(),
+            BramaPrimative::List(_)     => "liste".to_string(),
+            BramaPrimative::Dict(_)     => "sözlük".to_string(),
+            BramaPrimative::Empty       => "boş".to_string(),
+            BramaPrimative::Function(_) => "fonksiyon".to_string()
         }
     }
 }

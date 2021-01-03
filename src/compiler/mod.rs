@@ -14,6 +14,10 @@ use std::vec::Vec;
 use std::mem;
 use std::fmt;
 
+pub trait GetType {
+    fn get_type(&self) -> String;
+}
+
 pub struct VmByte(pub u8);
 impl fmt::Debug for VmByte {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

@@ -1,4 +1,4 @@
-use crate::{buildin::{Module}};
+use crate::buildin::{Module, ClassType};
 use crate::compiler::function::{NativeCall, NativeCallResult};
 use crate::types::VmObject;
 use crate::compiler::value::EMPTY_OBJECT;
@@ -40,6 +40,10 @@ impl Module for DebugModule {
 
     fn get_modules(&self) -> HashMap<String, Rc<dyn Module>> {
         HashMap::new()
+    }
+
+    fn get_classes(&self) -> Vec<Rc<ClassType>> {
+        Vec::new()
     }
 }
 

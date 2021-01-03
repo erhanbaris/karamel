@@ -1,7 +1,7 @@
 use crate::compiler::function::{NativeCallResult, NativeCall};
 use crate::types::VmObject;
 use crate::compiler::value::EMPTY_OBJECT;
-use crate::buildin::Module;
+use crate::buildin::{Module, ClassType};
 use std::collections::HashMap;
 use std::rc::Rc;
 use std::io::{self};
@@ -46,6 +46,10 @@ impl Module for IoModule {
 
     fn get_modules(&self) -> HashMap<String, Rc<dyn Module>> {
         HashMap::new()
+    }
+
+    fn get_classes(&self) -> Vec<Rc<ClassType>> {
+        Vec::new()
     }
 }
 
