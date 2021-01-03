@@ -248,11 +248,11 @@ impl Tokinizer<'_> {
     }
 
     pub fn increase_index(&mut self) {
+        self.index  += self.get_char().len_utf8() as u32;
+        self.column += 1;
         self.iter.next();
         self.iter_second.next();
         self.iter_third.next();
-        self.index  += self.get_char().len_utf8() as u32;
-        self.column += 1;
     }
 
     pub fn increate_line(& mut self) {

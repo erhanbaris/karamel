@@ -2,12 +2,7 @@ extern crate tpd;
 
 #[cfg(test)]
 mod tests {
-    use crate::tpd::parser::*;
-    use crate::tpd::compiler::*;
     use crate::tpd::vm::*;
-    use crate::tpd::syntax::*;
-
-    use std::rc::Rc;
 
     #[test]
     fn test_files_executer() {
