@@ -71,9 +71,9 @@ pub unsafe fn dump_opcode<W: Write>(index: usize, options: &mut BramaCompiler, l
 
             VmOpCode::Func => {
                 let location = ((options.opcodes[opcode_index+2] as u16 * 256) + options.opcodes[opcode_index+1] as u16) as usize;
-                let data = format!("║ {:4} ║ {:15} ║ {:^5?} ║ {:^5} ║", opcode_index, format!("{:?}", opcode), location + opcode_index + 1, "");
-                build_arrow(index, opcode_index, 3, &mut buffer, &data);
-                opcode_index += 3;
+                let data = format!("║ {:4} ║ {:15} ║ {:^5?} ║ {:^5} ║", opcode_index, format!("{:?}", opcode), opcode_index + 1, "");
+                build_arrow(index, opcode_index, 1, &mut buffer, &data);
+                opcode_index += 1;
             },
 
             VmOpCode::InitArguments |

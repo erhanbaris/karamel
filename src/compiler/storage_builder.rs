@@ -58,16 +58,31 @@ impl StorageBuilder {
             },
             
             BramaAstType::Symbol(string) => {
-                let function_search = options.find_function(string.to_string(), [].to_vec(), "".to_string(), storage_index);
+                let function_search = options.find_function(string.to_string(), Vec::new(), "".to_string(), storage_index);
                 match function_search {
                     Some(reference) => {
                         options.storages.get_mut(storage_index).unwrap().add_constant(Rc::new(BramaPrimative::Function(reference)));
                     },
-                    None => {
-                        options.storages.get_mut(storage_index).unwrap().add_variable(&string);
-                        compiler_option.max_stack = max(1, compiler_option.max_stack);
-                    }
+                    None => ()
                 };
+
+                options.storages.get_mut(storage_index).unwrap().add_variable(&string);
+                compiler_option.max_stack = max(1, compiler_option.max_stack);
+                1
+            },
+
+            BramaAstType::FunctionMap(params) => {
+                let name = params[params.len() - 1].to_string();
+                let module_path = params[0..(params.len() - 1)].to_vec();
+
+                let function_search = options.find_function(name, module_path, "".to_string(), storage_index);
+                match function_search {
+                    Some(reference) => {
+                        options.storages.get_mut(storage_index).unwrap().add_constant(Rc::new(BramaPrimative::Function(reference)));
+                    },
+                    None => ()
+                };
+                compiler_option.max_stack = max(1, compiler_option.max_stack);
                 1
             },
             
@@ -135,12 +150,14 @@ impl StorageBuilder {
 
 
                 /* Variables */
-                if *assign_to_temp {
-                    max_temp + 1
+                let size = if *assign_to_temp {
+                    max_temp + 2
                 }
                 else {
-                    max_temp
-                }
+                    max_temp + 1
+                };
+                compiler_option.max_stack = max(size, compiler_option.max_stack);
+                size
             },
 
             BramaAstType::Return(expression) => {
@@ -233,12 +250,13 @@ impl StorageBuilder {
                         total = max(total, self.get_temp_count_from_ast(&else_if_item.body, ast, options, storage_index, compiler_option));
                     }
                     
-                    compiler_option.max_stack = max(0, total);
+                    compiler_option.max_stack = max(total, compiler_option.max_stack);
                     total
                 },
 
                 BramaAstType::None => {
                     options.storages.get_mut(storage_index).unwrap().add_constant(Rc::new(BramaPrimative::Empty));
+                    compiler_option.max_stack = max(1, compiler_option.max_stack);
                     1
                 },
             _ => 0

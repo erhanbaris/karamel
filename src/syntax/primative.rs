@@ -184,6 +184,49 @@ impl PrimativeParser {
         return Ok(BramaAstType::None);
     }
 
+    pub fn parse_function_map(parser: &SyntaxParser) -> AstResult {
+        parser.backup();
+        parser.cleanup_whitespaces();
+        let token = parser.peek_token();
+        if token.is_err() {
+            return Ok(BramaAstType::None);
+        }
+
+        if let BramaTokenType::Symbol(symbol) = &token.unwrap().token_type {
+            let mut symbol_definitions: Vec<String> = Vec::new();
+            symbol_definitions.push(symbol.to_string());
+
+            parser.consume_token();
+            loop {
+                if let Some(_) = parser.match_operator(&[BramaOperatorType::ColonMark]) {
+                    if let Some(_) = parser.match_operator(&[BramaOperatorType::ColonMark]) {
+                        if let BramaTokenType::Symbol(inner_symbol) = &parser.peek_token().unwrap().token_type {
+                            parser.consume_token();
+                            symbol_definitions.push(inner_symbol.to_string());
+                            continue;
+                        }
+                        else {
+                            parser.restore();
+                            return Ok(BramaAstType::None);
+                        }
+                    }
+                    else {
+                        parser.restore();
+                        return Ok(BramaAstType::None);
+                    }
+                }
+                break;
+            }
+            
+            if symbol_definitions.len() > 1 {
+                return Ok(BramaAstType::FunctionMap(symbol_definitions.to_vec()));
+            }
+        }
+
+        parser.restore();
+        return Ok(BramaAstType::None);
+    }
+
     pub fn parse_parenthesis(parser: &SyntaxParser) -> AstResult {
         parser.backup();
         if parser.match_operator(&[BramaOperatorType::LeftParentheses]).is_some() {
@@ -207,6 +250,6 @@ impl PrimativeParser {
 
 impl SyntaxParserTrait for PrimativeParser {
     fn parse(parser: &SyntaxParser) -> AstResult {
-        return map_parser(parser, &[Self::parse_dict, Self::parse_list, Self::parse_parenthesis, Self::parse_symbol, Self::parse_basic_primatives]);
+        return map_parser(parser, &[Self::parse_dict, Self::parse_list, Self::parse_parenthesis, Self::parse_function_map, Self::parse_symbol, Self::parse_basic_primatives]);
     }
 }

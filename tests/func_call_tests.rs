@@ -100,4 +100,5 @@ mod tests {
             assign_to_temp: true
         })
     }));
+    test_compare!(func_call_12, "gç::satıryaz", Ok(BramaAstType::FunctionMap(["gç".to_string(), "satıryaz".to_string()].to_vec())));
 }

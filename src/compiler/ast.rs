@@ -75,6 +75,7 @@ pub enum BramaAstType {
         body: Rc<BramaAstType>
     },
     Symbol(String),
+    FunctionMap(Vec<String>),
     List(Vec<Box<BramaAstType>>),
     Dict(Vec<Box<BramaDictItem>>),
     Indexer { body: Box<BramaAstType>, indexer: Box<BramaAstType> },

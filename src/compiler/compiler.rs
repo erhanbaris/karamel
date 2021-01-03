@@ -241,7 +241,8 @@ impl InterpreterCompiler {
             BramaAstType::IfStatement {condition, body, else_body, else_if} => self.generate_if_condition(condition, body, else_body, else_if, upper_ast, options, storage_index),
             BramaAstType::Indexer {body, indexer} => self.generate_indexer(body, indexer, upper_ast, options, storage_index),
             BramaAstType::None => self.generate_none(options, storage_index),
-            BramaAstType::FunctionDefination{name: _, arguments: _, body: _} => Ok(0)
+            BramaAstType::FunctionDefination{name: _, arguments: _, body: _} => Ok(0),
+            BramaAstType::FunctionMap(name) => self.generate_function_map(name, options, storage_index)
         }
     }
 
@@ -256,6 +257,30 @@ impl InterpreterCompiler {
                 Ok(index)
             },
             _ => Err("Value not found in storage")
+        }
+    }
+
+
+    fn generate_function_map(&self, params: &Vec<String>, options: &mut BramaCompiler, storage_index: usize) -> CompilerResult {
+        let storage = &options.storages[storage_index];
+
+        let name = params[params.len() - 1].to_string();
+        let module_path = params[0..(params.len() - 1)].to_vec();
+
+        let function_search = options.find_function(name, module_path, "".to_string(), storage_index);
+        match function_search {
+            Some(reference) => {
+                let result = storage.get_constant_location(Rc::new(BramaPrimative::Function(reference)));
+                match result {
+                    Some(index) => {
+                        options.opcodes.push(VmOpCode::Load as u8);
+                        options.opcodes.push(index as u8);
+                        Ok(0)
+                    },
+                    _ => Err("Function not found in storage")
+                }
+            },
+            None => Err("Function not found in storage")
         }
     }
 
@@ -488,24 +513,24 @@ impl InterpreterCompiler {
     }
 
     fn generate_symbol(&self, variable: &String, _: &BramaAstType, options: &mut BramaCompiler, storage_index: usize) -> CompilerResult {
-        match options.storages.get_mut(storage_index).unwrap().get_variable_location(variable) {
-            /* Variable found */
-            Some(location) => {
+        let storage = &options.storages[storage_index];                
+        let result = storage.get_function_constant(variable.to_string(), Vec::new(), "".to_string());
+        match result {
+            Some(index) => {
                 options.opcodes.push(VmOpCode::Load as u8);
-                options.opcodes.push(location as u8);
-                Ok(location)
+                options.opcodes.push(index as u8);
+                Ok(0)
             },
-            /* Variable not found, lets check for function */
-            None => {
-                let storage = &options.storages[storage_index];                
-                let result = storage.get_function_constant(variable.to_string(), Vec::new(), "".to_string());
-                match result {
-                    Some(index) => {
+            _ => {
+                match options.storages.get_mut(storage_index).unwrap().get_variable_location(variable) {
+                    /* Variable found */
+                    Some(location) => {
                         options.opcodes.push(VmOpCode::Load as u8);
-                        options.opcodes.push(index as u8);
-                        Ok(0)
+                        options.opcodes.push(location as u8);
+                        Ok(location)
                     },
-                    _ => return Err("Value not found in storage")
+                    /* Variable not found, lets check for function */
+                    None => return Err("Value not found in storage")
                 }
             }
         }
