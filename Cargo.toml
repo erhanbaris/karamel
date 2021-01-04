@@ -18,9 +18,10 @@ default = ["dumpOpcodes", "dumpMemory", "dumpExecutionOpcode"]
 [dependencies]
 wasm-bindgen = "0.2"
 bitflags = "1.2"
-termion = "*"
 log-update = "*"
 
+[target.'cfg(not(windows))'.dependencies]
+termion = "*"
 
 [lib]
 crate-type = ["cdylib", "rlib"]

@@ -80,7 +80,7 @@ impl  BramaCompiler {
     pub fn prepare_modules(&mut self) {
         let mut functions = Vec::new();
 
-        for (module_name, module) in &self.modules.modules {
+        for (_, module) in &self.modules.modules {
             let mut module_path = Vec::new();
             if module.get_module_name().len() > 0 {
                 module_path = [module.get_module_name()].to_vec();

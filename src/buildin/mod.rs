@@ -2,6 +2,9 @@ pub mod debug;
 pub mod io;
 pub mod num;
 pub mod base_functions;
+pub mod opcode_class;
+
+use crate::compiler::GetType;
 
 use std::collections::HashMap;
 use std::vec::Vec;
@@ -19,7 +22,7 @@ pub trait Module {
     fn get_methods(&self) -> Vec<(&'static str, NativeCall)>;
     fn get_modules(&self) -> HashMap<String, Rc<dyn Module>>;
 
-    fn get_classes(&self) -> Vec<Rc<ClassType>>;
+    fn get_classes(&self) -> Vec<Rc<dyn Class>>;
 }
 
 pub struct ModuleCollection {
@@ -46,27 +49,11 @@ impl ModuleCollection
 
 
 pub enum ClassProperty {
-    Function(FunctionReference),
+    Function(Rc<FunctionReference>),
     Field(Rc<BramaPrimative>)
 }
 
-pub struct ClassType {
-    pub name: String,
-    pub storage_index: u16,
-    pub properties: HashMap<String, ClassProperty>
-}
-
-impl ClassType {
-    pub fn new(name: String) -> ClassType {
-        ClassType {
-            name: name,
-            storage_index: 0,
-            properties:HashMap::new()
-        }
-    }
-}
-
-pub trait Class {
+pub trait Class: GetType {
     fn get_class_name(&self) -> String;
     
     fn has_property(&self, name: String) -> bool;
@@ -74,6 +61,6 @@ pub trait Class {
     fn add_method(&mut self, name: String, function: Rc<FunctionReference>);
     fn add_property(&mut self, name: String, property: Rc<BramaPrimative>);
     
-    fn get_method(&self, name: &String) -> Option<FunctionReference>;
+    fn get_method(&self, name: &String) -> Option<Rc<FunctionReference>>;
     fn get_property(&self, name: &String) -> Option<Rc<BramaPrimative>>;
 }

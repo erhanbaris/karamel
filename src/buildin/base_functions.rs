@@ -1,10 +1,9 @@
 use crate::compiler::function::{NativeCallResult, NativeCall};
 use crate::types::VmObject;
-use crate::buildin::{Module, ClassType};
+use crate::buildin::{Module, Class};
 use crate::compiler::GetType;
 use std::collections::HashMap;
 use std::rc::Rc;
-use std::io::{self};
 
 
 #[derive(Clone)]
@@ -44,7 +43,7 @@ impl Module for BaseFunctionsModule {
         HashMap::new()
     }
 
-    fn get_classes(&self) -> Vec<Rc<ClassType>> {
+    fn get_classes(&self) -> Vec<Rc<dyn Class>> {
         Vec::new()
     }
 }

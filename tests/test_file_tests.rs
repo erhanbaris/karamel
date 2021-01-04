@@ -4,6 +4,7 @@ extern crate tpd;
 mod tests {
     use crate::tpd::vm::*;
 
+    #[cfg(not(target_family = "windows"))]
     #[test]
     fn test_files_executer() {
         use std::env;

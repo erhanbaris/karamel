@@ -124,6 +124,7 @@ impl StaticStorage {
         }
     }
 
+    #[allow(dead_code)]
     pub fn get_variable_value(&self, name: &String) -> Option<Rc<BramaPrimative>> {
         match self.get_variable_location(name) {
             Some(loc) => Some(self.memory.borrow_mut()[loc as usize].deref()),

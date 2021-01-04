@@ -2,7 +2,7 @@ use crate::compiler::function::{NativeCallResult, NativeCall};
 use crate::types::VmObject;
 use crate::compiler::value::BramaPrimative;
 use crate::compiler::value::EMPTY_OBJECT;
-use crate::buildin::{Module, ClassType};
+use crate::buildin::{Module, Class};
 use std::collections::HashMap;
 use std::rc::Rc;
 
@@ -42,7 +42,7 @@ impl Module for NumModule {
         HashMap::new()
     }
     
-    fn get_classes(&self) -> Vec<Rc<ClassType>> {
+    fn get_classes(&self) -> Vec<Rc<dyn Class>> {
         Vec::new()
     }
 }

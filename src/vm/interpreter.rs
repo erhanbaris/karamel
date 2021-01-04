@@ -4,12 +4,11 @@ use crate::compiler::*;
 use std::rc::Rc;
 use std::mem;
 use std::collections::HashMap;
-use std::io::stdout;
-use log_update::LogUpdate;
-use std::io::{self, Write};
 
-#[cfg(feature = "dumpOpcodes")]
+#[cfg(all(feature = "dumpOpcodes", not(target_family = "windows")))]
 pub unsafe fn dump_opcode<W: Write>(index: usize, options: &mut BramaCompiler, log_update: &mut LogUpdate<W>) {
+    use std::io::stdout;
+    use log_update::LogUpdate;
     use termion::{color, style};
     use std::{thread, time};
 
@@ -118,8 +117,9 @@ pub unsafe fn dump_opcode<W: Write>(index: usize, options: &mut BramaCompiler, l
 
 pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<(), String>
 {
+    #[cfg(not(target_family = "windows"))]
     let mut log_update = LogUpdate::new(stdout()).unwrap();
-    #[cfg(feature = "dumpOpcodes")] {
+    #[cfg(all(feature = "dumpOpcodes", not(target_family = "windows")))] {
         dump_opcode(0, options, &mut log_update);
     }
     {
@@ -137,7 +137,7 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<(), String>
 
         while opcode_size > options.opcode_index {
             let opcode = mem::transmute::<u8, VmOpCode>(options.opcodes[options.opcode_index]);
-            #[cfg(feature = "liveOpcodeView")] {
+            #[cfg(all(feature = "liveOpcodeView", not(target_family = "windows")))] {
                 dump_opcode(options.opcode_index, options, &mut log_update);
             }
             

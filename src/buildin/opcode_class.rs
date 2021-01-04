@@ -1,31 +1,23 @@
 use crate::buildin::{Class, ClassProperty};
-use crate::compiler::{BramaPrimative, function::{FunctionReference, NativeCall}};
+use crate::compiler::{BramaPrimative, function::{FunctionReference}};
 
 use std::collections::HashMap;
-use std::vec::Vec;
+use crate::compiler::GetType;
 use std::rc::Rc;
 
 pub struct OpcodeClass {
     pub name: String,
-    pub storage_index: u16,
+    pub storage_index: usize,
     pub properties: HashMap<String, ClassProperty>
  }
 
 impl Class for OpcodeClass {
-    fn new(name: String, storage_index: usize) -> Class {
-        OpcodeClass {
-            name: String::new(),
-            storage_index: 0,
-            properties: HashMap::new()
-        }
-    }
-
     fn get_class_name(&self) -> String {
-        self.name
+        self.name.to_string()
     }
     
     fn has_property(&self, name: String) -> bool {
-        self.properties.contains_key(name)
+        self.properties.contains_key(&name)
     }
     
     fn add_method(&mut self, name: String, function: Rc<FunctionReference>) {
@@ -33,15 +25,15 @@ impl Class for OpcodeClass {
     }
 
     fn add_property(&mut self, name: String, property: Rc<BramaPrimative>) {
-        self.properties.insert(name, ClassProperty::Field(function.clone()));
+        self.properties.insert(name, ClassProperty::Field(property.clone()));
     }
     
-    fn get_method(&self, name: &String) -> Option<FunctionReference> {
+    fn get_method(&self, name: &String) -> Option<Rc<FunctionReference>> {
         match self.properties.get(name) {
             Some(property) => {
                 match property {
                     ClassProperty::Field(_) => None,
-                    ClassProperty::Function(function) => Some(function)
+                    ClassProperty::Function(function) => Some(function.clone())
                 }
             },
             None => None
@@ -52,11 +44,27 @@ impl Class for OpcodeClass {
         match self.properties.get(name) {
             Some(property) => {
                 match property {
-                    ClassProperty::Field(property) => Some(property),
+                    ClassProperty::Field(property) => Some(property.clone()),
                     ClassProperty::Function(_) => None
                 }
             },
             None => None
+        }
+    }
+}
+
+impl GetType for OpcodeClass {
+    fn get_type(&self) -> String {
+        self.get_class_name()
+    }
+}
+
+impl OpcodeClass {
+    fn new(name: String, storage_index: usize) -> OpcodeClass {
+        OpcodeClass {
+            name: name,
+            storage_index: storage_index,
+            properties: HashMap::new()
         }
     }
 }
