@@ -10,7 +10,7 @@ mod tests {
         use std::env;
         use std::fs;
         use std::path::Path;
-        use termion::{color, style};
+        use colored::*;
 
         let mut test_status = true;
         let current_dir = env::current_dir().unwrap();
@@ -33,18 +33,18 @@ mod tests {
                                 match executer::code_executer(&file_content) {
                                     Ok(_) => {
                                         if !is_pass {
-                                            println!("{}{}# {} failed ({}){}", color::Fg(color::Red), style::Bold, __path, "Not failed", style::Reset);
+                                            println!("# {} failed ({})", __path, "Not failed".red());
                                             test_status = false;
                                         } else {
-                                            println!("{}# {} passed{}",  color::Fg(color::Green), __path, style::Reset);
+                                            println!("# {} passed", __path);
                                         }
                                     },
                                     Err(error) => {
                                         if is_pass {
-                                            println!("{}{}# {} failed ({}){}", color::Fg(color::Red), style::Bold, __path, error, style::Reset);
+                                            println!("# {} failed ({})", __path, error);
                                             test_status = false;
                                         } else {
-                                            println!("{}# {} passed{}",  color::Fg(color::Green), __path, style::Reset);
+                                            println!("# {} passed", __path);
                                         }
                                     }
                                 }

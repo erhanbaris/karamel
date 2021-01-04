@@ -1,6 +1,4 @@
 extern crate bitflags;
-#[cfg(not(target_family = "windows"))]
-extern crate termion;
 extern crate log_update;
 
 mod macros;

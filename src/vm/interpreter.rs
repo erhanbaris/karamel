@@ -4,19 +4,21 @@ use crate::compiler::*;
 use std::rc::Rc;
 use std::mem;
 use std::collections::HashMap;
+use std::io::stdout;
+use log_update::LogUpdate;
+use colored::*;
+use std::io::{self, Write};
 
 #[cfg(all(feature = "dumpOpcodes", not(target_family = "windows")))]
 pub unsafe fn dump_opcode<W: Write>(index: usize, options: &mut BramaCompiler, log_update: &mut LogUpdate<W>) {
-    use std::io::stdout;
-    use log_update::LogUpdate;
-    use termion::{color, style};
+
     use std::{thread, time};
 
     let mut buffer = String::new();
 
     fn build_arrow(index: usize, opcode_index: usize, opcode_length: usize, buffer: &mut String, data: &String) { 
         if index >= opcode_index && index <= opcode_index + opcode_length {
-            buffer.push_str(&format!("{}║{:3}{}{}\r\n", color::Fg(color::Green), " > " , data, style::Reset));
+            buffer.push_str(&format!("║{:3}{}\r\n", " > ".green().bold() , data));
         } else {
             buffer.push_str(&format!("║{:3}{}\r\n", "", data));
         }
@@ -94,7 +96,7 @@ pub unsafe fn dump_opcode<W: Write>(index: usize, options: &mut BramaCompiler, l
             VmOpCode::Call => {
                 let location = (options.opcodes[opcode_index+1] as u16) as usize;
                 let data = format!("║ {:4} ║ {:15} ║ {:^5?} ║ {:^5} ║", opcode_index, format!("{:?}", opcode), location, options.opcodes[opcode_index + 2]);
-                build_arrow(index, opcode_index, 3, &mut buffer, &data);
+                build_arrow(index, opcode_index, 2, &mut buffer, &data);
                 opcode_index += 2;
             },
             
@@ -117,8 +119,9 @@ pub unsafe fn dump_opcode<W: Write>(index: usize, options: &mut BramaCompiler, l
 
 pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<(), String>
 {
-    #[cfg(not(target_family = "windows"))]
+    #[cfg(not(target_family = "windows"))]    
     let mut log_update = LogUpdate::new(stdout()).unwrap();
+    
     #[cfg(all(feature = "dumpOpcodes", not(target_family = "windows")))] {
         dump_opcode(0, options, &mut log_update);
     }
