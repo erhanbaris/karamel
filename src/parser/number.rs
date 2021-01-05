@@ -113,9 +113,10 @@ impl NumberParser {
         let (_, digits)  = self.get_digits(tokinizer);
         let before_comma = digits;
         let mut ch       = tokinizer.get_char();
+        let ch_next = tokinizer.get_next_char();
 
         /* Double number */
-        if !tokinizer.is_end() && ch == '.' {
+        if !tokinizer.is_end() && ch == '.' && (ch_next >= '0' && ch_next <= '9') {
             self.increase(tokinizer);
 
             let (digit_num, digits) = self.get_digits(tokinizer);
@@ -163,7 +164,8 @@ impl NumberParser {
 impl TokenParser for NumberParser {
     fn check(&self, tokinizer: &mut Tokinizer) -> bool {
         let ch = tokinizer.get_char();
-        return ch == '.' || (ch >= '0' && ch <= '9');
+        let ch_next = tokinizer.get_next_char();
+        return (ch == '.' && (ch_next >= '0' && ch_next <= '9')) || (ch >= '0' && ch <= '9');
     }
 
     fn parse(&self, tokinizer: &mut Tokinizer) -> Result<(), (&'static str, u32, u32)> {

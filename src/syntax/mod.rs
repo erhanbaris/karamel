@@ -42,6 +42,7 @@ bitflags! {
         const IN_EXPRESSION       = 0b00001000;
         const IN_FUNCTION_ARG     = 0b00010000;
         const IN_RETURN           = 0b00100000;
+        const SKIP_FUNC_CALL      = 0b01000000;
     }
 }
 

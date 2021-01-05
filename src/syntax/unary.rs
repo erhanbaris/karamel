@@ -7,6 +7,8 @@ use crate::syntax::util::is_ast_empty;
 use crate::compiler::ast::BramaAstType;
 use crate::compiler::value::BramaPrimative;
 use crate::syntax::control::ExpressionParser;
+use crate::syntax::{SyntaxFlag};
+
 
 use std::rc::Rc;
 
@@ -14,7 +16,11 @@ pub struct UnaryParser;
 
 impl SyntaxParserTrait for UnaryParser {
     fn parse(parser: &SyntaxParser) -> AstResult {
-        let ast = map_parser(parser, &[Self::parse_prefix_unary, Self::parse_suffix_unary, FuncCallParser::parse, PrimativeParser::parse])?;
+        let ast = if !parser.flags.get().contains(SyntaxFlag::SKIP_FUNC_CALL) { 
+            map_parser(parser, &[Self::parse_prefix_unary, Self::parse_suffix_unary, FuncCallParser::parse, PrimativeParser::parse])?
+        } else {
+            map_parser(parser, &[Self::parse_prefix_unary, Self::parse_suffix_unary, PrimativeParser::parse])?
+        };
         
         parser.backup();
         parser.cleanup_whitespaces();

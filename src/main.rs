@@ -27,13 +27,7 @@ pub fn greet(name: &str) {
 #[cfg(not(feature = "wasmBuild"))]
 fn main() {
     let result = vm::executer::code_executer(&r#"
-fn test_1:
-    döndür 'erhan'
-erhan = test_1
-barış = erhan
-hataayıklama::doğrula(barış() + " barış", 'erhan barış')
-gç::satıryaz(barış(), erhan())
-barış
+sayı_mı()()
 "#.to_string());
     match result {
         Ok(_) => println!("Success"),

@@ -12,6 +12,17 @@ impl SyntaxParserTrait for FuncCallParser {
         let token = parser.peek_token();
 
         if token.is_ok() {
+
+            /*let parser_flags  = parser.flags.get();
+            parser.flags.set(parser_flags | SyntaxFlag::SKIP_FUNC_CALL);
+            let expression = ExpressionParser::parse(parser);
+            match expression {
+                Err(_) => return expression,
+                _ => ()
+            };
+
+            parser.flags.set(parser_flags);*/
+
             if let BramaTokenType::Symbol(name) = &token.unwrap().token_type {
                 parser.consume_token();
                 let mut name_collection = Vec::new();

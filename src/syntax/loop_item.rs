@@ -11,7 +11,7 @@ impl SyntaxParserTrait for LoopItemParser {
 
         if parser.check_keyword(BramaKeywordType::Break) ||
            parser.check_keyword(BramaKeywordType::Continue) {
-            if parser.flags.get().contains(SyntaxFlag::LOOP) {     
+            if parser.flags.get().contains(SyntaxFlag::LOOP) {
                 let keyword = parser.peek_token().unwrap().token_type.get_keyword();
                 parser.consume_token();
                 match keyword {
