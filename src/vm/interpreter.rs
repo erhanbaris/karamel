@@ -9,7 +9,7 @@ use log_update::LogUpdate;
 use colored::*;
 use std::io::{self, Write};
 
-#[cfg(all(feature = "dumpOpcodes", not(target_family = "windows")))]
+#[cfg(all(feature = "dumpOpcodes"))]
 pub unsafe fn dump_opcode<W: Write>(index: usize, options: &mut BramaCompiler, log_update: &mut LogUpdate<W>) {
 
     use std::{thread, time};
@@ -119,10 +119,9 @@ pub unsafe fn dump_opcode<W: Write>(index: usize, options: &mut BramaCompiler, l
 
 pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<(), String>
 {
-    #[cfg(not(target_family = "windows"))]    
     let mut log_update = LogUpdate::new(stdout()).unwrap();
     
-    #[cfg(all(feature = "dumpOpcodes", not(target_family = "windows")))] {
+    #[cfg(all(feature = "dumpOpcodes"))] {
         dump_opcode(0, options, &mut log_update);
     }
     {
@@ -140,7 +139,7 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<(), String>
 
         while opcode_size > options.opcode_index {
             let opcode = mem::transmute::<u8, VmOpCode>(options.opcodes[options.opcode_index]);
-            #[cfg(all(feature = "liveOpcodeView", not(target_family = "windows")))] {
+            #[cfg(all(feature = "liveOpcodeView"))] {
                 dump_opcode(options.opcode_index, options, &mut log_update);
             }
             
