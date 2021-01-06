@@ -13,20 +13,25 @@ impl SyntaxParserTrait for FuncCallParser {
 
         if token.is_ok() {
 
-            /*let parser_flags  = parser.flags.get();
-            parser.flags.set(parser_flags | SyntaxFlag::SKIP_FUNC_CALL);
-            let expression = ExpressionParser::parse(parser);
-            match expression {
-                Err(_) => return expression,
-                _ => ()
-            };
+            let parser_flags  = parser.flags.get();
+            let mut call_expression: AstResult = Ok(BramaAstType::None);
 
-            parser.flags.set(parser_flags);*/
+            loop {
+                parser.flags.set(parser_flags | SyntaxFlag::SKIP_FUNC_CALL);
+                let current_expression = ExpressionParser::parse(parser);
+                println!("{:?}", call_expression);
+                call_expression = match current_expression {
+                    Err(_) => {
+                        match call_expression {
+                            Ok(BramaAstType::None) => return current_expression,
+                            Ok(_) => call_expression,
+                            _ => return current_expression
+                        }
+                    },
+                    _ => current_expression
+                };
 
-            if let BramaTokenType::Symbol(name) = &token.unwrap().token_type {
-                parser.consume_token();
                 let mut name_collection = Vec::new();
-                name_collection.push(name.to_string());
 
                 loop {
                     if let Some(_) = parser.match_operator(&[BramaOperatorType::ColonMark]) {
@@ -34,7 +39,6 @@ impl SyntaxParserTrait for FuncCallParser {
                             let token = parser.peek_token();
                             if let BramaTokenType::Symbol(name) = &token.unwrap().token_type {
                                 parser.consume_token();
-                                name_collection.push(name.to_string());
                             }
                             else {
                                 return Err(("Function name required", 0, 0));
@@ -81,7 +85,6 @@ impl SyntaxParserTrait for FuncCallParser {
                             _ => return Err(("Right parantheses missing", 0, 0))
                         }
 
-
                         match expression {
                             Ok(BramaAstType::None) => (),
                             Ok(data) => arguments.push(Box::new(data)),
@@ -90,18 +93,22 @@ impl SyntaxParserTrait for FuncCallParser {
                     }
 
                     parser.flags.set(parser_flags);
-                    let func_call_ast = BramaAstType::FuncCall {
+                    call_expression = Ok(BramaAstType::FuncCall {
                         names: name_collection.to_vec(),
                         arguments: arguments,
                         assign_to_temp: parser.flags.get().contains(SyntaxFlag::IN_EXPRESSION)
                                      || parser.flags.get().contains(SyntaxFlag::IN_ASSIGNMENT)
                                      || parser.flags.get().contains(SyntaxFlag::IN_FUNCTION_ARG)
                                      || parser.flags.get().contains(SyntaxFlag::IN_RETURN)
-                    };
-                    
-                    return Ok(func_call_ast);
+                    });
+                }
+                else {
+                    break;
                 }
             }
+
+            parser.flags.set(parser_flags);
+            return call_expression;
         }
         
         parser.restore();
