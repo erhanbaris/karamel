@@ -27,7 +27,7 @@ pub fn greet(name: &str) {
 #[cfg(not(feature = "wasmBuild"))]
 fn main() {
     let result = vm::executer::code_executer(&r#"
-sayı_mı()()
+gç::satıryaz()()
 "#.to_string());
     match result {
         Ok(_) => println!("Success"),

@@ -7,11 +7,12 @@ pub struct FunctionReturnParser;
 
 impl SyntaxParserTrait for FunctionReturnParser {
     fn parse(parser: &SyntaxParser) -> AstResult {
-        parser.backup();
+        let index_backup = parser.get_index();
         parser.cleanup_whitespaces();
 
         if parser.match_keyword(BramaKeywordType::Return) {
             if !parser.flags.get().contains(SyntaxFlag::FUNCTION_DEFINATION) {
+                parser.set_index(index_backup);
                 return Err(("return must be used in function", 0, 0));
             }
 
@@ -27,7 +28,7 @@ impl SyntaxParserTrait for FunctionReturnParser {
             return Ok(return_ast);
         }
 
-        parser.restore();
+        parser.set_index(index_backup);
         return Ok(BramaAstType::None);
     }
 }

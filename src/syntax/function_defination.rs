@@ -9,7 +9,7 @@ pub struct FunctionDefinationParser;
 
 impl SyntaxParserTrait for FunctionDefinationParser {
     fn parse(parser: &SyntaxParser) -> AstResult {
-        parser.backup();
+        let index_backup = parser.get_index();
         parser.indentation_check()?;
 
         if parser.match_keyword(BramaKeywordType::Fn) {
@@ -21,7 +21,10 @@ impl SyntaxParserTrait for FunctionDefinationParser {
             let name_expression = PrimativeParser::parse_symbol(parser)?;
             let name = match name_expression {
                 BramaAstType::Symbol(text) => text,
-                _ => return Err(("Function name not defined", 0, 0))
+                _ => {
+                    parser.set_index(index_backup);
+                    return Err(("Function name not defined", 0, 0));
+                }
             };
 
             parser.cleanup_whitespaces();
@@ -37,9 +40,15 @@ impl SyntaxParserTrait for FunctionDefinationParser {
 
                     let argument = PrimativeParser::parse_symbol(parser)?;
                     match argument {
-                        BramaAstType::None => return Err(("Argument must be a text", 0, 0)),
+                        BramaAstType::None => {
+                            parser.set_index(index_backup);
+                            return Err(("Argument must be a text", 0, 0));
+                        },
                         BramaAstType::Symbol(text) => arguments.push(text),
-                        _ => return Err(("Argument not found", 0, 0))
+                        _ => {
+                            parser.set_index(index_backup);
+                            return Err(("Argument not found", 0, 0));
+                        }
                     };
 
                     parser.cleanup_whitespaces();
@@ -49,12 +58,14 @@ impl SyntaxParserTrait for FunctionDefinationParser {
                 }
 
                 if let None = parser.match_operator(&[BramaOperatorType::RightParentheses]) {
+                    parser.set_index(index_backup);
                     return Err(("')' missing", 0, 0));
                 }
             }
 
             parser.cleanup_whitespaces();
             if let None = parser.match_operator(&[BramaOperatorType::ColonMark]) {
+                parser.set_index(index_backup);
                 return Err(("':' missing", 0, 0));
             }
 
@@ -79,7 +90,10 @@ impl SyntaxParserTrait for FunctionDefinationParser {
                         false
                     }
                 },
-                BramaAstType::None => return Err(("Function condition body not found", 0, 0)),
+                BramaAstType::None => {
+                    parser.set_index(index_backup);
+                    return Err(("Function condition body not found", 0, 0));
+                },
                 _ => false
             };
 
@@ -108,7 +122,7 @@ impl SyntaxParserTrait for FunctionDefinationParser {
             return Ok(function_defination_ast);
         }
         
-        parser.restore();
+        parser.set_index(index_backup);
         return Ok(BramaAstType::None);
     }
 }

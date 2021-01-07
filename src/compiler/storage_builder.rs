@@ -127,7 +127,7 @@ impl StorageBuilder {
 ║   Function Pointer   ║
 ╚══════════════════════╝
  */
-            BramaAstType::FuncCall { names, arguments, assign_to_temp } => {
+            BramaAstType::FuncCall { func_name_expression, arguments, assign_to_temp } => {
 
                 /* Need to allocate space for function arguments */
                 let mut max_temp = 0 as u8;
@@ -140,13 +140,13 @@ impl StorageBuilder {
                 compiler_option.max_stack = max(max_temp, compiler_option.max_stack);
 
 
-                let function_search = options.find_function(names[names.len() - 1].to_string(), names[0..(names.len()-1)].to_vec(), "".to_string(), storage_index);
+                /*let function_search = options.find_function(names[names.len() - 1].to_string(), names[0..(names.len()-1)].to_vec(), "".to_string(), storage_index);
                 match function_search {
                     Some(reference) => {
                         options.storages.get_mut(storage_index).unwrap().add_constant(Rc::new(BramaPrimative::Function(reference)));
                     },
                     None => () // It can be assigned function pointer
-                };
+                };*/
 
 
                 /* Variables */

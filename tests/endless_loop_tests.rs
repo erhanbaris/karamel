@@ -41,7 +41,7 @@ test_compare!(endless_2, r#"sonsuz:
     expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123.0))))
 },
 BramaAstType::FuncCall {
-    names: ["print".to_string()].to_vec(),
+    func_name_expression: Box::new(BramaAstType::Symbol("print".to_string())),
     arguments: [Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(1.0))))].to_vec(),
     assign_to_temp: false
 }
@@ -49,7 +49,7 @@ BramaAstType::FuncCall {
 test_compare!(endless_3, r#"sonsuz
     erhan=123   
     print(1)"#, Err(("':' missing", 0, 0)));
-    test_compare!(endless_4, r#"sonsuz:
+test_compare!(endless_4, r#"sonsuz:
     erhan=123   
     print(1)
     kır"#, Ok(BramaAstType::EndlessLoop(Box::new(BramaAstType::Block([BramaAstType::Assignment {
@@ -58,7 +58,7 @@ test_compare!(endless_3, r#"sonsuz
     expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123.0))))
 },
 BramaAstType::FuncCall {
-    names: ["print".to_string()].to_vec(),
+    func_name_expression: Box::new(BramaAstType::Symbol("print".to_string())),
     arguments: [Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(1.0))))].to_vec(),
     assign_to_temp: false
 },

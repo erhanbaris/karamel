@@ -79,7 +79,7 @@ yada:
         expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123.0))))
     },
     BramaAstType::FuncCall {
-        names: ["print".to_string()].to_vec(),
+        func_name_expression: Box::new(BramaAstType::Symbol("print".to_string())),
         arguments: [Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(1.0))))].to_vec(),
         assign_to_temp: false
     }
@@ -105,7 +105,7 @@ yada :
         expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123.0))))
     },
     BramaAstType::FuncCall {
-        names: ["print".to_string()].to_vec(),
+        func_name_expression: Box::new(BramaAstType::Symbol("print".to_string())),
         arguments: [Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(1.0))))].to_vec(),
         assign_to_temp: false
     }
@@ -116,7 +116,7 @@ yada :
         expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(321.0))))
     },
     BramaAstType::FuncCall {
-        names: ["print".to_string()].to_vec(),
+        func_name_expression: Box::new(BramaAstType::Symbol("print".to_string())),
         arguments: [Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(2.0))))].to_vec(),
         assign_to_temp: false
     }

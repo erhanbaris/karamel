@@ -35,7 +35,7 @@ pub fn err_or_message(ast: &AstResult, message: &'static str) -> AstResult {
 
 pub fn update_functions_for_temp_return(ast: &mut BramaAstType) {
     match ast {
-        BramaAstType::FuncCall { names: _, arguments: _, assign_to_temp } => {
+        BramaAstType::FuncCall { func_name_expression: _, arguments: _, assign_to_temp } => {
             *assign_to_temp = true;
         },
         BramaAstType::Block(blocks) => {

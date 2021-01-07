@@ -7,7 +7,7 @@ pub struct AssignmentParser;
 
 impl SyntaxParserTrait for AssignmentParser {
     fn parse(parser: &SyntaxParser) -> AstResult {
-        parser.backup();
+        let index_backup = parser.get_index();
         parser.indentation_check()?;
         let token = parser.peek_token();
 
@@ -46,7 +46,7 @@ impl SyntaxParserTrait for AssignmentParser {
             }
         }
         
-        parser.restore();
+        parser.set_index(index_backup);
         return Ok(BramaAstType::None);
     }
 }

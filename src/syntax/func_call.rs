@@ -7,7 +7,7 @@ pub struct FuncCallParser;
 
 impl SyntaxParserTrait for FuncCallParser {
     fn parse(parser: &SyntaxParser) -> AstResult {
-        parser.backup();
+        let index_backup = parser.get_index();
         parser.cleanup_whitespaces();
         let token = parser.peek_token();
 
@@ -19,7 +19,6 @@ impl SyntaxParserTrait for FuncCallParser {
             loop {
                 parser.flags.set(parser_flags | SyntaxFlag::SKIP_FUNC_CALL);
                 let current_expression = ExpressionParser::parse(parser);
-                println!("{:?}", call_expression);
                 call_expression = match current_expression {
                     Err(_) => {
                         match call_expression {
@@ -30,30 +29,6 @@ impl SyntaxParserTrait for FuncCallParser {
                     },
                     _ => current_expression
                 };
-
-                let mut name_collection = Vec::new();
-
-                loop {
-                    if let Some(_) = parser.match_operator(&[BramaOperatorType::ColonMark]) {
-                        if let Some(_) = parser.match_operator(&[BramaOperatorType::ColonMark]) {
-                            let token = parser.peek_token();
-                            if let BramaTokenType::Symbol(name) = &token.unwrap().token_type {
-                                parser.consume_token();
-                            }
-                            else {
-                                return Err(("Function name required", 0, 0));
-                            }
-                        }
-                        else {
-                            break;
-                        }
-                    }
-                    else {
-                        break;
-                    }
-                }
-
-                parser.cleanup_whitespaces();
 
                 if let Some(_) = parser.match_operator(&[BramaOperatorType::LeftParentheses]) {
                     let mut arguments = Vec::new();
@@ -66,9 +41,9 @@ impl SyntaxParserTrait for FuncCallParser {
                     while continue_to_parse {
                         parser.cleanup_whitespaces();
                         
-                        let expression = ExpressionParser::parse(parser);
-                        match expression {
-                            Err(_) => return expression,
+                        let param_expression = ExpressionParser::parse(parser);
+                        match param_expression {
+                            Err(_) => return param_expression,
                             _ => ()
                         };
                         
@@ -77,15 +52,19 @@ impl SyntaxParserTrait for FuncCallParser {
                         match parser.match_operator(&[BramaOperatorType::RightParentheses, BramaOperatorType::Comma]) {
                             Some(BramaOperatorType::RightParentheses) => continue_to_parse = false,  
                             Some(BramaOperatorType::Comma)            => {
-                                if let Ok(BramaAstType::None) = expression {
+                                if let Ok(BramaAstType::None) = param_expression {
+                                    parser.set_index(index_backup);
                                     return Err(("Syntax error, undefined syntax", 0, 0))
                                 }
                                 else {()}
                             },
-                            _ => return Err(("Right parantheses missing", 0, 0))
+                            _ => {
+                                parser.set_index(index_backup);
+                                return Err(("Right parantheses missing", 0, 0));
+                            }
                         }
 
-                        match expression {
+                        match param_expression {
                             Ok(BramaAstType::None) => (),
                             Ok(data) => arguments.push(Box::new(data)),
                             _ => (),
@@ -94,7 +73,7 @@ impl SyntaxParserTrait for FuncCallParser {
 
                     parser.flags.set(parser_flags);
                     call_expression = Ok(BramaAstType::FuncCall {
-                        names: name_collection.to_vec(),
+                        func_name_expression: Box::new(call_expression.unwrap()),
                         arguments: arguments,
                         assign_to_temp: parser.flags.get().contains(SyntaxFlag::IN_EXPRESSION)
                                      || parser.flags.get().contains(SyntaxFlag::IN_ASSIGNMENT)
@@ -111,7 +90,7 @@ impl SyntaxParserTrait for FuncCallParser {
             return call_expression;
         }
         
-        parser.restore();
+        parser.set_index(index_backup);
         return Ok(BramaAstType::None);
     }
 }

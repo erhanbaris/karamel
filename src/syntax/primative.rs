@@ -13,7 +13,7 @@ pub struct PrimativeParser;
 
 impl PrimativeParser {
     pub fn parse_basic_primatives(parser: &SyntaxParser) -> AstResult {
-        parser.backup();
+        let index_backup = parser.get_index();
         parser.cleanup_whitespaces();
 
         let token = parser.peek_token();
@@ -36,7 +36,7 @@ impl PrimativeParser {
             BramaTokenType::Operator(BramaOperatorType::ColonMark) => {
                 let next_token = parser.next_token();
                 if next_token.is_err() {
-                    parser.restore();
+                    parser.set_index(index_backup);
                     return Ok(BramaAstType::None)
                 }
 
@@ -57,7 +57,7 @@ impl PrimativeParser {
 
         match result {
             Ok(BramaAstType::None) => {
-                parser.restore();
+                parser.set_index(index_backup);
                 Ok(BramaAstType::None)
             },
             Ok(ast) => {
@@ -69,7 +69,7 @@ impl PrimativeParser {
     }
 
     pub fn parse_list(parser: &SyntaxParser) -> AstResult {
-        parser.backup();
+        let index_backup = parser.get_index();
         if parser.match_operator(&[BramaOperatorType::SquareBracketStart]).is_some() {
             let mut ast_vec   = Vec::new();
             parser.cleanup_whitespaces();
@@ -83,6 +83,7 @@ impl PrimativeParser {
 
                 let ast = ExpressionParser::parse(parser);
                 if is_ast_empty(&ast) {
+                    parser.set_index(index_backup);
                     return err_or_message(&ast, "Invalid list item");
                 }
                 
@@ -95,18 +96,19 @@ impl PrimativeParser {
             }
 
             if parser.match_operator(&[BramaOperatorType::SquareBracketEnd]).is_none() {
+                parser.set_index(index_backup);
                 return Err(("Array not closed", 0, 0));
             }
 
             return Ok(BramaAstType::List(ast_vec));
         }
 
-        parser.restore();
+        parser.set_index(index_backup);
         return Ok(BramaAstType::None);
     }
 
     pub fn parse_dict(parser: &SyntaxParser) -> AstResult {
-        parser.backup();
+        let index_backup = parser.get_index();
         if parser.match_operator(&[BramaOperatorType::CurveBracketStart]).is_some() {
             let mut dict_items   = Vec::new();
             parser.cleanup();
@@ -120,6 +122,7 @@ impl PrimativeParser {
 
                 let key_ast = Self::parse_basic_primatives(parser);
                 if is_ast_empty(&key_ast) {
+                    parser.set_index(index_backup);
                     return err_or_message(&key_ast, "Dictionary key not valid");
                 }
                 
@@ -128,21 +131,29 @@ impl PrimativeParser {
                     Ok(BramaAstType::Primative(primative)) => {
                         match &*primative {
                             BramaPrimative::Text(_) => primative.clone(),
-                            _ =>  return Err((": Dictionary key not valid", 0, 0))
+                            _ =>  {
+                                parser.set_index(index_backup);
+                                return Err((": Dictionary key not valid", 0, 0));
+                            }
                         }
                     },
-                    _ => return Err((": Dictionary key not valid", 0, 0))
+                    _ => {
+                        parser.set_index(index_backup);
+                        return Err((": Dictionary key not valid", 0, 0));
+                    }
                 };
 
                 parser.cleanup();
 
                 if parser.match_operator(&[BramaOperatorType::ColonMark]).is_none()  {
+                    parser.set_index(index_backup);
                     return Err((": required", 0, 0));
                 }
 
                 parser.cleanup();
                 let value = ExpressionParser::parse(parser);
                 if is_ast_empty(&value) {
+                    parser.set_index(index_backup);
                     return err_or_message(&value, "Dictionary value not valid");
                 }
   
@@ -158,18 +169,19 @@ impl PrimativeParser {
             }
 
             if parser.match_operator(&[BramaOperatorType::CurveBracketEnd]).is_none() {
+                parser.set_index(index_backup);
                 return Err(("Dict not closed", 0, 0));
             }
 
             return Ok(BramaAstType::Dict(dict_items));
         }
 
-        parser.restore();
+        parser.set_index(index_backup);
         return Ok(BramaAstType::None);
     }
 
     pub fn parse_symbol(parser: &SyntaxParser) -> AstResult {
-        parser.backup();
+        let index_backup = parser.get_index();
         parser.cleanup_whitespaces();
         let token = parser.peek_token();
         if token.is_err() {
@@ -180,12 +192,12 @@ impl PrimativeParser {
             parser.consume_token();
             return Ok(BramaAstType::Symbol(symbol.to_string()));
         }
-        parser.restore();
+        parser.set_index(index_backup);
         return Ok(BramaAstType::None);
     }
 
     pub fn parse_function_map(parser: &SyntaxParser) -> AstResult {
-        parser.backup();
+        let index_backup = parser.get_index();
         parser.cleanup_whitespaces();
         let token = parser.peek_token();
         if token.is_err() {
@@ -206,12 +218,12 @@ impl PrimativeParser {
                             continue;
                         }
                         else {
-                            parser.restore();
+                            parser.set_index(index_backup);
                             return Ok(BramaAstType::None);
                         }
                     }
                     else {
-                        parser.restore();
+                        parser.set_index(index_backup);
                         return Ok(BramaAstType::None);
                     }
                 }
@@ -223,27 +235,29 @@ impl PrimativeParser {
             }
         }
 
-        parser.restore();
+        parser.set_index(index_backup);
         return Ok(BramaAstType::None);
     }
 
     pub fn parse_parenthesis(parser: &SyntaxParser) -> AstResult {
-        parser.backup();
+        let index_backup = parser.get_index();
         if parser.match_operator(&[BramaOperatorType::LeftParentheses]).is_some() {
             
             let ast = ExpressionParser::parse(parser);
             if is_ast_empty(&ast) {
+                parser.set_index(index_backup);
                 return err_or_message(&ast, "Invalid expression");
             }
 
             if parser.match_operator(&[BramaOperatorType::RightParentheses]).is_none() {
+                parser.set_index(index_backup);
                 return Err(("Parentheses not closed", 0, 0));
             }
 
             return Ok(ast.unwrap());
         }
 
-        parser.restore();
+        parser.set_index(index_backup);
         return Ok(BramaAstType::None);
     }
 }

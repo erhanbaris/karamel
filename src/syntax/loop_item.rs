@@ -6,7 +6,7 @@ pub struct LoopItemParser;
 
 impl SyntaxParserTrait for LoopItemParser {
     fn parse(parser: &SyntaxParser) -> AstResult {
-        parser.backup();
+        let index_backup = parser.get_index();
         parser.cleanup_whitespaces();
 
         if parser.check_keyword(BramaKeywordType::Break) ||
@@ -21,11 +21,12 @@ impl SyntaxParserTrait for LoopItemParser {
                 };
             }
             else {
+                parser.set_index(index_backup);
                 return Err(("break and continue belong to loops", 0, 0));
             }
         }
 
-        parser.restore();
+        parser.set_index(index_backup);
         return Ok(BramaAstType::None);
     }
 }

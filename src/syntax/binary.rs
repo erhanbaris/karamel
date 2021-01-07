@@ -35,7 +35,7 @@ pub fn parse_binary<T: SyntaxParserTrait>(parser: &SyntaxParser, operators: &[Br
     };
 
     loop {
-        parser.backup();
+        let index_backup = parser.get_index();
         parser.cleanup_whitespaces();
         
         if let Some(operator) = parser.match_operator(operators) {
@@ -50,7 +50,10 @@ pub fn parse_binary<T: SyntaxParserTrait>(parser: &SyntaxParser, operators: &[Br
             
             let right_expr = T::parse(parser);
             match right_expr {
-                Ok(BramaAstType::None) => return Err(("Right side of expression not found", 0, 0)),
+                Ok(BramaAstType::None) => {
+                    parser.set_index(index_backup);
+                    return Err(("Right side of expression not found", 0, 0));
+                },
                 Ok(_) => (),
                 Err(_) => return right_expr
             };
@@ -63,7 +66,7 @@ pub fn parse_binary<T: SyntaxParserTrait>(parser: &SyntaxParser, operators: &[Br
             };
         }
         else {
-            parser.restore();
+            parser.set_index(index_backup);
             break;
         }
     }

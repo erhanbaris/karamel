@@ -22,7 +22,7 @@ impl SyntaxParserTrait for UnaryParser {
             map_parser(parser, &[Self::parse_prefix_unary, Self::parse_suffix_unary, PrimativeParser::parse])?
         };
         
-        parser.backup();
+        let index_backup = parser.get_indentation();
         parser.cleanup_whitespaces();
         
         if parser.match_operator(&[BramaOperatorType::SquareBracketStart]).is_some() {
@@ -36,14 +36,14 @@ impl SyntaxParserTrait for UnaryParser {
             }
         }
 
-        parser.restore();
+        parser.set_indentation(index_backup);
         return Ok(ast);
     }
 }
 
 impl UnaryParser {
     fn parse_suffix_unary(parser: &SyntaxParser) -> AstResult {
-        parser.backup();
+        let index_backup = parser.get_indentation();
         match &parser.peek_token() {
             Ok(token) => {
                 if token.token_type.is_symbol() {
@@ -61,11 +61,13 @@ impl UnaryParser {
             _ => ()
         };
         
-        parser.restore();
+        parser.set_indentation(index_backup);
         return Ok(BramaAstType::None);
     }
 
     fn parse_prefix_unary(parser: &SyntaxParser) -> AstResult {
+        let index_backup = parser.get_index();
+
         if let Some(operator) = parser.match_operator(&[BramaOperatorType::Addition,
             BramaOperatorType::Subtraction,
             BramaOperatorType::Increment,
@@ -89,7 +91,10 @@ impl UnaryParser {
                     match token.token_type {
                         BramaTokenType::Integer(integer) => return Ok(BramaAstType::Primative(Rc::new(BramaPrimative::Number(integer as f64 * opt)))),
                         BramaTokenType::Double(double) => return Ok(BramaAstType::Primative(Rc::new(BramaPrimative::Number(double * opt)))),
-                        _ => return Err(("Unary works with number", 0, 0))
+                        _ => {
+                            parser.set_index(index_backup);
+                            return Err(("Unary works with number", 0, 0));
+                        }
                     }
                 },
 
@@ -104,16 +109,28 @@ impl UnaryParser {
                 BramaOperatorType::Not => {
                     let expression = UnaryParser::parse(parser);
                     unary_ast = match expression {
-                        Ok(BramaAstType::None) => return Err(("Invalid unary expression", 0, 0)),
+                        Ok(BramaAstType::None) => {
+                            parser.set_index(index_backup);
+                            return Err(("Invalid unary expression", 0, 0));
+                        },
                         Ok(ast) => ast,
-                        Err(_) => return Err(("Invalid unary expression", 0, 0))
+                        Err(_) => {
+                            parser.set_index(index_backup);
+                            return Err(("Invalid unary expression", 0, 0));
+                        }
                     };
                 }
-                _ => return Err(("Invalid unary operation", 0, 0))
+                _ => { 
+                    parser.set_index(index_backup);
+                    return Err(("Invalid unary operation", 0, 0));
+                }
             }
 
             return match unary_ast {
-                BramaAstType::None => Err(("Invalid unary operation", 0, 0)),
+                BramaAstType::None => {
+                    parser.set_index(index_backup);
+                    Err(("Invalid unary operation", 0, 0))
+                },
                 _ => Ok(BramaAstType::PrefixUnary(operator, Box::new(unary_ast)))
             };
         }

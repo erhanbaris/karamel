@@ -234,7 +234,7 @@ impl InterpreterCompiler {
             BramaAstType::Primative(primative) => self.generate_primative(primative.clone(), upper_ast, options, storage_index),
             BramaAstType::List(list) => self.generate_list(list, upper_ast, options, storage_index),
             BramaAstType::Dict(dict) => self.generate_dict(dict, upper_ast, options, storage_index),
-            BramaAstType::FuncCall { names, arguments, assign_to_temp } => self.generate_func_call(names, arguments, *assign_to_temp, upper_ast, options, storage_index),
+            BramaAstType::FuncCall { func_name_expression, arguments, assign_to_temp } => self.generate_func_call(func_name_expression, arguments, *assign_to_temp, upper_ast, options, storage_index),
             BramaAstType::PrefixUnary (operator, expression) => self.generate_prefix_unary(operator, expression, upper_ast, options, storage_index),
             BramaAstType::SuffixUnary (operator, expression) => self.generate_suffix_unary(operator, expression, upper_ast, options, storage_index),
             BramaAstType::NewLine => Ok(0),
@@ -322,13 +322,13 @@ impl InterpreterCompiler {
         Ok(0)
     }
 
-    fn generate_func_call(&self, names: &Vec<String>, arguments: &Vec<Box<BramaAstType>>, assign_to_temp: bool,  upper_ast: &BramaAstType, options: &mut BramaCompiler, storage_index: usize) -> CompilerResult {
+    fn generate_func_call(&self, func_name_expression: &BramaAstType, arguments: &Vec<Box<BramaAstType>>, assign_to_temp: bool,  upper_ast: &BramaAstType, options: &mut BramaCompiler, storage_index: usize) -> CompilerResult {
         /* Build arguments */
         for argument in arguments {
             self.generate_opcode(argument, upper_ast, options, storage_index)?;
         }
 
-        let function_search = options.find_function(names[names.len()-1].to_string(), names[0..(names.len()-1)].to_vec(), "".to_string(), storage_index);
+        /*let function_search = options.find_function(names[names.len()-1].to_string(), names[0..(names.len()-1)].to_vec(), "".to_string(), storage_index);
 
         match function_search {
             Some(function_ref) => {
@@ -362,7 +362,7 @@ impl InterpreterCompiler {
             None => {
                 
             }
-        };
+        };*/
 
         return Err("Function not found");
 

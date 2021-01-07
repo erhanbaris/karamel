@@ -40,7 +40,7 @@ pub enum BramaAstType {
     NewLine,
     Block(Vec<BramaAstType>),
     FuncCall {
-        names: Vec<String>,
+        func_name_expression: Box<BramaAstType>,
         arguments: Vec<Box<BramaAstType>>,
         assign_to_temp: bool
     },

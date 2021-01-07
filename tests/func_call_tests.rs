@@ -26,37 +26,37 @@ mod tests {
     }
 
     test_compare!(func_call_1, "print()", Ok(BramaAstType::FuncCall {
-        names: ["print".to_string()].to_vec(),
+        func_name_expression: Box::new(BramaAstType::Symbol("print".to_string())),
         arguments: [].to_vec(),
         assign_to_temp: false
     }));
 
     test_compare!(func_call_2, "print(1)", Ok(BramaAstType::FuncCall {
-        names: ["print".to_string()].to_vec(),
+        func_name_expression: Box::new(BramaAstType::Symbol("print".to_string())),
         arguments: [Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(1.0))))].to_vec(),
         assign_to_temp: false
     }));
 
     test_compare!(func_call_3, "print( 1 )", Ok(BramaAstType::FuncCall {
-        names: ["print".to_string()].to_vec(),
+        func_name_expression: Box::new(BramaAstType::Symbol("print".to_string())),
         arguments: [Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(1.0))))].to_vec(),
         assign_to_temp: false
     }));
 
     test_compare!(func_call_4, "print( 1 , 2 )", Ok(BramaAstType::FuncCall {
-        names: ["print".to_string()].to_vec(),
+        func_name_expression: Box::new(BramaAstType::Symbol("print".to_string())),
         arguments: [Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(1.0)))), Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(2.0))))].to_vec(),
         assign_to_temp: false
     }));
 
     test_compare!(func_call_5, "print(1,2)", Ok(BramaAstType::FuncCall {
-        names: ["print".to_string()].to_vec(),
+        func_name_expression: Box::new(BramaAstType::Symbol("print".to_string())),
         arguments: [Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(1.0)))), Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(2.0))))].to_vec(),
         assign_to_temp: false
     }));
 
     test_compare!(func_call_6, "print(1,2,'erhan')", Ok(BramaAstType::FuncCall {
-        names: ["print".to_string()].to_vec(),
+        func_name_expression: Box::new(BramaAstType::Symbol("print".to_string())),
         arguments: [Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(1.0)))),
                     Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(2.0)))),
                     Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Text(Rc::new("erhan".to_string())))))].to_vec(),
@@ -69,33 +69,33 @@ mod tests {
         variable: Rc::new("data".to_string()),
         operator: tpd::types::BramaOperatorType::Assign,
         expression: Box::new(BramaAstType::FuncCall {
-            names: ["print".to_string()].to_vec(),
+            func_name_expression: Box::new(BramaAstType::Symbol("print".to_string())),
             arguments: [].to_vec(),
             assign_to_temp: true
         })
     }));
     test_compare!(func_call_10, "data1() + data2()", Ok(BramaAstType::Binary {
         left: Box::new(BramaAstType::FuncCall {
-            names: ["data1".to_string()].to_vec(),
+            func_name_expression: Box::new(BramaAstType::Symbol("data1".to_string())),
             arguments: [].to_vec(),
             assign_to_temp: true
         }),
         operator: tpd::types::BramaOperatorType::Addition,
         right: Box::new(BramaAstType::FuncCall {
-            names: ["data2".to_string()].to_vec(),
+            func_name_expression: Box::new(BramaAstType::Symbol("data2".to_string())),
             arguments: [].to_vec(),
             assign_to_temp: true
         })
     }));
     test_compare!(func_call_11, "data1() > data2()", Ok(BramaAstType::Control {
         left: Box::new(BramaAstType::FuncCall {
-            names: ["data1".to_string()].to_vec(),
+            func_name_expression: Box::new(BramaAstType::Symbol("data1".to_string())),
             arguments: [].to_vec(),
             assign_to_temp: true
         }),
         operator: tpd::types::BramaOperatorType::GreaterThan,
         right: Box::new(BramaAstType::FuncCall {
-            names: ["data2".to_string()].to_vec(),
+            func_name_expression: Box::new(BramaAstType::Symbol("data2".to_string())),
             arguments: [].to_vec(),
             assign_to_temp: true
         })

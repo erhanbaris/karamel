@@ -8,7 +8,7 @@ pub struct WhileLoopParser;
 
 impl SyntaxParserTrait for WhileLoopParser {
     fn parse(parser: &SyntaxParser) -> AstResult {
-        parser.backup();
+        let index_backup = parser.get_index();
         parser.indentation_check()?;
 
         /*
@@ -20,6 +20,7 @@ impl SyntaxParserTrait for WhileLoopParser {
 
             parser.cleanup_whitespaces();
             if let None = parser.match_operator(&[BramaOperatorType::ColonMark]) {
+                parser.set_index(index_backup);
                 return Err(("':' missing", 0, 0));
             }
 
@@ -58,11 +59,13 @@ impl SyntaxParserTrait for WhileLoopParser {
 
             parser.cleanup_whitespaces();
             if !parser.match_keyword(BramaKeywordType::WhileEndPart) {
+                parser.set_indentation(indentation);
                 return Err(("ise/while missing", 0, 0));
             }
 
             parser.cleanup_whitespaces();
             if let None = parser.match_operator(&[BramaOperatorType::ColonMark]) {
+                parser.set_indentation(indentation);
                 return Err(("':' missing", 0, 0));
             }
 
@@ -88,7 +91,7 @@ impl SyntaxParserTrait for WhileLoopParser {
             });
         }
         
-        parser.restore();
+        parser.set_index(index_backup);
         return Ok(BramaAstType::None);
     }
 }

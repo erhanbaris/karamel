@@ -28,7 +28,6 @@ pub type ParseType = fn(parser: &SyntaxParser) -> AstResult;
 pub struct SyntaxParser {
     pub tokens: Box<Vec<Token>>,
     pub index: Cell<usize>,
-    pub backup_index: Cell<usize>,
     pub indentation: Cell<usize>,
     pub flags: Cell<SyntaxFlag>
 }
@@ -55,7 +54,6 @@ impl SyntaxParser {
         SyntaxParser {
             tokens: tokens,
             index: Cell::new(0),
-            backup_index: Cell::new(0),
             indentation: Cell::new(0),
             flags: Cell::new(SyntaxFlag::NONE)
         }
@@ -76,20 +74,20 @@ impl SyntaxParser {
         };
     }
 
-    pub fn backup(&self) {
-        self.backup_index.set(self.index.get());
-    }
-
-    pub fn restore(&self) {
-        self.index.set(self.backup_index.get());
-    }
-
     pub fn set_indentation(&self, indentation: usize) {
         self.indentation.set(indentation);
     }
 
     pub fn get_indentation(&self) -> usize {
         self.indentation.get()
+    }
+
+    pub fn set_index(&self, index: usize) {
+        self.index.set(index);
+    }
+
+    pub fn get_index(&self) -> usize {
+        self.index.get()
     }
 
     pub fn is_same_indentation(&self, indentation: usize) -> bool {
