@@ -139,15 +139,31 @@ impl StorageBuilder {
 
                 compiler_option.max_stack = max(max_temp, compiler_option.max_stack);
 
-
-                /*let function_search = options.find_function(names[names.len() - 1].to_string(), names[0..(names.len()-1)].to_vec(), "".to_string(), storage_index);
-                match function_search {
-                    Some(reference) => {
-                        options.storages.get_mut(storage_index).unwrap().add_constant(Rc::new(BramaPrimative::Function(reference)));
+                match &**func_name_expression {
+                    BramaAstType::Symbol(function_name) => {
+                        let function_search = options.find_function(function_name.to_string(), Vec::new(), "".to_string(), storage_index);
+                        match function_search {
+                            Some(reference) => {
+                                options.storages.get_mut(storage_index).unwrap().add_constant(Rc::new(BramaPrimative::Function(reference)));
+                            },
+                            None => () // It can be assigned function pointer
+                        };
                     },
-                    None => () // It can be assigned function pointer
-                };*/
-
+                    BramaAstType::FunctionMap(names) => {
+                        let function_search = options.find_function(names[names.len() - 1].to_string(), names[0..(names.len()-1)].to_vec(), "".to_string(), storage_index);
+                        match function_search {
+                            Some(reference) => {
+                                options.storages.get_mut(storage_index).unwrap().add_constant(Rc::new(BramaPrimative::Function(reference)));
+                            },
+                            None => () // It can be assigned function pointer
+                        };
+                    },
+                    _ => {
+                        println!("{:?}", func_name_expression);
+                        let name_expression_count = self.get_temp_count_from_ast(func_name_expression, ast, options, storage_index, compiler_option);
+                        compiler_option.max_stack = max(name_expression_count, compiler_option.max_stack);
+                    }
+                };
 
                 /* Variables */
                 let size = if *assign_to_temp {

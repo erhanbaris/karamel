@@ -1,6 +1,7 @@
 use crate::types::*;
 use crate::syntax::{SyntaxParser, SyntaxParserTrait, SyntaxFlag};
 use crate::syntax::binary::AddSubtractParser;
+use crate::syntax::func_call::FuncCallParser;
 use crate::syntax::util::update_functions_for_temp_return;
 use crate::compiler::ast::BramaAstType;
 
@@ -12,7 +13,12 @@ pub struct ControlParser;
 
 impl SyntaxParserTrait for ExpressionParser {
     fn parse(parser: &SyntaxParser) -> AstResult {
-        return OrParser::parse(parser);
+        let ast = OrParser::parse(parser)?;
+        if FuncCallParser::can_be_func_call(parser) {
+            return FuncCallParser::func_call_parse(Box::new(ast), parser);
+        }
+
+        return Ok(ast);
     }
 }
 

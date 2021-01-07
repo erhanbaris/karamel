@@ -17,12 +17,12 @@ pub struct UnaryParser;
 impl SyntaxParserTrait for UnaryParser {
     fn parse(parser: &SyntaxParser) -> AstResult {
         let ast = if !parser.flags.get().contains(SyntaxFlag::SKIP_FUNC_CALL) { 
-            map_parser(parser, &[Self::parse_prefix_unary, Self::parse_suffix_unary, FuncCallParser::parse, PrimativeParser::parse])?
+            map_parser(parser, &[Self::parse_prefix_unary, Self::parse_suffix_unary, PrimativeParser::parse])?
         } else {
             map_parser(parser, &[Self::parse_prefix_unary, Self::parse_suffix_unary, PrimativeParser::parse])?
         };
         
-        let index_backup = parser.get_indentation();
+        let index_backup = parser.get_index();
         parser.cleanup_whitespaces();
         
         if parser.match_operator(&[BramaOperatorType::SquareBracketStart]).is_some() {
@@ -36,7 +36,7 @@ impl SyntaxParserTrait for UnaryParser {
             }
         }
 
-        parser.set_indentation(index_backup);
+        parser.set_index(index_backup);
         return Ok(ast);
     }
 }
@@ -61,7 +61,7 @@ impl UnaryParser {
             _ => ()
         };
         
-        parser.set_indentation(index_backup);
+        parser.set_index(index_backup);
         return Ok(BramaAstType::None);
     }
 

@@ -146,6 +146,7 @@ pub trait Compiler
 pub struct InterpreterCompiler;
 impl Compiler for InterpreterCompiler {   
     fn compile(&self, ast: &BramaAstType, options: &mut BramaCompiler) -> CompilerResult {
+        println!("------ {:?}", ast);
         let storage_builder: StorageBuilder = StorageBuilder::new();
         /* Save all function information */
         options.prepare_modules();
@@ -322,13 +323,8 @@ impl InterpreterCompiler {
         Ok(0)
     }
 
-    fn generate_func_call(&self, func_name_expression: &BramaAstType, arguments: &Vec<Box<BramaAstType>>, assign_to_temp: bool,  upper_ast: &BramaAstType, options: &mut BramaCompiler, storage_index: usize) -> CompilerResult {
-        /* Build arguments */
-        for argument in arguments {
-            self.generate_opcode(argument, upper_ast, options, storage_index)?;
-        }
-
-        /*let function_search = options.find_function(names[names.len()-1].to_string(), names[0..(names.len()-1)].to_vec(), "".to_string(), storage_index);
+    fn generate_func_call_by_name(&self, name :&String, module_path: Vec<String>, framework: String, arguments: &Vec<Box<BramaAstType>>, assign_to_temp: bool, options: &mut BramaCompiler, storage_index: usize) -> Result<bool, &'static str> {
+        let function_search = options.find_function(name.to_string(), module_path, framework, storage_index);
 
         match function_search {
             Some(function_ref) => {
@@ -339,7 +335,7 @@ impl InterpreterCompiler {
                         options.opcodes.push(location as u8);
                         options.opcodes.push(arguments.len() as u8);
                         options.opcodes.push(assign_to_temp as u8);
-                        return Ok(0 as u8);
+                        return Ok(true);
                     },
                     _ => return Err("Function not found")
                 }
@@ -347,7 +343,7 @@ impl InterpreterCompiler {
             _ => ()
         };
 
-        match options.storages[storage_index].get_variable_location(&names[0].to_string()) {
+        match options.storages[storage_index].get_variable_location(&name) {
             /* Variable found */
             Some(location) => {
                 options.opcodes.push(VmOpCode::Load as u8);
@@ -356,66 +352,40 @@ impl InterpreterCompiler {
                 options.opcodes.push(VmOpCode::CallStack as u8);
                 options.opcodes.push(arguments.len() as u8);
                 options.opcodes.push(assign_to_temp as u8);
-                return Ok(0 as u8);
+                return Ok(true);
             },
             /* Variable not found, lets check for function */
-            None => {
-                
-            }
-        };*/
+            None => ()
+        };
 
-        return Err("Function not found");
+        return Ok(false);
+    }
 
-        /* Search function */
-        /*
-        let mut search_storage = &options.storages[storage_index];
-        loop {
-            let function_search = search_storage.get_function_constant(names[names.len()-1].to_string(), names[0..(names.len()-1)].to_vec(), "".to_string());
-            match function_search {
-                Some(constant_address) => {
-                    options.opcodes.push(VmOpCode::Call as u8);
-                    options.opcodes.push(constant_address as u8);
-                    options.opcodes.push(arguments.len() as u8);
-                    options.opcodes.push(assign_to_temp as u8);
-                    return Ok(0 as u8);
-                },
-                None => {
-                    match search_storage.get_variable_location(&names[0].to_string()) {
-                        /* Variable found */
-                        Some(location) => {
-                            options.opcodes.push(VmOpCode::Load as u8);
-                            options.opcodes.push(location as u8);
+    fn generate_func_call(&self, func_name_expression: &BramaAstType, arguments: &Vec<Box<BramaAstType>>, assign_to_temp: bool,  upper_ast: &BramaAstType, options: &mut BramaCompiler, storage_index: usize) -> CompilerResult {
+        /* Build arguments */
+        for argument in arguments {
+            self.generate_opcode(argument, upper_ast, options, storage_index)?;
+        }
 
-                            options.opcodes.push(VmOpCode::CallStack as u8);
-                            options.opcodes.push(arguments.len() as u8);
-                            options.opcodes.push(assign_to_temp as u8);
-                            return Ok(0 as u8);
-                        },
-                        /* Variable not found, lets check for function */
-                        None => {
-                            let normal_func = search_storage.get_function(&names.join("::"));
-                            match normal_func {
-                                Some(function) => {
-                                    options.opcodes.push(VmOpCode::Load as u8);
-                                    options.opcodes.push(function.opcode_location.get() as u8);
-
-                                    options.opcodes.push(VmOpCode::CallStack as u8);
-                                    options.opcodes.push(arguments.len() as u8);
-                                    options.opcodes.push(assign_to_temp as u8);
-                                    return Ok(0 as u8);
-                                },
-                                None => ()
-                            };
-                        }
-                    };
+        match &func_name_expression {
+            BramaAstType::Symbol(function_name) => {
+                let result = self.generate_func_call_by_name(&function_name, Vec::new(), "".to_string(), &arguments, assign_to_temp, options, storage_index)?;
+                match result {
+                    true => return Ok(0),
+                    false =>  return Err("Function not found")
                 }
-            };
-
-            search_storage = match search_storage.get_parent_location() {
-                Some(location) => &options.storages[location as usize],
-                None => return Err("Function not found")
-            };
-        }*/
+            },
+            BramaAstType::FunctionMap(names) => {
+                let result = self.generate_func_call_by_name(&names[names.len() - 1].to_string(), names[0..(names.len()-1)].to_vec(), "".to_string(), &arguments, assign_to_temp, options, storage_index)?;
+                match result {
+                    true => return Ok(0),
+                    false =>  return Err("Function not found")
+                }
+            },
+            _ => {
+                self.generate_opcode(func_name_expression, upper_ast, options, storage_index)
+            }
+        }
     }
 
     fn generate_break(&self, _: &BramaAstType, options: &mut BramaCompiler, _: usize) -> CompilerResult {       
