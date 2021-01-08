@@ -31,11 +31,8 @@ fn test:
     fn test_erhan:
         döndür 'erhan'
 
-    fn test_barış:
-        döndür 'barış'
-
-    döndür test_erhan() + " " + test_barış()
-hataayıklama::doğrula(test(), 'erhan barış')"#.to_string());
+    döndür test_erhan
+hataayıklama::doğrula(test()(), 'erhan')"#.to_string());
     match result {
         Ok(_) => println!("Success"),
         Err(error) => println!("Fail ({})", error)

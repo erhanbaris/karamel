@@ -17,7 +17,7 @@ pub struct UnaryParser;
 impl SyntaxParserTrait for UnaryParser {
     fn parse(parser: &SyntaxParser) -> AstResult {
         let ast = if !parser.flags.get().contains(SyntaxFlag::SKIP_FUNC_CALL) { 
-            map_parser(parser, &[Self::parse_prefix_unary, Self::parse_suffix_unary, PrimativeParser::parse])?
+            map_parser(parser, &[Self::parse_prefix_unary, Self::parse_suffix_unary, FuncCallParser::parse, PrimativeParser::parse])?
         } else {
             map_parser(parser, &[Self::parse_prefix_unary, Self::parse_suffix_unary, PrimativeParser::parse])?
         };
@@ -43,7 +43,7 @@ impl SyntaxParserTrait for UnaryParser {
 
 impl UnaryParser {
     fn parse_suffix_unary(parser: &SyntaxParser) -> AstResult {
-        let index_backup = parser.get_indentation();
+        let index_backup = parser.get_index();
         match &parser.peek_token() {
             Ok(token) => {
                 if token.token_type.is_symbol() {

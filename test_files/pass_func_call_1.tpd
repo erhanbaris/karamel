@@ -1,0 +1,6 @@
+fn test:
+    fn test_erhan:
+        döndür 'erhan'
+    döndür test_erhan
+hataayıklama::doğrula(test()(), 'erhan')
+hataayıklama::doğrula(tür_bilgisi(test()), 'fonksiyon')

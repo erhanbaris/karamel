@@ -383,7 +383,11 @@ impl InterpreterCompiler {
                 }
             },
             _ => {
-                self.generate_opcode(func_name_expression, upper_ast, options, storage_index)
+                self.generate_opcode(func_name_expression, upper_ast, options, storage_index)?;
+                options.opcodes.push(VmOpCode::CallStack as u8);
+                options.opcodes.push(arguments.len() as u8);
+                options.opcodes.push(assign_to_temp as u8);
+                return Ok(0);
             }
         }
     }
