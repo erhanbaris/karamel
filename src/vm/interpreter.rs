@@ -11,8 +11,9 @@ use std::io::{self, Write};
 
 #[cfg(all(feature = "dumpOpcodes"))]
 pub unsafe fn dump_opcode<W: Write>(index: usize, options: &mut BramaCompiler, log_update: &mut LogUpdate<W>) {
-
-    use std::{thread, time};
+    #[cfg(feature = "liveOpcodeView")] {
+        use std::{thread, time};
+    }
 
     let mut buffer = String::new();
 
@@ -110,8 +111,10 @@ pub unsafe fn dump_opcode<W: Write>(index: usize, options: &mut BramaCompiler, l
         opcode_index += 1;
     }
     buffer.push_str("╚═══╩══════╩═════════════════╩═══════╩═══════╝\r\n");
-    log_update.render(&format!("{}", buffer)).unwrap();
-    io::stdout().flush().unwrap();
+    #[cfg(not(feature = "test"))] {
+        log_update.render(&format!("{}", buffer)).unwrap();
+        io::stdout().flush().unwrap();
+    }
     #[cfg(feature = "liveOpcodeView")] {
         thread::sleep(time::Duration::from_millis(500));
     }

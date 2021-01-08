@@ -37,7 +37,7 @@ impl SyntaxParserTrait for AssignmentParser {
 
                     let assignment_ast = BramaAstType::Assignment {
                         variable: symbol.clone(),
-                        operator: operator,
+                        operator,
                         expression: Box::new(expression.unwrap())
                     };
 

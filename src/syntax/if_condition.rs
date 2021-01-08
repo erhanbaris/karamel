@@ -63,11 +63,9 @@ impl SyntaxParserTrait for IfConditiontParser {
                         parser.set_index(index_backup);
                         return Err(("':' missing", 0, 0));
                     }
-                    else {
-                        if !else_body.is_none() {
-                            parser.set_index(index_backup);
-                            return Err(("Multiple else usage not valid", 0, 0));
-                        }
+                    else if !else_body.is_none() {
+                        parser.set_index(index_backup);
+                        return Err(("Multiple else usage not valid", 0, 0));
                     }
                     parser.cleanup_whitespaces();
                     
@@ -105,7 +103,7 @@ impl SyntaxParserTrait for IfConditiontParser {
             let assignment_ast = BramaAstType::IfStatement {
                 condition: Box::new(expression.unwrap()),
                 body: Box::new(true_body),
-                else_body: else_body,
+                else_body,
                 else_if: else_if.to_vec()
             };
 

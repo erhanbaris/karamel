@@ -84,7 +84,7 @@ pub fn parse_control<T: SyntaxParserTrait>(parser: &SyntaxParser, operators: &[B
             parser.flags.set(parser_flags);
             left_expr = BramaAstType::Control {
                 left: Box::new(left_expr),
-                operator: operator,
+                operator,
                 right: Box::new(right_expr.unwrap())
             };
         }        

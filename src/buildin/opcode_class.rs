@@ -62,8 +62,8 @@ impl GetType for OpcodeClass {
 impl OpcodeClass {
     fn new(name: String, storage_index: usize) -> OpcodeClass {
         OpcodeClass {
-            name: name,
-            storage_index: storage_index,
+            name,
+            storage_index,
             properties: HashMap::new()
         }
     }

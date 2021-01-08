@@ -22,7 +22,7 @@ impl SyntaxParserTrait for MultiplyDivideParser {
 
 impl SyntaxParserTrait for AddSubtractParser {
     fn parse(parser: &SyntaxParser) -> AstResult {
-        return parse_binary::<ModuloParser>(parser, &[BramaOperatorType::Addition, BramaOperatorType::Subtraction]);
+        parse_binary::<ModuloParser>(parser, &[BramaOperatorType::Addition, BramaOperatorType::Subtraction])
     }
 }
 
@@ -61,7 +61,7 @@ pub fn parse_binary<T: SyntaxParserTrait>(parser: &SyntaxParser, operators: &[Br
             parser.flags.set(parser_flags);
             left_expr = BramaAstType::Binary {
                 left: Box::new(left_expr),
-                operator: operator,
+                operator,
                 right: Box::new(right_expr.unwrap())
             };
         }
@@ -71,5 +71,5 @@ pub fn parse_binary<T: SyntaxParserTrait>(parser: &SyntaxParser, operators: &[Br
         }
     }
 
-    return Ok(left_expr);
+    Ok(left_expr)
 }

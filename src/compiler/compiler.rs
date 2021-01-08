@@ -154,8 +154,8 @@ impl Compiler for InterpreterCompiler {
 
         /* Jump over all function definations to main function */
         options.opcodes.push(VmOpCode::Jump as u8);
-        options.opcodes.push(0 as u8);
-        options.opcodes.push(0 as u8);
+        options.opcodes.push(0_u8);
+        options.opcodes.push(0_u8);
 
         /* First part of the codes are functions */
         let mut functions = Vec::new();
@@ -424,8 +424,8 @@ impl InterpreterCompiler {
         options.opcodes.push(VmOpCode::Compare as u8);
         let compare_location = options.opcodes.len();
 
-        options.opcodes.push(0 as u8);
-        options.opcodes.push(0 as u8);
+        options.opcodes.push(0_u8);
+        options.opcodes.push(0_u8);
 
         self.generate_opcode(body, upper_ast, options, storage_index)?;
 
@@ -540,19 +540,18 @@ impl InterpreterCompiler {
         let storage = &options.storages[storage_index];
         
         if let BramaAstType::Primative(primative) = expression_ast {
-            if mem::discriminant(&**primative) != mem::discriminant(&BramaPrimative::List([].to_vec())) {
-                if *operator == BramaOperatorType::Assign {
-                    let result = storage.get_constant_location(primative.clone());
-                    let primative_location = match result {
-                        Some(index) => index as u8,
-                        _ => return Err("Value not found in storage")
-                    };
+            if mem::discriminant(&**primative) != mem::discriminant(&BramaPrimative::List([].to_vec())) && 
+               *operator == BramaOperatorType::Assign {
+                let result = storage.get_constant_location(primative.clone());
+                let primative_location = match result {
+                    Some(index) => index as u8,
+                    _ => return Err("Value not found in storage")
+                };
 
-                    options.opcodes.push(VmOpCode::FastStore as u8);
-                    options.opcodes.push(location);
-                    options.opcodes.push(primative_location);
-                    return Ok(0);
-                }
+                options.opcodes.push(VmOpCode::FastStore as u8);
+                options.opcodes.push(location);
+                options.opcodes.push(primative_location);
+                return Ok(0);
             }
         }
 
@@ -638,16 +637,16 @@ impl InterpreterCompiler {
     fn create_exit_jump(&self, options: &mut BramaCompiler, exit_locations: &mut Vec<usize>) {
         options.opcodes.push(VmOpCode::Jump as u8);
         exit_locations.push(options.opcodes.len());
-        options.opcodes.push(0 as u8);
-        options.opcodes.push(0 as u8);
+        options.opcodes.push(0_u8);
+        options.opcodes.push(0_u8);
     }
 
     fn create_compare(&self, options: &mut BramaCompiler) -> usize {
         options.opcodes.push(VmOpCode::Compare as u8);
         let compare_location = options.opcodes.len();
 
-        options.opcodes.push(0 as u8);
-        options.opcodes.push(0 as u8);
+        options.opcodes.push(0_u8);
+        options.opcodes.push(0_u8);
 
         return compare_location;
     }
@@ -759,7 +758,7 @@ impl InterpreterCompiler {
         Err("Unary expression not valid")
     }
 
-    fn generate_block(&self, asts: &Vec<BramaAstType>, upper_ast: &BramaAstType, options: &mut BramaCompiler, storage_index: usize) -> CompilerResult {
+    fn generate_block(&self, asts: &[BramaAstType], upper_ast: &BramaAstType, options: &mut BramaCompiler, storage_index: usize) -> CompilerResult {
         for ast in asts {
             self.generate_opcode(&ast, upper_ast, options, storage_index)?;
         }

@@ -42,9 +42,9 @@ impl FunctionReference {
     pub fn native_function(func: NativeCall, name: String, module_path: Vec<String>, framework: String) -> Rc<FunctionReference> {
         let reference = FunctionReference {
             callback: FunctionType::Native(func),
-            framework: framework,
-            module_path: module_path,
-            name: name,
+            framework,
+            module_path,
+            name,
             arguments: Vec::new(),
             storage_index: 0,
             opcode_location: Cell::new(0),
@@ -57,16 +57,16 @@ impl FunctionReference {
     pub fn opcode_function(name: String, arguments: Vec<String>, module_path: Vec<String>, framework: String, storage_index: usize, defined_storage_index: usize) -> Rc<FunctionReference> {
         let reference = FunctionReference {
             callback: FunctionType::Opcode,
-            framework: framework,
-            module_path: module_path,
-            name: name,
-            arguments: arguments,
-            storage_index: storage_index,
-            defined_storage_index: defined_storage_index,
+            framework,
+            module_path,
+            name,
+            arguments,
+            storage_index,
+            defined_storage_index,
             opcode_location: Cell::new(0),
             used_locations: RefCell::new(Vec::new())
         };
-        return Rc::new(reference);
+        Rc::new(reference)
     }
 
     unsafe fn native_function_call(_: &FunctionReference, func: NativeCall, compiler: &mut BramaCompiler) -> Result<(), String> {            
@@ -83,13 +83,13 @@ impl FunctionReference {
                 }
 
                 compiler.opcode_index += 2;
-                return Ok(());
+                Ok(())
             },
             Err((error, _, _)) => {
                 println!("{:?}", error);
-                return Err(error);
+                Err(error)
             }
-        };
+        }
     }
 
     fn opcode_function_call(reference: &FunctionReference, options: &mut BramaCompiler) -> Result<(), String> {
@@ -124,7 +124,7 @@ impl FunctionReference {
                 location: old_index,
                 memory_index: get_memory_index!(options),
                 const_size: options.storages[reference.storage_index].get_constant_size(),
-                call_return_assign_to_temp: call_return_assign_to_temp
+                call_return_assign_to_temp
             };
 
             options.current_scope = &mut options.scopes[options.scope_index] as *mut Scope;

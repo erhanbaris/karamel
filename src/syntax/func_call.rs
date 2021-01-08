@@ -46,7 +46,6 @@ impl SyntaxParserTrait for FuncCallParser {
                                     if let Ok(BramaAstType::None) = expression {
                                         return Err(("Syntax error, undefined syntax", 0, 0))
                                     }
-                                    else {()}
                                 },
                                 _ => return Err(("Right parantheses missing", 0, 0))
                             }
@@ -116,7 +115,6 @@ impl FuncCallParser {
                             parser.set_index(index_backup);
                             return Err(("Syntax error, undefined syntax", 0, 0))
                         }
-                        else {()}
                     },
                     _ => {
                         parser.set_index(index_backup);
@@ -134,7 +132,7 @@ impl FuncCallParser {
             parser.flags.set(inner_parser_flags);
             return Ok(BramaAstType::FuncCall {
                 func_name_expression: ast,
-                arguments: arguments,
+                arguments,
                 assign_to_temp: parser.flags.get().contains(SyntaxFlag::IN_EXPRESSION)
                                 || parser.flags.get().contains(SyntaxFlag::IN_ASSIGNMENT)
                                 || parser.flags.get().contains(SyntaxFlag::IN_FUNCTION_ARG)

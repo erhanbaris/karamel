@@ -76,7 +76,7 @@ impl BramaKeywordType {
     }
 }
 
-pub static KEYWORDS: &'static [(&str, BramaKeywordType)] = &[
+pub static KEYWORDS: &[(&str, BramaKeywordType)] = &[
     ("true",   BramaKeywordType::True),
     ("false",  BramaKeywordType::False),
     ("use",    BramaKeywordType::Use),
@@ -240,9 +240,9 @@ impl Tokinizer<'_> {
     pub fn add_token(&mut self, start: u32, token_type: BramaTokenType) {
         let token = Token {
             line: self.line,
-            start: start,
+            start,
             end: self.column,
-            token_type: token_type
+            token_type
         };
         self.tokens.push(token);
     }
@@ -289,7 +289,7 @@ impl CharTraits for char {
     }
 
     fn is_symbol(&self) -> bool {
-        return self.is_alphabetic() || *self == '_' ||  *self == '$';
+        self.is_alphabetic() || *self == '_' ||  *self == '$'
     }
 
     fn is_integer(&self) -> bool {
@@ -303,7 +303,7 @@ impl CharTraits for char {
 impl BramaTokenType {
 
     pub fn is_symbol(&self) -> bool {
-        return match self {
+        match self {
             BramaTokenType::Symbol(_) => true,
             _ => false
         }
@@ -311,21 +311,21 @@ impl BramaTokenType {
 
     #[allow(dead_code)]
     pub fn is_keyword(&self) -> bool {
-        return match self {
+        match self {
             BramaTokenType::Keyword(_) => true,
             _ => false
         }
     }
 
     pub fn get_symbol(&self) -> String {
-        return match self {
+        match self {
             BramaTokenType::Symbol(string) => string.to_string(),
             _ => String::from("")
         }
     }
 
     pub fn get_keyword(&self) -> BramaKeywordType {
-        return match self {
+        match self {
             BramaTokenType::Keyword(keyword) => *keyword,
             _ => BramaKeywordType::None
         }
@@ -340,6 +340,6 @@ impl StrTrait for str {
     fn atom(&self) -> u64 {
         let mut hasher = DefaultHasher::new();
         self.hash(&mut hasher);
-        return hasher.finish();
+        hasher.finish()
     }
 }

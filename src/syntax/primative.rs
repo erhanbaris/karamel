@@ -158,7 +158,7 @@ impl PrimativeParser {
                 }
   
                 dict_items.push(Box::new(BramaDictItem {
-                    key: key,
+                    key,
                     value: Rc::new(value.unwrap())
                 }));
 

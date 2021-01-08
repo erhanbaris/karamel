@@ -20,7 +20,7 @@ impl Module for DebugModule {
     }
 
     fn get_module_name(&self) -> String {
-        return "hataayıklama".to_string();
+        "hataayıklama".to_string()
     }
 
     fn get_method(&self, name: &String) -> Option<NativeCall> {

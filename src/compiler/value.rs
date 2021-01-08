@@ -144,7 +144,7 @@ impl PartialEq for BramaPrimative {
                         return false;
                     }
                 }
-                return true;
+                true
             },
             (BramaPrimative::Function(l_value), BramaPrimative::Function(r_value)) => {
                 if l_value.name != r_value.name ||
@@ -152,7 +152,7 @@ impl PartialEq for BramaPrimative {
                    l_value.module_path != r_value.module_path {
                     return false;
                 }
-                return true;
+                true
             },
             (BramaPrimative::Dict(l_value),           BramaPrimative::Dict(r_value))       => {
                 if (*l_value).len() != (*r_value).len() {

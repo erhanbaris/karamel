@@ -26,3 +26,19 @@ macro_rules! dec_memory_index {
         (*$options.current_scope).memory_index -= $count
     }}
 }
+
+// The debug version
+#[allow(dead_code)]
+#[macro_export]
+#[cfg(feature = "test")]
+macro_rules! debug_println {
+    ($( $args:expr ),*) => { println!( $( $args ),* ); }
+}
+
+// Non-debug version
+#[allow(dead_code)]
+#[macro_export]
+#[cfg(not(feature = "test"))]
+macro_rules! debug_println {
+    ($( $args:expr ),*) => {}
+}

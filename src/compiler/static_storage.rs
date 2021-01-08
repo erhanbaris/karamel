@@ -2,6 +2,7 @@ use crate::types::*;
 use crate::compiler::*;
 use std::cell::RefCell;
 use std::rc::Rc;
+use crate::{debug_println};
 
 
 pub struct StaticStorage {
@@ -91,7 +92,7 @@ impl StaticStorage {
         });
         
         if !has { 
-            self.constants.push(VmObject::convert(value.clone()));
+            self.constants.push(VmObject::convert(value));
         };
     }
 
@@ -155,43 +156,41 @@ impl StaticStorage {
     }
 
     pub fn dump(&self) {
-        println!("╔════════════════════════════════════════╗");
-        println!("║               MEMORY DUMP              ║");
-        println!("╠═══╦═════╦══════════════════════════════╣");
+        debug_println!("╔════════════════════════════════════════╗");
+        debug_println!("║               MEMORY DUMP              ║");
+        debug_println!("╠═══╦═════╦══════════════════════════════╣");
 
         let consts    = self.constant_size;
         let variables = self.constant_size as usize + self.variables.len();
 
-        let mut last_type = 'C';
-
         for (index, item) in self.memory.borrow().iter().enumerate() {
-
+            let mut last_type = 'C';
             if consts as usize == index {
                 last_type = 'V';
             } else if variables as usize == index {
                 last_type = 'T';
             }
 
-            println!("║ {} ║ {:3?} ║ {:28} ║", last_type.to_string(), index, format!("{:?}", *item.deref()));
+            debug_println!("║ {} ║ {:3?} ║ {:28} ║", last_type.to_string(), index, format!("{:?}", *item.deref()));
         }
 
-        println!("╚═══╩═════╩══════════════════════════════╝");
-        println!("╔════════════════════════════════════════╗");
-        println!("║             VARIABLE DUMP              ║");
-        println!("╠════════════════════════════════════════╣");
+        debug_println!("╚═══╩═════╩══════════════════════════════╝");
+        debug_println!("╔════════════════════════════════════════╗");
+        debug_println!("║             VARIABLE DUMP              ║");
+        debug_println!("╠════════════════════════════════════════╣");
         for (variable, value) in &self.variables {
-            println!("║ {:38} ║", format!("{} [{}]", variable, value));
+            debug_println!("║ {:38} ║", format!("{} [{}]", variable, value));
         }
-        println!("╚════════════════════════════════════════╝");
+        debug_println!("╚════════════════════════════════════════╝");
 
-        println!("╔════════════════════════════════════════╗");
-        println!("║                  STACK                 ║");
-        println!("╠════════════════════════════════════════╣");
-        println!("║ Stack size: {:<10}                 ║", self.stack.borrow().len());
-        println!("╠════════════════════════════════════════╣");
+        debug_println!("╔════════════════════════════════════════╗");
+        debug_println!("║                  STACK                 ║");
+        debug_println!("╠════════════════════════════════════════╣");
+        debug_println!("║ Stack size: {:<10}                 ║", self.stack.borrow().len());
+        debug_println!("╠════════════════════════════════════════╣");
         for item in self.stack.borrow().iter() {
-            println!("║ {:38} ║", format!("{:?}", item.deref()));
+            debug_println!("║ {:38} ║", format!("{:?}", item.deref()));
         }
-        println!("╚════════════════════════════════════════╝");
+        debug_println!("╚════════════════════════════════════════╝");
     }
 }
