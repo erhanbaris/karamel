@@ -66,7 +66,7 @@ mod tests {
     test_compare!(func_call_7, "print(,2,'erhan')", Err(("Syntax error, undefined syntax", 0, 0)));
     test_compare!(func_call_8, "print(", Err(("Right parantheses missing", 0, 0)));
     test_compare!(func_call_9, "data=print()", Ok(BramaAstType::Assignment {
-        variable: Rc::new("data".to_string()),
+        variable: Box::new(BramaAstType::Symbol("data".to_string())),
         operator: tpd::types::BramaOperatorType::Assign,
         expression: Box::new(BramaAstType::FuncCall {
             func_name_expression: Box::new(BramaAstType::Symbol("print".to_string())),

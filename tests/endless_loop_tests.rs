@@ -29,14 +29,14 @@ mod tests {
     test_compare!(endless_1, r#"sonsuz:
     erhan=123
 "#, Ok(BramaAstType::EndlessLoop(Box::new(BramaAstType::Assignment {
-    variable: Rc::new("erhan".to_string()),
+    variable: Box::new(BramaAstType::Symbol("erhan".to_string())),
     operator: BramaOperatorType::Assign,
     expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123.0))))
 }))));
 test_compare!(endless_2, r#"sonsuz:
     erhan=123   
     print(1)"#, Ok(BramaAstType::EndlessLoop(Box::new(BramaAstType::Block([BramaAstType::Assignment {
-    variable: Rc::new("erhan".to_string()),
+    variable: Box::new(BramaAstType::Symbol("erhan".to_string())),
     operator: BramaOperatorType::Assign,
     expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123.0))))
 },
@@ -53,7 +53,7 @@ test_compare!(endless_4, r#"sonsuz:
     erhan=123   
     print(1)
     kır"#, Ok(BramaAstType::EndlessLoop(Box::new(BramaAstType::Block([BramaAstType::Assignment {
-    variable: Rc::new("erhan".to_string()),
+    variable: Box::new(BramaAstType::Symbol("erhan".to_string())),
     operator: BramaOperatorType::Assign,
     expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123.0))))
 },

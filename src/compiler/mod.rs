@@ -92,5 +92,6 @@ pub enum VmOpCode {
     FastStore,
     CopyToStore,
     Dublicate,
-    GetItem
+    GetItem,
+    SetItem
 }

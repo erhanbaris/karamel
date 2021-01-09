@@ -32,7 +32,7 @@ fn test():
         name: "test".to_string(),
         arguments: [].to_vec(),
         body: Rc::new(BramaAstType::Block([BramaAstType::Assignment {
-            variable: Rc::new("erhan".to_string()),
+            variable: Box::new(BramaAstType::Symbol("erhan".to_string())),
             operator: BramaOperatorType::Assign,
             expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123.0))))
         },
@@ -44,7 +44,7 @@ fn test(a):
         name: "test".to_string(),
         arguments: ["a".to_string()].to_vec(),
         body: Rc::new(BramaAstType::Block([BramaAstType::Assignment {
-            variable: Rc::new("erhan".to_string()),
+            variable: Box::new(BramaAstType::Symbol("erhan".to_string())),
             operator: BramaOperatorType::Assign,
             expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123.0))))
         },
@@ -56,7 +56,7 @@ fn test(a, b    ,   c):
         name: "test".to_string(),
         arguments: ["a".to_string(), "b".to_string(), "c".to_string()].to_vec(),
         body: Rc::new(BramaAstType::Block([BramaAstType::Assignment {
-            variable: Rc::new("erhan".to_string()),
+            variable: Box::new(BramaAstType::Symbol("erhan".to_string())),
             operator: BramaOperatorType::Assign,
             expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123.0))))
         },
@@ -68,7 +68,7 @@ fn test:
             name: "test".to_string(),
             arguments: [].to_vec(),
             body: Rc::new(BramaAstType::Block([BramaAstType::Assignment {
-                variable: Rc::new("erhan".to_string()),
+                variable: Box::new(BramaAstType::Symbol("erhan".to_string())),
                 operator: BramaOperatorType::Assign,
                 expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123.0))))
             },
@@ -83,7 +83,7 @@ fn test   :
                 name: "test".to_string(),
                 arguments: [].to_vec(),
                 body: Rc::new(BramaAstType::Block([BramaAstType::Assignment {
-                    variable: Rc::new("erhan".to_string()),
+                    variable: Box::new(BramaAstType::Symbol("erhan".to_string())),
                     operator: BramaOperatorType::Assign,
                     expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123.0))))
                 },
@@ -124,7 +124,7 @@ fn test():
     name: "test".to_string(),
     arguments: [].to_vec(),
     body: Rc::new(BramaAstType::Block([BramaAstType::Assignment {
-        variable: Rc::new("erhan".to_string()),
+        variable: Box::new(BramaAstType::Symbol("erhan".to_string())),
         operator: BramaOperatorType::Assign,
         expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123.0))))
     },
@@ -137,7 +137,7 @@ fn test():
     name: "test".to_string(),
     arguments: [].to_vec(),
     body: Rc::new(BramaAstType::Block([BramaAstType::Assignment {
-        variable: Rc::new("erhan".to_string()),
+        variable: Box::new(BramaAstType::Symbol("erhan".to_string())),
         operator: BramaOperatorType::Assign,
         expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123.0))))
     },

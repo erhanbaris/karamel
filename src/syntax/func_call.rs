@@ -61,7 +61,7 @@ impl SyntaxParserTrait for FuncCallParser {
                         parser.flags.set(parser_flags);
                         let func_call_ast = BramaAstType::FuncCall {
                             func_name_expression: Box::new(function_name),
-                            arguments: arguments,
+                            arguments,
                             assign_to_temp: parser.flags.get().contains(SyntaxFlag::IN_EXPRESSION)
                                         || parser.flags.get().contains(SyntaxFlag::IN_ASSIGNMENT)
                                         || parser.flags.get().contains(SyntaxFlag::IN_FUNCTION_ARG)

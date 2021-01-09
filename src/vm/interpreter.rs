@@ -50,6 +50,7 @@ pub unsafe fn dump_opcode<W: Write>(index: usize, options: &mut BramaCompiler, l
             VmOpCode::LessEqualThan | 
             VmOpCode::LessThan | 
             VmOpCode::GetItem | 
+            VmOpCode::SetItem |
             VmOpCode::Multiply => {
                 let data = format!("║ {:4} ║ {:15} ║ {:^5} ║ {:^5} ║", opcode_index, format!("{:?}", opcode), "", "").to_string();
                 build_arrow(index, opcode_index, 0, &mut buffer, &data);
@@ -400,7 +401,7 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<(), String>
                         BramaPrimative::Atom(_) => true,
                         BramaPrimative::Bool(l_value) => *l_value,
                         BramaPrimative::Number(l_value) => *l_value > 0.0,
-                        BramaPrimative::Text(l_value) => (*l_value).len() > 0,
+                        BramaPrimative::Text(l_value) => !(*l_value).is_empty(),
                         _ => false
                     };
 
@@ -418,6 +419,32 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<(), String>
                     options.opcode_index = location as usize;
                     continue;
                 },
+                
+                VmOpCode::SetItem => {
+                    let assign_item  = pop!(options);
+                    let indexer = pop!(options);
+                    let object  = pop!(options);
+
+                    match &*object {
+                        BramaPrimative::List(value) => {
+                            let indexer_value = match &*indexer {
+                                BramaPrimative::Number(number) => *number as usize,
+                                _ => return Err("Indexer must be number".to_string())
+                            };
+
+                            value.borrow_mut()[indexer_value] = assign_item;
+                        },
+                        BramaPrimative::Dict(value) => {
+                            let indexer_value = match &*indexer {
+                                BramaPrimative::Text(text) => &*text,
+                                _ => return Err("Indexer must be string".to_string())
+                            };
+
+                            value.borrow_mut().insert(indexer_value.to_string(), assign_item);
+                        }
+                        _ => ()
+                    };
+                },
 
                 VmOpCode::GetItem => {
                     let indexer = pop!(options);
@@ -430,7 +457,7 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<(), String>
                                 _ => return Err("Indexer must be number".to_string())
                             };
 
-                            match (*value).get(indexer_value as usize) {
+                            match (*value).borrow().get(indexer_value as usize) {
                                 Some(data) => VmObject::from(data.clone()),
                                 _ => empty_primative
                             }
@@ -441,7 +468,7 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<(), String>
                                 _ => return Err("Indexer must be string".to_string())
                             };
 
-                            match (*value).get(&indexer_value.to_string()) {
+                            match (*value).borrow().get(&indexer_value.to_string()) {
                                 Some(data) => VmObject::from(data.clone()),
                                 _ => empty_primative
                             }

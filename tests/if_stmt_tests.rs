@@ -37,12 +37,12 @@ yada:
         right: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123.0))))
     }),
     body: Box::new(BramaAstType::Assignment {
-        variable: Rc::new("erhan".to_string()),
+        variable: Box::new(BramaAstType::Symbol("erhan".to_string())),
         operator: BramaOperatorType::Assign,
         expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123.0))))
     }),
     else_body: Some(Box::new(BramaAstType::Assignment {
-        variable: Rc::new("erhan".to_string()),
+        variable: Box::new(BramaAstType::Symbol("erhan".to_string())),
         operator: BramaOperatorType::Assign,
         expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(1234.0))))
     })),
@@ -57,7 +57,7 @@ yada:
         right: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123.0))))
     }),
     body: Box::new(BramaAstType::Assignment {
-        variable: Rc::new("erhan".to_string()),
+        variable: Box::new(BramaAstType::Symbol("erhan".to_string())),
         operator: BramaOperatorType::Assign,
         expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123.0))))
     }),
@@ -74,7 +74,7 @@ yada:
         right: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123.0))))
     }),
     body: Box::new(BramaAstType::Block([BramaAstType::Assignment {
-        variable: Rc::new("erhan".to_string()),
+        variable: Box::new(BramaAstType::Symbol("erhan".to_string())),
         operator: BramaOperatorType::Assign,
         expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123.0))))
     },
@@ -100,7 +100,7 @@ yada :
         right: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123.0))))
     }),
     body: Box::new(BramaAstType::Block([BramaAstType::Assignment {
-        variable: Rc::new("erhan".to_string()),
+        variable: Box::new(BramaAstType::Symbol("erhan".to_string())),
         operator: BramaOperatorType::Assign,
         expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123.0))))
     },
@@ -111,7 +111,7 @@ yada :
     }
     ].to_vec())),
     else_body: Some(Box::new(BramaAstType::Block([BramaAstType::Assignment {
-        variable: Rc::new("erhan".to_string()),
+        variable: Box::new(BramaAstType::Symbol("erhan".to_string())),
         operator: BramaOperatorType::Assign,
         expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(321.0))))
     },
@@ -137,12 +137,12 @@ yada:
         right: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123.0))))
     }),
     body: Box::new(BramaAstType::Assignment {
-        variable: Rc::new("erhan".to_string()),
+        variable: Box::new(BramaAstType::Symbol("erhan".to_string())),
         operator: BramaOperatorType::Assign,
         expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123.0))))
     }),
     else_body: Some(Box::new(BramaAstType::Assignment {
-        variable: Rc::new("erhan".to_string()),
+        variable: Box::new(BramaAstType::Symbol("erhan".to_string())),
         operator: BramaOperatorType::Assign,
         expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(1234.0))))
     })),
@@ -155,7 +155,7 @@ yada:
         operator: BramaOperatorType::GreaterThan,
         right: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(10000000.0)))),
     }), Box::new(BramaAstType::Assignment {
-        variable: Rc::new("erhan".to_string()),
+        variable: Box::new(BramaAstType::Symbol("erhan".to_string())),
         operator: BramaOperatorType::Assign,
         expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(12345.0))))
     })))].to_vec()
@@ -176,12 +176,12 @@ yada:
         right: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123.0))))
     }),
     body: Box::new(BramaAstType::Assignment {
-        variable: Rc::new("erhan".to_string()),
+        variable: Box::new(BramaAstType::Symbol("erhan".to_string())),
         operator: BramaOperatorType::Assign,
         expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123.0))))
     }),
     else_body: Some(Box::new(BramaAstType::Assignment {
-        variable: Rc::new("erhan".to_string()),
+        variable: Box::new(BramaAstType::Symbol("erhan".to_string())),
         operator: BramaOperatorType::Assign,
         expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(1234.0))))
     })),
@@ -194,7 +194,7 @@ yada:
         operator: BramaOperatorType::GreaterThan,
         right: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(10000000.0)))),
     }), Box::new(BramaAstType::Assignment {
-        variable: Rc::new("erhan".to_string()),
+        variable: Box::new(BramaAstType::Symbol("erhan".to_string())),
         operator: BramaOperatorType::Assign,
         expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(12345.0))))
     }))),
@@ -207,7 +207,7 @@ yada:
         operator: BramaOperatorType::LessThan,
         right: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(10000000.0)))),
     }), Box::new(BramaAstType::Assignment {
-        variable: Rc::new("erhan".to_string()),
+        variable: Box::new(BramaAstType::Symbol("erhan".to_string())),
         operator: BramaOperatorType::Assign,
         expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123456.0))))
     })))].to_vec()
@@ -248,7 +248,7 @@ condition: Box::new(BramaAstType::Binary {
     right: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123.0))))
 }),
 body: Box::new(BramaAstType::Assignment {
-    variable: Rc::new("erhan".to_string()),
+    variable: Box::new(BramaAstType::Symbol("erhan".to_string())),
     operator: BramaOperatorType::Assign,
     expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123.0))))
 }),
@@ -262,7 +262,7 @@ else_if: [Box::new(BramaIfStatementElseItem::new(Box::new(BramaAstType::Control 
     operator: BramaOperatorType::GreaterThan,
     right: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(10000000.0)))),
 }), Box::new(BramaAstType::Assignment {
-    variable: Rc::new("erhan".to_string()),
+    variable: Box::new(BramaAstType::Symbol("erhan".to_string())),
     operator: BramaOperatorType::Assign,
     expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(12345.0))))
 })))].to_vec()

@@ -1,5 +1,6 @@
 use std::vec::Vec;
 use std::rc::Rc;
+use std::cell::RefCell;
 use std::mem::ManuallyDrop;
 use std::fmt;
 use std::collections::HashMap;
@@ -18,8 +19,8 @@ pub enum BramaPrimative {
     Empty,
     Number(f64),
     Bool(bool),
-    List(Vec<Rc<BramaPrimative>>),
-    Dict(HashMap<String, Rc<BramaPrimative>>),
+    List(RefCell<Vec<Rc<BramaPrimative>>>),
+    Dict(RefCell<HashMap<String, Rc<BramaPrimative>>>),
     Atom(u64),
     Text(Rc<String>),
     Function(Rc<FunctionReference>)
@@ -28,12 +29,12 @@ pub enum BramaPrimative {
 impl BramaPrimative {
     pub fn is_true(&self) -> bool {
         match self {
-            BramaPrimative::Text(value)       => value.len() > 0,
+            BramaPrimative::Text(value)       => !value.is_empty(),
             BramaPrimative::Number(value)     => *value > 0.0,
             BramaPrimative::Bool(value)       => *value,
             BramaPrimative::Atom(_)           => true,
-            BramaPrimative::List(items)       => items.len() > 0,
-            BramaPrimative::Dict(items) => items.len() > 0,
+            BramaPrimative::List(items)       => !items.borrow().is_empty(),
+            BramaPrimative::Dict(items) => !items.borrow().is_empty(),
             BramaPrimative::Empty             => false,
             BramaPrimative::Function(_) => true
         }
@@ -89,7 +90,7 @@ impl From<String> for VmObject {
 
 impl From<Vec<Rc<BramaPrimative>>> for VmObject {
     fn from(source: Vec<Rc<BramaPrimative>>) -> Self {
-        VmObject::convert(Rc::new(BramaPrimative::List(source)))
+        VmObject::convert(Rc::new(BramaPrimative::List(RefCell::new(source))))
     }
 }
 
@@ -101,7 +102,7 @@ impl From<Rc<BramaPrimative>> for VmObject {
 
 impl From<HashMap<String, Rc<BramaPrimative>>> for VmObject {
     fn from(source: HashMap<String, Rc<BramaPrimative>>) -> Self {
-        VmObject::convert(Rc::new(BramaPrimative::Dict(source)))
+        VmObject::convert(Rc::new(BramaPrimative::Dict(RefCell::new(source))))
     }
 }
 
@@ -135,12 +136,12 @@ impl PartialEq for BramaPrimative {
             (BramaPrimative::Number(n),               BramaPrimative::Number(m))    => if n.is_nan() && m.is_nan() { true } else { n == m },
             (BramaPrimative::Text(lvalue),            BramaPrimative::Text(rvalue)) => lvalue == rvalue,
             (BramaPrimative::List(l_value),           BramaPrimative::List(r_value))       => {
-                if (*l_value).len() != (*r_value).len() {
+                if (*l_value).borrow().len() != (*r_value).borrow().len() {
                     return false;
                 }
 
-                for i in 0..(*l_value).len() {
-                    if (*l_value)[i].clone() != (*r_value)[i].clone() {
+                for i in 0..(*l_value).borrow().len() {
+                    if (*l_value).borrow()[i].clone() != (*r_value).borrow()[i].clone() {
                         return false;
                     }
                 }
@@ -155,12 +156,12 @@ impl PartialEq for BramaPrimative {
                 true
             },
             (BramaPrimative::Dict(l_value),           BramaPrimative::Dict(r_value))       => {
-                if (*l_value).len() != (*r_value).len() {
+                if (*l_value).borrow().len() != (*r_value).borrow().len() {
                     return false;
                 }
 
-                for (key, l_item) in l_value {
-                    match r_value.get(key) {
+                for (key, l_item) in l_value.borrow().iter() {
+                    match r_value.borrow().get(key) {
                         Some(r_item) => {
                             if l_item != r_item {
                                 return false;

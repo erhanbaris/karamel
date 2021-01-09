@@ -9,7 +9,7 @@ use crate::compiler::ast::BramaAstType;
 
 pub type ParseResult        = Result<(), (&'static str, u32, u32)>;
 pub type AstResult          = Result<BramaAstType, (&'static str, u32, u32)>;
-pub type CompilerResult     = Result<u8, &'static str>;
+pub type CompilerResult     = Result<(), &'static str>;
 
 pub const TAG_NULL        : u64 = 0;
 pub const TAG_FALSE       : u64 = 1;

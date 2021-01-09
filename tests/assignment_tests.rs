@@ -27,13 +27,13 @@ mod tests {
     }
 
     test_compare!(assignment_1, "erhan = 2020", Ok(BramaAstType::Assignment {
-        variable: Rc::new("erhan".to_string()),
+        variable: Box::new(BramaAstType::Symbol("erhan".to_string())),
         operator: BramaOperatorType::Assign,
         expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(2020.0))))
     }));
 
     test_compare!(assignment_2, "erhan = ('erhan' * 2)", Ok(BramaAstType::Assignment {
-        variable: Rc::new("erhan".to_string()),
+        variable: Box::new(BramaAstType::Symbol("erhan".to_string())),
         operator: BramaOperatorType::Assign,
         expression: Box::new(BramaAstType::Binary {
             left: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Text(Rc::new("erhan".to_string()))))),

@@ -87,7 +87,8 @@ impl StorageBuilder {
                 variable,
                 operator,
                 expression} =>  {
-                options.storages.get_mut(storage_index).unwrap().add_variable(&*variable);
+                let var_stack_size = self.get_temp_count_from_ast(variable, ast, options, storage_index, compiler_option);
+                compiler_option.max_stack = max(var_stack_size, compiler_option.max_stack);
                 
                 let stack_size = self.get_temp_count_from_ast(expression, ast, options, storage_index, compiler_option);
                 compiler_option.max_stack = max(stack_size, compiler_option.max_stack);
@@ -108,6 +109,16 @@ impl StorageBuilder {
 
                 compiler_option.max_stack = max(list_temp_count, compiler_option.max_stack);
                 list_temp_count
+            },
+            
+            BramaAstType::AccessorFuncCall {
+                source,
+                target,
+                assign_to_temp
+            } => {
+                compiler_option.max_stack = max(self.get_temp_count_from_ast(source, ast, options, storage_index, compiler_option), compiler_option.max_stack);
+                compiler_option.max_stack = max(self.get_temp_count_from_ast(target, ast, options, storage_index, compiler_option), compiler_option.max_stack);
+                0
             },
 
 /*

@@ -22,39 +22,60 @@ impl SyntaxParserTrait for ExpressionParser {
         } 
         
         /* parse for 'object.method()' */
-        else if parser.check_operator(&BramaOperatorType::Dot) {
+        else if let Some(_) = parser.match_operator(&[BramaOperatorType::Dot]) {
             update_functions_for_temp_return(&mut ast);
-            return FuncCallParser::func_call_parse(Box::new(ast), parser);
+            let sub_ast = FuncCallParser::parse(parser)?;
+
+            match &sub_ast {
+                BramaAstType::FuncCall {
+                    func_name_expression,
+                    arguments: _,
+                    assign_to_temp: _ 
+                } => {
+                    match &**func_name_expression {
+                        BramaAstType::Symbol(_) => (),
+                        _ => return Err(("Function call syntax not valid", 0, 0))
+                    };
+                },
+                 _ => return Err(("Function call syntax not valid", 0, 0))
+            };
+
+            return Ok(BramaAstType::AccessorFuncCall {
+                source: Box::new(ast),
+                target: Box::new(sub_ast),
+                assign_to_temp: false
+            });
+
         }
 
-        return Ok(ast);
+        Ok(ast)
     }
 }
 
 impl SyntaxParserTrait for OrParser {
     fn parse(parser: &SyntaxParser) -> AstResult {
-        return parse_control::<AndParser>(parser, &[BramaOperatorType::Or]);
+        parse_control::<AndParser>(parser, &[BramaOperatorType::Or])
     }
 }
 
 impl SyntaxParserTrait for AndParser {
     fn parse(parser: &SyntaxParser) -> AstResult {
-        return parse_control::<EqualityParser>(parser, &[BramaOperatorType::And]);
+        parse_control::<EqualityParser>(parser, &[BramaOperatorType::And])
     }
 }
 
 impl SyntaxParserTrait for EqualityParser {
     fn parse(parser: &SyntaxParser) -> AstResult {
-        return parse_control::<ControlParser>(parser, &[BramaOperatorType::Equal, BramaOperatorType::NotEqual]);
+        parse_control::<ControlParser>(parser, &[BramaOperatorType::Equal, BramaOperatorType::NotEqual])
     }
 }
 
 impl SyntaxParserTrait for ControlParser {
     fn parse(parser: &SyntaxParser) -> AstResult {
-        return parse_control::<AddSubtractParser>(parser, &[BramaOperatorType::GreaterEqualThan, 
+        parse_control::<AddSubtractParser>(parser, &[BramaOperatorType::GreaterEqualThan, 
             BramaOperatorType::GreaterThan,
             BramaOperatorType::LessEqualThan, 
-            BramaOperatorType::LessThan]);
+            BramaOperatorType::LessThan])
     }
 }
 
@@ -102,5 +123,5 @@ pub fn parse_control<T: SyntaxParserTrait>(parser: &SyntaxParser, operators: &[B
         }
     }
 
-    return Ok(left_expr);
+    Ok(left_expr)
 }

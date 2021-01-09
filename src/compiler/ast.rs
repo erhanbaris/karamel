@@ -44,6 +44,11 @@ pub enum BramaAstType {
         arguments: Vec<Box<BramaAstType>>,
         assign_to_temp: bool
     },
+    AccessorFuncCall {
+        source: Box<BramaAstType>,
+        target: Box<BramaAstType>,
+        assign_to_temp: bool
+    },
     Primative(Rc<BramaPrimative>),
     Binary {
         left: Box<BramaAstType>, 
@@ -59,7 +64,7 @@ pub enum BramaAstType {
     PrefixUnary(BramaOperatorType, Box<BramaAstType>),
     SuffixUnary(BramaOperatorType, Box<BramaAstType>),
     Assignment {
-        variable: Rc<String>,
+        variable: Box<BramaAstType>,
         operator: BramaOperatorType,
         expression: Box<BramaAstType>
     },

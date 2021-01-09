@@ -38,6 +38,15 @@ pub fn update_functions_for_temp_return(ast: &mut BramaAstType) {
         BramaAstType::FuncCall { func_name_expression: _, arguments: _, assign_to_temp } => {
             *assign_to_temp = true;
         },
+        BramaAstType::AccessorFuncCall {
+            source,
+            target,
+            assign_to_temp
+        } => {
+            update_functions_for_temp_return(source);
+            update_functions_for_temp_return(target);
+            *assign_to_temp = true;
+        },
         BramaAstType::Block(blocks) => {
             for mut block in blocks {
                 update_functions_for_temp_return(&mut block);

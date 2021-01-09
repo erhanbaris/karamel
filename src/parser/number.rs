@@ -5,7 +5,7 @@ pub struct NumberParser;
 impl NumberParser {
     fn increase(&self, tokinizer: &mut Tokinizer) -> char {
         tokinizer.increase_index();
-        return tokinizer.get_char();
+        tokinizer.get_char()
     }
 
     fn get_digits(&self, tokinizer: &mut Tokinizer) -> (u8, u64) {
@@ -24,7 +24,7 @@ impl NumberParser {
             ch = self.increase(tokinizer);
         }
 
-        return (num_count, number);
+        (num_count, number)
     }
 
     fn detect_number_system(&self, tokinizer: &mut Tokinizer) -> BramaNumberSystem {
@@ -66,7 +66,7 @@ impl NumberParser {
             ch = self.increase(tokinizer);
         }
 
-        return BramaTokenType::Integer(number as i64);
+        BramaTokenType::Integer(number as i64)
     }
 
     fn parse_octal(&self, tokinizer: &mut Tokinizer) -> BramaTokenType {
@@ -84,7 +84,7 @@ impl NumberParser {
             ch = self.increase(tokinizer);
         }
 
-        return BramaTokenType::Integer(number as i64);
+        BramaTokenType::Integer(number as i64)
     }
 
     fn parse_binary(&self, tokinizer: &mut Tokinizer) -> BramaTokenType {
@@ -102,7 +102,7 @@ impl NumberParser {
             ch = self.increase(tokinizer);
         }
 
-        return BramaTokenType::Integer(number as i64);
+        BramaTokenType::Integer(number as i64)
     }
 
     fn parse_decimal(&self, tokinizer: &mut Tokinizer) -> BramaTokenType {
@@ -157,7 +157,7 @@ impl NumberParser {
             return BramaTokenType::Double(num)
         }
 
-        return BramaTokenType::Integer(before_comma as i64);
+        BramaTokenType::Integer(before_comma as i64)
     }
 }
 
@@ -165,7 +165,7 @@ impl TokenParser for NumberParser {
     fn check(&self, tokinizer: &mut Tokinizer) -> bool {
         let ch = tokinizer.get_char();
         let ch_next = tokinizer.get_next_char();
-        return (ch == '.' && (ch_next >= '0' && ch_next <= '9')) || (ch >= '0' && ch <= '9');
+        (ch == '.' && (ch_next >= '0' && ch_next <= '9')) || (ch >= '0' && ch <= '9')
     }
 
     fn parse(&self, tokinizer: &mut Tokinizer) -> Result<(), (&'static str, u32, u32)> {
@@ -183,6 +183,6 @@ impl TokenParser for NumberParser {
         if tokinizer.get_char().is_alphabetic() && !tokinizer.get_char().is_whitespace() {
             return Err(("Number parser error", tokinizer.line, tokinizer.column));
         }
-        return Ok(());
+        Ok(())
     }
 }

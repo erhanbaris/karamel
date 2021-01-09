@@ -50,7 +50,6 @@ impl UnaryParser {
                         BramaOperatorType::Deccrement]) {
                         return Ok(BramaAstType::SuffixUnary(operator, Box::new(BramaAstType::Symbol(token.token_type.get_symbol().to_string()))));
                     }
-                    ()
                 }
             },
             _ => ()
