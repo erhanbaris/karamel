@@ -14,7 +14,15 @@ pub struct ControlParser;
 impl SyntaxParserTrait for ExpressionParser {
     fn parse(parser: &SyntaxParser) -> AstResult {
         let mut ast = OrParser::parse(parser)?;
+
+        /* parse for 'object()()' */
         if FuncCallParser::can_be_func_call(parser) {
+            update_functions_for_temp_return(&mut ast);
+            return FuncCallParser::func_call_parse(Box::new(ast), parser);
+        } 
+        
+        /* parse for 'object.method()' */
+        else if parser.check_operator(&BramaOperatorType::Dot) {
             update_functions_for_temp_return(&mut ast);
             return FuncCallParser::func_call_parse(Box::new(ast), parser);
         }

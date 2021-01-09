@@ -32,7 +32,7 @@ fn test:
         döndür 'erhan'
 
     döndür test_erhan
-hataayıklama::doğrula(test()(), 'erhan')"#.to_string());
+test().test()"#.to_string());
     match result {
         Ok(_) => println!("Success"),
         Err(error) => println!("Fail ({})", error)
