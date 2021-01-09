@@ -27,11 +27,6 @@ pub fn greet(name: &str) {
 #[cfg(not(feature = "wasmBuild"))]
 fn main() {
     let result = vm::executer::code_executer(&r#"
-fn test:
-    fn test_erhan:
-        döndür 'erhan'
-
-    döndür test_erhan
 test().test()"#.to_string());
     match result {
         Ok(_) => println!("Success"),

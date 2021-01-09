@@ -12,7 +12,7 @@ dumpMemory = []
 dumpOpcodes = []
 liveOpcodeView = []
 wasmBuild = []
-test = []
+unittest = []
 default = ["dumpOpcodes", "dumpMemory", "dumpExecutionOpcode"]
 
 [dependencies]

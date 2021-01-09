@@ -30,7 +30,7 @@ macro_rules! dec_memory_index {
 // The debug version
 #[allow(dead_code)]
 #[macro_export]
-#[cfg(feature = "test")]
+#[cfg(not(feature = "unittest"))]
 macro_rules! debug_println {
     ($( $args:expr ),*) => { println!( $( $args ),* ); }
 }
@@ -38,7 +38,7 @@ macro_rules! debug_println {
 // Non-debug version
 #[allow(dead_code)]
 #[macro_export]
-#[cfg(not(feature = "test"))]
+#[cfg(feature = "unittest")]
 macro_rules! debug_println {
     ($( $args:expr ),*) => {}
 }

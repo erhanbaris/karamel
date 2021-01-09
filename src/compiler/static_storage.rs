@@ -107,16 +107,6 @@ impl StaticStorage {
         }
     }
 
-    pub fn set_variable_value(&mut self, name: &String, object: VmObject) {
-        match self.get_variable_location(name) {
-            Some(location) => {
-                let mut memory = self.memory.borrow_mut();
-                memory[location as usize] = object;
-            },
-            _ => ()
-        };
-    }
-
     pub fn get_variable_location(&self, name: &String) -> Option<u8> {
         let result = self.variables.iter().position(|(key, _)| key == name);
         match result {
@@ -154,7 +144,10 @@ impl StaticStorage {
 
         None
     }
+    #[cfg(feature = "unit-test")]
+    pub fn dump(&self) {}
 
+    #[cfg(not(feature = "test"))]
     pub fn dump(&self) {
         debug_println!("╔════════════════════════════════════════╗");
         debug_println!("║               MEMORY DUMP              ║");
@@ -164,14 +157,15 @@ impl StaticStorage {
         let variables = self.constant_size as usize + self.variables.len();
 
         for (index, item) in self.memory.borrow().iter().enumerate() {
-            let mut last_type = 'C';
-            if consts as usize == index {
-                last_type = 'V';
+            let last_type = if consts as usize == index {
+                "V"
             } else if variables as usize == index {
-                last_type = 'T';
-            }
+                "T"
+            } else {
+                "C"
+            };
 
-            debug_println!("║ {} ║ {:3?} ║ {:28} ║", last_type.to_string(), index, format!("{:?}", *item.deref()));
+            debug_println!("║ {} ║ {:3?} ║ {:28} ║", last_type, index, format!("{:?}", *item.deref()));
         }
 
         debug_println!("╚═══╩═════╩══════════════════════════════╝");
