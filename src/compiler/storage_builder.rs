@@ -87,11 +87,9 @@ impl StorageBuilder {
                 variable,
                 operator,
                 expression} =>  {
-                let var_stack_size = self.get_temp_count_from_ast(variable, ast, options, storage_index, compiler_option);
-                compiler_option.max_stack = max(var_stack_size, compiler_option.max_stack);
-                
+                let var_stack_size = self.get_temp_count_from_ast(variable, ast, options, storage_index, compiler_option);                
                 let stack_size = self.get_temp_count_from_ast(expression, ast, options, storage_index, compiler_option);
-                compiler_option.max_stack = max(stack_size, compiler_option.max_stack);
+                compiler_option.max_stack = max(stack_size + var_stack_size, compiler_option.max_stack);
                 
                 let size = match *operator {
                     BramaOperatorType::Assign => 0,

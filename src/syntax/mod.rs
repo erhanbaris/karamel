@@ -48,6 +48,11 @@ pub trait SyntaxParserTrait {
     fn parse(parser: &SyntaxParser) -> AstResult;
 }
 
+pub trait ExtensionSyntaxParser: Sized {
+    fn parsable    (parser: &SyntaxParser) -> bool;
+    fn parse_suffix(ast: Box<BramaAstType>, parser: &SyntaxParser) -> AstResult;
+}
+
 impl SyntaxParser {
     pub fn new(tokens: Box<Vec<Token>>) -> SyntaxParser {
         SyntaxParser {

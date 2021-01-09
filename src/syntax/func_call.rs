@@ -1,5 +1,5 @@
 use crate::types::*;
-use crate::syntax::{SyntaxParser, SyntaxParserTrait, SyntaxFlag};
+use crate::syntax::{SyntaxParser, SyntaxParserTrait, SyntaxFlag, ExtensionSyntaxParser};
 use crate::syntax::control::ExpressionParser;
 use crate::syntax::primative::PrimativeParser;
 use crate::compiler::ast::BramaAstType;
@@ -18,58 +18,12 @@ impl SyntaxParserTrait for FuncCallParser {
 
             match function_name {
                 BramaAstType::None => (),
-                _ => {
-                    parser.cleanup_whitespaces();
-
-                    if let Some(_) = parser.match_operator(&[BramaOperatorType::LeftParentheses]) {
-                        let mut arguments = Vec::new();
-
-                        let parser_flags  = parser.flags.get();
-                        parser.flags.set(parser_flags | SyntaxFlag::IN_FUNCTION_ARG);
-
-                        /* Parse function call arguments */
-                        let mut continue_to_parse = true;
-                        while continue_to_parse {
-                            parser.cleanup_whitespaces();
-                            
-                            let expression = ExpressionParser::parse(parser);
-                            match expression {
-                                Err(_) => return expression,
-                                _ => ()
-                            };
-                            
-                            parser.cleanup_whitespaces();
-
-                            match parser.match_operator(&[BramaOperatorType::RightParentheses, BramaOperatorType::Comma]) {
-                                Some(BramaOperatorType::RightParentheses) => continue_to_parse = false,  
-                                Some(BramaOperatorType::Comma)            => {
-                                    if let Ok(BramaAstType::None) = expression {
-                                        return Err(("Syntax error, undefined syntax", 0, 0))
-                                    }
-                                },
-                                _ => return Err(("Right parantheses missing", 0, 0))
-                            }
-
-
-                            match expression {
-                                Ok(BramaAstType::None) => (),
-                                Ok(data) => arguments.push(Box::new(data)),
-                                _ => (),
-                            };
-                        }
-
-                        parser.flags.set(parser_flags);
-                        let func_call_ast = BramaAstType::FuncCall {
-                            func_name_expression: Box::new(function_name),
-                            arguments,
-                            assign_to_temp: parser.flags.get().contains(SyntaxFlag::IN_EXPRESSION)
-                                        || parser.flags.get().contains(SyntaxFlag::IN_ASSIGNMENT)
-                                        || parser.flags.get().contains(SyntaxFlag::IN_FUNCTION_ARG)
-                                        || parser.flags.get().contains(SyntaxFlag::IN_RETURN)
-                        };
-                        
-                        return Ok(func_call_ast);
-                    }
+                _ => { 
+                    let parse_result = FuncCallParser::parse_suffix(Box::new(function_name), parser)?;
+                    match parse_result {
+                        BramaAstType::None => (),
+                        _ => return Ok(parse_result)
+                    }; 
                 }
             };
         }
@@ -79,12 +33,12 @@ impl SyntaxParserTrait for FuncCallParser {
     }
 }
 
-impl FuncCallParser {
-    pub fn can_be_func_call(parser: &SyntaxParser) -> bool {
+impl ExtensionSyntaxParser for FuncCallParser {
+    fn parsable(parser: &SyntaxParser) -> bool {
         parser.check_operator(&BramaOperatorType::LeftParentheses)
     }
 
-    pub fn func_call_parse(ast: Box<BramaAstType>, parser: &SyntaxParser) -> AstResult {
+    fn parse_suffix(ast: Box<BramaAstType>, parser: &SyntaxParser) -> AstResult {
         let index_backup = parser.get_index();
         let parser_flags  = parser.flags.get();
         parser.cleanup_whitespaces();

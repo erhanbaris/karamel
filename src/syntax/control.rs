@@ -1,7 +1,8 @@
 use crate::types::*;
-use crate::syntax::{SyntaxParser, SyntaxParserTrait, SyntaxFlag};
+use crate::syntax::{SyntaxParser, SyntaxParserTrait, SyntaxFlag, ExtensionSyntaxParser};
 use crate::syntax::binary::AddSubtractParser;
 use crate::syntax::func_call::FuncCallParser;
+use crate::syntax::unary::UnaryParser;
 use crate::syntax::util::update_functions_for_temp_return;
 use crate::compiler::ast::BramaAstType;
 
@@ -16,10 +17,10 @@ impl SyntaxParserTrait for ExpressionParser {
         let mut ast = OrParser::parse(parser)?;
 
         /* parse for 'object()()' */
-        if FuncCallParser::can_be_func_call(parser) {
+        if FuncCallParser::parsable(parser) {
             update_functions_for_temp_return(&mut ast);
-            return FuncCallParser::func_call_parse(Box::new(ast), parser);
-        } 
+            return FuncCallParser::parse_suffix(Box::new(ast), parser);
+        }
         
         /* parse for 'object.method()' */
         else if let Some(_) = parser.match_operator(&[BramaOperatorType::Dot]) {
@@ -45,7 +46,11 @@ impl SyntaxParserTrait for ExpressionParser {
                 target: Box::new(sub_ast),
                 assign_to_temp: false
             });
-
+        }
+        
+        /* parse for '["data"]' */
+        else if parser.check_operator(&BramaOperatorType::SquareBracketStart) {
+            return UnaryParser::parse_indexer(Box::new(ast), parser);
         }
 
         Ok(ast)
