@@ -111,12 +111,16 @@ impl StorageBuilder {
             
             BramaAstType::AccessorFuncCall {
                 source,
-                target,
+                indexer,
                 assign_to_temp
             } => {
                 compiler_option.max_stack = max(self.get_temp_count_from_ast(source, ast, options, storage_index, compiler_option), compiler_option.max_stack);
-                compiler_option.max_stack = max(self.get_temp_count_from_ast(target, ast, options, storage_index, compiler_option), compiler_option.max_stack);
-                0
+                compiler_option.max_stack = max(self.get_temp_count_from_ast(indexer, ast, options, storage_index, compiler_option), compiler_option.max_stack);
+                if *assign_to_temp {
+                    1
+                } else {
+                    0
+                }
             },
 
 /*

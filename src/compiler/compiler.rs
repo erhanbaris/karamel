@@ -236,7 +236,7 @@ impl InterpreterCompiler {
             BramaAstType::List(list) => self.generate_list(list, upper_ast, options, storage_index),
             BramaAstType::Dict(dict) => self.generate_dict(dict, upper_ast, options, storage_index),
             BramaAstType::FuncCall { func_name_expression, arguments, assign_to_temp } => self.generate_func_call(func_name_expression, arguments, *assign_to_temp, upper_ast, options, storage_index),
-            BramaAstType::AccessorFuncCall { source, target, assign_to_temp } => Ok(()),
+            BramaAstType::AccessorFuncCall { source, indexer, assign_to_temp } => self.generate_accessor_func_call(source, indexer, *assign_to_temp, upper_ast, options, storage_index),
             BramaAstType::PrefixUnary (operator, expression) => self.generate_prefix_unary(operator, expression, upper_ast, options, storage_index),
             BramaAstType::SuffixUnary (operator, expression) => self.generate_suffix_unary(operator, expression, upper_ast, options, storage_index),
             BramaAstType::NewLine => Ok(()),
@@ -360,6 +360,15 @@ impl InterpreterCompiler {
         };
 
         return Ok(false);
+    }
+
+    fn generate_accessor_func_call(&self, source: &BramaAstType, indexer: &BramaAstType, assign_to_temp: bool,  upper_ast: &BramaAstType, options: &mut BramaCompiler, storage_index: usize) -> CompilerResult {
+
+        self.generate_opcode(source, &BramaAstType::None, options, storage_index)?;
+        self.generate_opcode(indexer, &BramaAstType::None, options, storage_index)?;
+        
+        options.opcodes.push(VmOpCode::CallItem as u8);
+        Ok(())
     }
 
     fn generate_func_call(&self, func_name_expression: &BramaAstType, arguments: &Vec<Box<BramaAstType>>, assign_to_temp: bool,  upper_ast: &BramaAstType, options: &mut BramaCompiler, storage_index: usize) -> CompilerResult {

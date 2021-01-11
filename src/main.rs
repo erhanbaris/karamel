@@ -27,9 +27,11 @@ pub fn greet(name: &str) {
 #[cfg(not(feature = "wasmBuild"))]
 fn main() {
     let result = vm::executer::code_executer(&r#"
-my_dict = { 'key_1': yanlış }
-my_dict['key_1'] = {'merhaba': 'dünya'} 
-hataayıklama::doğrula(my_dict['key_1']['merhaba'], 'dünya')"#.to_string());
+fn func:
+    döndür 'oldu'
+data = { 'key_1': 'evet' }
+data.key_1 = func
+data.key_1()"#.to_string());
     match result {
         Ok(_) => println!("Success"),
         Err(error) => println!("Fail ({})", error)

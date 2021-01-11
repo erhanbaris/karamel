@@ -1,5 +1,5 @@
 use crate::types::*;
-use crate::syntax::SyntaxParser;
+use crate::syntax::{SyntaxParser};
 use crate::syntax::ParseType;
 use crate::compiler::ast::BramaAstType;
 
@@ -40,11 +40,11 @@ pub fn update_functions_for_temp_return(ast: &mut BramaAstType) {
         },
         BramaAstType::AccessorFuncCall {
             source,
-            target,
+            indexer,
             assign_to_temp
         } => {
             update_functions_for_temp_return(source);
-            update_functions_for_temp_return(target);
+            update_functions_for_temp_return(indexer);
             *assign_to_temp = true;
         },
         BramaAstType::Block(blocks) => {

@@ -51,6 +51,7 @@ pub unsafe fn dump_opcode<W: Write>(index: usize, options: &mut BramaCompiler, l
             VmOpCode::LessThan | 
             VmOpCode::GetItem | 
             VmOpCode::SetItem |
+            VmOpCode::CallItem |
             VmOpCode::Multiply => {
                 let data = format!("║ {:4} ║ {:15} ║ {:^5} ║ {:^5} ║", opcode_index, format!("{:?}", opcode), "", "").to_string();
                 build_arrow(index, opcode_index, 0, &mut buffer, &data);
@@ -419,6 +420,8 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<(), String>
                     options.opcode_index = location as usize;
                     continue;
                 },
+                
+                VmOpCode::CallItem => { },
                 
                 VmOpCode::SetItem => {
                     let assign_item  = pop!(options);

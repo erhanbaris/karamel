@@ -46,7 +46,7 @@ pub enum BramaAstType {
     },
     AccessorFuncCall {
         source: Box<BramaAstType>,
-        target: Box<BramaAstType>,
+        indexer: Box<BramaAstType>,
         assign_to_temp: bool
     },
     Primative(Rc<BramaPrimative>),
