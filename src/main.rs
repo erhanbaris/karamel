@@ -27,11 +27,15 @@ pub fn greet(name: &str) {
 #[cfg(not(feature = "wasmBuild"))]
 fn main() {
     let result = vm::executer::code_executer(&r#"
-fn func:
-    döndür 'oldu'
-data = { 'key_1': 'evet' }
-data.key_1 = func
-data.key_1()"#.to_string());
+fn test:
+    fn test_erhan:
+        döndür 'erhan'
+    döndür test_erhan
+
+data      = { }
+data.func = test
+
+hataayıklama::doğrula(data.func()(), 'erhan')"#.to_string());
     match result {
         Ok(_) => println!("Success"),
         Err(error) => println!("Fail ({})", error)

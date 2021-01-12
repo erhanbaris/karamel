@@ -2,6 +2,8 @@ use crate::types::*;
 use crate::compiler::*;
 use std::cell::RefCell;
 use std::rc::Rc;
+
+#[cfg(not(feature = "unittest"))]
 use crate::{debug_println};
 
 
@@ -144,10 +146,10 @@ impl StaticStorage {
 
         None
     }
-    #[cfg(feature = "unit-test")]
+    #[cfg(feature = "unittest")]
     pub fn dump(&self) {}
 
-    #[cfg(not(feature = "test"))]
+    #[cfg(not(feature = "unittest"))]
     pub fn dump(&self) {
         debug_println!("╔════════════════════════════════════════╗");
         debug_println!("║               MEMORY DUMP              ║");

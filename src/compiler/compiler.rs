@@ -365,10 +365,44 @@ impl InterpreterCompiler {
     fn generate_accessor_func_call(&self, source: &BramaAstType, indexer: &BramaAstType, assign_to_temp: bool,  upper_ast: &BramaAstType, options: &mut BramaCompiler, storage_index: usize) -> CompilerResult {
 
         self.generate_opcode(source, &BramaAstType::None, options, storage_index)?;
-        self.generate_opcode(indexer, &BramaAstType::None, options, storage_index)?;
         
-        options.opcodes.push(VmOpCode::CallItem as u8);
-        Ok(())
+        if let BramaAstType::FuncCall { func_name_expression, arguments, assign_to_temp: _ } = indexer {
+            /* Build arguments */
+            for argument in arguments {
+                self.generate_opcode(argument, upper_ast, options, storage_index)?;
+            }
+
+            match &**func_name_expression {
+                BramaAstType::Symbol(function_name) => {
+                    
+                    let search_location = options.storages[storage_index].get_constant_location(Rc::new(BramaPrimative::Text(Rc::new(function_name.to_string()))));
+                    match search_location {
+                        Some(location) => {
+                            options.opcodes.push(VmOpCode::CallItem as u8);
+                            options.opcodes.push(location as u8);
+                            options.opcodes.push(arguments.len() as u8);
+                            options.opcodes.push(assign_to_temp as u8);
+                            return Ok(());
+                        },
+                        _ => return Err("Function not found")
+                    }
+                },
+                
+                BramaAstType::FuncCall {
+                    func_name_expression,
+                    arguments,
+                    assign_to_temp
+                }=> {
+                    return self.generate_func_call(func_name_expression, arguments, *assign_to_temp, upper_ast, options, storage_index);
+                },
+                _ => {
+                    return Err("Function not found");
+                }
+            }   
+        }
+        else {
+            return Err("Function not found");
+        }
     }
 
     fn generate_func_call(&self, func_name_expression: &BramaAstType, arguments: &Vec<Box<BramaAstType>>, assign_to_temp: bool,  upper_ast: &BramaAstType, options: &mut BramaCompiler, storage_index: usize) -> CompilerResult {

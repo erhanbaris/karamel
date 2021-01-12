@@ -1,7 +1,7 @@
 use crate::types::*;
 use crate::syntax::{SyntaxParser, SyntaxParserTrait, SyntaxFlag};
 use crate::compiler::ast::BramaAstType;
-use crate::syntax::control::ExpressionParser;
+use crate::syntax::expression::ExpressionParser;
 
 pub struct FunctionReturnParser;
 

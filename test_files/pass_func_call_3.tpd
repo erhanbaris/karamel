@@ -1,0 +1,7 @@
+fn func:
+    fn inner_1:
+        fn inner_2:
+            döndür 'oldu'
+        döndür inner_2
+    döndür inner_1
+gç::satıryaz(func()()())

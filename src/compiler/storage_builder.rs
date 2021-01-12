@@ -154,7 +154,10 @@ impl StorageBuilder {
                         let function_search = options.find_function(function_name.to_string(), Vec::new(), "".to_string(), storage_index);
                         if let Some(reference) = function_search {
                             options.storages.get_mut(storage_index).unwrap().add_constant(Rc::new(BramaPrimative::Function(reference)));
-                        };
+                        }
+                        else {
+                            options.storages.get_mut(storage_index).unwrap().add_constant(Rc::new(BramaPrimative::Text(Rc::new(function_name.to_string()))));
+                        }
                     },
                     BramaAstType::FunctionMap(names) => {
                         let function_search = options.find_function(names[names.len() - 1].to_string(), names[0..(names.len()-1)].to_vec(), "".to_string(), storage_index);

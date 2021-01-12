@@ -6,7 +6,7 @@ use crate::syntax::func_call::FuncCallParser;
 use crate::syntax::util::is_ast_empty;
 use crate::compiler::ast::BramaAstType;
 use crate::compiler::value::BramaPrimative;
-use crate::syntax::control::ExpressionParser;
+use crate::syntax::expression::ExpressionParser;
 
 
 use std::rc::Rc;

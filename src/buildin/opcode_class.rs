@@ -60,6 +60,7 @@ impl GetType for OpcodeClass {
 }
 
 impl OpcodeClass {
+    #[allow(dead_code)]
     fn new(name: String, storage_index: usize) -> OpcodeClass {
         OpcodeClass {
             name,

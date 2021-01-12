@@ -13,6 +13,7 @@ pub mod function_defination;
 pub mod function_return;
 pub mod while_loop;
 pub mod loop_item;
+pub mod expression;
 
 use std::vec::Vec;
 use std::cell::Cell;

@@ -1,6 +1,6 @@
 use crate::types::*;
 use crate::syntax::{SyntaxParser, SyntaxParserTrait, SyntaxFlag, ExtensionSyntaxParser};
-use crate::syntax::control::ExpressionParser;
+use crate::syntax::expression::ExpressionParser;
 use crate::syntax::primative::PrimativeParser;
 use crate::compiler::ast::BramaAstType;
 use crate::syntax::util::map_parser;

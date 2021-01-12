@@ -1,75 +1,13 @@
-use std::rc::Rc;
-
 use crate::types::*;
-use crate::syntax::{SyntaxParser, SyntaxParserTrait, SyntaxFlag, ExtensionSyntaxParser};
+use crate::syntax::{SyntaxParser, SyntaxParserTrait, SyntaxFlag};
 use crate::syntax::binary::AddSubtractParser;
-use crate::syntax::func_call::FuncCallParser;
-use crate::syntax::unary::UnaryParser;
 use crate::syntax::util::update_functions_for_temp_return;
 use crate::compiler::ast::BramaAstType;
-use crate::compiler::value::BramaPrimative;
 
-pub struct ExpressionParser;
 pub struct OrParser;
 pub struct AndParser;
 pub struct EqualityParser;
 pub struct ControlParser;
-
-impl SyntaxParserTrait for ExpressionParser {
-    fn parse(parser: &SyntaxParser) -> AstResult {
-        let mut ast = OrParser::parse(parser)?;
-
-        /* parse for 'object()()' */
-        if FuncCallParser::parsable(parser) {
-            update_functions_for_temp_return(&mut ast);
-            return FuncCallParser::parse_suffix(Box::new(ast), parser);
-        }
-        
-        /* parse for 'object.method()' or 'object.method' */
-        else if let Some(_) = parser.match_operator(&[BramaOperatorType::Dot]) {
-            let sub_ast = ExpressionParser::parse(parser)?;
-            
-            let ast = match &sub_ast {
-                BramaAstType::Symbol(symbol) => {
-                    BramaAstType::Indexer 
-                    { 
-                        body: Box::new(ast),
-                        
-                        /* Convert symbol to text */
-                        indexer: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Text(Rc::new(symbol.to_string()))))) 
-                    }
-                },
-                BramaAstType::FuncCall {
-                    func_name_expression,
-                    arguments: _,
-                    assign_to_temp: _ 
-                } => {
-                    match &**func_name_expression {
-                        BramaAstType::Symbol(_) => {
-                            update_functions_for_temp_return(&mut ast);
-                            BramaAstType::AccessorFuncCall {
-                                source: Box::new(ast),
-                                indexer: Box::new(sub_ast),
-                                assign_to_temp: false
-                            }
-                        },
-                        _ => return Err(("Function call syntax not valid", 0, 0))
-                    }
-                },
-                 _ => return Err(("Function call syntax not valid", 0, 0))
-            };
-
-            return Ok(ast);
-        }
-        
-        /* parse for '["data"]' */
-        else if parser.check_operator(&BramaOperatorType::SquareBracketStart) {
-            return UnaryParser::parse_indexer(Box::new(ast), parser);
-        }
-
-        Ok(ast)
-    }
-}
 
 impl SyntaxParserTrait for OrParser {
     fn parse(parser: &SyntaxParser) -> AstResult {
