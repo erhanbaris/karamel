@@ -56,10 +56,6 @@ mod tests {
             };
         }
 
-        if !test_status {
-            println!("# {} file FAILED", __path);
-        }
-
         assert_eq!(true, test_status);
     }
 }

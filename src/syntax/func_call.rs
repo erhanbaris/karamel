@@ -9,6 +9,10 @@ pub struct FuncCallParser;
 
 impl SyntaxParserTrait for FuncCallParser {
     fn parse(parser: &SyntaxParser) -> AstResult {
+        if parser.flags.get().contains(SyntaxFlag::IN_DICT_INDEXER) {
+            return Ok(BramaAstType::None);
+        }
+
         let index = parser.get_index();
         parser.cleanup_whitespaces();
         let token = parser.peek_token();
@@ -35,10 +39,15 @@ impl SyntaxParserTrait for FuncCallParser {
 
 impl ExtensionSyntaxParser for FuncCallParser {
     fn parsable(parser: &SyntaxParser) -> bool {
+        if parser.flags.get().contains(SyntaxFlag::IN_DICT_INDEXER) {
+            return false;
+        }
+
         parser.check_operator(&BramaOperatorType::LeftParentheses)
     }
 
     fn parse_suffix(ast: Box<BramaAstType>, parser: &SyntaxParser) -> AstResult {
+
         let index_backup = parser.get_index();
         let parser_flags  = parser.flags.get();
         parser.cleanup_whitespaces();

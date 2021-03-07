@@ -391,9 +391,9 @@ impl InterpreterCompiler {
                 BramaAstType::FuncCall {
                     func_name_expression,
                     arguments,
-                    assign_to_temp
+                    assign_to_temp: _
                 }=> {
-                    return self.generate_func_call(func_name_expression, arguments, *assign_to_temp, upper_ast, options, storage_index);
+                    return self.generate_func_call(func_name_expression, arguments, true, upper_ast, options, storage_index);
                 },
                 _ => {
                     return Err("Function not found");
@@ -416,9 +416,22 @@ impl InterpreterCompiler {
                 let result = self.generate_func_call_by_name(&function_name, Vec::new(), "".to_string(), &arguments, assign_to_temp, options, storage_index)?;
                 match result {
                     true => return Ok(()),
-                    false =>  return Err("Function not found")
+                    false => {
+                        print!("{:?}", function_name);
+                        return Err("Function not found");
+                    }
                 }
             },
+
+            BramaAstType::FuncCall {func_name_expression, arguments: inner_arguments, assign_to_temp: inner_assign_to_temp} => {
+                self.generate_func_call(func_name_expression, inner_arguments, true, upper_ast, options, storage_index)?;
+                options.opcodes.push(VmOpCode::CallStack as u8);
+                options.opcodes.push(arguments.len() as u8);
+                options.opcodes.push(assign_to_temp as u8);
+
+                return Ok(());
+            },
+
             BramaAstType::FunctionMap(names) => {
                 let result = self.generate_func_call_by_name(&names[names.len() - 1].to_string(), names[0..(names.len()-1)].to_vec(), "".to_string(), &arguments, assign_to_temp, options, storage_index)?;
                 match result {

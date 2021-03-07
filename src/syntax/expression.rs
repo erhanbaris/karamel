@@ -1,7 +1,7 @@
 use std::rc::Rc;
 
 use crate::types::*;
-use crate::syntax::{SyntaxParser, SyntaxParserTrait, ExtensionSyntaxParser};
+use crate::syntax::{SyntaxParser, SyntaxParserTrait, SyntaxFlag, ExtensionSyntaxParser};
 use crate::syntax::func_call::FuncCallParser;
 use crate::syntax::unary::UnaryParser;
 use crate::syntax::control::OrParser;
@@ -21,12 +21,21 @@ impl SyntaxParserTrait for ExpressionParser {
             /* parse for 'object()()' */
             if FuncCallParser::parsable(parser) {
                 update_functions_for_temp_return(&mut ast);
+
+                let inner_parser_flags  = parser.flags.get();
+                parser.flags.set(inner_parser_flags | SyntaxFlag::IN_DICT_INDEXER);
                 ast = FuncCallParser::parse_suffix(Box::new(ast), parser)?;
+                parser.flags.set(inner_parser_flags);
             }
             
             /* parse for 'object.method()' or 'object.method' */
             else if let Some(_) = parser.match_operator(&[BramaOperatorType::Dot]) {
+
+                let inner_parser_flags  = parser.flags.get();
+                parser.flags.set(inner_parser_flags | SyntaxFlag::IN_DICT_INDEXER);
+
                 let sub_ast = ExpressionParser::parse(parser)?;
+                parser.flags.set(inner_parser_flags);
                 
                 ast = match &sub_ast {
                     BramaAstType::Symbol(symbol) => {
@@ -49,19 +58,7 @@ impl SyntaxParserTrait for ExpressionParser {
                                 BramaAstType::AccessorFuncCall {
                                     source: Box::new(ast),
                                     indexer: Box::new(sub_ast),
-                                    assign_to_temp: false
-                                }
-                            },
-                            BramaAstType::FuncCall {
-                                func_name_expression,
-                                arguments,
-                                assign_to_temp
-                            } => {
-                                update_functions_for_temp_return(&mut ast);
-                                BramaAstType::AccessorFuncCall {
-                                    source: Box::new(ast),
-                                    indexer: Box::new(sub_ast),
-                                    assign_to_temp: false
+                                    assign_to_temp: true
                                 }
                             },
                             _ => {
