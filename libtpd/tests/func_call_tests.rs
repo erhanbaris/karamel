@@ -1,11 +1,11 @@
-extern crate tpd;
+extern crate libtpd;
 
 #[cfg(test)]
 mod tests {
-    use crate::tpd::parser::*;
-    use crate::tpd::syntax::*;
-    use crate::tpd::compiler::value::BramaPrimative;
-    use crate::tpd::compiler::ast::BramaAstType;
+    use crate::libtpd::parser::*;
+    use crate::libtpd::syntax::*;
+    use crate::libtpd::compiler::value::BramaPrimative;
+    use crate::libtpd::compiler::ast::BramaAstType;
     use std::rc::Rc;
 
     #[warn(unused_macros)]
@@ -67,7 +67,7 @@ mod tests {
     test_compare!(func_call_8, "print(", Err(("Right parantheses missing", 0, 0)));
     test_compare!(func_call_9, "data=print()", Ok(BramaAstType::Assignment {
         variable: Box::new(BramaAstType::Symbol("data".to_string())),
-        operator: tpd::types::BramaOperatorType::Assign,
+        operator: libtpd::types::BramaOperatorType::Assign,
         expression: Box::new(BramaAstType::FuncCall {
             func_name_expression: Box::new(BramaAstType::Symbol("print".to_string())),
             arguments: [].to_vec(),
@@ -80,7 +80,7 @@ mod tests {
             arguments: [].to_vec(),
             assign_to_temp: true
         }),
-        operator: tpd::types::BramaOperatorType::Addition,
+        operator: libtpd::types::BramaOperatorType::Addition,
         right: Box::new(BramaAstType::FuncCall {
             func_name_expression: Box::new(BramaAstType::Symbol("data2".to_string())),
             arguments: [].to_vec(),
@@ -93,7 +93,7 @@ mod tests {
             arguments: [].to_vec(),
             assign_to_temp: true
         }),
-        operator: tpd::types::BramaOperatorType::GreaterThan,
+        operator: libtpd::types::BramaOperatorType::GreaterThan,
         right: Box::new(BramaAstType::FuncCall {
             func_name_expression: Box::new(BramaAstType::Symbol("data2".to_string())),
             arguments: [].to_vec(),

@@ -1,10 +1,10 @@
-extern crate tpd;
+extern crate libtpd;
 
 #[cfg(test)]
 mod tests {
-    use crate::tpd::parser::*;
-    use crate::tpd::syntax::*;
-    use crate::tpd::compiler::*;
+    use crate::libtpd::parser::*;
+    use crate::libtpd::syntax::*;
+    use crate::libtpd::compiler::*;
 
     use std::rc::Rc;
 

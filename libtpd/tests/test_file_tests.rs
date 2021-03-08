@@ -1,8 +1,8 @@
-extern crate tpd;
+extern crate libtpd;
 
 #[cfg(test)]
 mod tests {
-    use crate::tpd::vm::*;
+    use crate::libtpd::vm::*;
 
     #[test]
     fn test_files_executer() {

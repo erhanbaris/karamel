@@ -1,9 +1,9 @@
-extern crate tpd;
+extern crate libtpd;
 
 #[cfg(test)]
 mod tests {
-    use crate::tpd::parser::*;
-    use crate::tpd::syntax::*;
+    use crate::libtpd::parser::*;
+    use crate::libtpd::syntax::*;
 
     #[warn(unused_macros)]
     macro_rules! test_success {

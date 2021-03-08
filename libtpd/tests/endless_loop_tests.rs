@@ -1,12 +1,12 @@
-extern crate tpd;
+extern crate libtpd;
 
 #[cfg(test)]
 mod tests {
-    use crate::tpd::types::*;
-    use crate::tpd::parser::*;
-    use crate::tpd::syntax::*;
-    use crate::tpd::compiler::value::BramaPrimative;
-    use crate::tpd::compiler::ast::{BramaAstType};
+    use crate::libtpd::types::*;
+    use crate::libtpd::parser::*;
+    use crate::libtpd::syntax::*;
+    use crate::libtpd::compiler::value::BramaPrimative;
+    use crate::libtpd::compiler::ast::{BramaAstType};
     use std::rc::Rc;
 
     #[warn(unused_macros)]
