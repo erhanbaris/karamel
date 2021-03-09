@@ -5,6 +5,7 @@ use crate::buildin::{Module, Class};
 use std::collections::HashMap;
 use std::rc::Rc;
 use std::io::{self};
+use log;
 
 
 #[derive(Clone)]
@@ -64,7 +65,7 @@ impl IoModule  {
 
     pub fn print(arguments: &Vec<VmObject>, last_position: usize, total_args: u8) -> NativeCallResult {
         for arg in arguments.iter().skip((last_position as usize - 1) - (total_args as usize - 1)).take(total_args as usize) {
-            print!("{:?}", arg.deref());
+            log::info!("{:?}", arg.deref());
         }
 
         Ok(EMPTY_OBJECT)
@@ -72,7 +73,7 @@ impl IoModule  {
     
     pub fn printline(arguments: &Vec<VmObject>, last_position: usize, total_args: u8) -> NativeCallResult {
         for arg in arguments.iter().skip((last_position as usize - 1) - (total_args as usize - 1)).take(total_args as usize) {
-            println!("{:?}", arg.deref());
+            log::info!("{:?}\r\n", arg.deref());
         }
 
         Ok(EMPTY_OBJECT)

@@ -2,20 +2,35 @@ use crate::vm::interpreter::run_vm;
 use crate::parser::*;
 use crate::compiler::*;
 use crate::syntax::SyntaxParser;
+use crate::logger::{ConsoleLogger, CollectorLogger};
 
 use std::io::{self};
 use std::io::Write;
 
+use log;
+
 //#[cfg(any(feature = "test", test))]
+
 
 #[allow(dead_code)]
 pub fn code_executer(data: &String) -> Result<(), String> {
+    match log::set_logger(&ConsoleLogger { }) {
+        Ok(_) => {
+            if cfg!(debug_assertions) {
+                log::set_max_level(log::LevelFilter::Debug)
+            } else {
+                log::set_max_level(log::LevelFilter::Info)
+            }
+        },
+        _ => ()
+    };
+
     let mut compiler_options: BramaCompiler = BramaCompiler::new();
 
     let mut parser = Parser::new(&data[..]);
     match parser.parse() {
         Err((message, line, column)) => {
-            println!("[{:?}:{:?}] {:?}", line, column, message);
+            log::debug!("[{:?}:{:?}] {:?}", line, column, message);
             return Err(message.to_string());
         },
         _ => ()
@@ -33,7 +48,7 @@ pub fn code_executer(data: &String) -> Result<(), String> {
             execution_status
         },
         Err((message, line, column)) => {
-            println!("[{}:{}] {}", line, column, message);
+            log::debug!("[{}:{}] {}", line, column, message);
             Err(message.to_string())
         }
     }

@@ -338,7 +338,7 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<(), String>
                         reference.execute(options)?;
                     }
                     else {
-                        println!("{:?}", &*function);
+                        log::debug!("{:?}", &*function);
                         return Err("Not callable".to_string());
                     }
                 },
@@ -538,6 +538,12 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<(), String>
         
         #[cfg(feature = "dumpMemory")] {
             options.storages[0].dump();
+        }
+    }
+
+    if (*options.current_scope).memory_index > 0 {
+        for index in 0..(*options.current_scope).memory_index {
+            log::info!("{:?}\r\n", (*options.current_scope).memory[index].deref());
         }
     }
 

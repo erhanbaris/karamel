@@ -62,7 +62,7 @@ impl SyntaxParserTrait for ExpressionParser {
                                 }
                             },
                             _ => {
-                                println!("Function call syntax not valid {:?}", func_name_expression);
+                                log::debug!("Function call syntax not valid {:?}", func_name_expression);
                                 return Err(("Function call syntax not valid", 0, 0));
                             }
                         }

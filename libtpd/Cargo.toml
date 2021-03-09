@@ -11,7 +11,7 @@ wasm-bindgen = "0.2"
 bitflags = "1.2"
 log-update = "*"
 colored = "2"
-log = { version = "0.4.14", default-features = false }
+log = "0.4.14"
 
 [features]
 dumpExecutionOpcode = []
@@ -20,7 +20,7 @@ dumpOpcodes = []
 liveOpcodeView = []
 wasmBuild = []
 unittest = []
-default = ["dumpOpcodes", "dumpMemory", "dumpExecutionOpcode"]
+default = []
 
 [lib]
 crate-type = ["cdylib", "rlib"]

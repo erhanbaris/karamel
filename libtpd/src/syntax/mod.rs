@@ -71,7 +71,7 @@ impl SyntaxParser {
                 self.cleanup();
                 
                 if let Ok(token) = self.peek_token() {
-                    println!("We forget this : {:?}", token);
+                    log::debug!("We forget this : {:?}", token);
                     return Err(("Syntax error, undefined syntax", token.line, token.start));
                 }
                 Ok(ast)

@@ -13,6 +13,8 @@ use crate::compiler::ast::{BramaAstType, BramaIfStatementElseItem};
 use crate::compiler::storage_builder::StorageBuilder;
 use crate::compiler::function::{FunctionReference, FunctionType};
 
+use log;
+
 #[derive(Clone)]
 pub struct Scope {
     pub memory: Vec<VmObject>, 
@@ -196,7 +198,7 @@ impl InterpreterCompiler {
                         self.find_function_definations(body, functions, options, reference.storage_index);
                     },
 
-                    None => println!("Nope nope")
+                    None => log::info!("Nope nope")
                 };
             },
             BramaAstType::Block(blocks) => {
@@ -417,7 +419,7 @@ impl InterpreterCompiler {
                 match result {
                     true => return Ok(()),
                     false => {
-                        print!("{:?}", function_name);
+                        log::debug!("{:?}", function_name);
                         return Err("Function not found");
                     }
                 }

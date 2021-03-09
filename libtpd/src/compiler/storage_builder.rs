@@ -166,7 +166,7 @@ impl StorageBuilder {
                         };
                     },
                     _ => {
-                        println!("{:?}", func_name_expression);
+                        log::debug!("{:?}", func_name_expression);
                         let name_expression_count = self.get_temp_count_from_ast(func_name_expression, ast, options, storage_index, compiler_option);
                         compiler_option.max_stack = max(name_expression_count, compiler_option.max_stack);
                     }
