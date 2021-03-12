@@ -43,7 +43,72 @@ impl TokenParser for TextParser {
             return Err(("Missing string deliminator", tokinizer.line, tokinizer.column));
         }
 
-        tokinizer.add_token(start_column, BramaTokenType::Text(Rc::new(tokinizer.data[start..end].to_string())));
+        tokinizer.add_token(start_column - 1, BramaTokenType::Text(Rc::new(tokinizer.data[start..end].to_string())));
         return Ok(());
     }
+}
+
+
+#[cfg(test)]
+#[test]
+fn text_parse_test_1() {
+    use crate::types::Tokinizer;
+
+    let data = "\"merhaba dünya\"";
+    let mut tokinizer = Tokinizer {
+        column: 0,
+        line: 0,
+        tokens: Vec::new(),
+        iter: data.chars().peekable(),
+        iter_second: data.chars().peekable(),
+        iter_third: data.chars().peekable(),
+        data: data.to_string(),
+        index: 0
+    };
+
+    let parser = TextParser { tag: '"' };
+    let parse_result = parser.parse(&mut tokinizer);
+
+    assert_eq!(parse_result.is_ok(), true);
+    assert_eq!(tokinizer.tokens.len(), 1);
+    assert_eq!(tokinizer.tokens[0].line, 0);
+    assert_eq!(tokinizer.tokens[0].start, 0);
+    assert_eq!(tokinizer.tokens[0].end, 15);
+
+    match &tokinizer.tokens[0].token_type {
+        BramaTokenType::Text(data) => assert_eq!(&**data, "merhaba dünya"),
+        _ => assert_eq!(true, false)
+    };
+}
+
+#[cfg(test)]
+#[test]
+fn text_parse_test_2() {
+    use crate::types::Tokinizer;
+
+    let data = "'merhaba dünya'";
+    let mut tokinizer = Tokinizer {
+        column: 0,
+        line: 0,
+        tokens: Vec::new(),
+        iter: data.chars().peekable(),
+        iter_second: data.chars().peekable(),
+        iter_third: data.chars().peekable(),
+        data: data.to_string(),
+        index: 0
+    };
+
+    let parser = TextParser { tag: '\'' };
+    let parse_result = parser.parse(&mut tokinizer);
+
+    assert_eq!(parse_result.is_ok(), true);
+    assert_eq!(tokinizer.tokens.len(), 1);
+    assert_eq!(tokinizer.tokens[0].line, 0);
+    assert_eq!(tokinizer.tokens[0].start, 0);
+    assert_eq!(tokinizer.tokens[0].end, 15);
+
+    match &tokinizer.tokens[0].token_type {
+        BramaTokenType::Text(data) => assert_eq!(&**data, "merhaba dünya"),
+        _ => assert_eq!(true, false)
+    };
 }
