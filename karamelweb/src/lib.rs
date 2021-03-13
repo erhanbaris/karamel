@@ -3,6 +3,7 @@ extern crate karamellib;
 use karamellib::compiler::BramaPrimative;
 use wasm_bindgen::prelude::*;
 use js_sys::*;
+use karamellib::logger::COLLECTOR_LOGGER;
 
 #[wasm_bindgen]
 pub fn execute_code(name: &str) -> Object {
@@ -12,12 +13,14 @@ pub fn execute_code(name: &str) -> Object {
     let status_ref      = JsValue::from("status");
     let error_ref       = JsValue::from("error");
     let results_ref     = JsValue::from("results");
+    let stdout_ref      = JsValue::from("stdout");
 
-    let result = karamellib::vm::executer::code_executer(&name.to_string());
+    let result = karamellib::vm::executer::code_executer(&name.to_string(), &COLLECTOR_LOGGER);
     match result {
         Ok(objects) => {
             Reflect::set(response.as_ref(), status_ref.as_ref(), JsValue::from_bool(true).as_ref()).unwrap();
             let results = Array::new();
+            let stdouts = Array::new();
             for object in objects.iter() {
                 match &*object.deref() {
                     BramaPrimative::Text(text) => results.push(&JsValue::from(&**text).into()),
@@ -27,8 +30,16 @@ pub fn execute_code(name: &str) -> Object {
                     BramaPrimative::Atom(atom) => results.push(&JsValue::from_f64(*atom as f64).into()),
                     _ => 0
                 };
-            };
+            }
+
+            for stdout in COLLECTOR_LOGGER.logs.borrow().iter() {
+                stdouts.push(&JsValue::from(stdout).into());
+            }
+
+            COLLECTOR_LOGGER.logs.borrow_mut().clear();
+
             Reflect::set(response.as_ref(), results_ref.as_ref(), results.as_ref()).unwrap();
+            Reflect::set(response.as_ref(), stdout_ref.as_ref(),  stdouts.as_ref()).unwrap();
         },
         Err(error) => {
             Reflect::set(response.as_ref(), error_ref.as_ref(), JsValue::from(error).as_ref()).unwrap();

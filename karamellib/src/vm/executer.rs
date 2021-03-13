@@ -2,20 +2,17 @@ use crate::vm::interpreter::run_vm;
 use crate::parser::*;
 use crate::compiler::*;
 use crate::syntax::SyntaxParser;
-use crate::logger::{ConsoleLogger};
 
 use std::io::{self};
 use std::io::Write;
 
 use log;
 use crate::types::VmObject;
-
-//#[cfg(any(feature = "test", test))]
-
+use log::Log;
 
 #[allow(dead_code)]
-pub fn code_executer(data: &String) -> Result<Vec<VmObject>, String> {
-    match log::set_logger(&ConsoleLogger { }) {
+pub fn code_executer(data: &String, logger: &'static dyn Log) -> Result<Vec<VmObject>, String> {
+    match log::set_logger(logger) {
         Ok(_) => {
             if cfg!(debug_assertions) {
                 log::set_max_level(log::LevelFilter::Debug)

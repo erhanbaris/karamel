@@ -121,6 +121,21 @@ impl fmt::Debug for BramaPrimative {
     }
 }
 
+impl fmt::Display for BramaPrimative {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            BramaPrimative::Empty => write!(f, "Empty"),
+            BramaPrimative::Number(number) => write!(f, "{}", number),
+            BramaPrimative::Bool(b) => write!(f, "{}", b),
+            BramaPrimative::List(b) => write!(f, "{:?}", b),
+            BramaPrimative::Dict(b) => write!(f, "{:?}", b),
+            BramaPrimative::Atom(b) => write!(f, "{}", b),
+            BramaPrimative::Text(b) => write!(f, "{}", b),
+            BramaPrimative::Function(func) => write!(f, "<function='{}'>", func.name)
+        }
+    }
+}
+
 impl Drop for BramaPrimative {
     fn drop(&mut self) {
         //println!("> {:?}", self);
