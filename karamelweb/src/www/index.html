@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>TPD</title>
+  <title>Karamel Programlama Dili</title>
   <link rel="preconnect" href="https://fonts.gstatic.com">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@100;300;400&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@200;300;400&display=swap" rel="stylesheet">
@@ -21,7 +21,7 @@
 <body>
 <noscript>This page contains webassembly and javascript content, please enable javascript in your browser.</noscript>
 <div class="header">
-  <span class="bold">TPD</span>
+  <span class="bold">Karamel Programlama Dili</span>
 </div>
 
 <div class="description">
@@ -40,7 +40,7 @@
 /* https://codepen.io/Souleste/pen/wvvwJWw */
   window.editor = CodeMirror(document.getElementById("source"), {
     value: ``,
-    mode:  "tpd",
+    mode:  "kpd",
     //lineNumbers: true,
     theme: "ayu-mirage",
     styleSelectedText: true,
@@ -67,7 +67,7 @@
     12: "variable-defination-token"
   };
 
-  import { execute_code, default as init } from './pkg/tpdweb.js';
+  import { execute_code, default as init } from './pkg/karamelweb.js';
 
   init();
   window.executer = function () {

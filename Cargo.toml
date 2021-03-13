@@ -1,2 +1,2 @@
 [workspace]
-members = [ "libtpd", "tpdapp", "tpdweb" ]
+members = [ "karamellib", "karamelapp", "karamelweb" ]

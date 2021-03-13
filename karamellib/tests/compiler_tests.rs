@@ -1,10 +1,10 @@
-extern crate libtpd;
+extern crate karamellib;
 
 #[cfg(test)]
 mod tests {
-    use crate::libtpd::parser::*;
-    use crate::libtpd::syntax::*;
-    use crate::libtpd::compiler::*;
+    use crate::karamellib::parser::*;
+    use crate::karamellib::syntax::*;
+    use crate::karamellib::compiler::*;
 
     use std::rc::Rc;
 

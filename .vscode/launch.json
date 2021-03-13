@@ -7,15 +7,15 @@
                 {
                         "type": "lldb",
                         "request": "launch",
-                        "name": "Debug executable 'tpd'",
+                        "name": "Debug executable 'karamelapp'",
                         "cargo": {
                                 "args": [
                                         "build",
-                                        "--bin=tpd",
-                                        "--package=tpd"
+                                        "--bin=karamelapp",
+                                        "--package=karamelapp"
                                 ],
                                 "filter": {
-                                        "name": "tpd",
+                                        "name": "karamelapp",
                                         "kind": "bin"
                                 }
                         },
@@ -25,16 +25,16 @@
                 {
                         "type": "lldb",
                         "request": "launch",
-                        "name": "Debug unit tests in executable 'tpd'",
+                        "name": "Debug unit tests in executable 'karamelapp'",
                         "cargo": {
                                 "args": [
                                         "test",
                                         "--no-run",
-                                        "--bin=tpd",
-                                        "--package=tpd"
+                                        "--bin=karamelapp",
+                                        "--package=karamelapp"
                                 ],
                                 "filter": {
-                                        "name": "tpd",
+                                        "name": "karamelapp",
                                         "kind": "bin"
                                 }
                         },

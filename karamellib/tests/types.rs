@@ -1,8 +1,8 @@
-extern crate libtpd;
+extern crate karamellib;
 
 #[cfg(test)]
 mod tests {
-    use crate::libtpd::types::CharTraits;
+    use crate::karamellib::types::CharTraits;
 
     #[test]
     fn is_new_line() {

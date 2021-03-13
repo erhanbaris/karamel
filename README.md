@@ -1,4 +1,4 @@
-# Türkçe Programlama Dili (TPD)
+# Karamel Programlama Dili (KPD)
 
 ### Temel Tipler
  - Tam Sayı (*1024*, *1_204*, *2048*)

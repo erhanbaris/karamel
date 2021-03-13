@@ -1,6 +1,6 @@
 # TASLAK
 
-**Türkçe Programlama Dili** kısa adıyla **TPD**; ikilik, sekizlik, onluk ve onaltılık sayı tabanlarını desteklemektedir.
+**Karamel Programlama Dili** kısa adıyla **KPD**; ikilik, sekizlik, onluk ve onaltılık sayı tabanlarını desteklemektedir.
 
 *Sozdizimi:*  
 &emsp;&emsp;*Sayi ::*  

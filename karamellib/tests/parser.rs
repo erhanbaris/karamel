@@ -1,9 +1,9 @@
-extern crate libtpd;
+extern crate karamellib;
 
 #[cfg(test)]
 mod tests {
-    use crate::libtpd::parser::*;
-    use crate::libtpd::types::*;
+    use crate::karamellib::parser::*;
+    use crate::karamellib::types::*;
 
     #[warn(unused_macros)]
     macro_rules! test_number {

@@ -1,8 +1,8 @@
-extern crate libtpd;
+extern crate karamellib;
 
 #[cfg(test)]
 mod tests {
-    use crate::libtpd::vm::*;
+    use crate::karamellib::vm::*;
 
     #[test]
     fn test_files_executer() {
