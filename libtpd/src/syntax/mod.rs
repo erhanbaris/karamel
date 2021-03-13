@@ -27,7 +27,7 @@ use bitflags::bitflags;
 pub type ParseType = fn(parser: &SyntaxParser) -> AstResult;
 
 pub struct SyntaxParser {
-    pub tokens: Box<Vec<Token>>,
+    pub tokens: Vec<Token>,
     pub index: Cell<usize>,
     pub indentation: Cell<usize>,
     pub flags: Cell<SyntaxFlag>
@@ -56,7 +56,7 @@ pub trait ExtensionSyntaxParser: Sized {
 }
 
 impl SyntaxParser {
-    pub fn new(tokens: Box<Vec<Token>>) -> SyntaxParser {
+    pub fn new(tokens: Vec<Token>) -> SyntaxParser {
         SyntaxParser {
             tokens,
             index: Cell::new(0),

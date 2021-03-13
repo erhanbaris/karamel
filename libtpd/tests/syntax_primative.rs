@@ -18,7 +18,7 @@ mod tests {
                 let parse_result = parser.parse();
                 match parse_result {
                     Ok(_) => {
-                        let syntax = SyntaxParser::new(Box::new(parser.tokens().to_vec()));
+                        let syntax = SyntaxParser::new(parser.tokens().to_vec());
                         assert_eq!(syntax.parse(), $result);
                     },
                     Err((message, l, c)) => {

@@ -20,7 +20,7 @@ mod tests {
                     _ => ()
                 };
 
-                let syntax = SyntaxParser::new(Box::new(parser.tokens().to_vec()));
+                let syntax = SyntaxParser::new(parser.tokens().to_vec());
                 let syntax_result = syntax.parse();
                 match syntax_result {
                     Err(_) => assert_eq!(true, false),

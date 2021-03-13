@@ -127,7 +127,7 @@ pub unsafe fn dump_opcode<W: Write>(index: usize, options: &mut BramaCompiler, l
     }
 }
 
-pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<(), String>
+pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, String>
 {
     let mut log_update = LogUpdate::new(stdout()).unwrap();
     
@@ -540,12 +540,12 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<(), String>
             options.storages[0].dump();
         }
     }
-
-    if (*options.current_scope).memory_index > 0 {
-        for index in 0..(*options.current_scope).memory_index {
-            log::info!("{:?}\r\n", (*options.current_scope).memory[index].deref());
-        }
+    
+    let mut result = Vec::with_capacity((*options.current_scope).memory_index);
+    for index in 0..(*options.current_scope).memory_index {
+        result.push((*options.current_scope).stack[index]);
+        log::info!("{:?}\r\n", (*options.current_scope).stack[index].deref());
     }
 
-    Ok(())
+    Ok(result)
 }

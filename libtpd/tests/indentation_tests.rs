@@ -13,7 +13,7 @@ mod tests {
                 let mut parser   = Parser::new($text);
                 let _parse_result = parser.parse();
 
-                let syntax = SyntaxParser::new(Box::new(parser.tokens().to_vec()));
+                let syntax = SyntaxParser::new(parser.tokens().to_vec());
                 let parse_result = syntax.parse();
 
                 match parse_result {
@@ -36,7 +36,7 @@ mod tests {
                 let mut parser   = Parser::new($text);
                 let _parse_result = parser.parse();
 
-                let syntax = SyntaxParser::new(Box::new(parser.tokens().to_vec()));
+                let syntax = SyntaxParser::new(parser.tokens().to_vec());
                 let parse_result = syntax.parse();
 
                 match parse_result {
