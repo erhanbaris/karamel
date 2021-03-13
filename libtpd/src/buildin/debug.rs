@@ -23,14 +23,11 @@ impl Module for DebugModule {
         "hataayıklama".to_string()
     }
 
-    fn get_method(&self, name: &String) -> Option<NativeCall> {
-        match self.methods.get(name) {
-            Some(method) => Some(*method),
-            None         => None
-        }
+    fn get_method(&self, name: &str) -> Option<NativeCall> {
+        self.methods.get(name).map(|method| *method)
     }
 
-    fn get_module(&self, _: &String) -> Option<Rc<dyn Module>> {
+    fn get_module(&self, _: &str) -> Option<Rc<dyn Module>> {
         None
     }
 
@@ -51,19 +48,19 @@ impl DebugModule  {
     pub fn assert(arguments: &Vec<VmObject>, last_position: usize, total_args: u8) -> NativeCallResult {
         match total_args {
             1 => {
-                return match arguments[last_position - 1].deref().is_true() {
+                match arguments[last_position - 1].deref().is_true() {
                     false => Err(("Assert failed".to_string(), 0, 0)),
                     true  => Ok(EMPTY_OBJECT)
                 }
             },
             2 => {
                 let status = arguments[last_position - 2].deref() == arguments[last_position - 1].deref();
-                return match status {
-                    false => Err((format!("Assert failed (left: {:?}, right: {:?})", arguments[last_position - 2].deref(), arguments[last_position - 1].deref()).to_string(), 0, 0)),
+                match status {
+                    false => Err((format!("Assert failed (left: {:?}, right: {:?})", arguments[last_position - 2].deref(), arguments[last_position - 1].deref()), 0, 0)),
                     true  => Ok(EMPTY_OBJECT)
-                };
+                }
             },
-            _ => return Err(("Assert failed".to_string(), 0, 0))
-        };
+            _ => Err(("Assert failed".to_string(), 0, 0))
+        }
     }
 }

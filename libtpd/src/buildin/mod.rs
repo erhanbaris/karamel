@@ -16,8 +16,8 @@ pub trait Module {
     fn new() -> Self where Self: Sized;
     fn get_module_name(&self) -> String;
     
-    fn get_method(&self, name: &String) -> Option<NativeCall>;
-    fn get_module(&self, name: &String) -> Option<Rc<dyn Module>>;
+    fn get_method(&self, name: &str) -> Option<NativeCall>;
+    fn get_module(&self, name: &str) -> Option<Rc<dyn Module>>;
 
     fn get_methods(&self) -> Vec<(&'static str, NativeCall)>;
     fn get_modules(&self) -> HashMap<String, Rc<dyn Module>>;
@@ -61,6 +61,6 @@ pub trait Class: GetType {
     fn add_method(&mut self, name: String, function: Rc<FunctionReference>);
     fn add_property(&mut self, name: String, property: Rc<BramaPrimative>);
     
-    fn get_method(&self, name: &String) -> Option<Rc<FunctionReference>>;
-    fn get_property(&self, name: &String) -> Option<Rc<BramaPrimative>>;
+    fn get_method(&self, name: &str) -> Option<Rc<FunctionReference>>;
+    fn get_property(&self, name: &str) -> Option<Rc<BramaPrimative>>;
 }

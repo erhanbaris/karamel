@@ -20,17 +20,14 @@ impl Module for NumModule {
     }
 
     fn get_module_name(&self) -> String {
-        return "sayı".to_string();
+        "sayı".to_string()
     }
 
-    fn get_method(&self, name: &String) -> Option<NativeCall> {
-        match self.methods.get(name) {
-            Some(method) => Some(*method),
-            None => None
-        }
+    fn get_method(&self, name: &str) -> Option<NativeCall> {
+        self.methods.get(name).map(|method| *method)
     }
 
-    fn get_module(&self, _: &String) -> Option<Rc<dyn Module>> {
+    fn get_module(&self, _: &str) -> Option<Rc<dyn Module>> {
         None
     }
 
@@ -55,7 +52,7 @@ impl NumModule  {
 
         let arg = arguments[last_position - 1].deref();
 
-        return match &*arg {
+        match &*arg {
             BramaPrimative::Number(_) => Ok(arguments[last_position - 1]),
             BramaPrimative::Text(text) => {
                 match (*text).parse() {
@@ -64,6 +61,6 @@ impl NumModule  {
                 }
             },
             _ => Ok(EMPTY_OBJECT)
-        };
+        }
     }
 }

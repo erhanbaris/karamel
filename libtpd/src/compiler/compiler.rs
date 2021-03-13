@@ -361,7 +361,7 @@ impl InterpreterCompiler {
             None => ()
         };
 
-        return Ok(false);
+        Ok(false)
     }
 
     fn generate_accessor_func_call(&self, source: &BramaAstType, indexer: &BramaAstType, assign_to_temp: bool,  upper_ast: &BramaAstType, options: &mut BramaCompiler, storage_index: usize) -> CompilerResult {
@@ -425,7 +425,7 @@ impl InterpreterCompiler {
                 }
             },
 
-            BramaAstType::FuncCall {func_name_expression, arguments: inner_arguments, assign_to_temp: inner_assign_to_temp} => {
+            BramaAstType::FuncCall {func_name_expression, arguments: inner_arguments, assign_to_temp: _} => {
                 self.generate_func_call(func_name_expression, inner_arguments, true, upper_ast, options, storage_index)?;
                 options.opcodes.push(VmOpCode::CallStack as u8);
                 options.opcodes.push(arguments.len() as u8);
@@ -704,7 +704,7 @@ impl InterpreterCompiler {
     fn generate_not(&self, expression: &BramaAstType, options: &mut BramaCompiler, storage_index: usize) -> CompilerResult { 
         self.generate_opcode(expression, &BramaAstType::None, options, storage_index)?;
         options.opcodes.push(VmOpCode::Not as u8);
-        return Ok(());
+        Ok(())
     }
 
     fn create_exit_jump(&self, options: &mut BramaCompiler, exit_locations: &mut Vec<usize>) {
@@ -721,7 +721,7 @@ impl InterpreterCompiler {
         options.opcodes.push(0_u8);
         options.opcodes.push(0_u8);
 
-        return compare_location;
+        compare_location
     }
 
     fn build_jump_location(&self, options: &mut BramaCompiler, jump_location: usize) {
@@ -793,7 +793,7 @@ impl InterpreterCompiler {
             self.build_jump_location(options, exit_location);
         }
 
-        return Ok(());
+        Ok(())
     }
 
     fn generate_indexer(&self, body: &BramaAstType, indexer: &BramaAstType, upper_ast: &BramaAstType, options: &mut BramaCompiler, storage_index: usize) -> CompilerResult {
@@ -801,7 +801,7 @@ impl InterpreterCompiler {
         self.generate_opcode(indexer, upper_ast, options, storage_index)?;
         options.opcodes.push(VmOpCode::GetItem as u8);
 
-        return Ok(());
+        Ok(())
     }
 
     fn generate_suffix_unary(&self, operator: &BramaOperatorType, expression: &BramaAstType, _: &BramaAstType, options: &mut BramaCompiler, storage_index: usize) -> CompilerResult { 

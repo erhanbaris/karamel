@@ -25,17 +25,14 @@ impl Module for IoModule {
     }
 
     fn get_module_name(&self) -> String {
-        return "gç".to_string();
+        "gç".to_string()
     }
 
-    fn get_method(&self, name: &String) -> Option<NativeCall> {
-        match self.methods.get(name) {
-            Some(method) => Some(*method),
-            None => None
-        }
+    fn get_method(&self, name: &str) -> Option<NativeCall> {
+        self.methods.get(name).map(|method| *method)
     }
 
-    fn get_module(&self, _: &String) -> Option<Rc<dyn Module>> {
+    fn get_module(&self, _: &str) -> Option<Rc<dyn Module>> {
         None
     }
 
@@ -59,7 +56,7 @@ impl IoModule  {
         let mut line = String::new();
         match io::stdin().read_line(&mut line) {
             Ok(_) => return Ok(VmObject::from(Rc::new(line.trim().to_string()))),
-            _ => return Ok(EMPTY_OBJECT)
+            _ => Ok(EMPTY_OBJECT)
         }
     }
 

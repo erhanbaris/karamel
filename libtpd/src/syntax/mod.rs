@@ -229,38 +229,32 @@ impl SyntaxParser {
             return Ok(BramaAstType::None);
         }
 
-        loop {
-            if let Ok(current_token) = self.peek_token() {
-                
-                let success = match current_token.token_type {
-                    BramaTokenType::NewLine(size) => {
-                        let token_type = &self.next_token().unwrap().token_type;
-                        if let BramaTokenType::NewLine(_) = token_type {
-                            /* If next token is newline, no need to check */
-                            true
-                        }
-                        else {
-                            /* Next token not a new line but space should be bigger than the current */
-                            size == self.indentation.get() as u8 
-                        }
-                    },
-                    
-                    BramaTokenType::WhiteSpace(size) => {
+        while let Ok(current_token) = self.peek_token() {                
+            let success = match current_token.token_type {
+                BramaTokenType::NewLine(size) => {
+                    let token_type = &self.next_token().unwrap().token_type;
+                    if let BramaTokenType::NewLine(_) = token_type {
+                        /* If next token is newline, no need to check */
+                        true
+                    }
+                    else {
+                        /* Next token not a new line but space should be bigger than the current */
                         size == self.indentation.get() as u8 
-                    },
-                    _ => break
-                };
+                    }
+                },
+                
+                BramaTokenType::WhiteSpace(size) => {
+                    size == self.indentation.get() as u8 
+                },
+                _ => break
+            };
 
-                if !success {
-                    let token = self.peek_token().unwrap();
-                    return Err(("Indentation issue", token.line, token.start));
-                }
+            if !success {
+                let token = self.peek_token().unwrap();
+                return Err(("Indentation issue", token.line, token.start));
+            }
 
-                self.consume_token();
-            }
-            else {
-                break;
-            }
+            self.consume_token();
         }
 
         Ok(BramaAstType::None)
@@ -271,40 +265,34 @@ impl SyntaxParser {
             return Ok(BramaAstType::None);
         }
 
-        loop {
-            if let Ok(current_token) = self.peek_token() {
-                
-                let success = match current_token.token_type {
-                    BramaTokenType::NewLine(size) => {
-                        let token_type = &self.next_token().unwrap().token_type;
-                        if let BramaTokenType::NewLine(_) = token_type {
-                            /* If next token is newline, no need to check */
+        while let Ok(current_token) = self.peek_token() {               
+            let success = match current_token.token_type {
+                BramaTokenType::NewLine(size) => {
+                    let token_type = &self.next_token().unwrap().token_type;
+                    if let BramaTokenType::NewLine(_) = token_type {
+                        /* If next token is newline, no need to check */
+                        true
+                    }
+                    else {
+                        /* Next token not a new line but space should be bigger than the current */
+                        if size > self.indentation.get() as u8 {
+                            self.set_indentation(size as usize);
                             true
                         }
                         else {
-                            /* Next token not a new line but space should be bigger than the current */
-                            if size > self.indentation.get() as u8 {
-                                self.set_indentation(size as usize);
-                                true
-                            }
-                            else {
-                                false
-                            }
+                            false
                         }
-                    },
-                    _ => break
-                };
+                    }
+                },
+                _ => break
+            };
 
-                if !success {
-                    let token = self.peek_token().unwrap();
-                    return Err(("Indentation issue", token.line, token.start));
-                }
+            if !success {
+                let token = self.peek_token().unwrap();
+                return Err(("Indentation issue", token.line, token.start));
+            }
 
-                self.consume_token();
-            }
-            else {
-                break;
-            }
+            self.consume_token();
         }
 
         Ok(BramaAstType::None)

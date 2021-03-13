@@ -10,7 +10,6 @@ pub fn execute_code(name: &str) -> Object {
 
     /* JS referance object */
     let status_ref      = JsValue::from("status");
-    let result_type_ref = JsValue::from("type");
     let error_ref       = JsValue::from("error");
     let results_ref     = JsValue::from("results");
 

@@ -21,14 +21,14 @@ impl Class for OpcodeClass {
     }
     
     fn add_method(&mut self, name: String, function: Rc<FunctionReference>) {
-        self.properties.insert(name, ClassProperty::Function(function.clone()));
+        self.properties.insert(name, ClassProperty::Function(function));
     }
 
     fn add_property(&mut self, name: String, property: Rc<BramaPrimative>) {
-        self.properties.insert(name, ClassProperty::Field(property.clone()));
+        self.properties.insert(name, ClassProperty::Field(property));
     }
     
-    fn get_method(&self, name: &String) -> Option<Rc<FunctionReference>> {
+    fn get_method(&self, name: &str) -> Option<Rc<FunctionReference>> {
         match self.properties.get(name) {
             Some(property) => {
                 match property {
@@ -40,7 +40,7 @@ impl Class for OpcodeClass {
         }
     }
 
-    fn get_property(&self, name: &String) -> Option<Rc<BramaPrimative>> {
+    fn get_property(&self, name: &str) -> Option<Rc<BramaPrimative>> {
         match self.properties.get(name) {
             Some(property) => {
                 match property {

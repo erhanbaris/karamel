@@ -2,7 +2,7 @@ use crate::vm::interpreter::run_vm;
 use crate::parser::*;
 use crate::compiler::*;
 use crate::syntax::SyntaxParser;
-use crate::logger::{ConsoleLogger, CollectorLogger};
+use crate::logger::{ConsoleLogger};
 
 use std::io::{self};
 use std::io::Write;

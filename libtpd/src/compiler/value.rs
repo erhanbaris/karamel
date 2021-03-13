@@ -170,7 +170,7 @@ impl PartialEq for BramaPrimative {
                         None => return false
                     }
                 }
-                return true;
+                true
             },
             _ => false
         }

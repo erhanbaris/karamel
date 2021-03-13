@@ -21,17 +21,17 @@ impl Module for BaseFunctionsModule {
     }
 
     fn get_module_name(&self) -> String {
-        return "".to_string();
+        "".to_string()
     }
 
-    fn get_method(&self, name: &String) -> Option<NativeCall> {
+    fn get_method(&self, name: &str) -> Option<NativeCall> {
         match self.methods.get(name) {
             Some(method) => Some(*method),
             None => None
         }
     }
 
-    fn get_module(&self, _: &String) -> Option<Rc<dyn Module>> {
+    fn get_module(&self, _: &str) -> Option<Rc<dyn Module>> {
         None
     }
 
@@ -55,6 +55,6 @@ impl BaseFunctionsModule  {
         }
 
         let arg = arguments[last_position - 1].deref();
-        return Ok(VmObject::from(Rc::new(arg.get_type())));
+        Ok(VmObject::from(Rc::new(arg.get_type())))
     }
 }

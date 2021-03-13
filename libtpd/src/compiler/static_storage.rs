@@ -98,7 +98,7 @@ impl StaticStorage {
         };
     }
 
-    pub fn add_variable(&mut self, name: &String) -> u8 {
+    pub fn add_variable(&mut self, name: &str) -> u8 {
         let result = self.variables.iter().position(|(key, _)| key == name);
         match result {
             Some(location) => self.variables[location].1,
@@ -109,7 +109,7 @@ impl StaticStorage {
         }
     }
 
-    pub fn get_variable_location(&self, name: &String) -> Option<u8> {
+    pub fn get_variable_location(&self, name: &str) -> Option<u8> {
         let result = self.variables.iter().position(|(key, _)| key == name);
         match result {
             Some(location) => Some(self.variables[location].1),
@@ -118,7 +118,7 @@ impl StaticStorage {
     }
 
     #[allow(dead_code)]
-    pub fn get_variable_value(&self, name: &String) -> Option<Rc<BramaPrimative>> {
+    pub fn get_variable_value(&self, name: &str) -> Option<Rc<BramaPrimative>> {
         match self.get_variable_location(name) {
             Some(loc) => Some(self.memory.borrow_mut()[loc as usize].deref()),
             _ => None
@@ -126,7 +126,7 @@ impl StaticStorage {
     }
 
     pub fn get_constant_location(&self, value: Rc<BramaPrimative>) -> Option<u8> {
-        return match self.memory.borrow().iter().position(|x| { return *x.deref() == *value; }) {
+        return match self.memory.borrow().iter().position(|x| { *x.deref() == *value }) {
             Some(number) => Some(number as u8),
             _ => None
         };

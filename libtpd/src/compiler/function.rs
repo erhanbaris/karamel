@@ -51,7 +51,7 @@ impl FunctionReference {
             used_locations: RefCell::new(Vec::new()),
             defined_storage_index: 0
         };
-        return Rc::new(reference);
+        Rc::new(reference)
     }
 
     pub fn opcode_function(name: String, arguments: Vec<String>, module_path: Vec<String>, framework: String, storage_index: usize, defined_storage_index: usize) -> Rc<FunctionReference> {
@@ -139,6 +139,6 @@ impl FunctionReference {
                 }
             }
         }
-        return Ok(());
+        Ok(())
     }
 }
