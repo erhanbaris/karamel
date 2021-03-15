@@ -7,8 +7,8 @@ use std::collections::hash_map::DefaultHasher;
 use std::rc::Rc;
 use crate::compiler::ast::BramaAstType;
 
-pub type ParseResult        = Result<(), (&'static str, u32, u32)>;
-pub type AstResult          = Result<BramaAstType, (&'static str, u32, u32)>;
+pub type ParseResult        = Result<(), BramaError>;
+pub type AstResult          = Result<BramaAstType, BramaError>;
 pub type CompilerResult     = Result<(), &'static str>;
 
 pub const TAG_NULL        : u64 = 0;
@@ -27,18 +27,13 @@ pub const EMPTY_FLAG:   u64 = QNAN | TAG_NULL;
 pub struct VmObject(pub u64);
 
 
+#[derive(Copy)]
 #[derive(Clone)]
 #[derive(Debug)]
 #[derive(PartialEq)]
-#[derive(Display)]
 pub enum BramaError {
-    #[display(fmt = "Sozdizimi hatasi")]
-    SyntaxError,
-    
-    #[display(fmt = "Birden fazla degisken kullanilamaz")]
+    SyntaxError = 100,
     MoreThan1ArgumentPassed,
-
-    #[display(fmt = "Birden fazla degisken kullanilamaz")]
     RightParanthesesMissing,
     AssertFailed,
     NumberNotParsed,
@@ -52,7 +47,38 @@ pub enum BramaError {
     IfConditionBodyNotFound,
     ParenthesesNotClosed,
     InvalidUnaryOperation,
-    UnaryWorksWithNumber
+    UnaryWorksWithNumber,
+    ArgumentNotFound,
+    MultipleElseUsageNotValid,
+    BreakAndContinueBelongToLoops,
+    FunctionConditionBodyNotFound,
+    ColonMarkMissing,
+    ElseIsUsed
+}
+
+
+impl BramaError {
+    pub fn as_text(&self) -> String {
+        let message = match self {
+            BramaError::SyntaxError => "Sozdizimi hatasi",
+            BramaError::MoreThan1ArgumentPassed => "Birden fazla degisken kullanilamaz",
+            BramaError::RightParanthesesMissing => "Sağ parantaz eksik",
+            BramaError::AssertFailed => "Doğrulanamadı",
+            BramaError::NumberNotParsed => "Sayı ayrıştırılamadı",
+            BramaError::MissingStringDeliminator => "Yazı sonlandırıcısı bulunamadı",
+            BramaError::CharNotValid => "Karakter geçerli değil",
+            BramaError::RightSideOfExpressionNotFound => "İfadenin sağ tarafı bulunamadı",
+            BramaError::ReturnMustBeUsedInFunction => "Döndür komutu fonksiyon içinde kullanılmalıdır",
+            BramaError::FunctionCallSyntaxNotValid => "Fonksiyon çağırma sözdizimi geçerli değil",
+            BramaError::FunctionNameNotDefined => "Fonksiyon adı tanımlanmamış",
+            BramaError::ArgumentMustBeText => "Değişken yazı olmalıdır",
+            BramaError::IfConditionBodyNotFound => "Koşul gövdesi eksik",
+            BramaError::ParenthesesNotClosed => "Parantez kapatılmamış",
+            BramaError::InvalidUnaryOperation => "Geçersiz tekli işlem",
+            BramaError::UnaryWorksWithNumber => "Tekli numara ile çalışmaktadır"
+        };
+        format!("(#{}) {}", *self as u8, message)
+    }
 }
 
 #[derive(Clone, Copy)]
@@ -295,7 +321,7 @@ impl Tokinizer<'_> {
 
 pub trait TokenParser {
     fn check(&self, tokinizer: &mut Tokinizer) -> bool;
-    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<(), (&'static str, u32, u32)>;
+    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<(), BramaError>;
 }
 
 pub trait CharTraits {

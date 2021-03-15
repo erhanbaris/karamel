@@ -91,7 +91,7 @@ fn test   :
             }));
             test_compare!(func_def_7, r#"
 fn test
-    erhan=123"#, Err(("':' missing", 0, 0)));
+    erhan=123"#, Err(BramaError::ColonMarkMissing));
     test_compare!(func_def_8, r#"
 fn test(:
     erhan=123"#, Err(("Argument must be a text", 0, 0)));
@@ -116,7 +116,7 @@ fn test(1):
 test_compare!(func_def_14, r#"
 test=1
 döndür test
-"#, Err(("return must be used in function", 0, 0)));
+"#, Err(BramaError::ReturnMustBeUsedInFunction);
 test_compare!(func_def_15, r#"
 fn test():
     erhan=123

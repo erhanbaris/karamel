@@ -48,7 +48,7 @@ BramaAstType::FuncCall {
 ].to_vec())))));
 test_compare!(endless_3, r#"sonsuz
     erhan=123   
-    print(1)"#, Err(("':' missing", 0, 0)));
+    print(1)"#, Err(BramaError::ColonMarkMissing));
 test_compare!(endless_4, r#"sonsuz:
     erhan=123   
     print(1)

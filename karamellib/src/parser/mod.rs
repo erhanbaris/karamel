@@ -63,7 +63,7 @@ impl<'a> Parser<'a> {
         symbol_parser.init_parser();
 
         while self.tokinizer.is_end() == false {
-            let status: Result<(), (&'static str, u32, u32)>;
+            let status: Result<(), BramaError>;
 
             if line_parser.check(&mut self.tokinizer) {
                 status = line_parser.parse(&mut self.tokinizer);
@@ -91,8 +91,7 @@ impl<'a> Parser<'a> {
             }
 
             if status.is_err() {
-                let (err_message, line, column) = status.err().unwrap();
-                return Err((err_message, line, column))
+                return Err(status.err().unwrap())
             }
         }
 

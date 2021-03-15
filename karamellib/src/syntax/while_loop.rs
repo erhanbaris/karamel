@@ -21,7 +21,7 @@ impl SyntaxParserTrait for WhileLoopParser {
             parser.cleanup_whitespaces();
             if let None = parser.match_operator(&[BramaOperatorType::ColonMark]) {
                 parser.set_index(index_backup);
-                return Err(("':' missing", 0, 0));
+                return Err(BramaError::ColonMarkMissing);
             }
 
             parser.cleanup_whitespaces();
@@ -66,7 +66,7 @@ impl SyntaxParserTrait for WhileLoopParser {
             parser.cleanup_whitespaces();
             if let None = parser.match_operator(&[BramaOperatorType::ColonMark]) {
                 parser.set_indentation(indentation);
-                return Err(("':' missing", 0, 0));
+                return Err(BramaError::ColonMarkMissing);
             }
 
             parser.cleanup_whitespaces();

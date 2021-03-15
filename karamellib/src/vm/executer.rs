@@ -35,9 +35,8 @@ pub fn code_executer(data: &String, logger: &'static dyn Log) -> ExecutionStatus
 
     let mut parser = Parser::new(data);
     match parser.parse() {
-        Err((message, line, column)) => {
-            log::debug!("[{:?}:{:?}] {:?}", line, column, message);
-            log::error!("Kod hatasi: {}", message);
+        Err(error) => {
+            log::error!("Kod hatasi: {}", error.as_text());
             return status;
         },
         _ => ()
@@ -46,9 +45,8 @@ pub fn code_executer(data: &String, logger: &'static dyn Log) -> ExecutionStatus
     let syntax = SyntaxParser::new(parser.tokens().to_vec());
     let ast = match syntax.parse() {
         Ok(ast) => ast,
-        Err((message, line, column)) => {
-            log::debug!("[{}:{}] {}", line, column, message);
-            log::error!("Kod hatasi: {}", message);
+        Err(error) => {
+            log::error!("Kod hatasi: {}", error.as_text());
             return status;
         }
     };

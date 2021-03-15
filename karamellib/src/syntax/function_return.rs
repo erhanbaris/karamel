@@ -13,7 +13,7 @@ impl SyntaxParserTrait for FunctionReturnParser {
         if parser.match_keyword(BramaKeywordType::Return) {
             if !parser.flags.get().contains(SyntaxFlag::FUNCTION_DEFINATION) {
                 parser.set_index(index_backup);
-                return Err(("return must be used in function", 0, 0));
+                return Err(BramaError::ReturnMustBeUsedInFunction);
             }
 
             parser.cleanup_whitespaces();

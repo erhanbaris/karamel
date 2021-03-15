@@ -23,7 +23,7 @@ impl SyntaxParserTrait for FunctionDefinationParser {
                 BramaAstType::Symbol(text) => text,
                 _ => {
                     parser.set_index(index_backup);
-                    return Err(("Function name not defined", 0, 0));
+                    return Err(BramaError::FunctionNameNotDefined);
                 }
             };
 
@@ -42,12 +42,12 @@ impl SyntaxParserTrait for FunctionDefinationParser {
                     match argument {
                         BramaAstType::None => {
                             parser.set_index(index_backup);
-                            return Err(("Argument must be a text", 0, 0));
+                            return Err(BramaError::ArgumentMustBeText);
                         },
                         BramaAstType::Symbol(text) => arguments.push(text),
                         _ => {
                             parser.set_index(index_backup);
-                            return Err(("Argument not found", 0, 0));
+                            return Err(BramaError::ArgumentNotFound);
                         }
                     };
 
@@ -59,14 +59,14 @@ impl SyntaxParserTrait for FunctionDefinationParser {
 
                 if let None = parser.match_operator(&[BramaOperatorType::RightParentheses]) {
                     parser.set_index(index_backup);
-                    return Err(("')' missing", 0, 0));
+                    return Err(BramaError::RightParanthesesMissing);
                 }
             }
 
             parser.cleanup_whitespaces();
             if let None = parser.match_operator(&[BramaOperatorType::ColonMark]) {
                 parser.set_index(index_backup);
-                return Err(("':' missing", 0, 0));
+                return Err(BramaError::ColonMarkMissing);
             }
 
             parser.cleanup_whitespaces();
@@ -92,7 +92,7 @@ impl SyntaxParserTrait for FunctionDefinationParser {
                 },
                 BramaAstType::None => {
                     parser.set_index(index_backup);
-                    return Err(("Function condition body not found", 0, 0));
+                    return Err(BramaError::FunctionConditionBodyNotFound);
                 },
                 _ => false
             };

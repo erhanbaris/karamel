@@ -25,7 +25,7 @@ impl SyntaxParserTrait for IfConditiontParser {
             parser.cleanup_whitespaces();
             if let None = parser.match_operator(&[BramaOperatorType::ColonMark]) {
                 parser.set_index(index_backup);
-                return Err(("':' missing", 0, 0));
+                return Err(BramaError::ColonMarkMissing);
             }
 
             parser.cleanup_whitespaces();
@@ -56,16 +56,16 @@ impl SyntaxParserTrait for IfConditiontParser {
 
                     if else_body.is_some() {
                         parser.set_index(index_backup);
-                        return Err(("else is used", 0, 0));
+                        return Err(BramaError::ElseIsUsed);
                     }
 
                     if let None = parser.match_operator(&[BramaOperatorType::ColonMark]) {
                         parser.set_index(index_backup);
-                        return Err(("':' missing", 0, 0));
+                        return Err(BramaError::ColonMarkMissing);
                     }
                     else if !else_body.is_none() {
                         parser.set_index(index_backup);
-                        return Err(("Multiple else usage not valid", 0, 0));
+                        return Err(BramaError::MultipleElseUsageNotValid);
                     }
                     parser.cleanup_whitespaces();
                     
@@ -79,7 +79,7 @@ impl SyntaxParserTrait for IfConditiontParser {
 
                     if body == BramaAstType::None {
                         parser.set_index(index_backup);
-                        return Err(("If condition body not found", 0, 0));
+                        return Err(BramaError::IfConditionBodyNotFound);
                     }
 
                     parser.set_indentation(indentation);
@@ -95,7 +95,7 @@ impl SyntaxParserTrait for IfConditiontParser {
                     break;
                 }
 
-                if let Err((_,_,_)) = parser.indentation_check() {
+                if let Err(_) = parser.indentation_check() {
                     break;
                 }
             }

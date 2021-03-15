@@ -22,7 +22,7 @@ impl SyntaxParserTrait for LoopItemParser {
             }
             else {
                 parser.set_index(index_backup);
-                return Err(("break and continue belong to loops", 0, 0));
+                return Err(BramaError::BreakAndContinueBelongToLoops);
             }
         }
 

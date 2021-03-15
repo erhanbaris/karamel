@@ -63,11 +63,11 @@ impl SyntaxParserTrait for ExpressionParser {
                             },
                             _ => {
                                 log::debug!("Function call syntax not valid {:?}", func_name_expression);
-                                return Err(("Function call syntax not valid", 0, 0));
+                                return Err(BramaError::FunctionCallSyntaxNotValid);
                             }
                         }
                     },
-                    _ => return Err(("Function call syntax not valid", 0, 0))
+                    _ => return Err(BramaError::FunctionCallSyntaxNotValid)
                 };
             }
             

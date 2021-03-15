@@ -223,7 +223,7 @@ yada:
     erhan=1234
 yada:
     erhan=1234
-"#, Err(("else is used", 0, 0)));
+"#, Err(BramaError::ElseIsUsed));
 
 test_compare!(if_8, r#"eğer 1024 * 123:
     erhan=123
@@ -233,7 +233,7 @@ yada 1024 * 123 > 10_000_000:
     erhan=12345
 yada 1024 * 123 < 10_000_000:
     erhan=123456
-"#, Err(("else is used", 0, 0)));
+"#, Err(BramaError::ElseIsUsed));
 
 
 
