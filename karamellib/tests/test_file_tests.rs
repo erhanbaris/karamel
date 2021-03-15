@@ -30,8 +30,9 @@ mod tests {
                         match _path.path().to_str() {
                             Some(__path) => {
                                 let file_content = fs::read_to_string(__path).unwrap();
-                                match executer::code_executer(&file_content, &DUMMY_LOGGER) {
-                                    Ok(_) => {
+                                let result = executer::code_executer(&file_content, &DUMMY_LOGGER);
+                                match result.compiled && result.executed {
+                                    true => {
                                         if !is_pass {
                                             println!("# {} failed ({})", __path, "Not failed".red());
                                             test_status = false;
@@ -39,9 +40,9 @@ mod tests {
                                             println!("# {} passed", __path);
                                         }
                                     },
-                                    Err(error) => {
+                                    false => {
                                         if is_pass {
-                                            println!("# {} failed ({})", __path, error);
+                                            println!("# {} failed", __path);
                                             test_status = false;
                                         } else {
                                             println!("# {} passed", __path);

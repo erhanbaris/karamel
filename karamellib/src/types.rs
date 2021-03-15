@@ -26,6 +26,35 @@ pub const EMPTY_FLAG:   u64 = QNAN | TAG_NULL;
 #[repr(transparent)]
 pub struct VmObject(pub u64);
 
+
+#[derive(Clone)]
+#[derive(Debug)]
+#[derive(PartialEq)]
+#[derive(Display)]
+pub enum BramaError {
+    #[display(fmt = "Sozdizimi hatasi")]
+    SyntaxError,
+    
+    #[display(fmt = "Birden fazla degisken kullanilamaz")]
+    MoreThan1ArgumentPassed,
+
+    #[display(fmt = "Birden fazla degisken kullanilamaz")]
+    RightParanthesesMissing,
+    AssertFailed,
+    NumberNotParsed,
+    MissingStringDeliminator,
+    CharNotValid,
+    RightSideOfExpressionNotFound,
+    ReturnMustBeUsedInFunction,
+    FunctionCallSyntaxNotValid,
+    FunctionNameNotDefined,
+    ArgumentMustBeText,
+    IfConditionBodyNotFound,
+    ParenthesesNotClosed,
+    InvalidUnaryOperation,
+    UnaryWorksWithNumber
+}
+
 #[derive(Clone, Copy)]
 #[derive(Debug)]
 #[derive(PartialEq, Eq)]

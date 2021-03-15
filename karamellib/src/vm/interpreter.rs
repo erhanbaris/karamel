@@ -544,7 +544,6 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
     let mut result = Vec::with_capacity((*options.current_scope).memory_index);
     for index in 0..(*options.current_scope).memory_index {
         result.push((*options.current_scope).stack[index]);
-        log::info!("{:?}\r\n", (*options.current_scope).stack[index].deref());
     }
 
     Ok(result)

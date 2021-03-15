@@ -1,5 +1,7 @@
+cd karamelweb/
 cargo build --target wasm32-unknown-unknown --release
-wasm-pack build --out-dir ./src/www/pkg/ --target web --no-typescript
-wasm-gc ./src/www/pkg/karamelweb_bg.wasm
+wasm-pack build --out-dir src/www/pkg/ --target web --no-typescript
+wasm-gc src/www/pkg/karamelweb_bg.wasm
 cd src/www/
 python3 -m http.server
+python -m SimpleHTTPServer

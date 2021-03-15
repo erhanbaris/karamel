@@ -4,7 +4,8 @@ use std::cell::RefCell;
 pub struct ConsoleLogger;
 pub struct DummyLogger;
 pub struct CollectorLogger {
-    pub logs: RefCell<Vec<String>>
+    pub stdout: RefCell<Vec<String>>,
+    pub stderr: RefCell<Vec<String>>
 }
 
 unsafe impl Send for CollectorLogger {}
@@ -12,7 +13,7 @@ unsafe impl Sync for CollectorLogger {}
 
 pub static CONSOLE_LOGGER: ConsoleLogger = ConsoleLogger;
 pub static DUMMY_LOGGER: DummyLogger = DummyLogger;
-pub static COLLECTOR_LOGGER: CollectorLogger = CollectorLogger { logs: RefCell::new(Vec::new()) };
+pub static COLLECTOR_LOGGER: CollectorLogger = CollectorLogger { stdout: RefCell::new(Vec::new()), stderr: RefCell::new(Vec::new()) };
 
 impl Log for CollectorLogger {
     fn enabled(&self, metadata: &Metadata) -> bool {
@@ -24,7 +25,10 @@ impl Log for CollectorLogger {
             #[cfg(all(not(target_arch = "wasm32"), not(test)))]
             println!("[{}] {}", record.level(), record.args());
 
-            self.logs.borrow_mut().push(record.args().to_string());
+            match record.level() {
+                Level::Error => self.stderr.borrow_mut().push(record.args().to_string()),
+                _ => self.stdout.borrow_mut().push(record.args().to_string())
+            };
         }
     }
 

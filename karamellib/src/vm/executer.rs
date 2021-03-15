@@ -15,9 +15,8 @@ pub struct ExecutionStatus {
     pub compiled: bool,
     pub executed: bool,
     pub memory_output: Option<Vec<VmObject>>,
-    pub stdout: Option<Vec<String>>,
-    pub stderr: Option<Vec<String>>,
-    pub error: Option<String>
+    pub stdout: Vec<String>,
+    pub stderr: Vec<String>
 }
 
 #[allow(dead_code)]
@@ -38,7 +37,7 @@ pub fn code_executer(data: &String, logger: &'static dyn Log) -> ExecutionStatus
     match parser.parse() {
         Err((message, line, column)) => {
             log::debug!("[{:?}:{:?}] {:?}", line, column, message);
-            status.error = Some(message.to_owned());
+            log::error!("Kod hatasi: {}", message);
             return status;
         },
         _ => ()
@@ -49,7 +48,7 @@ pub fn code_executer(data: &String, logger: &'static dyn Log) -> ExecutionStatus
         Ok(ast) => ast,
         Err((message, line, column)) => {
             log::debug!("[{}:{}] {}", line, column, message);
-            status.error = Some(message.to_owned());
+            log::error!("Kod hatasi: {}", message);
             return status;
         }
     };
@@ -60,10 +59,11 @@ pub fn code_executer(data: &String, logger: &'static dyn Log) -> ExecutionStatus
     let execution_memory = match opcode_compiler.compile(&ast, &mut compiler_options) {
         Ok(_) => unsafe { run_vm(&mut compiler_options) },
         Err(message) => {
-            status.error = Some(message.to_owned());
+            log::error!("Program hata ile sonlandirildi: {}", message);
             return status;
         }
     };
+    log::info!("Program basariyla calistirildi");
 
     match execution_memory {
         Ok(memory) => {
@@ -72,7 +72,7 @@ pub fn code_executer(data: &String, logger: &'static dyn Log) -> ExecutionStatus
             status.memory_output = Some(memory)
         },
         Err(error) => {
-            status.error = Some(error.to_owned())
+            log::error!("Hafizada ki bilgileri okuma sitasinda hata olustur fakat program hatasiz olarak calisti. Hata mesaji: {}", error);
         }
     };
 
