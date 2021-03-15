@@ -1,4 +1,4 @@
-use crate::vm::interpreter::run_vm;
+use crate::{vm::interpreter::run_vm};
 use crate::parser::*;
 use crate::compiler::*;
 use crate::syntax::SyntaxParser;
@@ -10,8 +10,19 @@ use log;
 use crate::types::VmObject;
 use log::Log;
 
+#[derive(Default)]
+pub struct ExecutionStatus {
+    pub compiled: bool,
+    pub executed: bool,
+    pub memory_output: Option<Vec<VmObject>>,
+    pub stdout: Option<Vec<String>>,
+    pub stderr: Option<Vec<String>>,
+    pub error: Option<String>
+}
+
 #[allow(dead_code)]
-pub fn code_executer(data: &String, logger: &'static dyn Log) -> Result<Vec<VmObject>, String> {
+pub fn code_executer(data: &String, logger: &'static dyn Log) -> ExecutionStatus {
+    let mut status = ExecutionStatus::default();
     match log::set_logger(logger) {
         Ok(_) => {
             if cfg!(debug_assertions) {
@@ -27,7 +38,8 @@ pub fn code_executer(data: &String, logger: &'static dyn Log) -> Result<Vec<VmOb
     match parser.parse() {
         Err((message, line, column)) => {
             log::debug!("[{:?}:{:?}] {:?}", line, column, message);
-            return Err(message.to_string());
+            status.error = Some(message.to_owned());
+            return status;
         },
         _ => ()
     };
@@ -37,17 +49,34 @@ pub fn code_executer(data: &String, logger: &'static dyn Log) -> Result<Vec<VmOb
         Ok(ast) => ast,
         Err((message, line, column)) => {
             log::debug!("[{}:{}] {}", line, column, message);
-            return Err(message.to_string());
+            status.error = Some(message.to_owned());
+            return status;
         }
     };
 
     let opcode_compiler = InterpreterCompiler {};
     let mut compiler_options: BramaCompiler = BramaCompiler::new();
 
-    match opcode_compiler.compile(&ast, &mut compiler_options) {
+    let execution_memory = match opcode_compiler.compile(&ast, &mut compiler_options) {
         Ok(_) => unsafe { run_vm(&mut compiler_options) },
-        Err(message) => Err(message.to_string())
-    }
+        Err(message) => {
+            status.error = Some(message.to_owned());
+            return status;
+        }
+    };
+
+    match execution_memory {
+        Ok(memory) => {
+            status.compiled = true;
+            status.executed = true;
+            status.memory_output = Some(memory)
+        },
+        Err(error) => {
+            status.error = Some(error.to_owned())
+        }
+    };
+
+    status
 }
 
 #[allow(dead_code)]
