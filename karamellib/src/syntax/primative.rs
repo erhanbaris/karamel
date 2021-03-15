@@ -251,7 +251,7 @@ impl PrimativeParser {
 
             if parser.match_operator(&[BramaOperatorType::RightParentheses]).is_none() {
                 parser.set_index(index_backup);
-                return Err(("Parentheses not closed", 0, 0));
+                return Err(BramaError::ParenthesesNotClosed);
             }
 
             return Ok(ast.unwrap());

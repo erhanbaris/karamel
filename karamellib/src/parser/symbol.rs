@@ -20,7 +20,7 @@ impl TokenParser for SymbolParser {
         return ch.is_symbol();
     }
 
-    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<(), (&'static str, u32, u32)> {
+    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<(), BramaError> {
         let mut ch: char;
         let start             = tokinizer.index as usize;
         let mut end           = start;

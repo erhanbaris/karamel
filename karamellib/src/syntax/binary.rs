@@ -52,7 +52,7 @@ pub fn parse_binary<T: SyntaxParserTrait>(parser: &SyntaxParser, operators: &[Br
             match right_expr {
                 Ok(BramaAstType::None) => {
                     parser.set_index(index_backup);
-                    return Err(("Right side of expression not found", 0, 0));
+                    return Err(BramaError::RightSideOfExpressionNotFound);
                 },
                 Ok(_) => (),
                 Err(_) => return right_expr

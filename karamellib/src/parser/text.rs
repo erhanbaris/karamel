@@ -11,7 +11,7 @@ impl TokenParser for TextParser {
         return ch == self.tag;
     }
 
-    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<(), (&'static str, u32, u32)> {
+    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<(), BramaError> {
         tokinizer.increase_index();
 
         let mut ch: char      = '\0';
@@ -40,7 +40,7 @@ impl TokenParser for TextParser {
         }
 
         if ch != self.tag {
-            return Err(("Missing string deliminator", tokinizer.line, tokinizer.column));
+            return Err(BramaError::MissingStringDeliminator);
         }
 
         tokinizer.add_token(start_column - 1, BramaTokenType::Text(Rc::new(tokinizer.data[start..end].to_string())));

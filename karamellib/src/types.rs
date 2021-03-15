@@ -53,7 +53,9 @@ pub enum BramaError {
     BreakAndContinueBelongToLoops,
     FunctionConditionBodyNotFound,
     ColonMarkMissing,
-    ElseIsUsed
+    ElseIsUsed,
+    IndentationIssue,
+    ParenthesesNotClosed
 }
 
 

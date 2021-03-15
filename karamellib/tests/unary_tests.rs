@@ -35,10 +35,10 @@ mod tests {
     test_compare!(unary_7, "not doğru", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Not, Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Bool(true)))))));
     test_compare!(unary_8, "not yanlış", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Not, Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Bool(false)))))));
     
-    test_compare!(unary_9, "+[]", Err(("Unary works with number", 0, 0)));
-    test_compare!(unary_10, "++100", Err(("Invalid unary operation", 0, 0)));
-    test_compare!(unary_11, "--100", Err(("Invalid unary operation", 0, 0)));
-    test_compare!(unary_12, "--true", Err(("Invalid unary operation", 0, 0)));
+    test_compare!(unary_9, "+[]", Err(BramaError::UnaryWorksWithNumber));
+    test_compare!(unary_10, "++100", Err(BramaError::InvalidUnaryOperation));
+    test_compare!(unary_11, "--100", Err(BramaError::InvalidUnaryOperation));
+    test_compare!(unary_12, "--true", Err(BramaError::InvalidUnaryOperation));
 
     test_compare!(unary_13, "++data", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Increment, Box::new(BramaAstType::Symbol("data".to_string())))));
     test_compare!(unary_14, "--data", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Deccrement, Box::new(BramaAstType::Symbol("data".to_string())))));

@@ -104,7 +104,7 @@ impl UnaryParser {
                         BramaTokenType::Double(double) => return Ok(BramaAstType::Primative(Rc::new(BramaPrimative::Number(double * opt)))),
                         _ => {
                             parser.set_index(index_backup);
-                            return Err(("Unary works with number", 0, 0));
+                            return Err(BramaError::UnaryWorksWithNumber);
                         }
                     }
                 },
@@ -122,25 +122,25 @@ impl UnaryParser {
                     unary_ast = match expression {
                         Ok(BramaAstType::None) => {
                             parser.set_index(index_backup);
-                            return Err(("Invalid unary expression", 0, 0));
+                            return Err(BramaError::InvalidUnaryOperation);
                         },
                         Ok(ast) => ast,
                         Err(_) => {
                             parser.set_index(index_backup);
-                            return Err(("Invalid unary expression", 0, 0));
+                            return Err(BramaError::InvalidUnaryOperation);
                         }
                     };
                 }
                 _ => { 
                     parser.set_index(index_backup);
-                    return Err(("Invalid unary operation", 0, 0));
+                    return Err(BramaError::InvalidUnaryOperation);
                 }
             }
 
             return match unary_ast {
                 BramaAstType::None => {
                     parser.set_index(index_backup);
-                    Err(("Invalid unary operation", 0, 0))
+                    Err(BramaError::InvalidUnaryOperation)
                 },
                 _ => Ok(BramaAstType::PrefixUnary(operator, Box::new(unary_ast)))
             };

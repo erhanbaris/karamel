@@ -72,7 +72,7 @@ impl SyntaxParser {
                 
                 if let Ok(token) = self.peek_token() {
                     log::debug!("We forget this : {:?}", token);
-                    return Err(BramaError::SyntaxError);
+                    return Err(("Syntax error, undefined syntax", token.line, token.start));
                 }
                 Ok(ast)
             },
@@ -97,7 +97,7 @@ impl SyntaxParser {
     }
 
     pub fn is_same_indentation(&self, indentation: usize) -> bool {
-        if let Err(_) = self.indentation_check() {
+        if let Err((_,_,_)) = self.indentation_check() {
             return false;
         }
         else if indentation != self.get_indentation() {

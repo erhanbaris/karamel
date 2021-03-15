@@ -7,7 +7,7 @@ impl TokenParser for OperatorParser {
         true
     }
 
-    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<(), (&'static str, u32, u32)> {
+    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<(), BramaError> {
         let ch       = tokinizer.get_char();
         let ch_next  = tokinizer.get_next_char();
         let start= tokinizer.column;

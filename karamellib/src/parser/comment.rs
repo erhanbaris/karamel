@@ -9,7 +9,7 @@ impl TokenParser for CommentParser {
         return (ch == '/' && ch_next == '*') || (ch == '/' && ch_next == '/');
     }
 
-    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<(), (&'static str, u32, u32)> {
+    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<(), BramaError> {
         let mut ch                   = tokinizer.get_char();
         let mut ch_next              = tokinizer.get_next_char();
 

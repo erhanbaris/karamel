@@ -40,7 +40,7 @@ impl SyntaxParserTrait for IfConditiontParser {
 
             if true_body == BramaAstType::None {
                 parser.set_index(index_backup);
-                return Err(("If condition body not found", 0, 0));
+                return Err(BramaError::IfConditionBodyNotFound);
             }
 
             parser.cleanup_whitespaces();

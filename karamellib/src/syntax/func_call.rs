@@ -76,12 +76,12 @@ impl ExtensionSyntaxParser for FuncCallParser {
                     Some(BramaOperatorType::Comma)            => {
                         if let Ok(BramaAstType::None) = param_expression {
                             parser.set_index(index_backup);
-                            return Err(("Syntax error, undefined syntax", 0, 0))
+                            return Err(BramaError::SyntaxError)
                         }
                     },
                     _ => {
                         parser.set_index(index_backup);
-                        return Err(("Right parantheses missing", 0, 0));
+                        return Err(BramaError::RightParanthesesMissing);
                     }
                 }
 

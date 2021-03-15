@@ -61,7 +61,7 @@ pub fn parse_control<T: SyntaxParserTrait>(parser: &SyntaxParser, operators: &[B
             match right_expr {
                 Ok(BramaAstType::None) => {
                     parser.set_index(index_backup);
-                    return Err(("Right side of expression not found", 0, 0));
+                    return Err(BramaError::RightSideOfExpressionNotFound);
                 },
                 Ok(_) => (),
                 Err(_) => return right_expr
