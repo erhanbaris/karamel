@@ -94,15 +94,16 @@
       buffer.push("Derleme işlemi başarılı");
       buffer.push("");
 
-      for (var i = 0; i < execution_result['results'].length; ++i)
-        buffer.push(execution_result['results'][i]);
-
       for (var i = 0; i < execution_result['stdout'].length; ++i)
         buffer.push(execution_result['stdout'][i]);
+
+      for (var i = 0; i < execution_result['results'].length; ++i)
+        buffer.push(execution_result['results'][i]);
     }
     else {
       buffer.push("Derleme sırasında hata oluştu");
-      buffer.push(execution_result['error']);
+      for (var i = 0; i < execution_result['stderr'].length; ++i)
+        buffer.push(execution_result['stderr'][i]);
     }
 
     window.target.setValue(buffer.join("\r\n"))
