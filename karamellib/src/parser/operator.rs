@@ -65,7 +65,7 @@ impl TokenParser for OperatorParser {
 
         if operator_type == BramaOperatorType::None {
             log::debug!("'{}' not found", ch as usize);
-            return Err(("Char not valid", tokinizer.line, tokinizer.column));
+            return Err(BramaError::CharNotValid);
         }
         
         tokinizer.add_token(start, BramaTokenType::Operator(operator_type));

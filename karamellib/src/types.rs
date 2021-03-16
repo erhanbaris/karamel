@@ -33,6 +33,7 @@ pub struct VmObject(pub u64);
 #[derive(PartialEq)]
 pub enum BramaError {
     SyntaxError = 100,
+    InvalidExpression,
     MoreThan1ArgumentPassed,
     RightParanthesesMissing,
     AssertFailed,
@@ -55,7 +56,13 @@ pub enum BramaError {
     ColonMarkMissing,
     ElseIsUsed,
     IndentationIssue,
-    ParenthesesNotClosed
+    DictNotClosed,
+    ArrayNotClosed,
+    InvalidListItem,
+    DictionaryKeyNotValid,
+    DictionaryValueNotValid,
+    CommentNotFinished,
+    WhileStatementNotValid
 }
 
 
@@ -77,7 +84,22 @@ impl BramaError {
             BramaError::IfConditionBodyNotFound => "Koşul gövdesi eksik",
             BramaError::ParenthesesNotClosed => "Parantez kapatılmamış",
             BramaError::InvalidUnaryOperation => "Geçersiz tekli işlem",
-            BramaError::UnaryWorksWithNumber => "Tekli numara ile çalışmaktadır"
+            BramaError::UnaryWorksWithNumber => "Tekli numara ile çalışmaktadır",
+            BramaError::InvalidExpression => "Geçersiz ifade",
+            BramaError::ArgumentNotFound => "Parametre bulunamadı",
+            BramaError::MultipleElseUsageNotValid => "Birden fazla yada ifadesi kullanılamaz",
+            BramaError::BreakAndContinueBelongToLoops => "'kır' ve 'devamet' ifadeleri döngü içinde kullanılabilir",
+            BramaError::FunctionConditionBodyNotFound => "Fonksiyon içi kodlar bulunamadı",
+            BramaError::ColonMarkMissing => "':' eksik",
+            BramaError::ElseIsUsed => "'yada' zaten kullanıldı",
+            BramaError::IndentationIssue => "Girinti sorunu",
+            BramaError::DictNotClosed => "Sözlük düzgün kapatılmamış",
+            BramaError::ArrayNotClosed => "Dizi düzgün kapatılmadı",
+            BramaError::InvalidListItem => "Dizi elemanı geçersiz",
+            BramaError::DictionaryKeyNotValid => "Sözlük anahtarı geçersiz",
+            BramaError::DictionaryValueNotValid => "Sözlük geçeri geçersiz",
+            BramaError::CommentNotFinished => "Yorum bilgisi düzgün kapatılmadı",
+            BramaError::WhileStatementNotValid => "Döngü düzgün tanımlanmamış"
         };
         format!("(#{}) {}", *self as u8, message)
     }

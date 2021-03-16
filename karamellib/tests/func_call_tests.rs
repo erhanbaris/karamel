@@ -2,6 +2,8 @@ extern crate karamellib;
 
 #[cfg(test)]
 mod tests {
+    use karamellib::types::BramaError;
+
     use crate::karamellib::parser::*;
     use crate::karamellib::syntax::*;
     use crate::karamellib::compiler::value::BramaPrimative;
@@ -63,8 +65,8 @@ mod tests {
                     assign_to_temp: false
     }));
 
-    test_compare!(func_call_7, "print(,2,'erhan')", Err(("Syntax error, undefined syntax", 0, 0)));
-    test_compare!(func_call_8, "print(", Err(("Right parantheses missing", 0, 0)));
+    test_compare!(func_call_7, "print(,2,'erhan')", Err(BramaError::SyntaxError));
+    test_compare!(func_call_8, "print(", Err(BramaError::RightParanthesesMissing));
     test_compare!(func_call_9, "data=print()", Ok(BramaAstType::Assignment {
         variable: Box::new(BramaAstType::Symbol("data".to_string())),
         operator: karamellib::types::BramaOperatorType::Assign,

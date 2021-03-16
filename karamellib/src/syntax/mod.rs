@@ -250,7 +250,6 @@ impl SyntaxParser {
             };
 
             if !success {
-                let token = self.peek_token().unwrap();
                 return Err(BramaError::IndentationIssue);
             }
 
@@ -288,7 +287,6 @@ impl SyntaxParser {
             };
 
             if !success {
-                let token = self.peek_token().unwrap();
                 return Err(BramaError::IndentationIssue);
             }
 

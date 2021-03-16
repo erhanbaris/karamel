@@ -64,7 +64,7 @@ impl PrimativeParser {
                 parser.consume_token();
                 Ok(ast)
             },
-            Err((message, line, column)) => Err((message, line, column))
+            _ => result
         }
     }
 
@@ -84,7 +84,7 @@ impl PrimativeParser {
                 let ast = ExpressionParser::parse(parser);
                 if is_ast_empty(&ast) {
                     parser.set_index(index_backup);
-                    return err_or_message(&ast, "Invalid list item");
+                    return err_or_message(&ast, BramaError::InvalidListItem);
                 }
                 
                 ast_vec.push(Box::new(ast.unwrap()));
@@ -97,7 +97,7 @@ impl PrimativeParser {
 
             if parser.match_operator(&[BramaOperatorType::SquareBracketEnd]).is_none() {
                 parser.set_index(index_backup);
-                return Err(("Array not closed", 0, 0));
+                return Err(BramaError::ArrayNotClosed);
             }
 
             return Ok(BramaAstType::List(ast_vec));
@@ -123,7 +123,7 @@ impl PrimativeParser {
                 let key_ast = Self::parse_basic_primatives(parser);
                 if is_ast_empty(&key_ast) {
                     parser.set_index(index_backup);
-                    return err_or_message(&key_ast, "Dictionary key not valid");
+                    return err_or_message(&key_ast, BramaError::DictionaryKeyNotValid);
                 }
                 
                 /* Check dictionary key */
@@ -133,13 +133,13 @@ impl PrimativeParser {
                             BramaPrimative::Text(_) => primative.clone(),
                             _ =>  {
                                 parser.set_index(index_backup);
-                                return Err((": Dictionary key not valid", 0, 0));
+                                return Err(BramaError::DictionaryKeyNotValid);
                             }
                         }
                     },
                     _ => {
                         parser.set_index(index_backup);
-                        return Err((": Dictionary key not valid", 0, 0));
+                        return Err(BramaError::DictionaryKeyNotValid);
                     }
                 };
 
@@ -147,14 +147,14 @@ impl PrimativeParser {
 
                 if parser.match_operator(&[BramaOperatorType::ColonMark]).is_none()  {
                     parser.set_index(index_backup);
-                    return Err((": required", 0, 0));
+                    return Err(BramaError::ColonMarkMissing);
                 }
 
                 parser.cleanup();
                 let value = ExpressionParser::parse(parser);
                 if is_ast_empty(&value) {
                     parser.set_index(index_backup);
-                    return err_or_message(&value, "Dictionary value not valid");
+                    return err_or_message(&value, BramaError::DictionaryValueNotValid);
                 }
   
                 dict_items.push(Box::new(BramaDictItem {
@@ -170,7 +170,7 @@ impl PrimativeParser {
 
             if parser.match_operator(&[BramaOperatorType::CurveBracketEnd]).is_none() {
                 parser.set_index(index_backup);
-                return Err(("Dict not closed", 0, 0));
+                return Err(BramaError::DictNotClosed);
             }
 
             return Ok(BramaAstType::Dict(dict_items));
@@ -246,7 +246,7 @@ impl PrimativeParser {
             let ast = ExpressionParser::parse(parser);
             if is_ast_empty(&ast) {
                 parser.set_index(index_backup);
-                return err_or_message(&ast, "Invalid expression");
+                return err_or_message(&ast, BramaError::InvalidExpression);
             }
 
             if parser.match_operator(&[BramaOperatorType::RightParentheses]).is_none() {

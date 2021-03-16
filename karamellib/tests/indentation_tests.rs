@@ -20,7 +20,7 @@ mod tests {
                     Ok(_) => {
                         assert_eq!(true, true);
                     },
-                    Err((_, _, _)) => {
+                    Err(_) => {
                         assert_eq!(false, true);
                     }
                 };
@@ -44,7 +44,7 @@ mod tests {
                         println!("'{}'", $text);
                         assert_eq!(false, true);
                     },
-                    Err((_, _, _)) => {
+                    Err(_) => {
                         assert_eq!(true, true);
                     }
                 };

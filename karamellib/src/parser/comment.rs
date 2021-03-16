@@ -35,7 +35,7 @@ impl TokenParser for CommentParser {
             }
 
             if !comment_end {
-                return Err(("Comment not finished", tokinizer.line, tokinizer.column));
+                return Err(BramaError::CommentNotFinished);
             }
         }
         else {

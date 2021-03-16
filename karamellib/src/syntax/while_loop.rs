@@ -60,7 +60,7 @@ impl SyntaxParserTrait for WhileLoopParser {
             parser.cleanup_whitespaces();
             if !parser.match_keyword(BramaKeywordType::WhileEndPart) {
                 parser.set_indentation(indentation);
-                return Err(("ise/while missing", 0, 0));
+                return Err(BramaError::WhileStatementNotValid);
             }
 
             parser.cleanup_whitespaces();

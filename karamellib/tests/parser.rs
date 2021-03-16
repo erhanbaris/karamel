@@ -73,7 +73,7 @@ mod tests {
             fn $name () {
                 let mut parser = Parser::new($text);
                 match parser.parse() {
-                    Err((_, _, _)) => assert_eq!(true, true),
+                    Err(_) => assert_eq!(true, true),
                     _ => assert_eq!(false, true)
                 }
             }

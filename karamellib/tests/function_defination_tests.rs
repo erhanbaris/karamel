@@ -116,7 +116,7 @@ fn test(1):
 test_compare!(func_def_14, r#"
 test=1
 döndür test
-"#, Err(BramaError::ReturnMustBeUsedInFunction);
+"#, Err(BramaError::ReturnMustBeUsedInFunction));
 test_compare!(func_def_15, r#"
 fn test():
     erhan=123

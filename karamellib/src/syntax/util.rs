@@ -25,11 +25,11 @@ pub fn is_ast_empty(ast: &AstResult) -> bool {
     }
 }
 
-pub fn err_or_message(ast: &AstResult, message: &'static str) -> AstResult {
+pub fn err_or_message(ast: &AstResult, error: BramaError) -> AstResult {
     match &ast {
-        Ok(BramaAstType::None) => Err((message, 0, 0,)),
+        Ok(BramaAstType::None) => Err(error),
         Ok(_) => Ok(BramaAstType::None),
-        Err((m, l, c)) => Err((m, *l, *c))
+        Err(error) => Err(*error)
     }
 }
 
