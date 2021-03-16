@@ -64,6 +64,6 @@ BramaAstType::FuncCall {
 },
 BramaAstType::Break
 ].to_vec())))));
-test_compare!(endless_5, r#"kır"#, Err(("break and continue belong to loops", 0, 0)));
-test_compare!(endless_6, r#"devamet"#, Err(("break and continue belong to loops", 0, 0)));
+test_compare!(endless_5, r#"kır"#, Err(BramaError::BreakAndContinueBelongToLoops));
+test_compare!(endless_6, r#"devamet"#, Err(BramaError::BreakAndContinueBelongToLoops));
 }

@@ -17,6 +17,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.59.2/theme/ayu-mirage.min.css" integrity="sha512-McHJYTvQc4LZQBg2bCgKgDbvGWaSe2ZiDbc3UoMS+ihFI103kl54eKblXb8tBtwhLAh0Yoogy8VXkmZTekMlzA==" crossorigin="anonymous" />
   <script src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/typed.js@2.0.11"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.min.css">
 </head>
 <body>
 <noscript>This page contains webassembly and javascript content, please enable javascript in your browser.</noscript>
@@ -29,8 +30,10 @@
 <div class="clearfix">
   <div class="container">
     <div id="editor">
-      <button onclick="execute()" style="z-index: 10; position: fixed; right: 10px; top: 10px">Execute</button>
-
+      <button onclick="execute()" class="ui primary right labeled icon button">
+        <i class="right cog icon"></i>
+        Çalıştır
+      </button>
       <div id="source" name="source"></div>
       <div id="target" name="target"></div>
     </div>

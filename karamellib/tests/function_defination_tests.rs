@@ -94,25 +94,25 @@ fn test
     erhan=123"#, Err(BramaError::ColonMarkMissing));
     test_compare!(func_def_8, r#"
 fn test(:
-    erhan=123"#, Err(("Argument must be a text", 0, 0)));
+    erhan=123"#, Err(BramaError::ArgumentMustBeText));
     test_compare!(func_def_9, r#"
 fn test(a:
-    erhan=123"#, Err(("')' missing", 0, 0)));
+    erhan=123"#, Err(BramaError::RightParanthesesMissing));
     test_compare!(func_def_10, r#"
 fn test(a):
-"#, Err(("Function condition body not found", 0, 0)));
+"#, Err(BramaError::FunctionConditionBodyNotFound));
 test_compare!(func_def_11, r#"
 fn (a):
   a=1
-"#, Err(("Function name not defined", 0, 0)));
+"#, Err(BramaError::FunctionNameNotDefined));
 test_compare!(func_def_12, r#"
 fn :
   a=1
-"#, Err(("Function name not defined", 0, 0)));
+"#, Err(BramaError::FunctionNameNotDefined));
 test_compare!(func_def_13, r#"
 fn test(1):
   a=1
-"#, Err(("Argument must be a text", 0, 0)));
+"#, Err(BramaError::ArgumentMustBeText));
 test_compare!(func_def_14, r#"
 test=1
 döndür test
