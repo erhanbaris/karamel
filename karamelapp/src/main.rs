@@ -1,12 +1,12 @@
 extern crate karamellib;
 
 use karamellib::logger::CONSOLE_LOGGER;
-use karamellib::types::BramaError;
+use karamellib::error::BramaErrorType;
 
 fn main() {
 
-    println!("{}", BramaError::FunctionCallSyntaxNotValid.as_text());
-    let result = karamellib::vm::executer::code_executer(&r#"gç::satıryaz("Sonsuza kadar devam")"#.to_string(), &CONSOLE_LOGGER);
+    println!("{}", BramaErrorType::FunctionCallSyntaxNotValid.as_text());
+    let result = karamellib::vm::executer::code_executer(&r#"gç::sa tıryaz("Sonsuza kadar devam")"#.to_string(), &CONSOLE_LOGGER);
     match result.executed {
         true => println!("Success"),
         false => println!("Fail")

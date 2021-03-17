@@ -8,6 +8,7 @@ use crate::syntax::control::OrParser;
 use crate::syntax::util::update_functions_for_temp_return;
 use crate::compiler::ast::BramaAstType;
 use crate::compiler::value::BramaPrimative;
+use crate::error::BramaErrorType;
 
 pub struct ExpressionParser;
 
@@ -63,11 +64,11 @@ impl SyntaxParserTrait for ExpressionParser {
                             },
                             _ => {
                                 log::debug!("Function call syntax not valid {:?}", func_name_expression);
-                                return Err(BramaError::FunctionCallSyntaxNotValid);
+                                return Err(BramaErrorType::FunctionCallSyntaxNotValid);
                             }
                         }
                     },
-                    _ => return Err(BramaError::FunctionCallSyntaxNotValid)
+                    _ => return Err(BramaErrorType::FunctionCallSyntaxNotValid)
                 };
             }
             

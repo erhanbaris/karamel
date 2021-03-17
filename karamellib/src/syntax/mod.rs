@@ -21,6 +21,7 @@ use std::cell::Cell;
 use crate::types::*;
 use self::block::MultiLineBlockParser;
 use crate::compiler::ast::BramaAstType;
+use crate::error::*;
 
 use bitflags::bitflags;
 
@@ -65,18 +66,36 @@ impl SyntaxParser {
         }
     }
 
-    pub fn parse(&self) -> AstResult {
+    pub fn parse(&self) -> Result<BramaAstType, BramaError> {
         return match MultiLineBlockParser::parse(&self) {
             Ok(ast) => {
                 self.cleanup();
                 
                 if let Ok(token) = self.peek_token() {
                     log::debug!("We forget this : {:?}", token);
-                    return Err(BramaError::SyntaxError);
+                    return Err(BramaError {
+                        error_type: BramaErrorType::SyntaxError,
+                        line: token.line,
+                        column: token.start
+                    });
                 }
                 Ok(ast)
             },
-            other => other
+            Err(error) => {
+                if let Ok(token) = self.peek_token() {
+                    log::debug!("We forget this : {:?}", token);
+                    return Err(BramaError {
+                        error_type: error,
+                        line: token.line,
+                        column: token.start
+                    });
+                }
+                return Err(BramaError {
+                    error_type: error,
+                    line: 0,
+                    column: 0
+                });
+            }
         };
     }
 
@@ -250,7 +269,7 @@ impl SyntaxParser {
             };
 
             if !success {
-                return Err(BramaError::IndentationIssue);
+                return Err(BramaErrorType::IndentationIssue);
             }
 
             self.consume_token();
@@ -287,7 +306,7 @@ impl SyntaxParser {
             };
 
             if !success {
-                return Err(BramaError::IndentationIssue);
+                return Err(BramaErrorType::IndentationIssue);
             }
 
             self.consume_token();

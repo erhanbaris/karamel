@@ -4,6 +4,7 @@ use crate::syntax::expression::ExpressionParser;
 use crate::syntax::primative::PrimativeParser;
 use crate::compiler::ast::BramaAstType;
 use crate::syntax::util::map_parser;
+use crate::error::BramaErrorType;
 
 pub struct FuncCallParser;
 
@@ -76,12 +77,12 @@ impl ExtensionSyntaxParser for FuncCallParser {
                     Some(BramaOperatorType::Comma)            => {
                         if let Ok(BramaAstType::None) = param_expression {
                             parser.set_index(index_backup);
-                            return Err(BramaError::SyntaxError)
+                            return Err(BramaErrorType::SyntaxError)
                         }
                     },
                     _ => {
                         parser.set_index(index_backup);
-                        return Err(BramaError::RightParanthesesMissing);
+                        return Err(BramaErrorType::RightParanthesesMissing);
                     }
                 }
 

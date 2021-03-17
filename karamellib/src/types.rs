@@ -5,10 +5,11 @@ use std::result::Result;
 use std::hash::{Hash, Hasher};
 use std::collections::hash_map::DefaultHasher;
 use std::rc::Rc;
-use crate::compiler::ast::BramaAstType;
+use crate::{compiler::ast::BramaAstType, error::BramaError};
+use crate::error::BramaErrorType;
 
 pub type ParseResult        = Result<(), BramaError>;
-pub type AstResult          = Result<BramaAstType, BramaError>;
+pub type AstResult          = Result<BramaAstType, BramaErrorType>;
 pub type CompilerResult     = Result<(), &'static str>;
 
 pub const TAG_NULL        : u64 = 0;
@@ -26,84 +27,6 @@ pub const EMPTY_FLAG:   u64 = QNAN | TAG_NULL;
 #[repr(transparent)]
 pub struct VmObject(pub u64);
 
-
-#[derive(Copy)]
-#[derive(Clone)]
-#[derive(Debug)]
-#[derive(PartialEq)]
-pub enum BramaError {
-    SyntaxError = 100,
-    InvalidExpression,
-    MoreThan1ArgumentPassed,
-    RightParanthesesMissing,
-    AssertFailed,
-    NumberNotParsed,
-    MissingStringDeliminator,
-    CharNotValid,
-    RightSideOfExpressionNotFound,
-    ReturnMustBeUsedInFunction,
-    FunctionCallSyntaxNotValid,
-    FunctionNameNotDefined,
-    ArgumentMustBeText,
-    IfConditionBodyNotFound,
-    ParenthesesNotClosed,
-    InvalidUnaryOperation,
-    UnaryWorksWithNumber,
-    ArgumentNotFound,
-    MultipleElseUsageNotValid,
-    BreakAndContinueBelongToLoops,
-    FunctionConditionBodyNotFound,
-    ColonMarkMissing,
-    ElseIsUsed,
-    IndentationIssue,
-    DictNotClosed,
-    ArrayNotClosed,
-    InvalidListItem,
-    DictionaryKeyNotValid,
-    DictionaryValueNotValid,
-    CommentNotFinished,
-    WhileStatementNotValid
-}
-
-
-impl BramaError {
-    pub fn as_text(&self) -> String {
-        let message = match self {
-            BramaError::SyntaxError => "Sozdizimi hatasi",
-            BramaError::MoreThan1ArgumentPassed => "Birden fazla degisken kullanilamaz",
-            BramaError::RightParanthesesMissing => "Sağ parantaz eksik",
-            BramaError::AssertFailed => "Doğrulanamadı",
-            BramaError::NumberNotParsed => "Sayı ayrıştırılamadı",
-            BramaError::MissingStringDeliminator => "Yazı sonlandırıcısı bulunamadı",
-            BramaError::CharNotValid => "Karakter geçerli değil",
-            BramaError::RightSideOfExpressionNotFound => "İfadenin sağ tarafı bulunamadı",
-            BramaError::ReturnMustBeUsedInFunction => "Döndür komutu fonksiyon içinde kullanılmalıdır",
-            BramaError::FunctionCallSyntaxNotValid => "Fonksiyon çağırma sözdizimi geçerli değil",
-            BramaError::FunctionNameNotDefined => "Fonksiyon adı tanımlanmamış",
-            BramaError::ArgumentMustBeText => "Değişken yazı olmalıdır",
-            BramaError::IfConditionBodyNotFound => "Koşul gövdesi eksik",
-            BramaError::ParenthesesNotClosed => "Parantez kapatılmamış",
-            BramaError::InvalidUnaryOperation => "Geçersiz tekli işlem",
-            BramaError::UnaryWorksWithNumber => "Tekli numara ile çalışmaktadır",
-            BramaError::InvalidExpression => "Geçersiz ifade",
-            BramaError::ArgumentNotFound => "Parametre bulunamadı",
-            BramaError::MultipleElseUsageNotValid => "Birden fazla yada ifadesi kullanılamaz",
-            BramaError::BreakAndContinueBelongToLoops => "'kır' ve 'devamet' ifadeleri döngü içinde kullanılabilir",
-            BramaError::FunctionConditionBodyNotFound => "Fonksiyon içi kodlar bulunamadı",
-            BramaError::ColonMarkMissing => "':' eksik",
-            BramaError::ElseIsUsed => "'yada' zaten kullanıldı",
-            BramaError::IndentationIssue => "Girinti sorunu",
-            BramaError::DictNotClosed => "Sözlük düzgün kapatılmamış",
-            BramaError::ArrayNotClosed => "Dizi düzgün kapatılmadı",
-            BramaError::InvalidListItem => "Dizi elemanı geçersiz",
-            BramaError::DictionaryKeyNotValid => "Sözlük anahtarı geçersiz",
-            BramaError::DictionaryValueNotValid => "Sözlük geçeri geçersiz",
-            BramaError::CommentNotFinished => "Yorum bilgisi düzgün kapatılmadı",
-            BramaError::WhileStatementNotValid => "Döngü düzgün tanımlanmamış"
-        };
-        format!("(#{}) {}", *self as u8, message)
-    }
-}
 
 #[derive(Clone, Copy)]
 #[derive(Debug)]
@@ -345,7 +268,7 @@ impl Tokinizer<'_> {
 
 pub trait TokenParser {
     fn check(&self, tokinizer: &mut Tokinizer) -> bool;
-    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<(), BramaError>;
+    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<(), BramaErrorType>;
 }
 
 pub trait CharTraits {

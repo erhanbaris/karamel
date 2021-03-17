@@ -2,6 +2,8 @@ extern crate karamellib;
 
 #[cfg(test)]
 mod tests {
+    use karamellib::error::{BramaError, BramaErrorType};
+
     use crate::karamellib::types::*;
     use crate::karamellib::parser::*;
     use crate::karamellib::syntax::*;
@@ -223,7 +225,11 @@ yada:
     erhan=1234
 yada:
     erhan=1234
-"#, Err(BramaError::ElseIsUsed));
+"#, Err(BramaError {
+    error_type: BramaErrorType::ElseIsUsed,
+    column: 4,
+    line: 0
+}));
 
 test_compare!(if_8, r#"eğer 1024 * 123:
     erhan=123
@@ -233,7 +239,11 @@ yada 1024 * 123 > 10_000_000:
     erhan=12345
 yada 1024 * 123 < 10_000_000:
     erhan=123456
-"#, Err(BramaError::ElseIsUsed));
+"#, Err(BramaError {
+    error_type: BramaErrorType::ElseIsUsed,
+    column: 4,
+    line: 0
+}));
 
 
 

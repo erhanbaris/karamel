@@ -7,6 +7,7 @@ use crate::syntax::util::is_ast_empty;
 use crate::compiler::ast::BramaAstType;
 use crate::compiler::value::BramaPrimative;
 use crate::syntax::expression::ExpressionParser;
+use crate::error::BramaErrorType;
 
 
 use std::rc::Rc;
@@ -104,7 +105,7 @@ impl UnaryParser {
                         BramaTokenType::Double(double) => return Ok(BramaAstType::Primative(Rc::new(BramaPrimative::Number(double * opt)))),
                         _ => {
                             parser.set_index(index_backup);
-                            return Err(BramaError::UnaryWorksWithNumber);
+                            return Err(BramaErrorType::UnaryWorksWithNumber);
                         }
                     }
                 },
@@ -122,25 +123,25 @@ impl UnaryParser {
                     unary_ast = match expression {
                         Ok(BramaAstType::None) => {
                             parser.set_index(index_backup);
-                            return Err(BramaError::InvalidUnaryOperation);
+                            return Err(BramaErrorType::InvalidUnaryOperation);
                         },
                         Ok(ast) => ast,
                         Err(_) => {
                             parser.set_index(index_backup);
-                            return Err(BramaError::InvalidUnaryOperation);
+                            return Err(BramaErrorType::InvalidUnaryOperation);
                         }
                     };
                 }
                 _ => { 
                     parser.set_index(index_backup);
-                    return Err(BramaError::InvalidUnaryOperation);
+                    return Err(BramaErrorType::InvalidUnaryOperation);
                 }
             }
 
             return match unary_ast {
                 BramaAstType::None => {
                     parser.set_index(index_backup);
-                    Err(BramaError::InvalidUnaryOperation)
+                    Err(BramaErrorType::InvalidUnaryOperation)
                 },
                 _ => Ok(BramaAstType::PrefixUnary(operator, Box::new(unary_ast)))
             };

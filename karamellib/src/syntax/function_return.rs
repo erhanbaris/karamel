@@ -2,6 +2,7 @@ use crate::types::*;
 use crate::syntax::{SyntaxParser, SyntaxParserTrait, SyntaxFlag};
 use crate::compiler::ast::BramaAstType;
 use crate::syntax::expression::ExpressionParser;
+use crate::error::BramaErrorType;
 
 pub struct FunctionReturnParser;
 
@@ -13,7 +14,7 @@ impl SyntaxParserTrait for FunctionReturnParser {
         if parser.match_keyword(BramaKeywordType::Return) {
             if !parser.flags.get().contains(SyntaxFlag::FUNCTION_DEFINATION) {
                 parser.set_index(index_backup);
-                return Err(BramaError::ReturnMustBeUsedInFunction);
+                return Err(BramaErrorType::ReturnMustBeUsedInFunction);
             }
 
             parser.cleanup_whitespaces();

@@ -2,6 +2,8 @@ extern crate karamellib;
 
 #[cfg(test)]
 mod tests {
+    use karamellib::error::{BramaError, BramaErrorType};
+
     use crate::karamellib::parser::*;
     use crate::karamellib::types::*;
     use crate::karamellib::syntax::*;
@@ -118,8 +120,16 @@ mod tests {
         right: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Bool(true)))), 
     }));
 
-    test_compare!(multiply_divide_8, "1/", Err(BramaError::RightSideOfExpressionNotFound));
-    test_compare!(multiply_divide_9, "/1", Err(BramaError::SyntaxError));
+    test_compare!(multiply_divide_8, "1/", Err(BramaError {
+        error_type: BramaErrorType::RightSideOfExpressionNotFound,
+        column: 1,
+        line: 0
+    }));
+    test_compare!(multiply_divide_9, "/1", Err(BramaError {
+        error_type: BramaErrorType::SyntaxError,
+        column: 0,
+        line: 0
+    }));
 
     test_compare!(modulo_1, "10 mod 10", Ok(BramaAstType::Binary {
         left: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(10.0)))), 

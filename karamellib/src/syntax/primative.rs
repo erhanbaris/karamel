@@ -8,6 +8,7 @@ use crate::syntax::{SyntaxParser, SyntaxParserTrait};
 use crate::syntax::expression::ExpressionParser;
 use crate::compiler::value::BramaPrimative;
 use crate::compiler::ast::{BramaAstType, BramaDictItem};
+use crate::error::BramaErrorType;
 
 pub struct PrimativeParser;
 
@@ -84,7 +85,7 @@ impl PrimativeParser {
                 let ast = ExpressionParser::parse(parser);
                 if is_ast_empty(&ast) {
                     parser.set_index(index_backup);
-                    return err_or_message(&ast, BramaError::InvalidListItem);
+                    return err_or_message(&ast, BramaErrorType::InvalidListItem);
                 }
                 
                 ast_vec.push(Box::new(ast.unwrap()));
@@ -97,7 +98,7 @@ impl PrimativeParser {
 
             if parser.match_operator(&[BramaOperatorType::SquareBracketEnd]).is_none() {
                 parser.set_index(index_backup);
-                return Err(BramaError::ArrayNotClosed);
+                return Err(BramaErrorType::ArrayNotClosed);
             }
 
             return Ok(BramaAstType::List(ast_vec));
@@ -123,7 +124,7 @@ impl PrimativeParser {
                 let key_ast = Self::parse_basic_primatives(parser);
                 if is_ast_empty(&key_ast) {
                     parser.set_index(index_backup);
-                    return err_or_message(&key_ast, BramaError::DictionaryKeyNotValid);
+                    return err_or_message(&key_ast, BramaErrorType::DictionaryKeyNotValid);
                 }
                 
                 /* Check dictionary key */
@@ -133,13 +134,13 @@ impl PrimativeParser {
                             BramaPrimative::Text(_) => primative.clone(),
                             _ =>  {
                                 parser.set_index(index_backup);
-                                return Err(BramaError::DictionaryKeyNotValid);
+                                return Err(BramaErrorType::DictionaryKeyNotValid);
                             }
                         }
                     },
                     _ => {
                         parser.set_index(index_backup);
-                        return Err(BramaError::DictionaryKeyNotValid);
+                        return Err(BramaErrorType::DictionaryKeyNotValid);
                     }
                 };
 
@@ -147,14 +148,14 @@ impl PrimativeParser {
 
                 if parser.match_operator(&[BramaOperatorType::ColonMark]).is_none()  {
                     parser.set_index(index_backup);
-                    return Err(BramaError::ColonMarkMissing);
+                    return Err(BramaErrorType::ColonMarkMissing);
                 }
 
                 parser.cleanup();
                 let value = ExpressionParser::parse(parser);
                 if is_ast_empty(&value) {
                     parser.set_index(index_backup);
-                    return err_or_message(&value, BramaError::DictionaryValueNotValid);
+                    return err_or_message(&value, BramaErrorType::DictionaryValueNotValid);
                 }
   
                 dict_items.push(Box::new(BramaDictItem {
@@ -170,7 +171,7 @@ impl PrimativeParser {
 
             if parser.match_operator(&[BramaOperatorType::CurveBracketEnd]).is_none() {
                 parser.set_index(index_backup);
-                return Err(BramaError::DictNotClosed);
+                return Err(BramaErrorType::DictNotClosed);
             }
 
             return Ok(BramaAstType::Dict(dict_items));
@@ -246,12 +247,12 @@ impl PrimativeParser {
             let ast = ExpressionParser::parse(parser);
             if is_ast_empty(&ast) {
                 parser.set_index(index_backup);
-                return err_or_message(&ast, BramaError::InvalidExpression);
+                return err_or_message(&ast, BramaErrorType::InvalidExpression);
             }
 
             if parser.match_operator(&[BramaOperatorType::RightParentheses]).is_none() {
                 parser.set_index(index_backup);
-                return Err(BramaError::ParenthesesNotClosed);
+                return Err(BramaErrorType::ParenthesesNotClosed);
             }
 
             return Ok(ast.unwrap());

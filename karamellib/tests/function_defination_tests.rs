@@ -2,6 +2,8 @@ extern crate karamellib;
 
 #[cfg(test)]
 mod tests {
+    use karamellib::error::{BramaError, BramaErrorType};
+
     use crate::karamellib::parser::*;
     use crate::karamellib::types::*;
     use crate::karamellib::syntax::*;
@@ -91,32 +93,64 @@ fn test   :
             }));
             test_compare!(func_def_7, r#"
 fn test
-    erhan=123"#, Err(BramaError::ColonMarkMissing));
+    erhan=123"#, Err(BramaError {
+        error_type: BramaErrorType::ColonMarkMissing,
+        column: 4,
+        line: 0
+    }));
     test_compare!(func_def_8, r#"
 fn test(:
-    erhan=123"#, Err(BramaError::ArgumentMustBeText));
+    erhan=123"#, Err(BramaError {
+        error_type: BramaErrorType::ArgumentMustBeText,
+        column: 4,
+        line: 0
+    }));
     test_compare!(func_def_9, r#"
 fn test(a:
-    erhan=123"#, Err(BramaError::RightParanthesesMissing));
+    erhan=123"#, Err(BramaError {
+        error_type: BramaErrorType::RightParanthesesMissing,
+        column: 4,
+        line: 0
+    }));
     test_compare!(func_def_10, r#"
 fn test(a):
-"#, Err(BramaError::FunctionConditionBodyNotFound));
+"#, Err(BramaError {
+    error_type: BramaErrorType::FunctionConditionBodyNotFound,
+    column: 4,
+    line: 0
+}));
 test_compare!(func_def_11, r#"
 fn (a):
   a=1
-"#, Err(BramaError::FunctionNameNotDefined));
+"#, Err(BramaError {
+    error_type: BramaErrorType::FunctionNameNotDefined,
+    column: 4,
+    line: 0
+}));
 test_compare!(func_def_12, r#"
 fn :
   a=1
-"#, Err(BramaError::FunctionNameNotDefined));
+"#, Err(BramaError {
+    error_type: BramaErrorType::FunctionNameNotDefined,
+    column: 4,
+    line: 0
+}));
 test_compare!(func_def_13, r#"
 fn test(1):
   a=1
-"#, Err(BramaError::ArgumentMustBeText));
+"#, Err(BramaError {
+    error_type: BramaErrorType::ArgumentMustBeText,
+    column: 4,
+    line: 0
+}));
 test_compare!(func_def_14, r#"
 test=1
 döndür test
-"#, Err(BramaError::ReturnMustBeUsedInFunction));
+"#, Err(BramaError {
+    error_type: BramaErrorType::ReturnMustBeUsedInFunction,
+    column: 4,
+    line: 0
+}));
 test_compare!(func_def_15, r#"
 fn test():
     erhan=123

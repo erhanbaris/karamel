@@ -2,6 +2,8 @@ extern crate karamellib;
 
 #[cfg(test)]
 mod tests {
+    use karamellib::error::{BramaError, BramaErrorType};
+
     use crate::karamellib::types::*;
     use crate::karamellib::parser::*;
     use crate::karamellib::syntax::*;
@@ -48,7 +50,11 @@ BramaAstType::FuncCall {
 ].to_vec())))));
 test_compare!(endless_3, r#"sonsuz
     erhan=123   
-    print(1)"#, Err(BramaError::ColonMarkMissing));
+    print(1)"#, Err(BramaError {
+        error_type: BramaErrorType::ColonMarkMissing,
+        line: 0,
+        column: 0
+    }));
 test_compare!(endless_4, r#"sonsuz:
     erhan=123   
     print(1)
@@ -64,6 +70,14 @@ BramaAstType::FuncCall {
 },
 BramaAstType::Break
 ].to_vec())))));
-test_compare!(endless_5, r#"kır"#, Err(BramaError::BreakAndContinueBelongToLoops));
-test_compare!(endless_6, r#"devamet"#, Err(BramaError::BreakAndContinueBelongToLoops));
+test_compare!(endless_5, r#"kır"#, Err(BramaError {
+    error_type: BramaErrorType::BreakAndContinueBelongToLoops,
+    column: 4,
+    line: 0
+}));
+test_compare!(endless_6, r#"devamet"#, Err(BramaError {
+    error_type: BramaErrorType::BreakAndContinueBelongToLoops,
+    column: 4,
+    line: 0
+}));
 }

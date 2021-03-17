@@ -2,6 +2,7 @@ use crate::types::*;
 use crate::syntax::{SyntaxParser};
 use crate::syntax::ParseType;
 use crate::compiler::ast::BramaAstType;
+use crate::error::BramaErrorType;
 
 // https://github.com/rust-lang/rust/issues/75429
 
@@ -25,7 +26,7 @@ pub fn is_ast_empty(ast: &AstResult) -> bool {
     }
 }
 
-pub fn err_or_message(ast: &AstResult, error: BramaError) -> AstResult {
+pub fn err_or_message(ast: &AstResult, error: BramaErrorType) -> AstResult {
     match &ast {
         Ok(BramaAstType::None) => Err(error),
         Ok(_) => Ok(BramaAstType::None),
