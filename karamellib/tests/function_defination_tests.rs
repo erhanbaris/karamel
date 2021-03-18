@@ -95,13 +95,13 @@ fn test   :
 fn test
     erhan=123"#, Err(BramaError {
         error_type: BramaErrorType::ColonMarkMissing,
-        column: 4,
-        line: 0
+        column: 7,
+        line: 1
     }));
     test_compare!(func_def_8, r#"
 fn test(:
     erhan=123"#, Err(BramaError {
-        error_type: BramaErrorType::FunctionDefinationNotValid,
+        error_type: BramaErrorType::ArgumentMustBeText,
         column: 9,
         line: 1
     }));
@@ -116,8 +116,8 @@ fn test(a:
 fn test(a):
 "#, Err(BramaError {
     error_type: BramaErrorType::FunctionConditionBodyNotFound,
-    column: 4,
-    line: 0
+    column: 11,
+    line: 1
 }));
 test_compare!(func_def_11, r#"
 fn (a):
@@ -125,7 +125,7 @@ fn (a):
 "#, Err(BramaError {
     error_type: BramaErrorType::FunctionNameNotDefined,
     column: 4,
-    line: 0
+    line: 1
 }));
 test_compare!(func_def_12, r#"
 fn :
@@ -133,23 +133,23 @@ fn :
 "#, Err(BramaError {
     error_type: BramaErrorType::FunctionNameNotDefined,
     column: 4,
-    line: 0
+    line: 1
 }));
 test_compare!(func_def_13, r#"
 fn test(1):
   a=1
 "#, Err(BramaError {
     error_type: BramaErrorType::ArgumentMustBeText,
-    column: 4,
-    line: 0
+    column: 9,
+    line: 1
 }));
 test_compare!(func_def_14, r#"
 test=1
 döndür test
 "#, Err(BramaError {
     error_type: BramaErrorType::ReturnMustBeUsedInFunction,
-    column: 4,
-    line: 0
+    column: 6,
+    line: 2
 }));
 test_compare!(func_def_15, r#"
 fn test():

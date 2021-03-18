@@ -39,22 +39,22 @@ mod tests {
     
     test_compare!(unary_9, "+[]", Err(BramaError {
         error_type: BramaErrorType::UnaryWorksWithNumber,
-        column: 4,
+        column: 1,
         line: 0
     }));
     test_compare!(unary_10, "++100", Err(BramaError {
         error_type: BramaErrorType::InvalidUnaryOperation,
-        column: 4,
+        column: 2,
         line: 0
     }));
     test_compare!(unary_11, "--100", Err(BramaError {
         error_type: BramaErrorType::InvalidUnaryOperation,
-        column: 4,
+        column: 2,
         line: 0
     }));
     test_compare!(unary_12, "--true", Err(BramaError {
         error_type: BramaErrorType::InvalidUnaryOperation,
-        column: 4,
+        column: 2,
         line: 0
     }));
 

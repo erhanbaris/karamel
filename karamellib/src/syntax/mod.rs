@@ -82,7 +82,7 @@ impl SyntaxParser {
                 Ok(ast)
             },
             Err(error) => {
-                if let Ok(token) = self.previous_token() {
+                if let Ok(token) = self.valid_token() {
                     log::debug!("Syntax parse failed : {:?}", token);
                     return Err(BramaError {
                         error_type: error,
@@ -140,14 +140,25 @@ impl SyntaxParser {
         }
     }
 
-    pub fn previous_token(&self) -> Result<&Token, ()> {
-        match self.index.get().checked_sub(1) {
-            Some(index) => match self.tokens.get(index) {
-                Some(token) => Ok(token),
-                None => Err(())
-            },
-            None => Err(())
+    pub fn valid_token(&self) -> Result<&Token, ()> {
+        let mut index = self.index.get() + 1;
+        
+        while index != 0 {
+            match index.checked_sub(1) {
+                Some(index) => match self.tokens.get(index) {
+                    Some(token) => match token.token_type {
+                        BramaTokenType::NewLine(_) => (),
+                        BramaTokenType::WhiteSpace(_) => (),
+                        _ => return Ok(token)
+                    },
+                    None => ()
+                },
+                None => return Err(())
+            };
+            
+            index -= 1;
         }
+        Err(())
     }
 
     pub fn next_token(&self) -> Result<&Token, ()> {

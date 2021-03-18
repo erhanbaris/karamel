@@ -84,7 +84,6 @@ impl PrimativeParser {
 
                 let ast = ExpressionParser::parse(parser);
                 if is_ast_empty(&ast) {
-                    parser.set_index(index_backup);
                     return err_or_message(&ast, BramaErrorType::InvalidListItem);
                 }
                 
@@ -97,7 +96,6 @@ impl PrimativeParser {
             }
 
             if parser.match_operator(&[BramaOperatorType::SquareBracketEnd]).is_none() {
-                parser.set_index(index_backup);
                 return Err(BramaErrorType::ArrayNotClosed);
             }
 
@@ -123,7 +121,6 @@ impl PrimativeParser {
 
                 let key_ast = Self::parse_basic_primatives(parser);
                 if is_ast_empty(&key_ast) {
-                    parser.set_index(index_backup);
                     return err_or_message(&key_ast, BramaErrorType::DictionaryKeyNotValid);
                 }
                 
@@ -133,28 +130,22 @@ impl PrimativeParser {
                         match &*primative {
                             BramaPrimative::Text(_) => primative.clone(),
                             _ =>  {
-                                parser.set_index(index_backup);
                                 return Err(BramaErrorType::DictionaryKeyNotValid);
                             }
                         }
                     },
-                    _ => {
-                        parser.set_index(index_backup);
-                        return Err(BramaErrorType::DictionaryKeyNotValid);
-                    }
+                    _ => return Err(BramaErrorType::DictionaryKeyNotValid)
                 };
 
                 parser.cleanup();
 
                 if parser.match_operator(&[BramaOperatorType::ColonMark]).is_none()  {
-                    parser.set_index(index_backup);
                     return Err(BramaErrorType::ColonMarkMissing);
                 }
 
                 parser.cleanup();
                 let value = ExpressionParser::parse(parser);
                 if is_ast_empty(&value) {
-                    parser.set_index(index_backup);
                     return err_or_message(&value, BramaErrorType::DictionaryValueNotValid);
                 }
   
@@ -170,7 +161,6 @@ impl PrimativeParser {
             }
 
             if parser.match_operator(&[BramaOperatorType::CurveBracketEnd]).is_none() {
-                parser.set_index(index_backup);
                 return Err(BramaErrorType::DictNotClosed);
             }
 

@@ -57,17 +57,17 @@ mod tests {
     test_success!(test_2, "\"merhaba dünya\"", Ok(BramaAstType::Primative(Rc::new(BramaPrimative::Text(Rc::new("merhaba dünya".to_string()))))));
     test_success!(test_3, "'merhaba dünya", Err(BramaError {
         error_type: BramaErrorType::MissingStringDeliminator,
-        column: 4,
+        column: 14,
         line: 0
     }));
     test_success!(test_4, "\"merhaba dünya", Err(BramaError {
         error_type: BramaErrorType::MissingStringDeliminator,
-        column: 4,
+        column: 14,
         line: 0
     }));
     test_success!(test_5, "merhaba dünya'", Err(BramaError {
         error_type: BramaErrorType::MissingStringDeliminator,
-        column: 4,
+        column: 14,
         line: 0
     }));
 

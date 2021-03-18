@@ -40,13 +40,8 @@ impl SyntaxParserTrait for FunctionDefinationParser {
 
                     let argument = PrimativeParser::parse_symbol(parser)?;
                     match argument {
-                        BramaAstType::None => {
-                            return Err(BramaErrorType::FunctionDefinationNotValid);
-                        },
                         BramaAstType::Symbol(text) => arguments.push(text),
-                        _ => {
-                            return Err(BramaErrorType::ArgumentMustBeText);
-                        }
+                        _ => return Err(BramaErrorType::ArgumentMustBeText)
                     };
 
                     parser.cleanup_whitespaces();
