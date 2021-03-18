@@ -4,7 +4,8 @@ use crate::compiler::value::EMPTY_OBJECT;
 use crate::buildin::{Module, Class};
 use std::collections::HashMap;
 use std::rc::Rc;
-use std::io::{self};
+use std::io;
+
 use log;
 
 

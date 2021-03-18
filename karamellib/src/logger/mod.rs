@@ -1,11 +1,11 @@
 use log::*;
-use std::cell::RefCell;
+use std::{cell::RefCell};
 
 pub struct ConsoleLogger;
 pub struct DummyLogger;
 pub struct CollectorLogger {
-    pub stdout: RefCell<Vec<String>>,
-    pub stderr: RefCell<Vec<String>>
+    pub stdout: RefCell<String>,
+    pub stderr: RefCell<String>
 }
 
 unsafe impl Send for CollectorLogger {}
@@ -13,7 +13,6 @@ unsafe impl Sync for CollectorLogger {}
 
 pub static CONSOLE_LOGGER: ConsoleLogger = ConsoleLogger;
 pub static DUMMY_LOGGER: DummyLogger = DummyLogger;
-pub static COLLECTOR_LOGGER: CollectorLogger = CollectorLogger { stdout: RefCell::new(Vec::new()), stderr: RefCell::new(Vec::new()) };
 
 impl Log for CollectorLogger {
     fn enabled(&self, metadata: &Metadata) -> bool {
@@ -26,8 +25,8 @@ impl Log for CollectorLogger {
             println!("[{}] {}", record.level(), record.args());
 
             match record.level() {
-                Level::Error => self.stderr.borrow_mut().push(record.args().to_string()),
-                _ => self.stdout.borrow_mut().push(record.args().to_string())
+                Level::Error => self.stderr.borrow_mut().push_str(&record.args().to_string()),
+                _ => self.stdout.borrow_mut().push_str(&record.args().to_string())
             };
         }
     }

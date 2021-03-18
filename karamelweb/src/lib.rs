@@ -1,9 +1,10 @@
 extern crate karamellib;
 
-use karamellib::compiler::BramaPrimative;
+use std::cell::RefCell;
+
+use karamellib::{compiler::BramaPrimative, logger::CollectorLogger};
 use wasm_bindgen::prelude::*;
 use js_sys::*;
-use karamellib::logger::COLLECTOR_LOGGER;
 
 #[wasm_bindgen]
 pub fn execute_code(name: &str) -> Object {
@@ -14,8 +15,12 @@ pub fn execute_code(name: &str) -> Object {
     let results_ref     = JsValue::from("results");
     let stdout_ref      = JsValue::from("stdout");
     let stderr_ref      = JsValue::from("stderr");
+    static COLLECTOR: CollectorLogger = CollectorLogger { 
+        stdout: RefCell::new(String::new()), 
+        stderr: RefCell::new(String::new())
+    };
 
-    let result = karamellib::vm::executer::code_executer(&name.to_string(), &COLLECTOR_LOGGER);
+    let result = karamellib::vm::executer::code_executer(&name.to_string(), &COLLECTOR);
     match result.compiled && result.executed {
         true => {
             Reflect::set(response.as_ref(), status_ref.as_ref(), JsValue::from_bool(true).as_ref()).unwrap();
@@ -37,11 +42,7 @@ pub fn execute_code(name: &str) -> Object {
                 None=> ()
             };
 
-            for stdout in COLLECTOR_LOGGER.stdout.borrow().iter() {
-                stdouts.push(&JsValue::from(stdout).into());
-            }
-
-            COLLECTOR_LOGGER.stdout.borrow_mut().clear();
+            stdouts.push(&JsValue::from(COLLECTOR.stdout.borrow().clone()).into());
 
             Reflect::set(response.as_ref(), results_ref.as_ref(), results.as_ref()).unwrap();
             Reflect::set(response.as_ref(), stdout_ref.as_ref(),  stdouts.as_ref()).unwrap();
@@ -49,16 +50,15 @@ pub fn execute_code(name: &str) -> Object {
         false => {
             let stderrs = Array::new();
 
-            for stderr in COLLECTOR_LOGGER.stderr.borrow().iter() {
-                stderrs.push(&JsValue::from(stderr).into());
-            }
-
-            COLLECTOR_LOGGER.stderr.borrow_mut().clear();
+            stderrs.push(&JsValue::from(COLLECTOR.stderr.borrow().clone()).into());
 
             Reflect::set(response.as_ref(), status_ref.as_ref(), JsValue::from_bool(false).as_ref()).unwrap();
             Reflect::set(response.as_ref(), stderr_ref.as_ref(),  stderrs.as_ref()).unwrap();
         }
     };
+
+    COLLECTOR.stdout.borrow_mut().clear();
+    COLLECTOR.stderr.borrow_mut().clear();
 
     response
 }
