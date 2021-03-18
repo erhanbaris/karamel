@@ -21,7 +21,6 @@ impl TokenParser for CommentParser {
                 tokinizer.increase_index();
 
                 if ch.is_new_line() {
-                    tokinizer.reset_column();
                     tokinizer.increate_line();
                 }
 
@@ -48,7 +47,6 @@ impl TokenParser for CommentParser {
                 tokinizer.increase_index();
 
                 if ch.is_new_line() {
-                    tokinizer.reset_column();
                     tokinizer.increate_line();
                 }
 

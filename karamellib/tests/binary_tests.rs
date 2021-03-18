@@ -122,7 +122,7 @@ mod tests {
 
     test_compare!(multiply_divide_8, "1/", Err(BramaError {
         error_type: BramaErrorType::RightSideOfExpressionNotFound,
-        column: 1,
+        column: 2,
         line: 0
     }));
     test_compare!(multiply_divide_9, "/1", Err(BramaError {

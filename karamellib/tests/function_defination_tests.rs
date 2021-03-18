@@ -101,16 +101,16 @@ fn test
     test_compare!(func_def_8, r#"
 fn test(:
     erhan=123"#, Err(BramaError {
-        error_type: BramaErrorType::ArgumentMustBeText,
-        column: 4,
-        line: 0
+        error_type: BramaErrorType::FunctionDefinationNotValid,
+        column: 9,
+        line: 1
     }));
     test_compare!(func_def_9, r#"
 fn test(a:
     erhan=123"#, Err(BramaError {
         error_type: BramaErrorType::RightParanthesesMissing,
-        column: 4,
-        line: 0
+        column: 10,
+        line: 1
     }));
     test_compare!(func_def_10, r#"
 fn test(a):

@@ -5,36 +5,37 @@
 #[derive(PartialEq)]
 pub enum BramaErrorType {
     SyntaxError = 100,
-    InvalidExpression,
-    MoreThan1ArgumentPassed,
-    RightParanthesesMissing,
-    AssertFailed,
-    NumberNotParsed,
-    MissingStringDeliminator,
-    CharNotValid,
-    RightSideOfExpressionNotFound,
-    ReturnMustBeUsedInFunction,
-    FunctionCallSyntaxNotValid,
-    FunctionNameNotDefined,
-    ArgumentMustBeText,
-    IfConditionBodyNotFound,
-    ParenthesesNotClosed,
-    InvalidUnaryOperation,
-    UnaryWorksWithNumber,
-    ArgumentNotFound,
-    MultipleElseUsageNotValid,
-    BreakAndContinueBelongToLoops,
-    FunctionConditionBodyNotFound,
-    ColonMarkMissing,
-    ElseIsUsed,
-    IndentationIssue,
-    DictNotClosed,
-    ArrayNotClosed,
-    InvalidListItem,
-    DictionaryKeyNotValid,
-    DictionaryValueNotValid,
-    CommentNotFinished,
-    WhileStatementNotValid
+    InvalidExpression = 101,
+    MoreThan1ArgumentPassed = 102,
+    RightParanthesesMissing = 103,
+    AssertFailed = 104,
+    NumberNotParsed = 105,
+    MissingStringDeliminator = 106,
+    CharNotValid = 107,
+    RightSideOfExpressionNotFound = 108,
+    ReturnMustBeUsedInFunction = 109,
+    FunctionCallSyntaxNotValid = 110,
+    FunctionNameNotDefined = 111,
+    ArgumentMustBeText = 112,
+    IfConditionBodyNotFound = 113,
+    ParenthesesNotClosed = 114,
+    InvalidUnaryOperation = 115,
+    UnaryWorksWithNumber = 116,
+    ArgumentNotFound = 117,
+    MultipleElseUsageNotValid = 118,
+    BreakAndContinueBelongToLoops = 119,
+    FunctionConditionBodyNotFound = 120,
+    ColonMarkMissing = 121,
+    ElseIsUsed = 122,
+    IndentationIssue = 123,
+    DictNotClosed = 124,
+    ArrayNotClosed = 125,
+    InvalidListItem = 126,
+    DictionaryKeyNotValid = 127,
+    DictionaryValueNotValid = 128,
+    CommentNotFinished = 129,
+    WhileStatementNotValid = 130,
+    FunctionDefinationNotValid = 131
 }
 
 #[derive(Copy)]
@@ -48,7 +49,8 @@ pub struct BramaError {
 }
 
 pub fn generate_error_message(data: &String, error: &BramaError) -> String {
-    let line = data.lines().skip(error.line as usize).next().unwrap();
+    let lines = data.split(|c| c == '\n').collect::<Vec<_>>();
+    let line = lines.iter().skip(error.line as usize).next().unwrap();
     return format!("...\r\n[{}:{}] {}\r\n...\r\n{}", error.line + 1, error.column, line, error.error_type.as_text());
     /*
 gç::sa tıryaz("Sonsuza kadar devam")
@@ -88,7 +90,8 @@ impl BramaErrorType {
             BramaErrorType::DictionaryKeyNotValid => "Sözlük anahtarı geçersiz",
             BramaErrorType::DictionaryValueNotValid => "Sözlük geçeri geçersiz",
             BramaErrorType::CommentNotFinished => "Yorum bilgisi düzgün kapatılmadı",
-            BramaErrorType::WhileStatementNotValid => "Döngü düzgün tanımlanmamış"
+            BramaErrorType::WhileStatementNotValid => "Döngü düzgün tanımlanmamış",
+            BramaErrorType::FunctionDefinationNotValid => "Fonksiyon tanımlaması hatalı"
         };
         format!("(#{}) {}", *self as u8, message)
     }

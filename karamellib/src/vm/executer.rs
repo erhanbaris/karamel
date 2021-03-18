@@ -20,7 +20,6 @@ pub struct ExecutionStatus {
     pub stderr: Vec<String>
 }
 
-#[allow(dead_code)]
 pub fn code_executer(data: &String, logger: &'static dyn Log) -> ExecutionStatus {
     let mut status = ExecutionStatus::default();
     match log::set_logger(logger) {

@@ -53,7 +53,7 @@ test_compare!(endless_3, r#"sonsuz
     print(1)"#, Err(BramaError {
         error_type: BramaErrorType::ColonMarkMissing,
         line: 0,
-        column: 0
+        column: 6
     }));
 test_compare!(endless_4, r#"sonsuz:
     erhan=123   
@@ -72,12 +72,12 @@ BramaAstType::Break
 ].to_vec())))));
 test_compare!(endless_5, r#"kır"#, Err(BramaError {
     error_type: BramaErrorType::BreakAndContinueBelongToLoops,
-    column: 4,
+    column: 3,
     line: 0
 }));
 test_compare!(endless_6, r#"devamet"#, Err(BramaError {
     error_type: BramaErrorType::BreakAndContinueBelongToLoops,
-    column: 4,
+    column: 7,
     line: 0
 }));
 }

@@ -67,12 +67,12 @@ mod tests {
 
     test_compare!(func_call_7, "print(,2,'erhan')", Err(BramaError {
         error_type: BramaErrorType::SyntaxError,
-        column: 4,
+        column: 6,
         line: 0
     }));
     test_compare!(func_call_8, "print(", Err(BramaError {
         error_type: BramaErrorType::RightParanthesesMissing,
-        column: 4,
+        column: 6,
         line: 0
     }));
     test_compare!(func_call_9, "data=print()", Ok(BramaAstType::Assignment {

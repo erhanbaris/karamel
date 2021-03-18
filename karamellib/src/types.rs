@@ -259,6 +259,7 @@ impl Tokinizer<'_> {
 
     pub fn increate_line(& mut self) {
         self.line += 1;
+        self.reset_column();
     }
 
     pub fn reset_column(& mut self) {

@@ -82,14 +82,15 @@ impl SyntaxParser {
                 Ok(ast)
             },
             Err(error) => {
-                if let Ok(token) = self.peek_token() {
-                    log::debug!("We forget this : {:?}", token);
+                if let Ok(token) = self.previous_token() {
+                    log::debug!("Syntax parse failed : {:?}", token);
                     return Err(BramaError {
                         error_type: error,
                         line: token.line,
-                        column: token.start
+                        column: token.end
                     });
                 }
+
                 return Err(BramaError {
                     error_type: error,
                     line: 0,
@@ -135,6 +136,16 @@ impl SyntaxParser {
     pub fn peek_token(&self) -> Result<&Token, ()> {
         match self.tokens.get(self.index.get()) {
             Some(token) => Ok(token),
+            None => Err(())
+        }
+    }
+
+    pub fn previous_token(&self) -> Result<&Token, ()> {
+        match self.index.get().checked_sub(1) {
+            Some(index) => match self.tokens.get(index) {
+                Some(token) => Ok(token),
+                None => Err(())
+            },
             None => Err(())
         }
     }
