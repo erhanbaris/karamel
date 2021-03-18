@@ -51,7 +51,7 @@ pub struct BramaError {
 pub fn generate_error_message(data: &String, error: &BramaError) -> String {
     let lines = data.split(|c| c == '\n').collect::<Vec<_>>();
     let line = lines.iter().skip(error.line as usize).next().unwrap();
-    return format!("...\r\n{}\r\n{:>width$} {}", line, "^", error.error_type.as_text(),  width=error.column as usize);
+    return format!("...\r\n{}\r\n{:>width$} [{}:{}] {}", line, "^", error.line, error.column, error.error_type.as_text(),  width=error.column as usize);
 }
 
 impl BramaErrorType {
