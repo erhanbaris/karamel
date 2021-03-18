@@ -21,6 +21,7 @@ use std::cell::Cell;
 use crate::types::*;
 use self::block::MultiLineBlockParser;
 use crate::compiler::ast::BramaAstType;
+use crate::error::*;
 
 use bitflags::bitflags;
 
@@ -65,18 +66,37 @@ impl SyntaxParser {
         }
     }
 
-    pub fn parse(&self) -> AstResult {
+    pub fn parse(&self) -> Result<BramaAstType, BramaError> {
         return match MultiLineBlockParser::parse(&self) {
             Ok(ast) => {
                 self.cleanup();
                 
                 if let Ok(token) = self.peek_token() {
                     log::debug!("We forget this : {:?}", token);
-                    return Err(BramaError::SyntaxError);
+                    return Err(BramaError {
+                        error_type: BramaErrorType::SyntaxError,
+                        line: token.line,
+                        column: token.start
+                    });
                 }
                 Ok(ast)
             },
-            other => other
+            Err(error) => {
+                if let Ok(token) = self.valid_token() {
+                    log::debug!("Syntax parse failed : {:?}", token);
+                    return Err(BramaError {
+                        error_type: error,
+                        line: token.line,
+                        column: token.end
+                    });
+                }
+
+                return Err(BramaError {
+                    error_type: error,
+                    line: 0,
+                    column: 0
+                });
+            }
         };
     }
 
@@ -118,6 +138,27 @@ impl SyntaxParser {
             Some(token) => Ok(token),
             None => Err(())
         }
+    }
+
+    pub fn valid_token(&self) -> Result<&Token, ()> {
+        let mut index = self.index.get() + 1;
+        
+        while index != 0 {
+            match index.checked_sub(1) {
+                Some(index) => match self.tokens.get(index) {
+                    Some(token) => match token.token_type {
+                        BramaTokenType::NewLine(_) => (),
+                        BramaTokenType::WhiteSpace(_) => (),
+                        _ => return Ok(token)
+                    },
+                    None => ()
+                },
+                None => return Err(())
+            };
+            
+            index -= 1;
+        }
+        Err(())
     }
 
     pub fn next_token(&self) -> Result<&Token, ()> {
@@ -250,7 +291,7 @@ impl SyntaxParser {
             };
 
             if !success {
-                return Err(BramaError::IndentationIssue);
+                return Err(BramaErrorType::IndentationIssue);
             }
 
             self.consume_token();
@@ -287,7 +328,7 @@ impl SyntaxParser {
             };
 
             if !success {
-                return Err(BramaError::IndentationIssue);
+                return Err(BramaErrorType::IndentationIssue);
             }
 
             self.consume_token();

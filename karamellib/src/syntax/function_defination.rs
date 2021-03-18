@@ -3,6 +3,7 @@ use crate::syntax::{SyntaxParser, SyntaxParserTrait, SyntaxFlag};
 use crate::syntax::primative::PrimativeParser;
 use crate::compiler::ast::{BramaAstType};
 use crate::syntax::block::{SingleLineBlockParser, MultiLineBlockParser};
+use crate::error::BramaErrorType;
 use std::rc::Rc;
 
 pub struct FunctionDefinationParser;
@@ -22,8 +23,7 @@ impl SyntaxParserTrait for FunctionDefinationParser {
             let name = match name_expression {
                 BramaAstType::Symbol(text) => text,
                 _ => {
-                    parser.set_index(index_backup);
-                    return Err(BramaError::FunctionNameNotDefined);
+                    return Err(BramaErrorType::FunctionNameNotDefined);
                 }
             };
 
@@ -40,15 +40,8 @@ impl SyntaxParserTrait for FunctionDefinationParser {
 
                     let argument = PrimativeParser::parse_symbol(parser)?;
                     match argument {
-                        BramaAstType::None => {
-                            parser.set_index(index_backup);
-                            return Err(BramaError::ArgumentMustBeText);
-                        },
                         BramaAstType::Symbol(text) => arguments.push(text),
-                        _ => {
-                            parser.set_index(index_backup);
-                            return Err(BramaError::ArgumentNotFound);
-                        }
+                        _ => return Err(BramaErrorType::ArgumentMustBeText)
                     };
 
                     parser.cleanup_whitespaces();
@@ -58,15 +51,13 @@ impl SyntaxParserTrait for FunctionDefinationParser {
                 }
 
                 if let None = parser.match_operator(&[BramaOperatorType::RightParentheses]) {
-                    parser.set_index(index_backup);
-                    return Err(BramaError::RightParanthesesMissing);
+                    return Err(BramaErrorType::RightParanthesesMissing);
                 }
             }
 
             parser.cleanup_whitespaces();
             if let None = parser.match_operator(&[BramaOperatorType::ColonMark]) {
-                parser.set_index(index_backup);
-                return Err(BramaError::ColonMarkMissing);
+                return Err(BramaErrorType::ColonMarkMissing);
             }
 
             parser.cleanup_whitespaces();
@@ -83,17 +74,12 @@ impl SyntaxParserTrait for FunctionDefinationParser {
 
             let has_return = match &body {
                 BramaAstType::Return(_) => true,
-                BramaAstType::Block(blocks) => {
-                    if let BramaAstType::Return(_) = blocks[blocks.len() - 1] {
-                        true
-                    } else {
-                        false
-                    }
-                },
-                BramaAstType::None => {
-                    parser.set_index(index_backup);
-                    return Err(BramaError::FunctionConditionBodyNotFound);
-                },
+                BramaAstType::Block(blocks) =>
+                    match blocks[blocks.len() - 1] {
+                        BramaAstType::Return(_) => true,
+                        _ => false
+                    },
+                BramaAstType::None => return Err(BramaErrorType::FunctionConditionBodyNotFound),
                 _ => false
             };
 

@@ -3,6 +3,7 @@ use crate::syntax::{SyntaxParser, SyntaxParserTrait, SyntaxFlag};
 use crate::syntax::unary::UnaryParser;
 use crate::syntax::util::update_functions_for_temp_return;
 use crate::compiler::ast::BramaAstType;
+use crate::error::BramaErrorType;
 
 pub struct ModuloParser;
 pub struct MultiplyDivideParser;
@@ -52,7 +53,7 @@ pub fn parse_binary<T: SyntaxParserTrait>(parser: &SyntaxParser, operators: &[Br
             match right_expr {
                 Ok(BramaAstType::None) => {
                     parser.set_index(index_backup);
-                    return Err(BramaError::RightSideOfExpressionNotFound);
+                    return Err(BramaErrorType::RightSideOfExpressionNotFound);
                 },
                 Ok(_) => (),
                 Err(_) => return right_expr

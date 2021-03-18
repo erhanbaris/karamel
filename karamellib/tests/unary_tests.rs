@@ -2,6 +2,8 @@ extern crate karamellib;
 
 #[cfg(test)]
 mod tests {
+    use karamellib::error::{BramaError, BramaErrorType};
+
     use crate::karamellib::parser::*;
     use crate::karamellib::types::*;
     use crate::karamellib::syntax::*;
@@ -35,10 +37,26 @@ mod tests {
     test_compare!(unary_7, "not doğru", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Not, Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Bool(true)))))));
     test_compare!(unary_8, "not yanlış", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Not, Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Bool(false)))))));
     
-    test_compare!(unary_9, "+[]", Err(BramaError::UnaryWorksWithNumber));
-    test_compare!(unary_10, "++100", Err(BramaError::InvalidUnaryOperation));
-    test_compare!(unary_11, "--100", Err(BramaError::InvalidUnaryOperation));
-    test_compare!(unary_12, "--true", Err(BramaError::InvalidUnaryOperation));
+    test_compare!(unary_9, "+[]", Err(BramaError {
+        error_type: BramaErrorType::UnaryWorksWithNumber,
+        column: 1,
+        line: 0
+    }));
+    test_compare!(unary_10, "++100", Err(BramaError {
+        error_type: BramaErrorType::InvalidUnaryOperation,
+        column: 2,
+        line: 0
+    }));
+    test_compare!(unary_11, "--100", Err(BramaError {
+        error_type: BramaErrorType::InvalidUnaryOperation,
+        column: 2,
+        line: 0
+    }));
+    test_compare!(unary_12, "--true", Err(BramaError {
+        error_type: BramaErrorType::InvalidUnaryOperation,
+        column: 2,
+        line: 0
+    }));
 
     test_compare!(unary_13, "++data", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Increment, Box::new(BramaAstType::Symbol("data".to_string())))));
     test_compare!(unary_14, "--data", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Deccrement, Box::new(BramaAstType::Symbol("data".to_string())))));

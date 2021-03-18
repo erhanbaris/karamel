@@ -11,6 +11,7 @@ pub type NativeCallResult = Result<VmObject, (String, u32, u32)>;
 pub type NativeCall       = fn(stack: &Vec<VmObject>, last_position: usize, arg_size: u8) -> NativeCallResult;
 
 #[derive(Clone)]
+#[derive(Default)]
 pub struct FunctionReference {
     pub callback: FunctionType,
     pub framework: String,
@@ -27,6 +28,10 @@ pub struct FunctionReference {
 pub enum FunctionType {
     Native(NativeCall),
     Opcode
+}
+
+impl Default for FunctionType {
+    fn default() -> Self { FunctionType::Opcode }
 }
 
 impl FunctionReference {

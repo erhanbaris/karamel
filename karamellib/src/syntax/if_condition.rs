@@ -3,6 +3,7 @@ use crate::syntax::{SyntaxParser, SyntaxParserTrait};
 use crate::syntax::expression::ExpressionParser;
 use crate::compiler::ast::{BramaAstType, BramaIfStatementElseItem};
 use crate::syntax::block::{SingleLineBlockParser, MultiLineBlockParser};
+use crate::error::BramaErrorType;
 
 pub struct IfConditiontParser;
 
@@ -25,7 +26,7 @@ impl SyntaxParserTrait for IfConditiontParser {
             parser.cleanup_whitespaces();
             if let None = parser.match_operator(&[BramaOperatorType::ColonMark]) {
                 parser.set_index(index_backup);
-                return Err(BramaError::ColonMarkMissing);
+                return Err(BramaErrorType::ColonMarkMissing);
             }
 
             parser.cleanup_whitespaces();
@@ -40,7 +41,7 @@ impl SyntaxParserTrait for IfConditiontParser {
 
             if true_body == BramaAstType::None {
                 parser.set_index(index_backup);
-                return Err(BramaError::IfConditionBodyNotFound);
+                return Err(BramaErrorType::IfConditionBodyNotFound);
             }
 
             parser.cleanup_whitespaces();
@@ -56,16 +57,16 @@ impl SyntaxParserTrait for IfConditiontParser {
 
                     if else_body.is_some() {
                         parser.set_index(index_backup);
-                        return Err(BramaError::ElseIsUsed);
+                        return Err(BramaErrorType::ElseIsUsed);
                     }
 
                     if let None = parser.match_operator(&[BramaOperatorType::ColonMark]) {
                         parser.set_index(index_backup);
-                        return Err(BramaError::ColonMarkMissing);
+                        return Err(BramaErrorType::ColonMarkMissing);
                     }
                     else if !else_body.is_none() {
                         parser.set_index(index_backup);
-                        return Err(BramaError::MultipleElseUsageNotValid);
+                        return Err(BramaErrorType::MultipleElseUsageNotValid);
                     }
                     parser.cleanup_whitespaces();
                     
@@ -79,7 +80,7 @@ impl SyntaxParserTrait for IfConditiontParser {
 
                     if body == BramaAstType::None {
                         parser.set_index(index_backup);
-                        return Err(BramaError::IfConditionBodyNotFound);
+                        return Err(BramaErrorType::IfConditionBodyNotFound);
                     }
 
                     parser.set_indentation(indentation);

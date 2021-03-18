@@ -1,4 +1,5 @@
 use crate::types::*;
+use crate::error::BramaErrorType;
 
 pub struct NumberParser;
 
@@ -168,7 +169,7 @@ impl TokenParser for NumberParser {
         (ch == '.' && (ch_next >= '0' && ch_next <= '9')) || (ch >= '0' && ch <= '9')
     }
 
-    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<(), BramaError> {
+    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<(), BramaErrorType> {
         let start_column = tokinizer.column;
         let number_system = self.detect_number_system(tokinizer);
 
@@ -181,7 +182,7 @@ impl TokenParser for NumberParser {
         tokinizer.add_token(start_column, token_type);
         
         if tokinizer.get_char().is_alphabetic() && !tokinizer.get_char().is_whitespace() {
-            return Err(BramaError::NumberNotParsed);
+            return Err(BramaErrorType::NumberNotParsed);
         }
         Ok(())
     }

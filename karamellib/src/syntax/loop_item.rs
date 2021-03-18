@@ -1,6 +1,7 @@
 use crate::types::*;
 use crate::syntax::{SyntaxParser, SyntaxParserTrait, SyntaxFlag};
 use crate::compiler::ast::BramaAstType;
+use crate::error::BramaErrorType;
 
 pub struct LoopItemParser;
 
@@ -22,7 +23,7 @@ impl SyntaxParserTrait for LoopItemParser {
             }
             else {
                 parser.set_index(index_backup);
-                return Err(BramaError::BreakAndContinueBelongToLoops);
+                return Err(BramaErrorType::BreakAndContinueBelongToLoops);
             }
         }
 

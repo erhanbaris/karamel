@@ -1,4 +1,5 @@
 use crate::types::*;
+use crate::error::BramaErrorType;
 
 pub struct OperatorParser;
 
@@ -7,7 +8,7 @@ impl TokenParser for OperatorParser {
         true
     }
 
-    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<(), BramaError> {
+    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<(), BramaErrorType> {
         let ch       = tokinizer.get_char();
         let ch_next  = tokinizer.get_next_char();
         let start= tokinizer.column;
@@ -65,7 +66,7 @@ impl TokenParser for OperatorParser {
 
         if operator_type == BramaOperatorType::None {
             log::debug!("'{}' not found", ch as usize);
-            return Err(BramaError::CharNotValid);
+            return Err(BramaErrorType::CharNotValid);
         }
         
         tokinizer.add_token(start, BramaTokenType::Operator(operator_type));

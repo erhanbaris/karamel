@@ -9,7 +9,7 @@ mod comment;
 use std::str;
 use std::collections::HashMap;
 
-use crate::types::*;
+use crate::{error::BramaError, types::*};
 use self::number::NumberParser;
 use self::text::TextParser;
 use self::operator::OperatorParser;
@@ -17,6 +17,7 @@ use self::symbol::SymbolParser;
 use self::line::LineParser;
 use self::whitespace::WhitespaceParser;
 use self::comment::CommentParser;
+use crate::error::BramaErrorType;
 
 pub struct Parser<'a> {
     tokinizer: Tokinizer<'a>
@@ -63,7 +64,7 @@ impl<'a> Parser<'a> {
         symbol_parser.init_parser();
 
         while self.tokinizer.is_end() == false {
-            let status: Result<(), BramaError>;
+            let status: Result<(), BramaErrorType>;
 
             if line_parser.check(&mut self.tokinizer) {
                 status = line_parser.parse(&mut self.tokinizer);
@@ -91,7 +92,11 @@ impl<'a> Parser<'a> {
             }
 
             if status.is_err() {
-                return Err(status.err().unwrap())
+                return Err(BramaError {
+                    error_type: status.err().unwrap(),
+                    line: self.tokinizer.line,
+                    column: self.tokinizer.column
+                });
             }
         }
 

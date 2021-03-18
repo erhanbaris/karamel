@@ -1,4 +1,5 @@
 use crate::types::*;
+use crate::error::BramaErrorType;
 
 pub struct CommentParser;
 
@@ -9,7 +10,7 @@ impl TokenParser for CommentParser {
         return (ch == '/' && ch_next == '*') || (ch == '/' && ch_next == '/');
     }
 
-    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<(), BramaError> {
+    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<(), BramaErrorType> {
         let mut ch                   = tokinizer.get_char();
         let mut ch_next              = tokinizer.get_next_char();
 
@@ -20,7 +21,6 @@ impl TokenParser for CommentParser {
                 tokinizer.increase_index();
 
                 if ch.is_new_line() {
-                    tokinizer.reset_column();
                     tokinizer.increate_line();
                 }
 
@@ -35,7 +35,7 @@ impl TokenParser for CommentParser {
             }
 
             if !comment_end {
-                return Err(BramaError::CommentNotFinished);
+                return Err(BramaErrorType::CommentNotFinished);
             }
         }
         else {
@@ -47,7 +47,6 @@ impl TokenParser for CommentParser {
                 tokinizer.increase_index();
 
                 if ch.is_new_line() {
-                    tokinizer.reset_column();
                     tokinizer.increate_line();
                 }
 

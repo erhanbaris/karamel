@@ -3,6 +3,7 @@ use crate::syntax::{SyntaxParser, SyntaxParserTrait, SyntaxFlag};
 use crate::compiler::ast::{BramaAstType};
 use crate::syntax::block::{SingleLineBlockParser, MultiLineBlockParser};
 use crate::syntax::expression::ExpressionParser;
+use crate::error::BramaErrorType;
 
 pub struct WhileLoopParser;
 
@@ -21,7 +22,7 @@ impl SyntaxParserTrait for WhileLoopParser {
             parser.cleanup_whitespaces();
             if let None = parser.match_operator(&[BramaOperatorType::ColonMark]) {
                 parser.set_index(index_backup);
-                return Err(BramaError::ColonMarkMissing);
+                return Err(BramaErrorType::ColonMarkMissing);
             }
 
             parser.cleanup_whitespaces();
@@ -60,13 +61,13 @@ impl SyntaxParserTrait for WhileLoopParser {
             parser.cleanup_whitespaces();
             if !parser.match_keyword(BramaKeywordType::WhileEndPart) {
                 parser.set_indentation(indentation);
-                return Err(BramaError::WhileStatementNotValid);
+                return Err(BramaErrorType::WhileStatementNotValid);
             }
 
             parser.cleanup_whitespaces();
             if let None = parser.match_operator(&[BramaOperatorType::ColonMark]) {
                 parser.set_indentation(indentation);
-                return Err(BramaError::ColonMarkMissing);
+                return Err(BramaErrorType::ColonMarkMissing);
             }
 
             parser.cleanup_whitespaces();

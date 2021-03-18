@@ -2,6 +2,7 @@ use crate::{vm::interpreter::run_vm};
 use crate::parser::*;
 use crate::compiler::*;
 use crate::syntax::SyntaxParser;
+use crate::error::generate_error_message;
 
 use std::io::{self};
 use std::io::Write;
@@ -19,7 +20,6 @@ pub struct ExecutionStatus {
     pub stderr: Vec<String>
 }
 
-#[allow(dead_code)]
 pub fn code_executer(data: &String, logger: &'static dyn Log) -> ExecutionStatus {
     let mut status = ExecutionStatus::default();
     match log::set_logger(logger) {
@@ -36,7 +36,7 @@ pub fn code_executer(data: &String, logger: &'static dyn Log) -> ExecutionStatus
     let mut parser = Parser::new(data);
     match parser.parse() {
         Err(error) => {
-            log::error!("Kod hatasi: {}", error.as_text());
+            log::error!("{}", generate_error_message(data, &error));
             return status;
         },
         _ => ()
@@ -46,7 +46,7 @@ pub fn code_executer(data: &String, logger: &'static dyn Log) -> ExecutionStatus
     let ast = match syntax.parse() {
         Ok(ast) => ast,
         Err(error) => {
-            log::error!("Kod hatasi: {}", error.as_text());
+            log::error!("{}", generate_error_message(data, &error));
             return status;
         }
     };

@@ -7,6 +7,7 @@ mod tests {
     use crate::karamellib::syntax::*;
     use crate::karamellib::compiler::value::BramaPrimative;
     use crate::karamellib::compiler::ast::*;
+    use crate::karamellib::error::*;
     use std::rc::Rc;
 
     #[warn(unused_macros)]
@@ -54,9 +55,21 @@ mod tests {
 
     test_success!(test_1, "'merhaba dünya'", Ok(BramaAstType::Primative(Rc::new(BramaPrimative::Text(Rc::new("merhaba dünya".to_string()))))));
     test_success!(test_2, "\"merhaba dünya\"", Ok(BramaAstType::Primative(Rc::new(BramaPrimative::Text(Rc::new("merhaba dünya".to_string()))))));
-    test_success!(test_3, "'merhaba dünya", Err(BramaError::MissingStringDeliminator));
-    test_success!(test_4, "\"merhaba dünya", Err(BramaError::MissingStringDeliminator));
-    test_success!(test_5, "merhaba dünya'", Err(BramaError::MissingStringDeliminator));
+    test_success!(test_3, "'merhaba dünya", Err(BramaError {
+        error_type: BramaErrorType::MissingStringDeliminator,
+        column: 14,
+        line: 0
+    }));
+    test_success!(test_4, "\"merhaba dünya", Err(BramaError {
+        error_type: BramaErrorType::MissingStringDeliminator,
+        column: 14,
+        line: 0
+    }));
+    test_success!(test_5, "merhaba dünya'", Err(BramaError {
+        error_type: BramaErrorType::MissingStringDeliminator,
+        column: 14,
+        line: 0
+    }));
 
     test_success!(bool_1, "true", Ok(BramaAstType::Primative(Rc::new(BramaPrimative::Bool(true)))));
     test_success!(bool_2, "doğru", Ok(BramaAstType::Primative(Rc::new(BramaPrimative::Bool(true)))));
@@ -109,7 +122,11 @@ mod tests {
     test_success!(list_5, "[123,doğru,:erhan_barış,'merhaba dünya',1.3]", Ok(BramaAstType::List([Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123.0)))), Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Bool(true)))), Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Atom("erhan_barış".atom())))), Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Text(Rc::new("merhaba dünya".to_string()))))), Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(1.3))))].to_vec())));
     test_success!(list_6, "[[]]", Ok(BramaAstType::List([Box::new(BramaAstType::List([].to_vec()))].to_vec())));
 
-    test_success!(list_7, "[123", Err(BramaError::ArrayNotClosed));
+    test_success!(list_7, "[123", Err(BramaError {
+        error_type: BramaErrorType::ArrayNotClosed,
+        column: 4,
+        line: 0
+    }));
     test_success!(list_8, "[data]", Ok(BramaAstType::List([Box::new(BramaAstType::Symbol("data".to_string()))].to_vec())));
 
     test_success!(empty_1, "yok", Ok(BramaAstType::Primative(Rc::new(BramaPrimative::Empty))));

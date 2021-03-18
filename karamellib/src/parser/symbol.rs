@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::rc::Rc;
 use crate::types::*;
+use crate::error::BramaErrorType;
 
 pub struct SymbolParser {
     pub keywords: HashMap<&'static str, BramaKeywordType>
@@ -20,7 +21,7 @@ impl TokenParser for SymbolParser {
         return ch.is_symbol();
     }
 
-    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<(), BramaError> {
+    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<(), BramaErrorType> {
         let mut ch: char;
         let start             = tokinizer.index as usize;
         let mut end           = start;

@@ -1,5 +1,6 @@
 use std::rc::Rc;
 use crate::types::*;
+use crate::error::BramaErrorType;
 
 pub struct TextParser {
     pub tag: char
@@ -11,7 +12,7 @@ impl TokenParser for TextParser {
         return ch == self.tag;
     }
 
-    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<(), BramaError> {
+    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<(), BramaErrorType> {
         tokinizer.increase_index();
 
         let mut ch: char      = '\0';
@@ -40,7 +41,7 @@ impl TokenParser for TextParser {
         }
 
         if ch != self.tag {
-            return Err(BramaError::MissingStringDeliminator);
+            return Err(BramaErrorType::MissingStringDeliminator);
         }
 
         tokinizer.add_token(start_column - 1, BramaTokenType::Text(Rc::new(tokinizer.data[start..end].to_string())));

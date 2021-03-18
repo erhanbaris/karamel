@@ -5,6 +5,7 @@
   <title>Karamel Programlama Dili</title>
   <link rel="preconnect" href="https://fonts.gstatic.com">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@100;300;400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css?family=Inconsolata:400,700&subset=latin,latin-ext" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@200;300;400&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;300;500&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.59.2/codemirror.min.js" integrity="sha512-UZAFKlbB343VyEfCComsVIxp836iYUvHyAuRYFoVN4LTNB6mpM+8EgKW8ymIV2qLZQsIiNdbpmJuA8y6IKzOow==" crossorigin="anonymous"></script>
@@ -55,6 +56,12 @@
 
 
   window.editor.setSize(null, 400);
+  window.editor.setOption("extraKeys", {
+  Tab: function(cm) {
+    var spaces = Array(cm.getOption("indentUnit") + 1).join(" ");
+    cm.replaceSelection(spaces);
+  }
+});
 
 
   window.target = CodeMirror(document.getElementById("target"), {
@@ -126,13 +133,13 @@
     background-color: cornflowerblue;
   }
   .CodeMirror {
-    font-family: 'Titillium Web', sans-serif;
+    font-family: Inconsolata, monospace;
     font-size: 20px;
     line-height: 1.5em;
   }
 
   .CodeMirror * {
-    font-family: 'Titillium Web', sans-serif;
+    font-family: Inconsolata, monospace;
     font-size: 20px;
     line-height: 1.5em;
   }

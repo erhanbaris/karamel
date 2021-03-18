@@ -7,3 +7,4 @@ pub mod vm;
 pub mod compiler;
 pub mod buildin;
 pub mod logger;
+pub mod error;
