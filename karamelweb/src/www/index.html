@@ -43,7 +43,20 @@
 <script type="module">
 /* https://codepen.io/Souleste/pen/wvvwJWw */
   window.editor = CodeMirror(document.getElementById("source"), {
-    value: ``,
+    value: `fn toplam(a,b):
+  döndür a + b
+
+gç::satıryaz(toplam(10, 20))
+gç::satıryaz(toplam("merhaba ", "dünya"))
+
+sayaç = 1
+sonsuz:
+    eğer sayaç == 10:
+        kır
+    gç::satıryaz(sayaç * sayaç)
+    sayaç += 1
+    devamet
+hataayıklama::doğrula(sayaç, 10)`,
     mode:  "kpd",
     //lineNumbers: true,
     theme: "ayu-mirage",
@@ -134,14 +147,14 @@
   }
   .CodeMirror {
     font-family: Inconsolata, monospace;
-    font-size: 20px;
-    line-height: 1.5em;
+    font-size: 15px;
+    line-height: 1.3em;
   }
 
   .CodeMirror * {
     font-family: Inconsolata, monospace;
-    font-size: 20px;
-    line-height: 1.5em;
+    font-size: 15px;
+    line-height: 1.3em;
   }
 
   #target >  .CodeMirror * {
