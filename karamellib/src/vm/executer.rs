@@ -57,11 +57,11 @@ pub fn code_executer(data: &String, logger: &'static dyn Log) -> ExecutionStatus
     let execution_memory = match opcode_compiler.compile(&ast, &mut compiler_options) {
         Ok(_) => unsafe { run_vm(&mut compiler_options) },
         Err(message) => {
-            log::error!("Program hata ile sonlandirildi: {}", message);
+            log::error!("Program hata ile sonlandırıldı: {}", message);
             return status;
         }
     };
-    log::info!("Program basariyla calistirildi");
+    log::info!("Program başarıyla çalıştırıldı");
 
     match execution_memory {
         Ok(memory) => {
@@ -70,16 +70,9 @@ pub fn code_executer(data: &String, logger: &'static dyn Log) -> ExecutionStatus
             status.memory_output = Some(memory)
         },
         Err(error) => {
-            log::error!("Hafizada ki bilgileri okuma sitasinda hata olustur fakat program hatasiz olarak calisti. Hata mesaji: {}", error);
+            log::error!("Hafızada ki bilgileri okuma sırasında hata oluştu fakat program hatasız olarak Çalıştı. Hata mesajı: {}", error);
         }
     };
 
     status
-}
-
-#[allow(dead_code)]
-fn console_welcome() {
-    println!("Karamel Programlama Dili (KPD) komut satırı");
-    print!("-> ");
-    io::stdout().flush().unwrap();
 }
