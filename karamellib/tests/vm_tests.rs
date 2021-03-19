@@ -300,65 +300,65 @@ veri2 = {
 hataayıklama::doğrula(veri1 != veri2)
 "#);
 execute!(vm_94, r#"
-fn test:
+fon test:
     döndür 10
 hataayıklama::doğrula(test() == 10)
 "#);
 execute!(vm_95, r#"
-fn test:
+fon test:
     döndür 10
 hataayıklama::doğrula(test() * 10, 100)
 "#);
 execute!(vm_96, r#"
-fn test:
+fon test:
     döndür 10
 hataayıklama::doğrula(test() + test(), 20)
 "#);
 execute!(vm_97, r#"
-fn test:
+fon test:
     döndür
 hataayıklama::doğrula(test(), yok)
 "#);
 execute!(vm_98, r#"
-fn test:
+fon test:
     döndür yok
 hataayıklama::doğrula(test(), yok)
 "#);
 execute!(vm_99, r#"
-fn test_1:
+fon test_1:
     döndür 'erhan'
 
-fn test_2:
+fon test_2:
     döndür test_1()
 hataayıklama::doğrula(test_2(), 'erhan')
 "#);
 execute!(vm_100, r#"
-fn test_1:
+fon test_1:
     döndür 'erhan'
-fn test_2:
+fon test_2:
     döndür test_1()
 hataayıklama::doğrula(test_2() + " barış", 'erhan barış')
 "#);
 execute!(vm_101, r#"
-fn test_2:
-    fn test_1:
+fon test_2:
+    fon test_1:
         döndür 'erhan'
     döndür test_1()
 hataayıklama::doğrula(test_2() + " barış", 'erhan barış')
 "#);
 execute!(vm_102, r#"
-fn test:
-    fn test_erhan:
+fon test:
+    fon test_erhan:
         döndür 'erhan'
 
-    fn test_barış:
+    fon test_barış:
         döndür 'barış'
 
     döndür test_erhan() + " " + test_barış()
 hataayıklama::doğrula(test(), 'erhan barış')
 "#);
 execute!(vm_103, r#"
-fn test(a, b):
+fon test(a, b):
     döndür a
 data = test(123, 321)
 hataayıklama::doğrula(123, data)
@@ -370,7 +370,7 @@ my_list = {
     'doğum tarihi': 1985
 }
 
-fn read_data(list, key):
+fon read_data(list, key):
     döndür list[key]
 
 adı          = read_data(my_list, 'ad')
@@ -382,7 +382,7 @@ hataayıklama::doğrula(soyadı,      'barış')
 hataayıklama::doğrula(doğum_tarihi, 1985)
 "#);
 execute!(vm_105, r#"
-fn test(list):
+fon test(list):
     döndür list['ad']
 
 data = test({
@@ -391,16 +391,16 @@ data = test({
 hataayıklama::doğrula("erhan", data)
 "#);
 execute!(vm_106, r#"
-fn test(a):
-    fn __test_1(a):
-        fn __test_2(a):
+fon test(a):
+    fon __test_1(a):
+        fon __test_2(a):
             return a
         return __test_2(a)
     return __test_1(a)
 hataayıklama::doğrula(test("erhan"), 'erhan')
 "#);
 execute!(vm_107, r#"
-fn Fibonacci(n):
+fon Fibonacci(n):
     eğer n <= 1:
         döndür n
     yada:

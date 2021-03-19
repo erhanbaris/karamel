@@ -40,16 +40,16 @@ yada:
 
 ## Fonksiyon tanımlama
 ```
-fn metod_1(a):
+fon metod_1(a):
     gç::yaz(a)
 
-fn merhaba_dünya:
+fon merhaba_dünya:
     gç::yaz('Merhaba dünya')
 
-fn metod_1(a):
+fon metod_1(a):
     gç::yaz(a)
 
-fn faktoriyel(sayı):    
+fon faktoriyel(sayı):    
     eğer sayı==1 veya sayı==0:
         döndür 1
     yada:

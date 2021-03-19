@@ -1,5 +1,5 @@
-fn test:
-    fn test_erhan:
+fon test:
+    fon test_erhan:
         döndür 'erhan'
     döndür test_erhan
 hataayıklama::doğrula(test()(), 'erhan')
