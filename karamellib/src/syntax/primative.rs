@@ -236,12 +236,10 @@ impl PrimativeParser {
             
             let ast = ExpressionParser::parse(parser);
             if is_ast_empty(&ast) {
-                parser.set_index(index_backup);
                 return err_or_message(&ast, BramaErrorType::InvalidExpression);
             }
 
             if parser.match_operator(&[BramaOperatorType::RightParentheses]).is_none() {
-                parser.set_index(index_backup);
                 return Err(BramaErrorType::ParenthesesNotClosed);
             }
 

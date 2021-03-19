@@ -25,7 +25,6 @@ impl SyntaxParserTrait for IfConditiontParser {
 
             parser.cleanup_whitespaces();
             if let None = parser.match_operator(&[BramaOperatorType::ColonMark]) {
-                parser.set_index(index_backup);
                 return Err(BramaErrorType::ColonMarkMissing);
             }
 
@@ -40,7 +39,6 @@ impl SyntaxParserTrait for IfConditiontParser {
             parser.set_indentation(indentation);
 
             if true_body == BramaAstType::None {
-                parser.set_index(index_backup);
                 return Err(BramaErrorType::IfConditionBodyNotFound);
             }
 
@@ -56,16 +54,13 @@ impl SyntaxParserTrait for IfConditiontParser {
                     let else_condition = ExpressionParser::parse(parser)?;
 
                     if else_body.is_some() {
-                        parser.set_index(index_backup);
                         return Err(BramaErrorType::ElseIsUsed);
                     }
 
                     if let None = parser.match_operator(&[BramaOperatorType::ColonMark]) {
-                        parser.set_index(index_backup);
                         return Err(BramaErrorType::ColonMarkMissing);
                     }
                     else if !else_body.is_none() {
-                        parser.set_index(index_backup);
                         return Err(BramaErrorType::MultipleElseUsageNotValid);
                     }
                     parser.cleanup_whitespaces();
@@ -79,7 +74,6 @@ impl SyntaxParserTrait for IfConditiontParser {
                     }?;
 
                     if body == BramaAstType::None {
-                        parser.set_index(index_backup);
                         return Err(BramaErrorType::IfConditionBodyNotFound);
                     }
 

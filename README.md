@@ -45,4 +45,16 @@ fn metod_1(a):
 
 fn merhaba_dünya:
     gç::yaz('Merhaba dünya')
+
+fn metod_1(a):
+    gç::yaz(a)
+
+fn faktoriyel(sayı):    
+    eğer sayı==1 veya sayı==0:
+        döndür 1
+    yada:
+        döndür sayı * faktoriyel(sayı - 1)
+
+faktoriyel_sonucu = faktoriyel(10)
+gç::satıryaz('faktoriyel 10 => ', faktoriyel_sonucu)
 ```
