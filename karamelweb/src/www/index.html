@@ -43,10 +43,19 @@
 <script type="module">
 /* https://codepen.io/Souleste/pen/wvvwJWw */
   window.editor = CodeMirror(document.getElementById("source"), {
-    value: `fn toplam(a,b):
-  döndür a + b
+    value: `
+fn toplam(a,b):
+    döndür a + b
+  
+fn faktoriyel(sayı):    
+    eğer sayı==1 veya sayı==0:
+        döndür 1
+    yada:
+        döndür sayı * faktoriyel(sayı - 1)
+    
+faktoriyel_sonucu = faktoriyel(10)
+gç::satıryaz('faktoriyel 10 => ', faktoriyel_sonucu)
 
-gç::satıryaz(toplam(10, 20))
 gç::satıryaz(toplam("merhaba ", "dünya"))
 
 sayaç = 1

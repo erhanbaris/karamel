@@ -62,17 +62,24 @@ impl IoModule  {
     }
 
     pub fn print(arguments: &Vec<VmObject>, last_position: usize, total_args: u8) -> NativeCallResult {
+        let mut buffer = String::new();
         for arg in arguments.iter().skip((last_position as usize - 1) - (total_args as usize - 1)).take(total_args as usize) {
-            log::info!("{:?}", arg.deref());
+            buffer.push_str(&format!("{}", arg.deref()));
         }
+        
+        log::info!("{}", buffer);
 
         Ok(EMPTY_OBJECT)
     }
     
     pub fn printline(arguments: &Vec<VmObject>, last_position: usize, total_args: u8) -> NativeCallResult {
+        let mut buffer = String::new();
         for arg in arguments.iter().skip((last_position as usize - 1) - (total_args as usize - 1)).take(total_args as usize) {
-            log::info!("{:?}\r\n", arg.deref());
+            buffer.push_str(&format!("{}", arg.deref()));
         }
+
+        buffer.push_str(&"\r\n");
+        log::info!("{}", buffer);
 
         Ok(EMPTY_OBJECT)
     }

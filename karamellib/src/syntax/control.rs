@@ -60,10 +60,7 @@ pub fn parse_control<T: SyntaxParserTrait>(parser: &SyntaxParser, operators: &[B
             
             let right_expr = T::parse(parser);
             match right_expr {
-                Ok(BramaAstType::None) => {
-                    parser.set_index(index_backup);
-                    return Err(BramaErrorType::RightSideOfExpressionNotFound);
-                },
+                Ok(BramaAstType::None) => return Err(BramaErrorType::RightSideOfExpressionNotFound),
                 Ok(_) => (),
                 Err(_) => return right_expr
             };

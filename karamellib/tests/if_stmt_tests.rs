@@ -227,8 +227,8 @@ yada:
     erhan=1234
 "#, Err(BramaError {
     error_type: BramaErrorType::ElseIsUsed,
-    column: 4,
-    line: 0
+    column: 5,
+    line: 8
 }));
 
 test_compare!(if_8, r#"eğer 1024 * 123:
@@ -241,8 +241,8 @@ yada 1024 * 123 < 10_000_000:
     erhan=123456
 "#, Err(BramaError {
     error_type: BramaErrorType::ElseIsUsed,
-    column: 4,
-    line: 0
+    column: 29,
+    line: 4
 }));
 
 
