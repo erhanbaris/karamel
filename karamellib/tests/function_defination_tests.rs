@@ -95,28 +95,28 @@ fon test   :
 fon test
     erhan=123"#, Err(BramaError {
         error_type: BramaErrorType::ColonMarkMissing,
-        column: 7,
+        column: 8,
         line: 1
     }));
     test_compare!(func_def_8, r#"
 fon test(:
     erhan=123"#, Err(BramaError {
         error_type: BramaErrorType::ArgumentMustBeText,
-        column: 9,
+        column: 10,
         line: 1
     }));
     test_compare!(func_def_9, r#"
 fon test(a:
     erhan=123"#, Err(BramaError {
         error_type: BramaErrorType::RightParanthesesMissing,
-        column: 10,
+        column: 11,
         line: 1
     }));
     test_compare!(func_def_10, r#"
 fon test(a):
 "#, Err(BramaError {
     error_type: BramaErrorType::FunctionConditionBodyNotFound,
-    column: 11,
+    column: 12,
     line: 1
 }));
 test_compare!(func_def_11, r#"
@@ -124,7 +124,7 @@ fon (a):
   a=1
 "#, Err(BramaError {
     error_type: BramaErrorType::FunctionNameNotDefined,
-    column: 4,
+    column: 5,
     line: 1
 }));
 test_compare!(func_def_12, r#"
@@ -132,7 +132,7 @@ fon :
   a=1
 "#, Err(BramaError {
     error_type: BramaErrorType::FunctionNameNotDefined,
-    column: 4,
+    column: 5,
     line: 1
 }));
 test_compare!(func_def_13, r#"
@@ -140,7 +140,7 @@ fon test(1):
   a=1
 "#, Err(BramaError {
     error_type: BramaErrorType::ArgumentMustBeText,
-    column: 9,
+    column: 10,
     line: 1
 }));
 test_compare!(func_def_14, r#"

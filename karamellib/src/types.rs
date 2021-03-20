@@ -133,7 +133,7 @@ pub static KEYWORDS: &[(&str, BramaKeywordType)] = &[
     ("kucukesittir",  BramaKeywordType::LessEqualThan),
     ("değil",         BramaKeywordType::Not),
     ("degil",         BramaKeywordType::Not),
-    ("fn",            BramaKeywordType::Fn),
+    ("fon",            BramaKeywordType::Fn),
     ("döndür",        BramaKeywordType::Return),
     ("dondur",        BramaKeywordType::Return),
     ("kır",           BramaKeywordType::Break),

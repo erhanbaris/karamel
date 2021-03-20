@@ -1,6 +1,5 @@
-use crate::buildin::{Module, Class};
+use crate::{buildin::{Module, Class}, compiler::BramaCompiler};
 use crate::compiler::function::{NativeCall, NativeCallResult};
-use crate::types::VmObject;
 use crate::compiler::value::EMPTY_OBJECT;
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -45,22 +44,24 @@ impl Module for DebugModule {
 }
 
 impl DebugModule  {
-    pub fn assert(arguments: &Vec<VmObject>, last_position: usize, total_args: u8) -> NativeCallResult {
-        match total_args {
-            1 => {
-                match arguments[last_position - 1].deref().is_true() {
-                    false => Err(("Assert failed".to_string(), 0, 0)),
-                    true  => Ok(EMPTY_OBJECT)
-                }
-            },
-            2 => {
-                let status = arguments[last_position - 2].deref() == arguments[last_position - 1].deref();
-                match status {
-                    false => Err((format!("Assert failed (left: {:?}, right: {:?})", arguments[last_position - 2].deref(), arguments[last_position - 1].deref()), 0, 0)),
-                    true  => Ok(EMPTY_OBJECT)
-                }
-            },
-            _ => Err(("Assert failed".to_string(), 0, 0))
+    pub fn assert(compiler: &mut BramaCompiler, last_position: usize, total_args: u8) -> NativeCallResult {
+        unsafe {
+            match total_args {
+                1 => {
+                    match (*compiler.current_scope).stack[last_position - 1].deref().is_true() {
+                        false => Err(("Assert failed".to_string(), 0, 0)),
+                        true  => Ok(EMPTY_OBJECT)
+                    }
+                },
+                2 => {
+                    let status = (*compiler.current_scope).stack[last_position - 2].deref() == (*compiler.current_scope).stack[last_position - 1].deref();
+                    match status {
+                        false => Err((format!("Assert failed (left: {:?}, right: {:?})", (*compiler.current_scope).stack[last_position - 2].deref(), (*compiler.current_scope).stack[last_position - 1].deref()), 0, 0)),
+                        true  => Ok(EMPTY_OBJECT)
+                    }
+                },
+                _ => Err(("Assert failed".to_string(), 0, 0))
+            }
         }
     }
 }

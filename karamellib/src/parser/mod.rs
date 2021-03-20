@@ -44,8 +44,8 @@ impl<'a> Parser<'a> {
         return parser;
     }
 
-    pub fn tokens(&self) -> &Vec<Token> {
-        return &self.tokinizer.tokens;
+    pub fn tokens(&self) -> Vec<Token> {
+        self.tokinizer.tokens.to_vec()
     }
 
     pub fn parse(&mut self) -> ParseResult {
