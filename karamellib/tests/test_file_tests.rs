@@ -3,6 +3,7 @@ extern crate karamellib;
 #[cfg(test)]
 mod tests {
     use crate::karamellib::vm::*;
+    use crate::karamellib::{vm::executer::{ExecutionParameters, ExecutionSource}};
     use karamellib::logger::DUMMY_LOGGER;
 
     #[test]
@@ -30,7 +31,13 @@ mod tests {
                         match _path.path().to_str() {
                             Some(__path) => {
                                 let file_content = fs::read_to_string(__path).unwrap();
-                                let result = executer::code_executer(&file_content, &DUMMY_LOGGER);
+                                let parameters = ExecutionParameters {
+                                    source: ExecutionSource::Code(file_content.to_string()),
+                                    return_opcode: false,
+                                    return_output: false
+                                };
+
+                                let result = executer::code_executer(parameters);
                                 match result.compiled && result.executed {
                                     true => {
                                         if !is_pass {
