@@ -1,9 +1,9 @@
-use crate::compiler::{BramaCompiler, function::{NativeCallResult, NativeCall}};
-use crate::types::VmObject;
+use crate::compiler::{BramaCompiler, BramaPrimative, function::{NativeCallResult, NativeCall}};
+use crate::types::{VmObject};
 use crate::compiler::value::EMPTY_OBJECT;
 use crate::buildin::{Module, Class};
 use std::collections::HashMap;
-use std::rc::Rc;
+use std::sync::Arc;
 use std::io;
 
 use log;
@@ -33,7 +33,7 @@ impl Module for IoModule {
         self.methods.get(name).map(|method| *method)
     }
 
-    fn get_module(&self, _: &str) -> Option<Rc<dyn Module>> {
+    fn get_module(&self, _: &str) -> Option<Arc<dyn Module>> {
         None
     }
 
@@ -43,25 +43,25 @@ impl Module for IoModule {
          ("satıryaz", Self::printline as NativeCall)].to_vec()
     }
 
-    fn get_modules(&self) -> HashMap<String, Rc<dyn Module>> {
+    fn get_modules(&self) -> HashMap<String, Arc<dyn Module>> {
         HashMap::new()
     }
 
-    fn get_classes(&self) -> Vec<Rc<dyn Class>> {
+    fn get_classes(&self) -> Vec<Arc<dyn Class>> {
         Vec::new()
     }
 }
 
 impl IoModule  {
-    pub fn readline(_: &mut BramaCompiler, _: usize, _: u8) -> NativeCallResult {        
+    pub fn readline(_: &mut BramaCompiler, _: Option<Arc<BramaPrimative>>, _: usize, _: u8) -> NativeCallResult {        
         let mut line = String::new();
         match io::stdin().read_line(&mut line) {
-            Ok(_) => return Ok(VmObject::from(Rc::new(line.trim().to_string()))),
+            Ok(_) => return Ok(VmObject::from(Arc::new(line.trim().to_string()))),
             _ => Ok(EMPTY_OBJECT)
         }
     }
 
-    pub fn print(compiler: &mut BramaCompiler, last_position: usize, total_args: u8) -> NativeCallResult {
+    pub fn print(compiler: &mut BramaCompiler, _: Option<Arc<BramaPrimative>>, last_position: usize, total_args: u8) -> NativeCallResult {
         let mut buffer = String::new();
         unsafe {
             for arg in (*compiler.current_scope).stack.iter().skip((last_position as usize - 1) - (total_args as usize - 1)).take(total_args as usize) {
@@ -78,7 +78,7 @@ impl IoModule  {
         Ok(EMPTY_OBJECT)
     }
     
-    pub fn printline(compiler: &mut BramaCompiler, last_position: usize, total_args: u8) -> NativeCallResult {
+    pub fn printline(compiler: &mut BramaCompiler, _: Option<Arc<BramaPrimative>>, last_position: usize, total_args: u8) -> NativeCallResult {
         let mut buffer = String::new();
         unsafe {
             for arg in (*compiler.current_scope).stack.iter().skip((last_position as usize - 1) - (total_args as usize - 1)).take(total_args as usize) {

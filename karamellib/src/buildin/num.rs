@@ -4,7 +4,7 @@ use crate::compiler::value::BramaPrimative;
 use crate::compiler::value::EMPTY_OBJECT;
 use crate::buildin::{Module, Class};
 use std::collections::HashMap;
-use std::rc::Rc;
+use std::sync::Arc;
 
 pub struct NumModule {
     methods: HashMap<String, NativeCall>
@@ -27,7 +27,7 @@ impl Module for NumModule {
         self.methods.get(name).map(|method| *method)
     }
 
-    fn get_module(&self, _: &str) -> Option<Rc<dyn Module>> {
+    fn get_module(&self, _: &str) -> Option<Arc<dyn Module>> {
         None
     }
 
@@ -35,17 +35,17 @@ impl Module for NumModule {
         [("oku", Self::parse as NativeCall)].to_vec()
     }
 
-    fn get_modules(&self) -> HashMap<String, Rc<dyn Module>> {
+    fn get_modules(&self) -> HashMap<String, Arc<dyn Module>> {
         HashMap::new()
     }
     
-    fn get_classes(&self) -> Vec<Rc<dyn Class>> {
+    fn get_classes(&self) -> Vec<Arc<dyn Class>> {
         Vec::new()
     }
 }
 
 impl NumModule  {
-    pub fn parse(compiler: &mut BramaCompiler, last_position: usize, total_args: u8) -> NativeCallResult {
+    pub fn parse(compiler: &mut BramaCompiler, _: Option<Arc<BramaPrimative>>, last_position: usize, total_args: u8) -> NativeCallResult {
         if total_args > 1 {
             return Err(("More than 1 argument passed".to_string(), 0, 0));
         }

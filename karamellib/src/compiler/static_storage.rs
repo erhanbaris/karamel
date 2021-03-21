@@ -1,7 +1,7 @@
 use crate::types::*;
 use crate::compiler::*;
 use std::cell::RefCell;
-use std::rc::Rc;
+use std::sync::Arc;
 
 #[cfg(not(feature = "unittest"))]
 use crate::{debug_println};
@@ -14,8 +14,8 @@ pub struct StaticStorage {
     pub temp_size             : u8,
     pub temp_counter          : u8,
     pub variables             : Vec<(String, u8)>,
-    pub memory                : Rc<RefCell<Vec<VmObject>>>,
-    pub stack                 : Rc<RefCell<Vec<VmObject>>>,
+    pub memory                : Arc<RefCell<Vec<VmObject>>>,
+    pub stack                 : Arc<RefCell<Vec<VmObject>>>,
     pub total_const_variables : u8,
     pub parent_location       : Option<usize>
 }
@@ -39,8 +39,8 @@ impl StaticStorage {
             temp_size: 0,
             temp_counter: 0,
             total_const_variables: 0,
-            memory: Rc::new(RefCell::new(Vec::new())),
-            stack: Rc::new(RefCell::new(Vec::new())),
+            memory: Arc::new(RefCell::new(Vec::new())),
+            stack: Arc::new(RefCell::new(Vec::new())),
             variables: Vec::new(),
             parent_location: None
         }
@@ -64,17 +64,17 @@ impl StaticStorage {
         /*  Allocate variable memory and update references */
         let mut index = self.get_constant_size();
         for (_, value) in self.variables.iter_mut() {
-            memory.push(VmObject::convert(Rc::new(BramaPrimative::Empty)));
+            memory.push(VmObject::convert(Arc::new(BramaPrimative::Empty)));
             *value = index;
             index += 1;
         }
 
         for _ in 0..self.temp_size {
-            stack.push(VmObject::convert(Rc::new(BramaPrimative::Empty)));
+            stack.push(VmObject::convert(Arc::new(BramaPrimative::Empty)));
         }
     }
-    pub fn get_memory(&mut self) -> Rc<RefCell<Vec<VmObject>>> { self.memory.clone() }
-    pub fn get_stack(&mut self) -> Rc<RefCell<Vec<VmObject>>> { self.stack.clone() }
+    pub fn get_memory(&mut self) -> Arc<RefCell<Vec<VmObject>>> { self.memory.clone() }
+    pub fn get_stack(&mut self) -> Arc<RefCell<Vec<VmObject>>> { self.stack.clone() }
     pub fn get_constant_size(&self) -> u8 { self.constant_size }
     pub fn get_variable_size(&self) -> u8 { self.variables.len() as u8 }
     pub fn get_temp_size(&self) -> u8     { self.temp_size }
@@ -88,7 +88,7 @@ impl StaticStorage {
     
     pub fn set_temp_size(&mut self, value: u8) { self.temp_size = value; }
 
-    pub fn add_constant(&mut self, value: Rc<BramaPrimative>) {
+    pub fn add_constant(&mut self, value: Arc<BramaPrimative>) {
         let has = self.constants.iter().any(|x| {
             *x.deref() == *value
         });
@@ -118,14 +118,14 @@ impl StaticStorage {
     }
 
     #[allow(dead_code)]
-    pub fn get_variable_value(&self, name: &str) -> Option<Rc<BramaPrimative>> {
+    pub fn get_variable_value(&self, name: &str) -> Option<Arc<BramaPrimative>> {
         match self.get_variable_location(name) {
             Some(loc) => Some(self.memory.borrow_mut()[loc as usize].deref()),
             _ => None
         }
     }
 
-    pub fn get_constant_location(&self, value: Rc<BramaPrimative>) -> Option<u8> {
+    pub fn get_constant_location(&self, value: Arc<BramaPrimative>) -> Option<u8> {
         return match self.memory.borrow().iter().position(|x| { *x.deref() == *value }) {
             Some(number) => Some(number as u8),
             _ => None

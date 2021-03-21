@@ -10,7 +10,7 @@ use crate::syntax::expression::ExpressionParser;
 use crate::error::BramaErrorType;
 
 
-use std::rc::Rc;
+use std::sync::Arc;
 
 pub struct UnaryParser;
 
@@ -101,8 +101,8 @@ impl UnaryParser {
 
                     parser.consume_token();
                     match token.token_type {
-                        BramaTokenType::Integer(integer) => return Ok(BramaAstType::Primative(Rc::new(BramaPrimative::Number(integer as f64 * opt)))),
-                        BramaTokenType::Double(double) => return Ok(BramaAstType::Primative(Rc::new(BramaPrimative::Number(double * opt)))),
+                        BramaTokenType::Integer(integer) => return Ok(BramaAstType::Primative(Arc::new(BramaPrimative::Number(integer as f64 * opt)))),
+                        BramaTokenType::Double(double) => return Ok(BramaAstType::Primative(Arc::new(BramaPrimative::Number(double * opt)))),
                         _ => {
                             parser.set_index(index_backup);
                             return Err(BramaErrorType::UnaryWorksWithNumber);

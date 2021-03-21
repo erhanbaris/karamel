@@ -1,5 +1,4 @@
-use std::vec::Vec;
-use std::rc::Rc;
+use std::{sync::Arc, vec::Vec};
 use std::cell::RefCell;
 use std::cell::Cell;
 
@@ -7,8 +6,10 @@ use crate::{inc_memory_index, dec_memory_index, get_memory_index};
 use crate::types::*;
 use crate::compiler::{BramaCompiler, Scope};
 
+use super::BramaPrimative;
+
 pub type NativeCallResult = Result<VmObject, (String, u32, u32)>;
-pub type NativeCall       = fn(compiler: &mut BramaCompiler, last_position: usize, arg_size: u8) -> NativeCallResult;
+pub type NativeCall       = fn(compiler: &mut BramaCompiler, Option<Arc<BramaPrimative>>, last_position: usize, arg_size: u8) -> NativeCallResult;
 
 #[derive(Clone)]
 #[derive(Default)]
@@ -38,16 +39,16 @@ impl Default for FunctionType {
 }
 
 impl FunctionReference {
-    pub fn execute(&self, compiler: &mut BramaCompiler) -> Result<(), String>{
+    pub fn execute(&self, compiler: &mut BramaCompiler, source: Option<Arc<BramaPrimative>>) -> Result<(), String>{
         unsafe {
             match self.callback {
-                FunctionType::Native(func) => FunctionReference::native_function_call(&self, func, compiler),
-                FunctionType::Opcode => FunctionReference::opcode_function_call(&self,  compiler)
+                FunctionType::Native(func) => FunctionReference::native_function_call(&self, func, source, compiler),
+                FunctionType::Opcode => FunctionReference::opcode_function_call(&self, source,  compiler)
             }
         }
     }
 
-    pub fn native_function(func: NativeCall, name: String, module_path: Vec<String>, framework: String) -> Rc<FunctionReference> {
+    pub fn native_function(func: NativeCall, name: String, module_path: Vec<String>, framework: String) -> Arc<FunctionReference> {
         let reference = FunctionReference {
             callback: FunctionType::Native(func),
             framework,
@@ -59,10 +60,10 @@ impl FunctionReference {
             used_locations: RefCell::new(Vec::new()),
             defined_storage_index: 0
         };
-        Rc::new(reference)
+        Arc::new(reference)
     }
 
-    pub fn opcode_function(name: String, arguments: Vec<String>, module_path: Vec<String>, framework: String, storage_index: usize, defined_storage_index: usize) -> Rc<FunctionReference> {
+    pub fn opcode_function(name: String, arguments: Vec<String>, module_path: Vec<String>, framework: String, storage_index: usize, defined_storage_index: usize) -> Arc<FunctionReference> {
         let reference = FunctionReference {
             callback: FunctionType::Opcode,
             framework,
@@ -74,14 +75,14 @@ impl FunctionReference {
             opcode_location: Cell::new(0),
             used_locations: RefCell::new(Vec::new())
         };
-        Rc::new(reference)
+        Arc::new(reference)
     }
 
-    unsafe fn native_function_call(_: &FunctionReference, func: NativeCall, compiler: &mut BramaCompiler) -> Result<(), String> {            
+    unsafe fn native_function_call(_: &FunctionReference, func: NativeCall, source: Option<Arc<BramaPrimative>>, compiler: &mut BramaCompiler) -> Result<(), String> {            
         let total_args = compiler.opcodes[compiler.opcode_index + 1];
         let call_return_assign_to_temp = compiler.opcodes[compiler.opcode_index + 2] != 0;
         
-        match func(compiler, get_memory_index!(compiler), total_args) {
+        match func(compiler, source, get_memory_index!(compiler), total_args) {
             Ok(result) => {
                 dec_memory_index!(compiler, total_args as usize);
 
@@ -100,7 +101,7 @@ impl FunctionReference {
         }
     }
 
-    fn opcode_function_call(reference: &FunctionReference, options: &mut BramaCompiler) -> Result<(), String> {
+    fn opcode_function_call(reference: &FunctionReference, _: Option<Arc<BramaPrimative>>, options: &mut BramaCompiler) -> Result<(), String> {
         let argument_size  = options.opcodes[options.opcode_index + 1];
         let call_return_assign_to_temp = options.opcodes[options.opcode_index + 2] != 0;
         let old_index = options.opcode_index + 2;

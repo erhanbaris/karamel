@@ -1,9 +1,8 @@
 use crate::buildin::{ClassProperty};
 use crate::compiler::{BramaPrimative, function::{FunctionReference}};
 
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::Arc};
 use crate::compiler::GetType;
-use std::rc::Rc;
 
 #[derive(Default)]
 pub struct OpcodeClass {
@@ -27,15 +26,15 @@ impl OpcodeClass {
         self.properties.contains_key(&name)
     }
     
-    pub fn add_method(&mut self, name: String, function: Rc<FunctionReference>) {
+    pub fn add_method(&mut self, name: String, function: Arc<FunctionReference>) {
         self.properties.insert(name, ClassProperty::Function(function));
     }
 
-    pub fn add_property(&mut self, name: String, property: Rc<BramaPrimative>) {
+    pub fn add_property(&mut self, name: String, property: Arc<BramaPrimative>) {
         self.properties.insert(name, ClassProperty::Field(property));
     }
     
-    pub fn get_method(&self, name: &str) -> Option<Rc<FunctionReference>> {
+    pub fn get_method(&self, name: &str) -> Option<Arc<FunctionReference>> {
         match self.properties.get(name) {
             Some(property) => {
                 match property {
@@ -47,7 +46,7 @@ impl OpcodeClass {
         }
     }
 
-    pub fn get_property(&self, name: &str) -> Option<Rc<BramaPrimative>> {
+    pub fn get_property(&self, name: &str) -> Option<Arc<BramaPrimative>> {
         match self.properties.get(name) {
             Some(property) => {
                 match property {
@@ -73,7 +72,6 @@ mod test {
     use crate::compiler::{BramaPrimative, function::{FunctionReference}};
 
     use crate::compiler::GetType;
-    use std::rc::Rc;
 
     #[test]
     fn test_opcode_class_1() {
@@ -97,8 +95,8 @@ mod test {
     fn test_opcode_class_3() {
         let mut opcode_class: OpcodeClass = OpcodeClass::new("test_class".to_string(), 10);
 
-        opcode_class.add_property("field_1".to_string(), Rc::new(BramaPrimative::Number(1024.0)));
-        opcode_class.add_property("field_2".to_string(), Rc::new(BramaPrimative::Number(2048.0)));
+        opcode_class.add_property("field_1".to_string(), Arc::new(BramaPrimative::Number(1024.0)));
+        opcode_class.add_property("field_2".to_string(), Arc::new(BramaPrimative::Number(2048.0)));
 
         assert_eq!(opcode_class.name, "test_class".to_string());
         assert_eq!(opcode_class.properties.len(), 2);
@@ -128,8 +126,8 @@ mod test {
     fn test_opcode_class_4() {
         let mut opcode_class: OpcodeClass = OpcodeClass::new("test_class".to_string(), 10);
 
-        opcode_class.add_property("field_1".to_string(), Rc::new(BramaPrimative::Number(1024.0)));
-        opcode_class.add_property("field_2".to_string(), Rc::new(BramaPrimative::Number(2048.0)));
+        opcode_class.add_property("field_1".to_string(), Arc::new(BramaPrimative::Number(1024.0)));
+        opcode_class.add_property("field_2".to_string(), Arc::new(BramaPrimative::Number(2048.0)));
 
         assert_eq!(opcode_class.name, "test_class".to_string());
         assert_eq!(opcode_class.properties.len(), 2);
@@ -145,8 +143,8 @@ mod test {
         function_1.name = "function_1".to_string();
         function_2.name = "function_2".to_string();
 
-        opcode_class.add_method("function_1".to_string(), Rc::new(function_1));
-        opcode_class.add_method("function_2".to_string(), Rc::new(function_2));
+        opcode_class.add_method("function_1".to_string(), Arc::new(function_1));
+        opcode_class.add_method("function_2".to_string(), Arc::new(function_2));
 
         assert_eq!(opcode_class.name, "test_class".to_string());
         assert_eq!(opcode_class.properties.len(), 2);

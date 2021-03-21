@@ -1,8 +1,8 @@
-use crate::{buildin::{Module, Class}, compiler::BramaCompiler};
+use crate::{buildin::{Module, Class}, compiler::{BramaCompiler, BramaPrimative}};
 use crate::compiler::function::{NativeCall, NativeCallResult};
 use crate::compiler::value::EMPTY_OBJECT;
 use std::collections::HashMap;
-use std::rc::Rc;
+use std::sync::Arc;
 
 #[derive(Clone)]
 pub struct DebugModule {
@@ -26,7 +26,7 @@ impl Module for DebugModule {
         self.methods.get(name).map(|method| *method)
     }
 
-    fn get_module(&self, _: &str) -> Option<Rc<dyn Module>> {
+    fn get_module(&self, _: &str) -> Option<Arc<dyn Module>> {
         None
     }
 
@@ -34,17 +34,17 @@ impl Module for DebugModule {
         [("doğrula", Self::assert as NativeCall)].to_vec()
     }
 
-    fn get_modules(&self) -> HashMap<String, Rc<dyn Module>> {
+    fn get_modules(&self) -> HashMap<String, Arc<dyn Module>> {
         HashMap::new()
     }
 
-    fn get_classes(&self) -> Vec<Rc<dyn Class>> {
+    fn get_classes(&self) -> Vec<Arc<dyn Class>> {
         Vec::new()
     }
 }
 
 impl DebugModule  {
-    pub fn assert(compiler: &mut BramaCompiler, last_position: usize, total_args: u8) -> NativeCallResult {
+    pub fn assert(compiler: &mut BramaCompiler, _: Option<Arc<BramaPrimative>>, last_position: usize, total_args: u8) -> NativeCallResult {
         unsafe {
             match total_args {
                 1 => {

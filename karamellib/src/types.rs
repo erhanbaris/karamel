@@ -4,7 +4,7 @@ use std::iter::Peekable;
 use std::result::Result;
 use std::hash::{Hash, Hasher};
 use std::collections::hash_map::DefaultHasher;
-use std::rc::Rc;
+use std::sync::Arc;
 use crate::{compiler::ast::BramaAstType, error::BramaError};
 use crate::error::BramaErrorType;
 
@@ -193,9 +193,9 @@ pub enum BramaOperatorType {
 pub enum BramaTokenType {
     Integer(i64),
     Double(f64),
-    Symbol(Rc<String>),
+    Symbol(Arc<String>),
     Operator(BramaOperatorType),
-    Text(Rc<String>),
+    Text(Arc<String>),
     Keyword(BramaKeywordType),
     WhiteSpace(u8),
     NewLine(u8)
