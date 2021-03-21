@@ -1,4 +1,4 @@
-fon test:
+fonk test:
     döndür 'erhan'
 
 my_dict = { 'fn': test }

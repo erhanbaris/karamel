@@ -1,6 +1,6 @@
-fon func:
-    fon inner_1:
-        fon inner_2:
+fonk func:
+    fonk inner_1:
+        fonk inner_2:
             döndür 'oldu'
         döndür inner_2
     döndür inner_1

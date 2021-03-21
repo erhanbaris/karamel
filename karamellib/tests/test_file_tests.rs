@@ -4,7 +4,6 @@ extern crate karamellib;
 mod tests {
     use crate::karamellib::vm::*;
     use crate::karamellib::{vm::executer::{ExecutionParameters, ExecutionSource}};
-    use karamellib::logger::DUMMY_LOGGER;
 
     #[test]
     fn test_files_executer() {
@@ -12,6 +11,7 @@ mod tests {
         use std::fs;
         use std::path::Path;
         use colored::*;
+        use log;
 
         let mut test_status = true;
         let current_dir = env::current_dir().unwrap();
@@ -41,18 +41,18 @@ mod tests {
                                 match result.compiled && result.executed {
                                     true => {
                                         if !is_pass {
-                                            println!("# {} failed ({})", __path, "Not failed".red());
+                                            log::error!("# {} failed ({})", __path, "Not failed".red());
                                             test_status = false;
                                         } else {
-                                            println!("# {} passed", __path);
+                                            log::info!("# {} passed", __path);
                                         }
                                     },
                                     false => {
                                         if is_pass {
-                                            println!("# {} failed", __path);
+                                            log::error!("# {} failed", __path);
                                             test_status = false;
                                         } else {
-                                            println!("# {} passed", __path);
+                                            log::info!("# {} passed", __path);
                                         }
                                     }
                                 }
