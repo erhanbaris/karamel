@@ -11,6 +11,7 @@ bitflags = "1.2"
 log-update = "*"
 colored = "2"
 log = "0.4.14"
+lazy_static = "1.4.0"
 
 [features]
 dumpExecutionOpcode = []

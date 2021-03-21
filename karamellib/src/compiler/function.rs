@@ -24,6 +24,9 @@ pub struct FunctionReference {
     pub used_locations: RefCell<Vec<u16>>
 }
 
+unsafe impl Send for FunctionReference {}
+unsafe impl Sync for FunctionReference {}
+
 #[derive(Clone)]
 pub enum FunctionType {
     Native(NativeCall),

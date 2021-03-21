@@ -3,6 +3,7 @@ pub mod io;
 pub mod num;
 pub mod base_functions;
 pub mod opcode_class;
+pub mod number;
 
 use crate::compiler::GetType;
 
@@ -53,7 +54,17 @@ pub enum ClassProperty {
     Field(Rc<BramaPrimative>)
 }
 
+pub struct ClassConfig {
+    pub name: String,
+    pub storage_index: usize,
+    pub properties: HashMap<String, ClassProperty>,
+    pub is_readonly: bool,
+    pub is_buildin: bool,
+    pub is_static: bool
+}
+
 pub trait Class: GetType {
+    fn set_class_config(&mut self, config: ClassConfig);
     fn get_class_name(&self) -> String;
     
     fn has_property(&self, name: String) -> bool;

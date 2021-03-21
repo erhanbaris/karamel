@@ -1,4 +1,4 @@
-use crate::buildin::{Class, ClassProperty};
+use crate::buildin::{ClassProperty};
 use crate::compiler::{BramaPrimative, function::{FunctionReference}};
 
 use std::collections::HashMap;
@@ -9,27 +9,33 @@ use std::rc::Rc;
 pub struct OpcodeClass {
     pub name: String,
     pub storage_index: usize,
-    pub properties: HashMap<String, ClassProperty>
+    pub properties: HashMap<String, ClassProperty>,
+    pub is_readonly: bool,
+    pub is_buildin: bool,
+    pub is_static: bool
  }
 
-impl Class for OpcodeClass {
-    fn get_class_name(&self) -> String {
+impl OpcodeClass {
+    pub fn set_name(&mut self, name: String) {
+        self.name = name;
+    }
+    pub fn get_class_name(&self) -> String {
         self.name.to_string()
     }
     
-    fn has_property(&self, name: String) -> bool {
+    pub fn has_property(&self, name: String) -> bool {
         self.properties.contains_key(&name)
     }
     
-    fn add_method(&mut self, name: String, function: Rc<FunctionReference>) {
+    pub fn add_method(&mut self, name: String, function: Rc<FunctionReference>) {
         self.properties.insert(name, ClassProperty::Function(function));
     }
 
-    fn add_property(&mut self, name: String, property: Rc<BramaPrimative>) {
+    pub fn add_property(&mut self, name: String, property: Rc<BramaPrimative>) {
         self.properties.insert(name, ClassProperty::Field(property));
     }
     
-    fn get_method(&self, name: &str) -> Option<Rc<FunctionReference>> {
+    pub fn get_method(&self, name: &str) -> Option<Rc<FunctionReference>> {
         match self.properties.get(name) {
             Some(property) => {
                 match property {
@@ -41,7 +47,7 @@ impl Class for OpcodeClass {
         }
     }
 
-    fn get_property(&self, name: &str) -> Option<Rc<BramaPrimative>> {
+    pub fn get_property(&self, name: &str) -> Option<Rc<BramaPrimative>> {
         match self.properties.get(name) {
             Some(property) => {
                 match property {
@@ -57,17 +63,6 @@ impl Class for OpcodeClass {
 impl GetType for OpcodeClass {
     fn get_type(&self) -> String {
         self.get_class_name()
-    }
-}
-
-impl OpcodeClass {
-    #[allow(dead_code)]
-    pub fn new(name: String, storage_index: usize) -> OpcodeClass {
-        OpcodeClass {
-            name,
-            storage_index,
-            properties: HashMap::new()
-        }
     }
 }
 

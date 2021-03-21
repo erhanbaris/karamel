@@ -493,6 +493,9 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
                                 _ => empty_primative
                             }
                         },
+                        BramaPrimative::Number(value) => {
+                            empty_primative
+                        },
                         BramaPrimative::Dict(value) => {
                             let indexer_value = match &*indexer {
                                 BramaPrimative::Text(text) => &*text,

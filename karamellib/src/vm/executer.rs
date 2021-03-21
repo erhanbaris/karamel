@@ -5,9 +5,6 @@ use crate::syntax::SyntaxParser;
 use crate::logger::{CONSOLE_LOGGER};
 use crate::error::generate_error_message;
 
-use std::io::{self};
-use std::io::Write;
-
 use log;
 use crate::types::VmObject;
 
@@ -80,26 +77,27 @@ pub fn code_executer(parameters: ExecutionParameters) -> ExecutionStatus {
         compiler_options.stderr = Some(String::new());
     }
 
-    let execution_memory = match opcode_compiler.compile(&ast, &mut compiler_options) {
+    let execution_status = match opcode_compiler.compile(&ast, &mut compiler_options) {
         Ok(_) => unsafe { run_vm(&mut compiler_options) },
         Err(message) => {
             log::error!("Program hata ile sonlandırıldı: {}", message);
             return status;
         }
     };
-    log::info!("Program başarıyla çalıştırıldı");
 
-    match execution_memory {
+    match execution_status {
         Ok(memory) => {
             status.compiled = true;
             status.executed = true;
             status.memory_output = Some(memory)
         },
         Err(error) => {
-            log::error!("Hafızada ki bilgileri okuma sırasında hata oluştu fakat program hatasız olarak Çalıştı. Hata mesajı: {}", error);
+            log::error!("Program hata ile sonlandırıldı: {}", error);
+            return status;
         }
     };
 
+    log::info!("Program başarıyla çalıştırıldı");
     if parameters.return_opcode {
         status.opcodes = Some(parser.tokens());
     }
