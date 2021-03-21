@@ -5,6 +5,7 @@ use std::mem::ManuallyDrop;
 use std::fmt;
 use std::collections::HashMap;
 
+
 use crate::{buildin::opcode_class::OpcodeClass, types::*};
 use crate::compiler::function::FunctionReference;
 use crate::compiler::GetType;
@@ -71,7 +72,6 @@ impl GetType for BramaPrimative {
         }
     }
 }
-
 
 impl From<f64> for VmObject {
     fn from(source: f64) -> Self {

@@ -1,4 +1,4 @@
-use crate::buildin::{ClassProperty};
+use crate::{buildin::{ClassProperty}, compiler::function::NativeCall};
 use crate::compiler::{BramaPrimative, function::{FunctionReference}};
 
 use std::{collections::HashMap, sync::Arc};
@@ -26,8 +26,9 @@ impl OpcodeClass {
         self.properties.contains_key(&name)
     }
     
-    pub fn add_method(&mut self, name: String, function: Arc<FunctionReference>) {
-        self.properties.insert(name, ClassProperty::Function(function));
+    pub fn add_method(&mut self, name: String, function: NativeCall) {
+        let function_ref = FunctionReference::buildin_function(function, name.to_string());
+        self.properties.insert(name.to_string(), ClassProperty::Function(function_ref));
     }
 
     pub fn add_property(&mut self, name: String, property: Arc<BramaPrimative>) {
@@ -67,7 +68,7 @@ impl GetType for OpcodeClass {
 
 #[cfg(test)]
 mod test {
-    use crate::buildin::{Class};
+    use std::sync::Arc;
     use crate::buildin::opcode_class::OpcodeClass;
     use crate::compiler::{BramaPrimative, function::{FunctionReference}};
 

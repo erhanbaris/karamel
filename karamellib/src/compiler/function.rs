@@ -48,6 +48,21 @@ impl FunctionReference {
         }
     }
 
+    pub fn buildin_function(func: NativeCall, name: String) -> Arc<FunctionReference> {
+        let reference = FunctionReference {
+            callback: FunctionType::Native(func),
+            framework: "".to_string(),
+            module_path: Vec::new(),
+            name,
+            arguments: Vec::new(),
+            storage_index: 0,
+            opcode_location: Cell::new(0),
+            used_locations: RefCell::new(Vec::new()),
+            defined_storage_index: 0
+        };
+        Arc::new(reference)
+    }
+
     pub fn native_function(func: NativeCall, name: String, module_path: Vec<String>, framework: String) -> Arc<FunctionReference> {
         let reference = FunctionReference {
             callback: FunctionType::Native(func),
