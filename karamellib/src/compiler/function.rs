@@ -8,7 +8,7 @@ use crate::types::*;
 use crate::compiler::{BramaCompiler, Scope};
 
 pub type NativeCallResult = Result<VmObject, (String, u32, u32)>;
-pub type NativeCall       = fn(stack: &Vec<VmObject>, last_position: usize, arg_size: u8) -> NativeCallResult;
+pub type NativeCall       = fn(compiler: &mut BramaCompiler, last_position: usize, arg_size: u8) -> NativeCallResult;
 
 #[derive(Clone)]
 #[derive(Default)]
@@ -78,7 +78,7 @@ impl FunctionReference {
         let total_args = compiler.opcodes[compiler.opcode_index + 1];
         let call_return_assign_to_temp = compiler.opcodes[compiler.opcode_index + 2] != 0;
         
-        match func(&(*compiler.current_scope).stack, get_memory_index!(compiler), total_args) {
+        match func(compiler, get_memory_index!(compiler), total_args) {
             Ok(result) => {
                 dec_memory_index!(compiler, total_args as usize);
 

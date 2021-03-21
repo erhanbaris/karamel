@@ -1,8 +1,6 @@
 extern crate karamellib;
 
-use std::cell::RefCell;
-
-use karamellib::{compiler::BramaPrimative, logger::CollectorLogger};
+use karamellib::{compiler::BramaPrimative, vm::executer::{ExecutionParameters, ExecutionSource}};
 use wasm_bindgen::prelude::*;
 use js_sys::*;
 
@@ -15,12 +13,14 @@ pub fn execute_code(name: &str) -> Object {
     let results_ref     = JsValue::from("results");
     let stdout_ref      = JsValue::from("stdout");
     let stderr_ref      = JsValue::from("stderr");
-    static COLLECTOR: CollectorLogger = CollectorLogger { 
-        stdout: RefCell::new(String::new()), 
-        stderr: RefCell::new(String::new())
+
+    let parameters = ExecutionParameters {
+        source: ExecutionSource::Code(name.to_string()),
+        return_opcode: true,
+        return_output: true
     };
 
-    let result = karamellib::vm::executer::code_executer(&name.to_string(), &COLLECTOR);
+    let result = karamellib::vm::executer::code_executer(parameters);
     match result.compiled && result.executed {
         true => {
             Reflect::set(response.as_ref(), status_ref.as_ref(), JsValue::from_bool(true).as_ref()).unwrap();
@@ -42,23 +42,26 @@ pub fn execute_code(name: &str) -> Object {
                 None=> ()
             };
 
-            stdouts.push(&JsValue::from(COLLECTOR.stdout.borrow().clone()).into());
-
+            match result.stdout {
+                Some(stdout) => { stdouts.push(&JsValue::from(stdout.clone()).into()); },
+                _ => ()
+            };
+            
             Reflect::set(response.as_ref(), results_ref.as_ref(), results.as_ref()).unwrap();
             Reflect::set(response.as_ref(), stdout_ref.as_ref(),  stdouts.as_ref()).unwrap();
         },
         false => {
             let stderrs = Array::new();
 
-            stderrs.push(&JsValue::from(COLLECTOR.stderr.borrow().clone()).into());
+            match result.stderr {
+                Some(stderr) => { stderrs.push(&JsValue::from(stderr.clone()).into()); },
+                _ => ()
+            };
 
             Reflect::set(response.as_ref(), status_ref.as_ref(), JsValue::from_bool(false).as_ref()).unwrap();
             Reflect::set(response.as_ref(), stderr_ref.as_ref(),  stderrs.as_ref()).unwrap();
         }
     };
-
-    COLLECTOR.stdout.borrow_mut().clear();
-    COLLECTOR.stderr.borrow_mut().clear();
 
     response
 }

@@ -1,5 +1,5 @@
-fn test_1:
-    fn inner():
+fonk test_1:
+    fonk inner():
         döndür 'gizli kayıtlar'
     döndür inner
 

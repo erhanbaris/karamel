@@ -1,4 +1,4 @@
-use crate::compiler::function::{NativeCallResult, NativeCall};
+use crate::compiler::{BramaCompiler, function::{NativeCallResult, NativeCall}};
 use crate::types::VmObject;
 use crate::compiler::value::BramaPrimative;
 use crate::compiler::value::EMPTY_OBJECT;
@@ -45,15 +45,15 @@ impl Module for NumModule {
 }
 
 impl NumModule  {
-    pub fn parse(arguments: &Vec<VmObject>, last_position: usize, total_args: u8) -> NativeCallResult {
+    pub fn parse(compiler: &mut BramaCompiler, last_position: usize, total_args: u8) -> NativeCallResult {
         if total_args > 1 {
             return Err(("More than 1 argument passed".to_string(), 0, 0));
         }
 
-        let arg = arguments[last_position - 1].deref();
+        let arg = unsafe { (*compiler.current_scope).stack[last_position - 1].deref() };
 
         match &*arg {
-            BramaPrimative::Number(_) => Ok(arguments[last_position - 1]),
+            BramaPrimative::Number(_) => Ok(unsafe {(*compiler.current_scope).stack[last_position - 1]}),
             BramaPrimative::Text(text) => {
                 match (*text).parse() {
                     Ok(num) => Ok(VmObject::native_convert(BramaPrimative::Number(num))),

@@ -1,4 +1,4 @@
-fn test_1:
+fonk test_1:
     döndür 'erhan'
 erhan = test_1
 barış = erhan

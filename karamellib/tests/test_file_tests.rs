@@ -3,7 +3,7 @@ extern crate karamellib;
 #[cfg(test)]
 mod tests {
     use crate::karamellib::vm::*;
-    use karamellib::logger::DUMMY_LOGGER;
+    use crate::karamellib::{vm::executer::{ExecutionParameters, ExecutionSource}};
 
     #[test]
     fn test_files_executer() {
@@ -11,6 +11,7 @@ mod tests {
         use std::fs;
         use std::path::Path;
         use colored::*;
+        use log;
 
         let mut test_status = true;
         let current_dir = env::current_dir().unwrap();
@@ -30,22 +31,28 @@ mod tests {
                         match _path.path().to_str() {
                             Some(__path) => {
                                 let file_content = fs::read_to_string(__path).unwrap();
-                                let result = executer::code_executer(&file_content, &DUMMY_LOGGER);
+                                let parameters = ExecutionParameters {
+                                    source: ExecutionSource::Code(file_content.to_string()),
+                                    return_opcode: false,
+                                    return_output: false
+                                };
+
+                                let result = executer::code_executer(parameters);
                                 match result.compiled && result.executed {
                                     true => {
                                         if !is_pass {
-                                            println!("# {} failed ({})", __path, "Not failed".red());
+                                            log::error!("# {} failed ({})", __path, "Not failed".red());
                                             test_status = false;
                                         } else {
-                                            println!("# {} passed", __path);
+                                            log::info!("# {} passed", __path);
                                         }
                                     },
                                     false => {
                                         if is_pass {
-                                            println!("# {} failed", __path);
+                                            log::error!("# {} failed", __path);
                                             test_status = false;
                                         } else {
-                                            println!("# {} passed", __path);
+                                            log::info!("# {} passed", __path);
                                         }
                                     }
                                 }

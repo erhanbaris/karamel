@@ -1,5 +1,5 @@
-fn test:
-    fn test_erhan:
+fonk test:
+    fonk test_erhan:
         döndür 'erhan'
     döndür test_erhan
 

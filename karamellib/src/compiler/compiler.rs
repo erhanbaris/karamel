@@ -55,6 +55,8 @@ pub struct BramaCompiler {
     pub current_scope: *mut Scope,
     pub scope_index: usize,
     pub functions : Vec<Rc<FunctionReference>>,
+    pub stdout: Option<String>,
+    pub stderr: Option<String>
 }
 
 impl  BramaCompiler {
@@ -69,7 +71,9 @@ impl  BramaCompiler {
             scopes: Vec::new(),
             current_scope: ptr::null_mut(),
             scope_index: 0,
-            functions: Vec::new()
+            functions: Vec::new(),
+            stdout: None,
+            stderr: None
         };
 
         for _ in 0..32{

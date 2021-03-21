@@ -29,7 +29,7 @@ mod tests {
     }
 
     test_compare!(func_def_1, r#"
-fn test():
+fonk test():
     erhan=123"#, Ok(BramaAstType::FunctionDefination {
         name: "test".to_string(),
         arguments: [].to_vec(),
@@ -41,7 +41,7 @@ fn test():
         BramaAstType::Return(Box::new(BramaAstType::None))].to_vec()))
     }));
     test_compare!(func_def_2, r#"
-fn test(a):
+fonk test(a):
     erhan=123"#, Ok(BramaAstType::FunctionDefination {
         name: "test".to_string(),
         arguments: ["a".to_string()].to_vec(),
@@ -53,7 +53,7 @@ fn test(a):
         BramaAstType::Return(Box::new(BramaAstType::None))].to_vec()))
     }));
     test_compare!(func_def_3, r#"
-fn test(a, b    ,   c):
+fonk test(a, b    ,   c):
     erhan=123"#, Ok(BramaAstType::FunctionDefination {
         name: "test".to_string(),
         arguments: ["a".to_string(), "b".to_string(), "c".to_string()].to_vec(),
@@ -65,7 +65,7 @@ fn test(a, b    ,   c):
         BramaAstType::Return(Box::new(BramaAstType::None))].to_vec()))
     }));
     test_compare!(func_def_4, r#"
-fn test:
+fonk test:
     erhan=123"#, Ok(BramaAstType::FunctionDefination {
             name: "test".to_string(),
             arguments: [].to_vec(),
@@ -77,7 +77,7 @@ fn test:
             BramaAstType::Return(Box::new(BramaAstType::None))].to_vec()))
         }));
         test_compare!(func_def_6, r#"
-fn test   :
+fonk test   :
     
     
     
@@ -92,55 +92,55 @@ fn test   :
                 BramaAstType::Return(Box::new(BramaAstType::None))].to_vec()))
             }));
             test_compare!(func_def_7, r#"
-fn test
+fonk test
     erhan=123"#, Err(BramaError {
         error_type: BramaErrorType::ColonMarkMissing,
-        column: 7,
-        line: 1
-    }));
-    test_compare!(func_def_8, r#"
-fn test(:
-    erhan=123"#, Err(BramaError {
-        error_type: BramaErrorType::ArgumentMustBeText,
         column: 9,
         line: 1
     }));
+    test_compare!(func_def_8, r#"
+fonk test(:
+    erhan=123"#, Err(BramaError {
+        error_type: BramaErrorType::ArgumentMustBeText,
+        column: 11,
+        line: 1
+    }));
     test_compare!(func_def_9, r#"
-fn test(a:
+fonk test(a:
     erhan=123"#, Err(BramaError {
         error_type: BramaErrorType::RightParanthesesMissing,
-        column: 10,
+        column: 12,
         line: 1
     }));
     test_compare!(func_def_10, r#"
-fn test(a):
+fonk test(a):
 "#, Err(BramaError {
     error_type: BramaErrorType::FunctionConditionBodyNotFound,
-    column: 11,
+    column: 13,
     line: 1
 }));
 test_compare!(func_def_11, r#"
-fn (a):
+fonk (a):
   a=1
 "#, Err(BramaError {
     error_type: BramaErrorType::FunctionNameNotDefined,
-    column: 4,
+    column: 6,
     line: 1
 }));
 test_compare!(func_def_12, r#"
-fn :
+fonk :
   a=1
 "#, Err(BramaError {
     error_type: BramaErrorType::FunctionNameNotDefined,
-    column: 4,
+    column: 6,
     line: 1
 }));
 test_compare!(func_def_13, r#"
-fn test(1):
+fonk test(1):
   a=1
 "#, Err(BramaError {
     error_type: BramaErrorType::ArgumentMustBeText,
-    column: 9,
+    column: 11,
     line: 1
 }));
 test_compare!(func_def_14, r#"
@@ -152,7 +152,7 @@ döndür test
     line: 2
 }));
 test_compare!(func_def_15, r#"
-fn test():
+fonk test():
     erhan=123
     return erhan"#, Ok(BramaAstType::FunctionDefination {
     name: "test".to_string(),
@@ -165,7 +165,7 @@ fn test():
     BramaAstType::Return(Box::new(BramaAstType::Symbol("erhan".to_string())))].to_vec()))
 }));
 test_compare!(func_def_16, r#"
-fn test():
+fonk test():
     erhan=123
     return"#, Ok(BramaAstType::FunctionDefination {
     name: "test".to_string(),

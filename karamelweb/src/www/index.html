@@ -43,10 +43,13 @@
 /* https://codepen.io/Souleste/pen/wvvwJWw */
   window.editor = CodeMirror(document.getElementById("source"), {
     value: `
-fn toplam(a,b):
+// İyi değişkeni topla
+fonk toplam(a,b):
     döndür a + b
   
-fn faktoriyel(sayı):    
+
+// Faktoriyel hesapla
+fonk faktoriyel(sayı):
     eğer sayı==1 veya sayı==0:
         döndür 1
     yada:
@@ -64,6 +67,7 @@ sonsuz:
     gç::satıryaz(sayaç * sayaç)
     sayaç += 1
     devamet
+/* Solda ki rakam ile sağda ki rakamların eşit olduğunu doğrula */
 hataayıklama::doğrula(sayaç, 10)`,
     mode:  "kpd",
     //lineNumbers: true,

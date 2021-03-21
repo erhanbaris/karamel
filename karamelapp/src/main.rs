@@ -1,9 +1,16 @@
 extern crate karamellib;
 
-use karamellib::logger::CONSOLE_LOGGER;
+use karamellib::{vm::executer::{ExecutionParameters, ExecutionSource}};
 
 fn main() {
-    let result = karamellib::vm::executer::code_executer(&r#"[123"#.to_string(), &CONSOLE_LOGGER);
+
+    let parameters = ExecutionParameters {
+        source: ExecutionSource::Code(r#"gç::satıryaz('merhaba dünya')asd"#.to_string()),
+        return_opcode: true,
+        return_output: true
+    };
+    
+    let result = karamellib::vm::executer::code_executer(parameters);
     match result.executed {
         true => println!("Success"),
         false => println!("Fail")
