@@ -6,24 +6,42 @@ use crate::compiler::GetType;
 
 #[derive(Default)]
 pub struct OpcodeClass {
-    pub name: String,
-    pub storage_index: usize,
-    pub properties: HashMap<String, ClassProperty>,
-    pub is_readonly: bool,
-    pub is_buildin: bool,
-    pub is_static: bool
+    name: String,
+    storage_index: usize,
+    properties: HashMap<String, ClassProperty>,
+    is_readonly: bool
  }
 
 impl OpcodeClass {
     pub fn set_name(&mut self, name: String) {
         self.name = name;
     }
-    pub fn get_class_name(&self) -> String {
+    pub fn get_name(&self) -> String {
         self.name.to_string()
+    }
+
+    pub fn set_storage_index(&mut self, index: usize) {
+        self.storage_index = index;
+    }
+
+    pub fn get_storage_index(&self) -> usize {
+        self.storage_index
     }
     
     pub fn has_property(&self, name: String) -> bool {
         self.properties.contains_key(&name)
+    }
+
+    pub(crate) fn is_readonly(&self) -> bool {
+        self.is_readonly
+    }
+
+    pub(crate) fn set_readonly(&mut self, readonly: bool) {
+        self.is_readonly = readonly;
+    }
+    
+    pub fn property_count(&self) -> usize {
+        self.properties.len()
     }
     
     pub fn add_method(&mut self, name: String, function: NativeCall) {
@@ -62,45 +80,58 @@ impl OpcodeClass {
 
 impl GetType for OpcodeClass {
     fn get_type(&self) -> String {
-        self.get_class_name()
+        self.get_name()
     }
 }
 
 #[cfg(test)]
 mod test {
     use std::sync::Arc;
-    use crate::buildin::opcode_class::OpcodeClass;
+    use crate::compiler::GetType;
+    use crate::{buildin::opcode_class::OpcodeClass, compiler::{BramaCompiler, EMPTY_OBJECT, function::NativeCallResult}};
     use crate::compiler::{BramaPrimative, function::{FunctionReference}};
 
-    use crate::compiler::GetType;
+    pub fn tmp_func_1(_: &mut BramaCompiler, _: Option<Arc<BramaPrimative>>, _: usize, _: u8) -> NativeCallResult {        
+        Ok(EMPTY_OBJECT)
+    }
+
+    pub fn tmp_func_2(_: &mut BramaCompiler, _: Option<Arc<BramaPrimative>>, _: usize, _: u8) -> NativeCallResult {        
+        Ok(EMPTY_OBJECT)
+    }
 
     #[test]
     fn test_opcode_class_1() {
         let opcode_class = OpcodeClass::default();
-        assert_eq!(opcode_class.name.len(), 0);
-        assert_eq!(opcode_class.properties.len(), 0);
-        assert_eq!(opcode_class.storage_index, 0);
+        assert_eq!(opcode_class.get_name().len(), 0);
+        assert_eq!(opcode_class.property_count(), 0);
+        assert_eq!(opcode_class.get_storage_index(), 0);
     }
 
     #[test]
     fn test_opcode_class_2() {
-        let opcode_class = OpcodeClass::new("test_class".to_string(), 1);
-        assert_eq!(opcode_class.name, "test_class".to_string());
-        assert_eq!(opcode_class.properties.len(), 0);
-        assert_eq!(opcode_class.storage_index, 1);
-        assert_eq!(opcode_class.get_type(), opcode_class.get_class_name());
+        let mut opcode_class: OpcodeClass = OpcodeClass::default();
+        opcode_class.set_name("test_class".to_string());
+        opcode_class.set_storage_index(1);
+
+        assert_eq!(opcode_class.get_name(), "test_class".to_string());
+        assert_eq!(opcode_class.property_count(), 0);
+        assert_eq!(opcode_class.get_storage_index(), 1);
+        assert_eq!(opcode_class.get_type(), opcode_class.get_name());
         assert_eq!(opcode_class.get_type(), "test_class".to_string());
     }
 
     #[test]
     fn test_opcode_class_3() {
-        let mut opcode_class: OpcodeClass = OpcodeClass::new("test_class".to_string(), 10);
+        let mut opcode_class: OpcodeClass = OpcodeClass::default();
+        opcode_class.set_name("test_class".to_string());
+        opcode_class.set_storage_index(10);
+
 
         opcode_class.add_property("field_1".to_string(), Arc::new(BramaPrimative::Number(1024.0)));
         opcode_class.add_property("field_2".to_string(), Arc::new(BramaPrimative::Number(2048.0)));
 
-        assert_eq!(opcode_class.name, "test_class".to_string());
-        assert_eq!(opcode_class.properties.len(), 2);
+        assert_eq!(opcode_class.get_name(), "test_class".to_string());
+        assert_eq!(opcode_class.property_count(), 2);
 
         let field_1 = opcode_class.get_property("field_1");
         let field_2 = opcode_class.get_property("field_2");
@@ -125,7 +156,9 @@ mod test {
 
     #[test]
     fn test_opcode_class_4() {
-        let mut opcode_class: OpcodeClass = OpcodeClass::new("test_class".to_string(), 10);
+        let mut opcode_class: OpcodeClass = OpcodeClass::default();
+        opcode_class.set_name("test_class".to_string());
+        opcode_class.set_storage_index(10);
 
         opcode_class.add_property("field_1".to_string(), Arc::new(BramaPrimative::Number(1024.0)));
         opcode_class.add_property("field_2".to_string(), Arc::new(BramaPrimative::Number(2048.0)));
@@ -137,19 +170,22 @@ mod test {
 
     #[test]
     fn test_opcode_class_5() {
-        let mut opcode_class: OpcodeClass = OpcodeClass::new("test_class".to_string(), 2);
+        let mut opcode_class: OpcodeClass = OpcodeClass::default();
+        opcode_class.set_name("test_class".to_string());
+        opcode_class.set_storage_index(2);
+
         let mut function_1 = FunctionReference::default();
         let mut function_2 = FunctionReference::default();
 
         function_1.name = "function_1".to_string();
         function_2.name = "function_2".to_string();
 
-        opcode_class.add_method("function_1".to_string(), Arc::new(function_1));
-        opcode_class.add_method("function_2".to_string(), Arc::new(function_2));
+        opcode_class.add_method("function_1".to_string(), tmp_func_1);
+        opcode_class.add_method("function_2".to_string(), tmp_func_2);
 
-        assert_eq!(opcode_class.name, "test_class".to_string());
-        assert_eq!(opcode_class.properties.len(), 2);
-        assert_eq!(opcode_class.storage_index, 2);
+        assert_eq!(opcode_class.get_name(), "test_class".to_string());
+        assert_eq!(opcode_class.property_count(), 2);
+        assert_eq!(opcode_class.get_storage_index(), 2);
 
         let function_1 = opcode_class.get_method("function_1");
         let function_2 = opcode_class.get_method("function_2");

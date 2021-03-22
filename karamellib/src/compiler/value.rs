@@ -127,7 +127,7 @@ impl fmt::Debug for BramaPrimative {
             BramaPrimative::Text(b) => write!(f, "{:?}", b),
             BramaPrimative::Function(func) => write!(f, "<Fonksiyon='{}'>", func.name),
             BramaPrimative::ClassFunction(func, _) => write!(f, "<Sınıf='{}'>", func.name),
-            BramaPrimative::Class(class) => write!(f, "<Sınıf='{}'>", class.get_class_name())
+            BramaPrimative::Class(class) => write!(f, "<Sınıf='{}'>", class.get_name())
         }
     }
 }
@@ -144,7 +144,7 @@ impl fmt::Display for BramaPrimative {
             BramaPrimative::Text(b) => write!(f, "{}", b),
             BramaPrimative::Function(func) => write!(f, "<Fonksiyon='{}'>", func.name),
             BramaPrimative::ClassFunction(func, _) => write!(f, "<Sınıf='{}'>", func.name),
-            BramaPrimative::Class(class) => write!(f, "<Sınıf='{}'>", class.get_class_name())
+            BramaPrimative::Class(class) => write!(f, "<Sınıf='{}'>", class.get_name())
         }
     }
 }
@@ -184,7 +184,7 @@ impl PartialEq for BramaPrimative {
                 true
             },
             (BramaPrimative::Class(l_value), BramaPrimative::Class(r_value)) => {
-                l_value.get_class_name() == r_value.get_class_name()
+                l_value.get_name() == r_value.get_name()
             },
             (BramaPrimative::ClassFunction(l_value, l_source), BramaPrimative::ClassFunction(r_value, r_source)) => {
                 l_value.name != r_value.name ||
