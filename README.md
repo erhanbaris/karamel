@@ -26,15 +26,15 @@ sonsuz:
     gç::satıryaz("Sonsuza kadar devam")
 ```
 
-Döngü kontrolü için *devamet*, *continue*, *kır*, *break*.
+Döngü kontrolü için *devam*, *continue*, *kır*, *break*.
 
 ### Sorgulama
 ```
 eğer a == b:  
     gç::satıryaz('a eşittir b')
-yada a == c:  
+yoksa a == c:  
     gç::satıryaz('a eşittir c')
-yada:  
+yoksa:  
     gç::satıryaz('a hiçbirine eşit değil')
 ```
 
@@ -52,7 +52,7 @@ fonk metod_1(a):
 fonk faktoriyel(sayı):    
     eğer sayı==1 veya sayı==0:
         döndür 1
-    yada:
+    yoksa:
         döndür sayı * faktoriyel(sayı - 1)
 
 faktoriyel_sonucu = faktoriyel(10)

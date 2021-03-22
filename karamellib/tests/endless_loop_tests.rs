@@ -75,9 +75,9 @@ test_compare!(endless_5, r#"kır"#, Err(BramaError {
     column: 3,
     line: 0
 }));
-test_compare!(endless_6, r#"devamet"#, Err(BramaError {
+test_compare!(endless_6, r#"devam"#, Err(BramaError {
     error_type: BramaErrorType::BreakAndContinueBelongToLoops,
-    column: 7,
+    column: 5,
     line: 0
 }));
 }
