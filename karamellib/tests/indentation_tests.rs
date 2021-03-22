@@ -64,28 +64,28 @@ mod tests {
 123"#);
 test_success!(indentation_7, r#"eğer 1024 * 123:
     erhan=123
-yada: 
+yoksa: 
     erhan=1234"#);
     test_success!(indentation_8, r#"eğer 1024 * 123:
     erhan=123
-yada: 
+yoksa: 
   erhan=1234
 "#);
 test_success!(indentation_9, r#"eğer 1024 * 123:
     erhan=123
-yada: 
+yoksa: 
     erhan=1234
 erhan=22"#);
 test_success!(indentation_10, r#"eğer 1024 * 123:
  erhan=123
-yada: 
+yoksa: 
  erhan=1234
 erhan=22"#);
 test_success!(indentation_11, r#"eğer 1024 * 123:
     erhan=123
     eğer doğru:
         erhan=123
-yada: 
+yoksa: 
     erhan=1234
 erhan=22"#);
 
@@ -96,7 +96,7 @@ eğer 1024 * 123:
     eğer doğru:
         io::print('merhaba dünya')
         erhan=123
-yada:
+yoksa:
     erhan=1234
 erhan=22"#);
 }
