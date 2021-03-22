@@ -5,7 +5,8 @@ use karamellib::{vm::executer::{ExecutionParameters, ExecutionSource}};
 fn main() {
 
     let parameters = ExecutionParameters {
-        source: ExecutionSource::Code(r#"gç::satıryaz(1.2.taban())"#.to_string()),
+        source: ExecutionSource::Code(r#"
+gç::satıryaz(-1.51.hex())  // -2"#.to_string()),
         return_opcode: true,
         return_output: true
     };

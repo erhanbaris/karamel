@@ -4,7 +4,7 @@ use super::opcode_class::OpcodeClass;
 use crate::compiler::value::BramaPrimative;
 use crate::types::VmObject;
 
-use std::{sync::Arc};
+use std::{mem, sync::Arc};
 
 use lazy_static::lazy_static;
 
@@ -23,7 +23,7 @@ lazy_static! {
 
 fn hex(_: &mut BramaCompiler, source: Option<Arc<BramaPrimative>>, _: usize, _: u8) -> NativeCallResult {
     if let BramaPrimative::Number(number) = &*source.unwrap() {
-        let as_int: u64 = *number as u64;
+        let as_int: u64 = unsafe { mem::transmute(*number) };
         return Ok(VmObject::native_convert(BramaPrimative::Text(Arc::new(format!("0x{:x}", as_int)))));
     }
     Ok(EMPTY_OBJECT)
@@ -48,4 +48,17 @@ fn taban(_: &mut BramaCompiler, source: Option<Arc<BramaPrimative>>, _: usize, _
         return Ok(VmObject::native_convert(BramaPrimative::Number(number.floor())));
     }
     Ok(EMPTY_OBJECT)
+}
+
+#[cfg(test)]
+mod tests {
+    use std::sync::Arc;
+    use crate::compiler::BramaCompiler;
+    use crate::compiler::value::BramaPrimative;
+    use super::hex;
+
+    #[test]
+    fn test_hex_1() {
+        let result = hex(&mut BramaCompiler::new(), Some(Arc::new(BramaPrimative::Number(-1.51))), 0, 0);
+    }
 }
