@@ -8,7 +8,7 @@ use std::io::stdout;
 use log_update::LogUpdate;
 use colored::*;
 use std::io::{self, Write};
-use crate::buildin::primative_types::number::NUMBER_CLASS;
+use crate::buildin::primative_types::PRIMATIVE_CLASSES;
 
 #[cfg(all(feature = "dumpOpcodes"))]
 pub unsafe fn dump_opcode<W: Write>(index: usize, options: &mut BramaCompiler, log_update: &mut LogUpdate<W>) {
@@ -494,17 +494,6 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
                                 _ => empty_primative
                             }
                         },
-                        BramaPrimative::Number(_) => {
-                            let indexer_value = match &*indexer {
-                                BramaPrimative::Text(text) => &*text,
-                                _ => return Err("Indexer must be string".to_string())
-                            };
-
-                            match NUMBER_CLASS.get_method(indexer_value) {
-                                Some(method) => VmObject::from(Arc::new(BramaPrimative::ClassFunction(method, object))),
-                                _ => empty_primative
-                            }
-                        },
                         BramaPrimative::Dict(value) => {
                             let indexer_value = match &*indexer {
                                 BramaPrimative::Text(text) => &*text,
@@ -515,8 +504,18 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
                                 Some(data) => VmObject::from(data.clone()),
                                 _ => empty_primative
                             }
-                        }
-                        _ => empty_primative
+                        },
+                        _ => {
+                            let indexer_value = match &*indexer {
+                                BramaPrimative::Text(text) => &*text,
+                                _ => return Err("Indexer must be string".to_string())
+                            };
+
+                            match PRIMATIVE_CLASSES.get_unchecked(object.discriminant()).get_method(indexer_value) {
+                                Some(method) => VmObject::from(Arc::new(BramaPrimative::ClassFunction(method, object))),
+                                _ => empty_primative
+                            }
+                        },
                     };
                     inc_memory_index!(options, 1);
                 },

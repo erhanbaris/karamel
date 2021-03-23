@@ -6,21 +6,17 @@ use crate::types::VmObject;
 
 use std::{mem, sync::Arc};
 
-use lazy_static::lazy_static;
-
-lazy_static! {
-    pub static ref NUMBER_CLASS: OpcodeClass = {
-        let mut opcode = OpcodeClass::default();
-        opcode.set_name("sayı".to_string());
-        
-        opcode.add_method("hex".to_string(), hex);
-        opcode.add_method("yuvarla".to_string(), round);
-        opcode.add_method("tavan".to_string(), ceil);
-        opcode.add_method("taban".to_string(), floor);
-        opcode.add_method("tamsayı".to_string(), trunc);
-        opcode.add_method("kesir".to_string(), fract);
-        opcode
-    };
+pub fn get_primative_class() -> OpcodeClass {
+    let mut opcode = OpcodeClass::default();
+    opcode.set_name("sayı".to_string());
+    
+    opcode.add_method("hex".to_string(), hex);
+    opcode.add_method("yuvarla".to_string(), round);
+    opcode.add_method("tavan".to_string(), ceil);
+    opcode.add_method("taban".to_string(), floor);
+    opcode.add_method("tamsayı".to_string(), trunc);
+    opcode.add_method("kesir".to_string(), fract);
+    opcode
 }
 
 fn hex(_: &mut BramaCompiler, source: Option<Arc<BramaPrimative>>, _: usize, _: u8) -> NativeCallResult {
@@ -76,19 +72,7 @@ mod tests {
     use crate::compiler::BramaCompiler;
     use crate::compiler::value::BramaPrimative;
     use super::*;
-
-    #[macro_export]
-    macro_rules! nativecall_test {
-        ($name:ident, $function_name:ident, $query:expr, $result:expr) => {
-            #[test]
-            fn $name () {
-                let result = $function_name(&mut BramaCompiler::new(), Some(Arc::new($query)), 0, 0);
-                assert!(result.is_ok());
-                let object = result.unwrap().deref();
-                assert_eq!(*object, $result);
-            }
-        };
-    }
+    use crate::nativecall_test;
 
     nativecall_test!{test_hex_1, hex, BramaPrimative::Number(-1.51), BramaPrimative::Text(Arc::new("0xbff828f5c28f5c29".to_string()))}
     nativecall_test!{test_hex_2, hex, BramaPrimative::Number(22.0), BramaPrimative::Text(Arc::new("0x16".to_string()))}

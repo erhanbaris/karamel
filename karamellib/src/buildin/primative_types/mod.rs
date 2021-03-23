@@ -1,10 +1,27 @@
 pub mod number;
+pub mod text;
 
-use crate::compiler::{BramaCompiler, function::{NativeCallResult}};
-use crate::compiler::value::EMPTY_OBJECT;
 use crate::buildin::opcode_class::OpcodeClass;
-use crate::compiler::value::BramaPrimative;
-use crate::types::VmObject;
+use lazy_static::lazy_static;
 
+lazy_static! {
+    pub static ref PRIMATIVE_CLASSES: Vec<OpcodeClass> = {
+        let mut m = Vec::new();
+        m.push(number::get_primative_class());
+        m.push(text::get_primative_class());
+        m
+    };
+}
 
-//static variable_name: &'static [OpcodeClass; 1] = &[number::NUMBER_CLASS];
+#[macro_export]
+macro_rules! nativecall_test {
+    ($name:ident, $function_name:ident, $query:expr, $result:expr) => {
+        #[test]
+        fn $name () {
+            let result = $function_name(&mut BramaCompiler::new(), Some(Arc::new($query)), 0, 0);
+            assert!(result.is_ok());
+            let object = result.unwrap().deref();
+            assert_eq!(*object, $result);
+        }
+    };
+}
