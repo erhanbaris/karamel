@@ -3,7 +3,7 @@ pub mod io;
 pub mod num;
 pub mod base_functions;
 pub mod opcode_class;
-pub mod number;
+pub mod primative_types;
 
 use crate::compiler::GetType;
 

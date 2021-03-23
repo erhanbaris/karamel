@@ -1,6 +1,6 @@
 use crate::compiler::{BramaCompiler, function::{NativeCallResult}};
 use crate::compiler::value::EMPTY_OBJECT;
-use super::opcode_class::OpcodeClass;
+use crate::buildin::opcode_class::OpcodeClass;
 use crate::compiler::value::BramaPrimative;
 use crate::types::VmObject;
 

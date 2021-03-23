@@ -8,7 +8,7 @@ use std::io::stdout;
 use log_update::LogUpdate;
 use colored::*;
 use std::io::{self, Write};
-use crate::buildin::number::NUMBER_CLASS;
+use crate::buildin::primative_types::number::NUMBER_CLASS;
 
 #[cfg(all(feature = "dumpOpcodes"))]
 pub unsafe fn dump_opcode<W: Write>(index: usize, options: &mut BramaCompiler, log_update: &mut LogUpdate<W>) {

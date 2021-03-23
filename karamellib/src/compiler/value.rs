@@ -54,6 +54,21 @@ impl BramaPrimative {
             _ => "".to_string()
         }
     }
+
+    pub fn discriminant(&self) -> usize {
+        match self {
+            BramaPrimative::Empty => 0,
+            BramaPrimative::Number(_) => 1,
+            BramaPrimative::Bool(_) => 2,
+            BramaPrimative::List(_) => 3,
+            BramaPrimative::Dict(_) => 4,
+            BramaPrimative::Atom(_) => 5,
+            BramaPrimative::Text(_) => 6,
+            BramaPrimative::Function(_) => 7,
+            BramaPrimative::ClassFunction(_, _) => 8,
+            BramaPrimative::Class(_) => 9
+        }
+    }
 }
 
 impl GetType for BramaPrimative {

@@ -6,7 +6,7 @@ fn main() {
 
     let parameters = ExecutionParameters {
         source: ExecutionSource::Code(r#"
-gç::satıryaz(-1.51.hex())  // -2"#.to_string()),
+gç::satıryaz(-1.1.kesir())  // -2"#.to_string()),
         return_opcode: true,
         return_output: true
     };
