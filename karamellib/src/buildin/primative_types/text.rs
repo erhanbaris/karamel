@@ -13,8 +13,11 @@ pub fn get_primative_class() -> OpcodeClass {
     
     opcode.add_method("uzunluk".to_string(), length);
     opcode.add_method("küçükharf".to_string(), lowercase);
+    opcode.add_method("kucukharf".to_string(), lowercase);
     opcode.add_method("büyükharf".to_string(), uppercase);
+    opcode.add_method("buyukharf".to_string(), uppercase);
     opcode.add_method("içeriyormu".to_string(), contains);
+    opcode.add_method("iceriyormu".to_string(), contains);
     opcode
 }
 
