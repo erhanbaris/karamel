@@ -1,4 +1,4 @@
-use crate::compiler::{BramaCompiler, BramaPrimative, function::{NativeCallResult, NativeCall}};
+use crate::compiler::{EMPTY_OBJECT, function::{FunctionParameter, NativeCall, NativeCallResult}};
 use crate::types::VmObject;
 use crate::buildin::{Module, Class};
 use crate::compiler::GetType;
@@ -49,12 +49,14 @@ impl Module for BaseFunctionsModule {
 }
 
 impl BaseFunctionsModule  {
-    pub fn type_info(compiler: &mut BramaCompiler, _: Option<Arc<BramaPrimative>>, last_position: usize, total_args: u8) -> NativeCallResult {        
-        if total_args > 1 {
+    pub fn type_info(parameter: FunctionParameter) -> NativeCallResult {        
+        if parameter.length() > 1 {
             return Err(("More than 1 argument passed".to_string(), 0, 0));
         }
 
-        let arg = unsafe {(*compiler.current_scope).stack[last_position - 1].deref()};
-        Ok(VmObject::from(Arc::new(arg.get_type())))
+        match parameter.iter().next() {
+            Some(arg) => Ok(VmObject::from(Arc::new(arg.deref().get_type()))),
+            None => Ok(EMPTY_OBJECT)
+        }
     }
 }

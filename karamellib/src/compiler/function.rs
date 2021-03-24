@@ -1,6 +1,8 @@
-use std::{sync::Arc, vec::Vec};
+use std::{iter::Skip, sync::Arc, vec::Vec};
 use std::cell::RefCell;
 use std::cell::Cell;
+use std::slice::Iter;
+use std::iter::Take;
 
 use crate::{inc_memory_index, dec_memory_index, get_memory_index};
 use crate::types::*;
@@ -9,7 +11,62 @@ use crate::compiler::{BramaCompiler, Scope};
 use super::BramaPrimative;
 
 pub type NativeCallResult = Result<VmObject, (String, u32, u32)>;
-pub type NativeCall       = fn(compiler: &mut BramaCompiler, Option<Arc<BramaPrimative>>, last_position: usize, arg_size: u8) -> NativeCallResult;
+pub type NativeCall       = fn(FunctionParameter) -> NativeCallResult;
+
+pub struct FunctionParameter<'a> {
+    stack: &'a Vec<VmObject>, 
+    source: Option<Arc<BramaPrimative>>, 
+    last_position: usize, 
+    arg_size: u8,
+    stdout: &'a Option<RefCell<String>>,
+    stderr: &'a Option<RefCell<String>>
+}
+
+pub struct FunctionParameterIterator<'a> {
+    iter: Take<Skip<Iter<'a, VmObject>>>
+}
+
+impl<'a> FunctionParameter<'a> {
+    pub fn new(stack: &'a Vec<VmObject>, source: Option<Arc<BramaPrimative>>, last_position: usize, arg_size: u8, stdout: &'a Option<RefCell<String>>, stderr: &'a Option<RefCell<String>>) -> Self {
+        FunctionParameter { stack, source, last_position, arg_size, stdout, stderr }
+    }
+
+    pub fn source(&self) -> Option<Arc<BramaPrimative>> {
+        match &self.source {
+            Some(primative) => Some(primative.clone()),
+            None => None
+        }
+    }
+
+    pub fn length(&self) -> u8 {
+        self.arg_size
+    }
+
+    pub fn write_to_stdout<'b>(&self, data: &'b str) {
+        match self.stdout {
+            Some(out) => match out.try_borrow_mut() {
+                Ok(mut out_mut) => out_mut.push_str(data),
+                _ => println!("{}", data)
+            },
+            _ => println!("{}", data)
+        };
+    }
+
+    pub fn iter(&self) -> FunctionParameterIterator {
+        FunctionParameterIterator 
+        { 
+            iter: self.stack.iter().skip((self.last_position as usize - 1) - (self.arg_size as usize - 1)).take(self.arg_size as usize).clone()
+        }
+    }
+}
+
+impl<'a> Iterator for FunctionParameterIterator<'a> {
+    type Item = &'a VmObject;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.iter.next()
+    }
+}
 
 #[derive(Clone)]
 #[derive(Default)]
@@ -96,8 +153,10 @@ impl FunctionReference {
     unsafe fn native_function_call(_: &FunctionReference, func: NativeCall, source: Option<Arc<BramaPrimative>>, compiler: &mut BramaCompiler) -> Result<(), String> {            
         let total_args = compiler.opcodes[compiler.opcode_index + 1];
         let call_return_assign_to_temp = compiler.opcodes[compiler.opcode_index + 2] != 0;
+
+        let parameter = FunctionParameter::new(&(*compiler.current_scope).stack, source, get_memory_index!(compiler), total_args, &compiler.stdout, &compiler.stderr);
         
-        match func(compiler, source, get_memory_index!(compiler), total_args) {
+        match func(parameter) {
             Ok(result) => {
                 dec_memory_index!(compiler, total_args as usize);
 

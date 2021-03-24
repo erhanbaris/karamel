@@ -1,5 +1,6 @@
-use crate::{buildin::{Module, Class}, compiler::{BramaCompiler, BramaPrimative}};
+use crate::buildin::{Module, Class};
 use crate::compiler::function::{NativeCall, NativeCallResult};
+use crate::compiler::function::FunctionParameter;
 use crate::compiler::value::EMPTY_OBJECT;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -44,24 +45,24 @@ impl Module for DebugModule {
 }
 
 impl DebugModule  {
-    pub fn assert(compiler: &mut BramaCompiler, _: Option<Arc<BramaPrimative>>, last_position: usize, total_args: u8) -> NativeCallResult {
-        unsafe {
-            match total_args {
-                1 => {
-                    match (*compiler.current_scope).stack[last_position - 1].deref().is_true() {
-                        false => Err(("Assert failed".to_string(), 0, 0)),
-                        true  => Ok(EMPTY_OBJECT)
-                    }
-                },
-                2 => {
-                    let status = (*compiler.current_scope).stack[last_position - 2].deref() == (*compiler.current_scope).stack[last_position - 1].deref();
-                    match status {
-                        false => Err((format!("Assert failed (left: {:?}, right: {:?})", (*compiler.current_scope).stack[last_position - 2].deref(), (*compiler.current_scope).stack[last_position - 1].deref()), 0, 0)),
-                        true  => Ok(EMPTY_OBJECT)
-                    }
-                },
-                _ => Err(("Assert failed".to_string(), 0, 0))
-            }
+    pub fn assert(parameter: FunctionParameter) -> NativeCallResult {
+        match parameter.length() {
+            1 => {
+                match parameter.iter().next().unwrap().deref().is_true() {
+                    false => Err(("Assert failed".to_string(), 0, 0)),
+                    true  => Ok(EMPTY_OBJECT)
+                }
+            },
+            2 => {
+                let mut iter = parameter.iter();
+                let left = iter.next().unwrap().deref();
+                let right = iter.next().unwrap().deref();
+                match left == right {
+                    false => Err((format!("Assert failed (left: {:?}, right: {:?})", left, right), 0, 0)),
+                    true  => Ok(EMPTY_OBJECT)
+                }
+            },
+            _ => Err(("Assert failed".to_string(), 0, 0))
         }
     }
 }

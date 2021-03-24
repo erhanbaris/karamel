@@ -1,4 +1,4 @@
-use crate::compiler::{BramaCompiler, function::{NativeCallResult}};
+use crate::compiler::{function::{FunctionParameter, NativeCallResult}};
 use crate::compiler::value::EMPTY_OBJECT;
 use crate::buildin::opcode_class::OpcodeClass;
 use crate::compiler::value::BramaPrimative;
@@ -19,8 +19,8 @@ pub fn get_primative_class() -> OpcodeClass {
     opcode
 }
 
-fn hex(_: &mut BramaCompiler, source: Option<Arc<BramaPrimative>>, _: usize, _: u8) -> NativeCallResult {
-    if let BramaPrimative::Number(number) = &*source.unwrap() {
+fn hex(parameter: FunctionParameter) -> NativeCallResult {
+    if let BramaPrimative::Number(number) = &*parameter.source().unwrap() {
         if number.fract() != 0.0 {
             let as_int: u64 = unsafe { mem::transmute(*number) };
             return Ok(VmObject::native_convert(BramaPrimative::Text(Arc::new(format!("0x{:x}", as_int)))));
@@ -31,36 +31,36 @@ fn hex(_: &mut BramaCompiler, source: Option<Arc<BramaPrimative>>, _: usize, _: 
     Ok(EMPTY_OBJECT)
 }
 
-fn round(_: &mut BramaCompiler, source: Option<Arc<BramaPrimative>>, _: usize, _: u8) -> NativeCallResult {
-    if let BramaPrimative::Number(number) = &*source.unwrap() {
+fn round(parameter: FunctionParameter) -> NativeCallResult {
+    if let BramaPrimative::Number(number) = &*parameter.source().unwrap() {
         return Ok(VmObject::native_convert(BramaPrimative::Number(number.round())));
     }
     Ok(EMPTY_OBJECT)
 }
 
-fn ceil(_: &mut BramaCompiler, source: Option<Arc<BramaPrimative>>, _: usize, _: u8) -> NativeCallResult {
-    if let BramaPrimative::Number(number) = &*source.unwrap() {
+fn ceil(parameter: FunctionParameter) -> NativeCallResult {
+    if let BramaPrimative::Number(number) = &*parameter.source().unwrap() {
         return Ok(VmObject::native_convert(BramaPrimative::Number(number.ceil())));
     }
     Ok(EMPTY_OBJECT)
 }
 
-fn floor(_: &mut BramaCompiler, source: Option<Arc<BramaPrimative>>, _: usize, _: u8) -> NativeCallResult {
-    if let BramaPrimative::Number(number) = &*source.unwrap() {
+fn floor(parameter: FunctionParameter) -> NativeCallResult {
+    if let BramaPrimative::Number(number) = &*parameter.source().unwrap() {
         return Ok(VmObject::native_convert(BramaPrimative::Number(number.floor())));
     }
     Ok(EMPTY_OBJECT)
 }
 
-fn trunc(_: &mut BramaCompiler, source: Option<Arc<BramaPrimative>>, _: usize, _: u8) -> NativeCallResult {
-    if let BramaPrimative::Number(number) = &*source.unwrap() {
+fn trunc(parameter: FunctionParameter) -> NativeCallResult {
+    if let BramaPrimative::Number(number) = &*parameter.source().unwrap() {
         return Ok(VmObject::native_convert(BramaPrimative::Number(number.trunc())));
     }
     Ok(EMPTY_OBJECT)
 }
 
-fn fract(_: &mut BramaCompiler, source: Option<Arc<BramaPrimative>>, _: usize, _: u8) -> NativeCallResult {
-    if let BramaPrimative::Number(number) = &*source.unwrap() {
+fn fract(parameter: FunctionParameter) -> NativeCallResult {
+    if let BramaPrimative::Number(number) = &*parameter.source().unwrap() {
         return Ok(VmObject::native_convert(BramaPrimative::Number(number.fract())));
     }
     Ok(EMPTY_OBJECT)

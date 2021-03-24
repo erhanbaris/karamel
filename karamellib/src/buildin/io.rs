@@ -1,4 +1,4 @@
-use crate::compiler::{BramaCompiler, BramaPrimative, function::{NativeCallResult, NativeCall}};
+use crate::compiler::{function::{FunctionParameter, NativeCall, NativeCallResult}};
 use crate::types::{VmObject};
 use crate::compiler::value::EMPTY_OBJECT;
 use crate::buildin::{Module, Class};
@@ -53,7 +53,7 @@ impl Module for IoModule {
 }
 
 impl IoModule  {
-    pub fn readline(_: &mut BramaCompiler, _: Option<Arc<BramaPrimative>>, _: usize, _: u8) -> NativeCallResult {        
+    pub fn readline(_: FunctionParameter) -> NativeCallResult {        
         let mut line = String::new();
         match io::stdin().read_line(&mut line) {
             Ok(_) => return Ok(VmObject::from(Arc::new(line.trim().to_string()))),
@@ -61,39 +61,28 @@ impl IoModule  {
         }
     }
 
-    pub fn print(compiler: &mut BramaCompiler, _: Option<Arc<BramaPrimative>>, last_position: usize, total_args: u8) -> NativeCallResult {
+    pub fn print(parameter: FunctionParameter) -> NativeCallResult {
         let mut buffer = String::new();
-        unsafe {
-            for arg in (*compiler.current_scope).stack.iter().skip((last_position as usize - 1) - (total_args as usize - 1)).take(total_args as usize) {
-                buffer.push_str(&format!("{}", arg.deref()));
-            }
+        for arg in parameter.iter() {
+            buffer.push_str(&format!("{}", arg.deref()));
         }
         log::info!("{}", buffer);
                 
-        match compiler.stdout {
-            Some(ref mut stdout) => stdout.push_str(&buffer),
-            _ => ()
-        };
-
+        parameter.write_to_stdout(&buffer);
         Ok(EMPTY_OBJECT)
     }
     
-    pub fn printline(compiler: &mut BramaCompiler, _: Option<Arc<BramaPrimative>>, last_position: usize, total_args: u8) -> NativeCallResult {
+    pub fn printline(parameter: FunctionParameter) -> NativeCallResult {
         let mut buffer = String::new();
-        unsafe {
-            for arg in (*compiler.current_scope).stack.iter().skip((last_position as usize - 1) - (total_args as usize - 1)).take(total_args as usize) {
-                buffer.push_str(&format!("{}", arg.deref()));
-            }
+
+        for arg in parameter.iter() {
+            buffer.push_str(&format!("{}", arg.deref()));
         }
 
         buffer.push_str(&"\r\n");
         log::info!("{}", buffer);
 
-        match compiler.stdout {
-            Some(ref mut stdout) => stdout.push_str(&buffer),
-            _ => ()
-        };
-
+        parameter.write_to_stdout(&buffer);
         Ok(EMPTY_OBJECT)
     }
 }

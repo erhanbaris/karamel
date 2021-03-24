@@ -43,7 +43,7 @@ pub fn execute_code(name: &str) -> Object {
             };
 
             match result.stdout {
-                Some(stdout) => { stdouts.push(&JsValue::from(stdout.clone()).into()); },
+                Some(stdout) => { stdouts.push(&JsValue::from(stdout.borrow().clone()).into()); },
                 _ => ()
             };
             
@@ -54,7 +54,7 @@ pub fn execute_code(name: &str) -> Object {
             let stderrs = Array::new();
 
             match result.stderr {
-                Some(stderr) => { stderrs.push(&JsValue::from(stderr.clone()).into()); },
+                Some(stderr) => { stderrs.push(&JsValue::from(stderr.borrow().clone()).into()); },
                 _ => ()
             };
 

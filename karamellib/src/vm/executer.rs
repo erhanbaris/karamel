@@ -1,3 +1,5 @@
+use std::cell::RefCell;
+
 use crate::{types::Token, vm::interpreter::run_vm};
 use crate::parser::*;
 use crate::compiler::*;
@@ -25,8 +27,8 @@ pub struct ExecutionStatus {
     pub compiled: bool,
     pub executed: bool,
     pub memory_output: Option<Vec<VmObject>>,
-    pub stdout: Option<String>,
-    pub stderr: Option<String>,
+    pub stdout: Option<RefCell<String>>,
+    pub stderr: Option<RefCell<String>>,
     pub opcodes: Option<Vec<Token>>
 }
 
@@ -73,8 +75,8 @@ pub fn code_executer(parameters: ExecutionParameters) -> ExecutionStatus {
     let mut compiler_options: BramaCompiler = BramaCompiler::new();
 
     if parameters.return_output {
-        compiler_options.stdout = Some(String::new());
-        compiler_options.stderr = Some(String::new());
+        compiler_options.stdout = Some(RefCell::new(String::new()));
+        compiler_options.stderr = Some(RefCell::new(String::new()));
     }
 
     let execution_status = match opcode_compiler.compile(&ast, &mut compiler_options) {

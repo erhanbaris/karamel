@@ -55,8 +55,8 @@ pub struct BramaCompiler {
     pub current_scope: *mut Scope,
     pub scope_index: usize,
     pub functions : Vec<Arc<FunctionReference>>,
-    pub stdout: Option<String>,
-    pub stderr: Option<String>
+    pub stdout: Option<RefCell<String>>,
+    pub stderr: Option<RefCell<String>>
 }
 
 impl  BramaCompiler {

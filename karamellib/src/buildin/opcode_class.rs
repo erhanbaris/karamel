@@ -87,15 +87,15 @@ impl GetType for OpcodeClass {
 #[cfg(test)]
 mod test {
     use std::sync::Arc;
-    use crate::compiler::GetType;
+    use crate::compiler::{GetType, function::FunctionParameter};
     use crate::{buildin::opcode_class::OpcodeClass, compiler::{BramaCompiler, EMPTY_OBJECT, function::NativeCallResult}};
     use crate::compiler::{BramaPrimative, function::{FunctionReference}};
 
-    pub fn tmp_func_1(_: &mut BramaCompiler, _: Option<Arc<BramaPrimative>>, _: usize, _: u8) -> NativeCallResult {        
+    pub fn tmp_func_1(_: FunctionParameter) -> NativeCallResult {        
         Ok(EMPTY_OBJECT)
     }
 
-    pub fn tmp_func_2(_: &mut BramaCompiler, _: Option<Arc<BramaPrimative>>, _: usize, _: u8) -> NativeCallResult {        
+    pub fn tmp_func_2(_: FunctionParameter) -> NativeCallResult {        
         Ok(EMPTY_OBJECT)
     }
 
