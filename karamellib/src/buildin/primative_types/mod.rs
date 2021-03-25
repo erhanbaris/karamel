@@ -5,11 +5,26 @@ use crate::buildin::opcode_class::OpcodeClass;
 use std::vec::Vec;
 use lazy_static::lazy_static;
 
+
+pub fn get_empty_class() -> OpcodeClass {
+    let mut opcode = OpcodeClass::default();
+    opcode.set_name("__NO__CLASS__".to_string());
+    opcode
+}
+
 lazy_static! {
     pub static ref PRIMATIVE_CLASSES: Vec<OpcodeClass> = {
         let mut m = Vec::new();
         m.push(number::get_primative_class());
         m.push(text::get_primative_class());
+        m.push(get_empty_class());
+        m.push(get_empty_class());
+        m.push(get_empty_class());
+        m.push(get_empty_class());
+        m.push(get_empty_class());
+        m.push(get_empty_class());
+        m.push(get_empty_class());
+        m.push(get_empty_class());
         m
     };
 }

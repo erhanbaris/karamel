@@ -10,7 +10,8 @@ fonk test:
     fonk test_erhan:
         döndür 'erhan'
     döndür test_erhan
-gç::satıryaz(test().büyükharf())"#.to_string()),
+sonuç = test()().büyükharf()
+gç::satıryaz(sonuç)"#.to_string()),
         return_opcode: true,
         return_output: true
     };
