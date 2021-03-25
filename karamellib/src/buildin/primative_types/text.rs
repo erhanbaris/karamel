@@ -3,13 +3,14 @@ use crate::compiler::value::EMPTY_OBJECT;
 use crate::buildin::opcode_class::OpcodeClass;
 use crate::compiler::value::BramaPrimative;
 use crate::types::VmObject;
+use crate::{n_parameter_expected, expected_parameter_type};
 
 use std::sync::Arc;
 
 
 pub fn get_primative_class() -> OpcodeClass {
     let mut opcode = OpcodeClass::default();
-    opcode.set_name("yazı".to_string());
+    opcode.set_name("Yazı".to_string());
     
     opcode.add_method("uzunluk".to_string(), length);
     opcode.add_method("küçükharf".to_string(), lowercase);
@@ -31,14 +32,14 @@ fn length(parameter: FunctionParameter) -> NativeCallResult {
 fn contains(parameter: FunctionParameter) -> NativeCallResult {
     if let BramaPrimative::Text(text) = &*parameter.source().unwrap() {
         return match parameter.length() {
-            0 => Err(("'contains' takes 1 argument".to_string(), 0, 0)),
+            0 =>  n_parameter_expected!("içeriyormu", 1),
             1 => {
                 match &*parameter.iter().next().unwrap().deref() {
                     BramaPrimative::Text(search) =>  Ok(VmObject::native_convert(BramaPrimative::Bool(text.contains(&search[..])))),
-                    _ => Err(("'contains' takes text as parameter".to_string(), 0, 0))
+                    _ => expected_parameter_type!("içeriyormu", "Yazı")
                 }
             },
-            _ => Err((format!("'contains' takes 1 argument, passed {} argument", parameter.length()), 0, 0))
+            _ => n_parameter_expected!("içeriyormu", 1, parameter.length())
         };
     }
     Ok(EMPTY_OBJECT)
@@ -83,7 +84,6 @@ fn uppercase(parameter: FunctionParameter) -> NativeCallResult {
 #[cfg(test)]
 mod tests {
     use std::sync::Arc;
-    use crate::compiler::BramaCompiler;
     use crate::compiler::value::BramaPrimative;
     use super::*;
 

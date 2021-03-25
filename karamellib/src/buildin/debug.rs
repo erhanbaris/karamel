@@ -49,7 +49,7 @@ impl DebugModule  {
         match parameter.length() {
             1 => {
                 match parameter.iter().next().unwrap().deref().is_true() {
-                    false => Err(("Assert failed".to_string(), 0, 0)),
+                    false => Err("Assert failed".to_string()),
                     true  => Ok(EMPTY_OBJECT)
                 }
             },
@@ -58,11 +58,11 @@ impl DebugModule  {
                 let left = iter.next().unwrap().deref();
                 let right = iter.next().unwrap().deref();
                 match left == right {
-                    false => Err((format!("Assert failed (left: {:?}, right: {:?})", left, right), 0, 0)),
+                    false => Err(format!("Assert failed (left: {:?}, right: {:?})", left, right)),
                     true  => Ok(EMPTY_OBJECT)
                 }
             },
-            _ => Err(("Assert failed".to_string(), 0, 0))
+            _ => Err("Assert failed".to_string())
         }
     }
 }

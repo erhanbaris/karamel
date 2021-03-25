@@ -3,6 +3,7 @@ use crate::types::VmObject;
 use crate::compiler::value::BramaPrimative;
 use crate::compiler::value::EMPTY_OBJECT;
 use crate::buildin::{Module, Class};
+use crate::{n_parameter_expected, expected_parameter_type};
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -47,7 +48,7 @@ impl Module for NumModule {
 impl NumModule  {
     pub fn parse(parameter: FunctionParameter) -> NativeCallResult {
         if parameter.length() > 1 {
-            return Err(("More than 1 argument passed".to_string(), 0, 0));
+            return n_parameter_expected!("oku", 1);
         }
 
         let arg = match parameter.iter().next() {
@@ -60,7 +61,7 @@ impl NumModule  {
             BramaPrimative::Text(text) => {
                 match (*text).parse() {
                     Ok(num) => Ok(VmObject::native_convert(BramaPrimative::Number(num))),
-                    _ => Err(("More than 1 argument passed".to_string(), 0, 0))
+                    _ => expected_parameter_type!("oku", "Yazı")
                 }
             },
             _ => Ok(EMPTY_OBJECT)

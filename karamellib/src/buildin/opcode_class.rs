@@ -14,8 +14,11 @@ pub struct OpcodeClass {
 
 impl OpcodeClass {
     pub fn set_name(&mut self, name: String) {
-        self.name = name;
+        if self.name.len() == 0 {
+            self.name = name;
+        }
     }
+
     pub fn get_name(&self) -> String {
         self.name.to_string()
     }
@@ -36,8 +39,8 @@ impl OpcodeClass {
         self.is_readonly
     }
 
-    pub(crate) fn set_readonly(&mut self, readonly: bool) {
-        self.is_readonly = readonly;
+    pub(crate) fn set_readonly(&mut self) {
+        self.is_readonly = true;
     }
     
     pub fn property_count(&self) -> usize {
@@ -45,11 +48,13 @@ impl OpcodeClass {
     }
     
     pub fn add_method(&mut self, name: String, function: NativeCall) {
+        if self.is_readonly() { return }
         let function_ref = FunctionReference::buildin_function(function, name.to_string());
         self.properties.insert(name.to_string(), ClassProperty::Function(function_ref));
     }
 
     pub fn add_property(&mut self, name: String, property: Arc<BramaPrimative>) {
+        if self.is_readonly() { return }
         self.properties.insert(name, ClassProperty::Field(property));
     }
     
@@ -75,6 +80,10 @@ impl OpcodeClass {
             },
             None => None
         }
+    }
+
+    pub fn get_element(&self, name: &str) -> Option<&ClassProperty> {
+        self.properties.get(name)
     }
 }
 

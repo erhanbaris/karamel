@@ -8,7 +8,7 @@ use std::{mem, sync::Arc};
 
 pub fn get_primative_class() -> OpcodeClass {
     let mut opcode = OpcodeClass::default();
-    opcode.set_name("sayı".to_string());
+    opcode.set_name("Sayı".to_string());
     
     opcode.add_method("hex".to_string(), hex);
     opcode.add_method("yuvarla".to_string(), round);
@@ -69,7 +69,6 @@ fn fract(parameter: FunctionParameter) -> NativeCallResult {
 #[cfg(test)]
 mod tests {
     use std::sync::Arc;
-    use crate::compiler::BramaCompiler;
     use crate::compiler::value::BramaPrimative;
     use super::*;
     use crate::nativecall_test;

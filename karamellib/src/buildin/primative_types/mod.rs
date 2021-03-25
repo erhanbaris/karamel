@@ -32,3 +32,23 @@ macro_rules! nativecall_test {
         }
     };
 }
+
+#[macro_export]
+macro_rules! n_parameter_check {
+    ($function_name:expr, $parameter_size:expr) => {
+        if parameter.length() > 1 {
+            return n_parameter_expected!("tür_bilgisi", 1);
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! n_parameter_expected {
+    ($function_name:expr, $parameter_size:expr) => { Err(format!("'{}' fonksiyonu {} parametre kabul ediyor", $function_name, $parameter_size)) };
+    ($function_name:expr, $parameter_size:expr, $parameter_found:expr) => { Err(format!("'{}' fonksiyonu {} parametre kabul ediyor, fakat {} adet parametre bulundu", $function_name, $parameter_size, $parameter_found)) };
+}
+
+#[macro_export]
+macro_rules! expected_parameter_type {
+    ($function_name:expr, $expected_type:expr) => { Err((format!("'{}' sadece {} parametresini kabul ediyor", $function_name, $expected_type))) };
+}

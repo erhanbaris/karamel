@@ -10,7 +10,7 @@ use crate::compiler::{BramaCompiler, Scope};
 
 use super::BramaPrimative;
 
-pub type NativeCallResult = Result<VmObject, (String, u32, u32)>;
+pub type NativeCallResult = Result<VmObject, String>;
 pub type NativeCall       = fn(FunctionParameter) -> NativeCallResult;
 
 pub struct FunctionParameter<'a> {
@@ -168,7 +168,7 @@ impl FunctionReference {
                 compiler.opcode_index += 2;
                 Ok(())
             },
-            Err((error, _, _)) => {
+            Err(error) => {
                 println!("{:?}", error);
                 Err(error)
             }

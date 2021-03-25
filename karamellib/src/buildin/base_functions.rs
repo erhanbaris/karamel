@@ -2,6 +2,7 @@ use crate::compiler::{EMPTY_OBJECT, function::{FunctionParameter, NativeCall, Na
 use crate::types::VmObject;
 use crate::buildin::{Module, Class};
 use crate::compiler::GetType;
+use crate::{n_parameter_expected};
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -51,7 +52,7 @@ impl Module for BaseFunctionsModule {
 impl BaseFunctionsModule  {
     pub fn type_info(parameter: FunctionParameter) -> NativeCallResult {        
         if parameter.length() > 1 {
-            return Err(("More than 1 argument passed".to_string(), 0, 0));
+            return n_parameter_expected!("tür_bilgisi", 1);
         }
 
         match parameter.iter().next() {

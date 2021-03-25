@@ -6,7 +6,11 @@ fn main() {
 
     let parameters = ExecutionParameters {
         source: ExecutionSource::Code(r#"
-gç::satıryaz(-1.1.kesir())  // -2"#.to_string()),
+fonk test:
+    fonk test_erhan:
+        döndür 'erhan'
+    döndür test_erhan
+gç::satıryaz(test().büyükharf())"#.to_string()),
         return_opcode: true,
         return_output: true
     };

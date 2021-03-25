@@ -9,6 +9,7 @@ use log_update::LogUpdate;
 use colored::*;
 use std::io::{self, Write};
 use crate::buildin::primative_types::PRIMATIVE_CLASSES;
+use crate::buildin::ClassProperty;
 
 #[cfg(all(feature = "dumpOpcodes"))]
 pub unsafe fn dump_opcode<W: Write>(index: usize, options: &mut BramaCompiler, log_update: &mut LogUpdate<W>) {
@@ -511,8 +512,11 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
                                 _ => return Err("Indexer must be string".to_string())
                             };
 
-                            match PRIMATIVE_CLASSES.get_unchecked(object.discriminant()).get_method(indexer_value) {
-                                Some(method) => VmObject::from(Arc::new(BramaPrimative::ClassFunction(method, object))),
+                            match PRIMATIVE_CLASSES.get_unchecked(object.discriminant()).get_element(indexer_value) {
+                                Some(element) => match element {
+                                    ClassProperty::Function(function) => VmObject::from(Arc::new(BramaPrimative::ClassFunction(function.clone(), object))),
+                                    ClassProperty::Field(field) => VmObject::from(field.clone())
+                                },
                                 _ => empty_primative
                             }
                         },
