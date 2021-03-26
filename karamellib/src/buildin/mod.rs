@@ -2,10 +2,9 @@ pub mod debug;
 pub mod io;
 pub mod num;
 pub mod base_functions;
-pub mod opcode_class;
 
 #[macro_use]
-pub mod primative_types;
+pub mod class;
 
 use crate::compiler::GetType;
 

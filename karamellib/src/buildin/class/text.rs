@@ -1,6 +1,6 @@
 use crate::compiler::{function::{FunctionParameter, NativeCallResult}};
 use crate::compiler::value::EMPTY_OBJECT;
-use crate::buildin::opcode_class::OpcodeClass;
+use crate::buildin::class::baseclass::OpcodeClass;
 use crate::compiler::value::BramaPrimative;
 use crate::types::VmObject;
 use crate::{n_parameter_expected, expected_parameter_type};

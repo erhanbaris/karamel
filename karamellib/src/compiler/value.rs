@@ -6,7 +6,7 @@ use std::fmt;
 use std::collections::HashMap;
 
 
-use crate::{buildin::opcode_class::OpcodeClass, types::*};
+use crate::{buildin::class::baseclass::OpcodeClass, types::*};
 use crate::compiler::function::FunctionReference;
 use crate::compiler::GetType;
 

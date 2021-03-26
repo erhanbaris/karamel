@@ -97,7 +97,7 @@ impl GetType for OpcodeClass {
 mod test {
     use std::sync::Arc;
     use crate::compiler::{GetType, function::FunctionParameter};
-    use crate::{buildin::opcode_class::OpcodeClass, compiler::{EMPTY_OBJECT, function::NativeCallResult}};
+    use crate::{buildin::class::baseclass::OpcodeClass, compiler::{EMPTY_OBJECT, function::NativeCallResult}};
     use crate::compiler::{BramaPrimative, function::{FunctionReference}};
 
     pub fn tmp_func_1(_: FunctionParameter) -> NativeCallResult {        

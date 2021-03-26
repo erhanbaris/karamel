@@ -1,9 +1,12 @@
 pub mod number;
 pub mod text;
+pub mod baseclass;
 
-use crate::buildin::opcode_class::OpcodeClass;
-use std::vec::Vec;
+use crate::{buildin::class::baseclass::OpcodeClass, compiler::{BramaPrimative, function::{FunctionReference, NativeCall}}};
+use std::{sync::Arc, vec::Vec};
 use lazy_static::lazy_static;
+
+use super::ClassProperty;
 
 
 pub fn get_empty_class() -> OpcodeClass {
@@ -66,4 +69,17 @@ macro_rules! n_parameter_expected {
 #[macro_export]
 macro_rules! expected_parameter_type {
     ($function_name:expr, $expected_type:expr) => { Err((format!("'{}' sadece {} parametresini kabul ediyor", $function_name, $expected_type))) };
+}
+
+
+
+trait Class {
+    fn get_name(&self) -> String;
+    fn has_element(&self, field: Arc<BramaPrimative>) -> bool;
+    fn element_count(&self) -> usize;
+    fn add_method(&mut self, name: String, function: NativeCall);
+    fn add_property(&mut self, name: String, property: Arc<BramaPrimative>);
+    fn get_element(&self, field: Arc<BramaPrimative>) -> Option<&ClassProperty>;
+    fn set_storage_index(&mut self, index: usize);
+    fn get_storage_index(&self) -> usize;
 }

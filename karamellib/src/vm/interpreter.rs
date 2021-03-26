@@ -8,7 +8,7 @@ use std::io::stdout;
 use log_update::LogUpdate;
 use colored::*;
 use std::io::{self, Write};
-use crate::buildin::primative_types::PRIMATIVE_CLASSES;
+use crate::buildin::class::PRIMATIVE_CLASSES;
 use crate::buildin::ClassProperty;
 
 #[cfg(all(feature = "dumpOpcodes"))]
