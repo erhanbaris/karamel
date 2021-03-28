@@ -147,7 +147,7 @@ impl StorageBuilder {
                     max_temp += self.get_temp_count_from_ast(arg, ast, options, storage_index, compiler_option);
                 }
 
-                compiler_option.max_stack = max(max_temp, compiler_option.max_stack);
+                //compiler_option.max_stack = max(max_temp, compiler_option.max_stack);
 
                 match &**func_name_expression {
                     BramaAstType::Symbol(function_name) => {
@@ -169,6 +169,7 @@ impl StorageBuilder {
                         log::debug!("{:?}", func_name_expression);
                         let name_expression_count = self.get_temp_count_from_ast(func_name_expression, ast, options, storage_index, compiler_option);
                         compiler_option.max_stack = max(name_expression_count, compiler_option.max_stack);
+                        compiler_option.max_stack += max_temp;
                     }
                 };
 

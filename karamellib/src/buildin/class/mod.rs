@@ -52,6 +52,13 @@ macro_rules! nativecall_test {
 }
 
 #[macro_export]
+macro_rules! primative_text {
+    ($text:expr) => {
+        BramaPrimative::Text(Arc::new($text.to_string()))
+    };
+}
+
+#[macro_export]
 macro_rules! nativecall_test_with_params {
     ($name:ident, $function_name:ident, $query:expr, $params:expr, $result:expr) => {
         #[test]
@@ -61,7 +68,7 @@ macro_rules! nativecall_test_with_params {
             let stdout = Some(RefCell::new(String::new()));
             let stderr = Some(RefCell::new(String::new()));
             
-            let parameter = FunctionParameter::new(&stack, Some(Arc::new($query)), 0, 1, &stdout, &stderr);
+            let parameter = FunctionParameter::new(&stack, Some(Arc::new($query)), 1, 1, &stdout, &stderr);
             let result = $function_name(parameter);
             assert!(result.is_ok());
             let object = result.unwrap().deref();

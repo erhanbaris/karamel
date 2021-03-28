@@ -22,7 +22,8 @@ pub fn get_primative_class() -> BasicInnerClass {
     opcode.add_method("satırlar", lines);
     opcode.add_method("satirlar", lines);
     opcode.add_method("parçala", split);
-    opcode.add_method("parçala", split);
+    opcode.add_method("parcala", split);
+    opcode.add_method("ara", find);
     opcode
 }
 
@@ -122,6 +123,27 @@ fn split(parameter: FunctionParameter) -> NativeCallResult {
     Ok(EMPTY_OBJECT)
 }
 
+fn find(parameter: FunctionParameter) -> NativeCallResult {
+    if let BramaPrimative::Text(text) = &*parameter.source().unwrap() {
+        return match parameter.length() {
+            0 =>  n_parameter_expected!("parçala", 1),
+            1 => {
+                match &*parameter.iter().next().unwrap().deref() {
+                    BramaPrimative::Text(search) =>  {
+                        match text.find(&**search) {
+                            Some(location) => Ok(VmObject::native_convert(BramaPrimative::Number(location as f64))),
+                            _ => Ok(EMPTY_OBJECT)
+                        }
+                    },
+                    _ => expected_parameter_type!("parçala", "Yazı")
+                }
+            },
+            _ => n_parameter_expected!("parçala", 1, parameter.length())
+        };
+    }
+    Ok(EMPTY_OBJECT)
+}
+
 #[cfg(test)]
 mod tests {
     use std::sync::Arc;
@@ -130,6 +152,7 @@ mod tests {
 
     use crate::nativecall_test;
     use crate::nativecall_test_with_params;
+    use crate::primative_text;
 
 
     nativecall_test!{test_length_1, length, BramaPrimative::Text(Arc::new("TÜRKİYE".to_string())), BramaPrimative::Number(7.0)}
@@ -147,5 +170,20 @@ mod tests {
     nativecall_test!{test_lines_4, lines, BramaPrimative::Text(Arc::new("erhan\r\nbarış\r\n".to_string())), BramaPrimative::List(RefCell::new([Arc::new(BramaPrimative::Text(Arc::new("erhan".to_string()))), Arc::new(BramaPrimative::Text(Arc::new("barış".to_string())))].to_vec()))}
     nativecall_test!{test_lines_5, lines, BramaPrimative::Text(Arc::new("erhan\r\nbarış\r\nkaramel".to_string())), BramaPrimative::List(RefCell::new([Arc::new(BramaPrimative::Text(Arc::new("erhan".to_string()))), Arc::new(BramaPrimative::Text(Arc::new("barış".to_string()))), Arc::new(BramaPrimative::Text(Arc::new("karamel".to_string())))].to_vec()))}
     
-    nativecall_test_with_params!{test_split_1, split, BramaPrimative::Text(Arc::new("erhan\r\n".to_string())), [VmObject::native_convert(BramaPrimative::Text(Arc::new("erhan".to_string())))], BramaPrimative::List(RefCell::new([Arc::new(BramaPrimative::Text(Arc::new("erhan".to_string())))].to_vec()))}
+    nativecall_test_with_params!{test_split_1, split, primative_text!("erhan\r\n"), [VmObject::native_convert(primative_text!("erhan"))], BramaPrimative::List(RefCell::new([Arc::new(primative_text!("")), Arc::new(primative_text!("\r\n"))].to_vec()))}
+    nativecall_test_with_params!{test_split_2, split, primative_text!("erhanbarışerhan"), [VmObject::native_convert(primative_text!("barış"))], BramaPrimative::List(RefCell::new([Arc::new(primative_text!("erhan")), Arc::new(primative_text!("erhan"))].to_vec()))}
+    nativecall_test_with_params!{test_split_3, split, primative_text!("karamel"), [VmObject::native_convert(primative_text!("erhan"))], BramaPrimative::List(RefCell::new([Arc::new(primative_text!("karamel"))].to_vec()))}
+
+    nativecall_test_with_params!{test_contains_1, contains, primative_text!("merhaba dünya"), [VmObject::native_convert(primative_text!("erhan"))], BramaPrimative::Bool(false)}
+    nativecall_test_with_params!{test_contains_2, contains, primative_text!("merhaba dünya"), [VmObject::native_convert(primative_text!("merhaba"))], BramaPrimative::Bool(true)}
+    nativecall_test_with_params!{test_contains_3, contains, primative_text!("merhaba dünya"), [VmObject::native_convert(primative_text!("dünya"))], BramaPrimative::Bool(true)}
+    nativecall_test_with_params!{test_contains_4, contains, primative_text!("merhaba dünya"), [VmObject::native_convert(primative_text!(" "))], BramaPrimative::Bool(true)}
+    nativecall_test_with_params!{test_contains_5, contains, primative_text!("bir karamel miyav dedi minik fare kükredi"), [VmObject::native_convert(primative_text!("minik fare"))], BramaPrimative::Bool(true)}
+
+    nativecall_test_with_params!{test_find_1, find, primative_text!("merhaba dünya"), [VmObject::native_convert(primative_text!("erhan"))], BramaPrimative::Empty}
+    nativecall_test_with_params!{test_find_2, find, primative_text!("merhaba dünya"), [VmObject::native_convert(primative_text!("merhaba"))], BramaPrimative::Number(0.0)}
+    nativecall_test_with_params!{test_find_3, find, primative_text!("merhaba dünya"), [VmObject::native_convert(primative_text!("dünya"))], BramaPrimative::Number(8.0)}
+    nativecall_test_with_params!{test_find_4, find, primative_text!("merhaba dünya"), [VmObject::native_convert(primative_text!(" "))], BramaPrimative::Number(7.0)}
+    nativecall_test_with_params!{test_find_5, find, primative_text!("bir karamel miyav dedi minik fare kükredi"), [VmObject::native_convert(primative_text!("minik fare"))], BramaPrimative::Number(23.0)}
+    nativecall_test_with_params!{test_find_6, find, primative_text!("kütüphaneciler haftası"), [VmObject::native_convert(primative_text!("hafta"))], BramaPrimative::Number(15.0)}
 }
