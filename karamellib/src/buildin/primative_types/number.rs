@@ -1,6 +1,6 @@
-use crate::{buildin::Class, compiler::{function::{FunctionParameter, NativeCallResult}}};
+use crate::compiler::{function::{FunctionParameter, NativeCallResult}};
 use crate::compiler::value::EMPTY_OBJECT;
-use crate::buildin::class::BasicInnerClass;
+use crate::buildin::opcode_class::BasicInnerClass;
 use crate::compiler::value::BramaPrimative;
 use crate::types::VmObject;
 
@@ -8,14 +8,14 @@ use std::{mem, sync::Arc};
 
 pub fn get_primative_class() -> BasicInnerClass {
     let mut opcode = BasicInnerClass::default();
-    opcode.set_name("Sayı");
+    opcode.set_name("Sayı".to_string());
     
-    opcode.add_method("hex", hex);
-    opcode.add_method("yuvarla", round);
-    opcode.add_method("tavan", ceil);
-    opcode.add_method("taban", floor);
-    opcode.add_method("tamsayı", trunc);
-    opcode.add_method("kesir", fract);
+    opcode.add_method("hex".to_string(), hex);
+    opcode.add_method("yuvarla".to_string(), round);
+    opcode.add_method("tavan".to_string(), ceil);
+    opcode.add_method("taban".to_string(), floor);
+    opcode.add_method("tamsayı".to_string(), trunc);
+    opcode.add_method("kesir".to_string(), fract);
     opcode
 }
 

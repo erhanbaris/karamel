@@ -1,6 +1,6 @@
-use crate::{buildin::Class, compiler::function::{FunctionParameter, NativeCallResult}};
+use crate::compiler::{function::{FunctionParameter, NativeCallResult}};
 use crate::compiler::value::EMPTY_OBJECT;
-use crate::buildin::class::baseclass::BasicInnerClass;
+use crate::buildin::opcode_class::BasicInnerClass;
 use crate::compiler::value::BramaPrimative;
 use crate::types::VmObject;
 use crate::{n_parameter_expected, expected_parameter_type};
@@ -10,15 +10,15 @@ use std::sync::Arc;
 
 pub fn get_primative_class() -> BasicInnerClass {
     let mut opcode = BasicInnerClass::default();
-    opcode.set_name("Yazı");
+    opcode.set_name("Yazı".to_string());
     
-    opcode.add_method("uzunluk", length);
-    opcode.add_method("küçükharf", lowercase);
-    opcode.add_method("kucukharf", lowercase);
-    opcode.add_method("büyükharf", uppercase);
-    opcode.add_method("buyukharf", uppercase);
-    opcode.add_method("içeriyormu", contains);
-    opcode.add_method("iceriyormu", contains);
+    opcode.add_method("uzunluk".to_string(), length);
+    opcode.add_method("küçükharf".to_string(), lowercase);
+    opcode.add_method("kucukharf".to_string(), lowercase);
+    opcode.add_method("büyükharf".to_string(), uppercase);
+    opcode.add_method("buyukharf".to_string(), uppercase);
+    opcode.add_method("içeriyormu".to_string(), contains);
+    opcode.add_method("iceriyormu".to_string(), contains);
     opcode
 }
 

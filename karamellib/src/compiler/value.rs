@@ -6,7 +6,7 @@ use std::fmt;
 use std::collections::HashMap;
 
 
-use crate::{buildin::class::baseclass::OpcodeClass, types::*};
+use crate::{buildin::class::baseclass::BasicInnerClass, types::*};
 use crate::compiler::function::FunctionReference;
 use crate::compiler::GetType;
 
@@ -26,7 +26,7 @@ pub enum BramaPrimative {
     Text(Arc<String>),
     Function(Arc<FunctionReference>),
     ClassFunction(Arc<FunctionReference>, Arc<BramaPrimative>),
-    Class(Arc<OpcodeClass>)
+    Class(Arc<BasicInnerClass>)
 }
 
 unsafe impl Send for BramaPrimative {}
@@ -143,7 +143,7 @@ impl fmt::Debug for BramaPrimative {
             BramaPrimative::Text(b) => write!(f, "{:?}", b),
             BramaPrimative::Function(func) => write!(f, "<Fonksiyon='{}'>", func.name),
             BramaPrimative::ClassFunction(func, _) => write!(f, "<Sınıf='{}'>", func.name),
-            BramaPrimative::Class(class) => write!(f, "<Sınıf='{}'>", class.get_name())
+            BramaPrimative::Class(class) => write!(f, "<Sınıf='{}'>", class.get_type())
         }
     }
 }
@@ -160,7 +160,7 @@ impl fmt::Display for BramaPrimative {
             BramaPrimative::Text(b) => write!(f, "{}", b),
             BramaPrimative::Function(func) => write!(f, "<Fonksiyon='{}'>", func.name),
             BramaPrimative::ClassFunction(func, _) => write!(f, "<Sınıf='{}'>", func.name),
-            BramaPrimative::Class(class) => write!(f, "<Sınıf='{}'>", class.get_name())
+            BramaPrimative::Class(class) => write!(f, "<Sınıf='{}'>", class.get_type())
         }
     }
 }
@@ -200,7 +200,7 @@ impl PartialEq for BramaPrimative {
                 true
             },
             (BramaPrimative::Class(l_value), BramaPrimative::Class(r_value)) => {
-                l_value.get_name() == r_value.get_name()
+                l_value.get_type() == r_value.get_type()
             },
             (BramaPrimative::ClassFunction(l_value, l_source), BramaPrimative::ClassFunction(r_value, r_source)) => {
                 l_value.name != r_value.name ||

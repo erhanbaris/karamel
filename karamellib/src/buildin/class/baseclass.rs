@@ -1,103 +1,95 @@
-use crate::{buildin::{ClassProperty}, compiler::function::NativeCall};
+use crate::{buildin::{Class, ClassProperty}, compiler::function::NativeCall};
 use crate::compiler::{BramaPrimative, function::{FunctionReference}};
 
-use std::{collections::HashMap, sync::Arc};
+use std::{sync::Arc};
 use crate::compiler::GetType;
+use crate::buildin::ClassConfig;
 
 #[derive(Default)]
-pub struct OpcodeClass {
-    name: String,
-    storage_index: usize,
-    properties: HashMap<String, ClassProperty>,
-    is_readonly: bool
+pub struct BasicInnerClass {
+    config: ClassConfig
  }
 
-impl OpcodeClass {
-    pub fn set_name(&mut self, name: String) {
-        if self.name.len() == 0 {
-            self.name = name;
+ impl Class for BasicInnerClass {
+    fn set_class_config(&mut self, config: ClassConfig) {
+        self.config = config;
+    }
+
+    fn get_class_name(&self) -> String {
+        self.config.name.clone()
+    }
+
+    fn has_element(&self, field: Arc<BramaPrimative>) -> bool {
+        match &*field {
+            BramaPrimative::Text(text) => self.config.properties.get(&**text).is_some(),
+            _ => false
         }
     }
-
-    pub fn get_name(&self) -> String {
-        self.name.to_string()
+    
+    fn properties(&self) -> std::collections::hash_map::Iter<'_, String, ClassProperty> {
+        self.config.properties.iter()
     }
 
-    pub fn set_storage_index(&mut self, index: usize) {
-        self.storage_index = index;
-    }
-
-    pub fn get_storage_index(&self) -> usize {
-        self.storage_index
+    fn get_element(&self, field: Arc<BramaPrimative>) -> Option<&ClassProperty> {
+        match &*field {
+            BramaPrimative::Text(text) => self.config.properties.get(&**text),
+            _ => None
+        }
     }
     
-    pub fn has_property(&self, name: String) -> bool {
-        self.properties.contains_key(&name)
+    fn property_count(&self) -> usize {
+        self.config.properties.len()
     }
 
-    pub(crate) fn is_readonly(&self) -> bool {
-        self.is_readonly
+    fn add_method(&mut self, name: &str, function: NativeCall) {
+        self.config.properties.insert(name.to_string(), ClassProperty::Function(FunctionReference::buildin_function(function, name.to_string())));
     }
 
-    pub(crate) fn set_readonly(&mut self) {
-        self.is_readonly = true;
-    }
-    
-    pub fn property_count(&self) -> usize {
-        self.properties.len()
-    }
-    
-    pub fn add_method(&mut self, name: String, function: NativeCall) {
-        if self.is_readonly() { return }
-        let function_ref = FunctionReference::buildin_function(function, name.to_string());
-        self.properties.insert(name.to_string(), ClassProperty::Function(function_ref));
+    fn add_property(&mut self, name: &str, property: Arc<BramaPrimative>) {
+        self.config.properties.insert(name.to_string(), ClassProperty::Field(property));
     }
 
-    pub fn add_property(&mut self, name: String, property: Arc<BramaPrimative>) {
-        if self.is_readonly() { return }
-        self.properties.insert(name, ClassProperty::Field(property));
-    }
-    
-    pub fn get_method(&self, name: &str) -> Option<Arc<FunctionReference>> {
-        match self.properties.get(name) {
-            Some(property) => {
-                match property {
-                    ClassProperty::Field(_) => None,
-                    ClassProperty::Function(function) => Some(function.clone())
-                }
+    fn get_method(&self, name: &str) -> Option<Arc<FunctionReference>> {
+        match self.config.properties.get(name) {
+            Some(property) => match property {
+                ClassProperty::Function(function) => Some(function.clone()),
+                _ => None
             },
-            None => None
+            _ => None
         }
     }
 
-    pub fn get_property(&self, name: &str) -> Option<Arc<BramaPrimative>> {
-        match self.properties.get(name) {
-            Some(property) => {
-                match property {
-                    ClassProperty::Field(property) => Some(property.clone()),
-                    ClassProperty::Function(_) => None
-                }
+    fn get_property(&self, name: &str) -> Option<Arc<BramaPrimative>> {
+        match self.config.properties.get(name) {
+            Some(property) => match property {
+                ClassProperty::Field(field) => Some(field.clone()),
+                _ => None
             },
-            None => None
+            _ => None
         }
     }
+ }
 
-    pub fn get_element(&self, name: &str) -> Option<&ClassProperty> {
-        self.properties.get(name)
+impl BasicInnerClass {
+    pub fn set_name(&mut self, name: &str) {
+        if self.config.name.len() == 0 {
+            self.config.name = name.to_string();
+        }
     }
 }
 
-impl GetType for OpcodeClass {
+impl GetType for BasicInnerClass {
     fn get_type(&self) -> String {
-        self.get_name()
+        self.config.name.clone()
     }
 }
 
 #[cfg(test)]
 mod test {
     use std::sync::Arc;
+    use crate::buildin::Class;
     use crate::compiler::{GetType, function::FunctionParameter};
-    use crate::{buildin::class::baseclass::OpcodeClass, compiler::{EMPTY_OBJECT, function::NativeCallResult}};
+    use crate::{buildin::class::baseclass::BasicInnerClass, compiler::{EMPTY_OBJECT, function::NativeCallResult}};
     use crate::compiler::{BramaPrimative, function::{FunctionReference}};
 
     pub fn tmp_func_1(_: FunctionParameter) -> NativeCallResult {        
@@ -110,36 +102,32 @@ mod test {
 
     #[test]
     fn test_opcode_class_1() {
-        let opcode_class = OpcodeClass::default();
-        assert_eq!(opcode_class.get_name().len(), 0);
+        let opcode_class = BasicInnerClass::default();
+        assert_eq!(opcode_class.get_type().len(), 0);
         assert_eq!(opcode_class.property_count(), 0);
-        assert_eq!(opcode_class.get_storage_index(), 0);
     }
 
     #[test]
     fn test_opcode_class_2() {
-        let mut opcode_class: OpcodeClass = OpcodeClass::default();
-        opcode_class.set_name("test_class".to_string());
-        opcode_class.set_storage_index(1);
+        let mut opcode_class: BasicInnerClass = BasicInnerClass::default();
+        opcode_class.set_name("test_class");
 
-        assert_eq!(opcode_class.get_name(), "test_class".to_string());
+        assert_eq!(opcode_class.get_class_name(), "test_class".to_string());
         assert_eq!(opcode_class.property_count(), 0);
-        assert_eq!(opcode_class.get_storage_index(), 1);
-        assert_eq!(opcode_class.get_type(), opcode_class.get_name());
+        assert_eq!(opcode_class.get_type(), opcode_class.get_class_name());
         assert_eq!(opcode_class.get_type(), "test_class".to_string());
     }
 
     #[test]
     fn test_opcode_class_3() {
-        let mut opcode_class: OpcodeClass = OpcodeClass::default();
-        opcode_class.set_name("test_class".to_string());
-        opcode_class.set_storage_index(10);
+        let mut opcode_class: BasicInnerClass = BasicInnerClass::default();
+        opcode_class.set_name("test_class");
 
 
-        opcode_class.add_property("field_1".to_string(), Arc::new(BramaPrimative::Number(1024.0)));
-        opcode_class.add_property("field_2".to_string(), Arc::new(BramaPrimative::Number(2048.0)));
+        opcode_class.add_property("field_1", Arc::new(BramaPrimative::Number(1024.0)));
+        opcode_class.add_property("field_2", Arc::new(BramaPrimative::Number(2048.0)));
 
-        assert_eq!(opcode_class.get_name(), "test_class".to_string());
+        assert_eq!(opcode_class.get_class_name(), "test_class".to_string());
         assert_eq!(opcode_class.property_count(), 2);
 
         let field_1 = opcode_class.get_property("field_1");
@@ -165,23 +153,20 @@ mod test {
 
     #[test]
     fn test_opcode_class_4() {
-        let mut opcode_class: OpcodeClass = OpcodeClass::default();
-        opcode_class.set_name("test_class".to_string());
-        opcode_class.set_storage_index(10);
+        let mut opcode_class: BasicInnerClass = BasicInnerClass::default();
+        opcode_class.set_name("test_class");
 
-        opcode_class.add_property("field_1".to_string(), Arc::new(BramaPrimative::Number(1024.0)));
-        opcode_class.add_property("field_2".to_string(), Arc::new(BramaPrimative::Number(2048.0)));
+        opcode_class.add_property("field_1", Arc::new(BramaPrimative::Number(1024.0)));
+        opcode_class.add_property("field_2", Arc::new(BramaPrimative::Number(2048.0)));
 
-        assert_eq!(opcode_class.name, "test_class".to_string());
-        assert_eq!(opcode_class.properties.len(), 2);
-        assert_eq!(opcode_class.storage_index, 10);
+        assert_eq!(opcode_class.get_class_name(), "test_class".to_string());
+        assert_eq!(opcode_class.property_count(), 2);
     }
 
     #[test]
     fn test_opcode_class_5() {
-        let mut opcode_class: OpcodeClass = OpcodeClass::default();
-        opcode_class.set_name("test_class".to_string());
-        opcode_class.set_storage_index(2);
+        let mut opcode_class: BasicInnerClass = BasicInnerClass::default();
+        opcode_class.set_name("test_class");
 
         let mut function_1 = FunctionReference::default();
         let mut function_2 = FunctionReference::default();
@@ -189,12 +174,11 @@ mod test {
         function_1.name = "function_1".to_string();
         function_2.name = "function_2".to_string();
 
-        opcode_class.add_method("function_1".to_string(), tmp_func_1);
-        opcode_class.add_method("function_2".to_string(), tmp_func_2);
+        opcode_class.add_method("function_1", tmp_func_1);
+        opcode_class.add_method("function_2", tmp_func_2);
 
-        assert_eq!(opcode_class.get_name(), "test_class".to_string());
+        assert_eq!(opcode_class.get_class_name(), "test_class".to_string());
         assert_eq!(opcode_class.property_count(), 2);
-        assert_eq!(opcode_class.get_storage_index(), 2);
 
         let function_1 = opcode_class.get_method("function_1");
         let function_2 = opcode_class.get_method("function_2");

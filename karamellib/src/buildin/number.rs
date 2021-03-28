@@ -1,26 +1,30 @@
-use crate::{buildin::Class, compiler::{function::{FunctionParameter, NativeCallResult}}};
+use crate::compiler::{BramaCompiler, function::{NativeCallResult}};
 use crate::compiler::value::EMPTY_OBJECT;
-use crate::buildin::class::BasicInnerClass;
+use super::opcode_class::BasicInnerClass;
 use crate::compiler::value::BramaPrimative;
 use crate::types::VmObject;
 
 use std::{mem, sync::Arc};
 
-pub fn get_primative_class() -> BasicInnerClass {
-    let mut opcode = BasicInnerClass::default();
-    opcode.set_name("Sayı");
-    
-    opcode.add_method("hex", hex);
-    opcode.add_method("yuvarla", round);
-    opcode.add_method("tavan", ceil);
-    opcode.add_method("taban", floor);
-    opcode.add_method("tamsayı", trunc);
-    opcode.add_method("kesir", fract);
-    opcode
+use lazy_static::lazy_static;
+
+lazy_static! {
+    pub static ref NUMBER_CLASS: BasicInnerClass = {
+        let mut opcode = BasicInnerClass::default();
+        opcode.set_name("sayı".to_string());
+        
+        opcode.add_method("hex".to_string(), hex);
+        opcode.add_method("yuvarla".to_string(), round);
+        opcode.add_method("tavan".to_string(), ceil);
+        opcode.add_method("taban".to_string(), floor);
+        opcode.add_method("tamsayı".to_string(), trunc);
+        opcode.add_method("kesir".to_string(), fract);
+        opcode
+    };
 }
 
-fn hex(parameter: FunctionParameter) -> NativeCallResult {
-    if let BramaPrimative::Number(number) = &*parameter.source().unwrap() {
+fn hex(_: &mut BramaCompiler, source: Option<Arc<BramaPrimative>>, _: usize, _: u8) -> NativeCallResult {
+    if let BramaPrimative::Number(number) = &*source.unwrap() {
         if number.fract() != 0.0 {
             let as_int: u64 = unsafe { mem::transmute(*number) };
             return Ok(VmObject::native_convert(BramaPrimative::Text(Arc::new(format!("0x{:x}", as_int)))));
@@ -31,36 +35,36 @@ fn hex(parameter: FunctionParameter) -> NativeCallResult {
     Ok(EMPTY_OBJECT)
 }
 
-fn round(parameter: FunctionParameter) -> NativeCallResult {
-    if let BramaPrimative::Number(number) = &*parameter.source().unwrap() {
+fn round(_: &mut BramaCompiler, source: Option<Arc<BramaPrimative>>, _: usize, _: u8) -> NativeCallResult {
+    if let BramaPrimative::Number(number) = &*source.unwrap() {
         return Ok(VmObject::native_convert(BramaPrimative::Number(number.round())));
     }
     Ok(EMPTY_OBJECT)
 }
 
-fn ceil(parameter: FunctionParameter) -> NativeCallResult {
-    if let BramaPrimative::Number(number) = &*parameter.source().unwrap() {
+fn ceil(_: &mut BramaCompiler, source: Option<Arc<BramaPrimative>>, _: usize, _: u8) -> NativeCallResult {
+    if let BramaPrimative::Number(number) = &*source.unwrap() {
         return Ok(VmObject::native_convert(BramaPrimative::Number(number.ceil())));
     }
     Ok(EMPTY_OBJECT)
 }
 
-fn floor(parameter: FunctionParameter) -> NativeCallResult {
-    if let BramaPrimative::Number(number) = &*parameter.source().unwrap() {
+fn floor(_: &mut BramaCompiler, source: Option<Arc<BramaPrimative>>, _: usize, _: u8) -> NativeCallResult {
+    if let BramaPrimative::Number(number) = &*source.unwrap() {
         return Ok(VmObject::native_convert(BramaPrimative::Number(number.floor())));
     }
     Ok(EMPTY_OBJECT)
 }
 
-fn trunc(parameter: FunctionParameter) -> NativeCallResult {
-    if let BramaPrimative::Number(number) = &*parameter.source().unwrap() {
+fn trunc(_: &mut BramaCompiler, source: Option<Arc<BramaPrimative>>, _: usize, _: u8) -> NativeCallResult {
+    if let BramaPrimative::Number(number) = &*source.unwrap() {
         return Ok(VmObject::native_convert(BramaPrimative::Number(number.trunc())));
     }
     Ok(EMPTY_OBJECT)
 }
 
-fn fract(parameter: FunctionParameter) -> NativeCallResult {
-    if let BramaPrimative::Number(number) = &*parameter.source().unwrap() {
+fn fract(_: &mut BramaCompiler, source: Option<Arc<BramaPrimative>>, _: usize, _: u8) -> NativeCallResult {
+    if let BramaPrimative::Number(number) = &*source.unwrap() {
         return Ok(VmObject::native_convert(BramaPrimative::Number(number.fract())));
     }
     Ok(EMPTY_OBJECT)
@@ -69,9 +73,22 @@ fn fract(parameter: FunctionParameter) -> NativeCallResult {
 #[cfg(test)]
 mod tests {
     use std::sync::Arc;
+    use crate::compiler::BramaCompiler;
     use crate::compiler::value::BramaPrimative;
     use super::*;
-    use crate::nativecall_test;
+
+    #[macro_export]
+    macro_rules! nativecall_test {
+        ($name:ident, $function_name:ident, $query:expr, $result:expr) => {
+            #[test]
+            fn $name () {
+                let result = $function_name(&mut BramaCompiler::new(), Some(Arc::new($query)), 0, 0);
+                assert!(result.is_ok());
+                let object = result.unwrap().deref();
+                assert_eq!(*object, $result);
+            }
+        };
+    }
 
     nativecall_test!{test_hex_1, hex, BramaPrimative::Number(-1.51), BramaPrimative::Text(Arc::new("0xbff828f5c28f5c29".to_string()))}
     nativecall_test!{test_hex_2, hex, BramaPrimative::Number(22.0), BramaPrimative::Text(Arc::new("0x16".to_string()))}

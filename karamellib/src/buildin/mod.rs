@@ -55,6 +55,7 @@ pub enum ClassProperty {
     Field(Arc<BramaPrimative>)
 }
 
+#[derive(Default)]
 pub struct ClassConfig {
     pub name: String,
     pub storage_index: usize,
@@ -68,10 +69,13 @@ pub trait Class: GetType {
     fn set_class_config(&mut self, config: ClassConfig);
     fn get_class_name(&self) -> String;
     
-    fn has_property(&self, name: String) -> bool;
+    fn has_element(&self, field: Arc<BramaPrimative>) -> bool;
+    fn get_element(&self, field: Arc<BramaPrimative>) -> Option<&ClassProperty>;
+    fn property_count(&self) -> usize;
+    fn properties(&self) -> std::collections::hash_map::Iter<'_, String, ClassProperty>;
     
-    fn add_method(&mut self, name: String, function: Arc<FunctionReference>);
-    fn add_property(&mut self, name: String, property: Arc<BramaPrimative>);
+    fn add_method(&mut self, name: &str, function: NativeCall);
+    fn add_property(&mut self, name: &str, property: Arc<BramaPrimative>);
     
     fn get_method(&self, name: &str) -> Option<Arc<FunctionReference>>;
     fn get_property(&self, name: &str) -> Option<Arc<BramaPrimative>>;

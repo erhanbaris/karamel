@@ -1,17 +1,14 @@
 pub mod number;
 pub mod text;
-pub mod baseclass;
 
-use crate::{buildin::class::baseclass::BasicInnerClass, compiler::{BramaPrimative, GetType, function::NativeCall}};
-use std::{sync::Arc, vec::Vec};
+use crate::buildin::opcode_class::BasicInnerClass;
+use std::vec::Vec;
 use lazy_static::lazy_static;
-
-use super::ClassProperty;
 
 
 pub fn get_empty_class() -> BasicInnerClass {
     let mut opcode = BasicInnerClass::default();
-    opcode.set_name("__NO__CLASS__");
+    opcode.set_name("__NO__CLASS__".to_string());
     opcode
 }
 
@@ -69,15 +66,4 @@ macro_rules! n_parameter_expected {
 #[macro_export]
 macro_rules! expected_parameter_type {
     ($function_name:expr, $expected_type:expr) => { Err((format!("'{}' sadece {} parametresini kabul ediyor", $function_name, $expected_type))) };
-}
-
-
-
-trait Class: GetType {
-    fn get_type(&self) -> String;
-    fn has_element(&self, field: Arc<BramaPrimative>) -> bool;
-    fn element_count(&self) -> usize;
-    fn add_method(&mut self, name: &String, function: NativeCall);
-    fn add_property(&mut self, name: &String, property: Arc<BramaPrimative>);
-    fn get_element(&self, field: Arc<BramaPrimative>) -> Option<&ClassProperty>;
 }
