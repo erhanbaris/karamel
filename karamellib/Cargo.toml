@@ -20,7 +20,7 @@ dumpOpcodes = []
 liveOpcodeView = []
 wasmBuild = []
 unittest = []
-default = ["dumpOpcodes"]
+default = ["dumpOpcodes", "dumpMemory", "dumpExecutionOpcode"]
 
 [lib]
 crate-type = ["cdylib", "rlib"]

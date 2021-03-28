@@ -134,6 +134,10 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
 {
     let mut log_update = LogUpdate::new(stdout()).unwrap();
     
+    #[cfg(feature = "dumpMemory")] {
+        options.storages[0].dump();
+    }
+    
     #[cfg(all(feature = "dumpOpcodes"))] {
         dump_opcode(0, options, &mut log_update);
     }

@@ -5,7 +5,7 @@ use crate::compiler::value::BramaPrimative;
 use crate::types::VmObject;
 use crate::{n_parameter_expected, expected_parameter_type};
 
-use std::sync::Arc;
+use std::{cell::RefCell, sync::Arc};
 
 
 pub fn get_primative_class() -> BasicInnerClass {
@@ -19,6 +19,10 @@ pub fn get_primative_class() -> BasicInnerClass {
     opcode.add_method("buyukharf", uppercase);
     opcode.add_method("içeriyormu", contains);
     opcode.add_method("iceriyormu", contains);
+    opcode.add_method("satırlar", lines);
+    opcode.add_method("satirlar", lines);
+    opcode.add_method("parçala", split);
+    opcode.add_method("parçala", split);
     opcode
 }
 
@@ -81,6 +85,43 @@ fn uppercase(parameter: FunctionParameter) -> NativeCallResult {
     Ok(EMPTY_OBJECT)
 }
 
+fn lines(parameter: FunctionParameter) -> NativeCallResult {
+    if let BramaPrimative::Text(text) = &*parameter.source().unwrap() {
+        let splits = text.lines().collect::<Vec<_>>();
+        let mut lines = Vec::new();
+
+        for line in splits.iter() {
+            lines.push(Arc::new(BramaPrimative::Text(Arc::new(line.to_string()))));
+        }
+        return Ok(VmObject::native_convert(BramaPrimative::List(RefCell::new(lines))));
+    }
+    Ok(EMPTY_OBJECT)
+}
+
+fn split(parameter: FunctionParameter) -> NativeCallResult {
+    if let BramaPrimative::Text(text) = &*parameter.source().unwrap() {
+        return match parameter.length() {
+            0 =>  n_parameter_expected!("parçala", 1),
+            1 => {
+                match &*parameter.iter().next().unwrap().deref() {
+                    BramaPrimative::Text(search) =>  {
+                        let splits = text.split(&**search).collect::<Vec<_>>();
+                        let mut lines = Vec::new();
+
+                        for line in splits.iter() {
+                            lines.push(Arc::new(BramaPrimative::Text(Arc::new(line.to_string()))));
+                        }
+                        return Ok(VmObject::native_convert(BramaPrimative::List(RefCell::new(lines))));
+                    },
+                    _ => expected_parameter_type!("parçala", "Yazı")
+                }
+            },
+            _ => n_parameter_expected!("parçala", 1, parameter.length())
+        };
+    }
+    Ok(EMPTY_OBJECT)
+}
+
 #[cfg(test)]
 mod tests {
     use std::sync::Arc;
@@ -88,6 +129,7 @@ mod tests {
     use super::*;
 
     use crate::nativecall_test;
+    use crate::nativecall_test_with_params;
 
 
     nativecall_test!{test_length_1, length, BramaPrimative::Text(Arc::new("TÜRKİYE".to_string())), BramaPrimative::Number(7.0)}
@@ -99,4 +141,11 @@ mod tests {
     nativecall_test!{test_uppercase_1, uppercase, BramaPrimative::Text(Arc::new("türkiye".to_string())), BramaPrimative::Text(Arc::new("TÜRKİYE".to_string()))}
     nativecall_test!{test_uppercase_2, uppercase, BramaPrimative::Text(Arc::new("ığüişçö".to_string())), BramaPrimative::Text(Arc::new("IĞÜİŞÇÖ".to_string()))}
     nativecall_test!{test_uppercase_3, uppercase, BramaPrimative::Text(Arc::new("erhan".to_string())), BramaPrimative::Text(Arc::new("ERHAN".to_string()))}
+    nativecall_test!{test_lines_1, lines, BramaPrimative::Text(Arc::new("erhan\r\n".to_string())), BramaPrimative::List(RefCell::new([Arc::new(BramaPrimative::Text(Arc::new("erhan".to_string())))].to_vec()))}
+    nativecall_test!{test_lines_2, lines, BramaPrimative::Text(Arc::new("\r\n".to_string())), BramaPrimative::List(RefCell::new([Arc::new(BramaPrimative::Text(Arc::new("".to_string())))].to_vec()))}
+    nativecall_test!{test_lines_3, lines, BramaPrimative::Text(Arc::new("erhan\r\nbarış".to_string())), BramaPrimative::List(RefCell::new([Arc::new(BramaPrimative::Text(Arc::new("erhan".to_string()))), Arc::new(BramaPrimative::Text(Arc::new("barış".to_string())))].to_vec()))}
+    nativecall_test!{test_lines_4, lines, BramaPrimative::Text(Arc::new("erhan\r\nbarış\r\n".to_string())), BramaPrimative::List(RefCell::new([Arc::new(BramaPrimative::Text(Arc::new("erhan".to_string()))), Arc::new(BramaPrimative::Text(Arc::new("barış".to_string())))].to_vec()))}
+    nativecall_test!{test_lines_5, lines, BramaPrimative::Text(Arc::new("erhan\r\nbarış\r\nkaramel".to_string())), BramaPrimative::List(RefCell::new([Arc::new(BramaPrimative::Text(Arc::new("erhan".to_string()))), Arc::new(BramaPrimative::Text(Arc::new("barış".to_string()))), Arc::new(BramaPrimative::Text(Arc::new("karamel".to_string())))].to_vec()))}
+    
+    nativecall_test_with_params!{test_split_1, split, BramaPrimative::Text(Arc::new("erhan\r\n".to_string())), [VmObject::native_convert(BramaPrimative::Text(Arc::new("erhan".to_string())))], BramaPrimative::List(RefCell::new([Arc::new(BramaPrimative::Text(Arc::new("erhan".to_string())))].to_vec()))}
 }

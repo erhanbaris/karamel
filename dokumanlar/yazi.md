@@ -9,3 +9,7 @@
 ### büyükharf()
 
 ### içeriyormu()
+
+### satırlar()
+
+### parçala()

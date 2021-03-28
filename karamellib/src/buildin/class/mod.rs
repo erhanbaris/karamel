@@ -52,6 +52,25 @@ macro_rules! nativecall_test {
 }
 
 #[macro_export]
+macro_rules! nativecall_test_with_params {
+    ($name:ident, $function_name:ident, $query:expr, $params:expr, $result:expr) => {
+        #[test]
+        fn $name () {
+            use std::cell::RefCell;
+            let stack: Vec<VmObject> = $params.to_vec();
+            let stdout = Some(RefCell::new(String::new()));
+            let stderr = Some(RefCell::new(String::new()));
+            
+            let parameter = FunctionParameter::new(&stack, Some(Arc::new($query)), 0, 1, &stdout, &stderr);
+            let result = $function_name(parameter);
+            assert!(result.is_ok());
+            let object = result.unwrap().deref();
+            assert_eq!(*object, $result);
+        }
+    };
+}
+
+#[macro_export]
 macro_rules! n_parameter_check {
     ($function_name:expr, $parameter_size:expr) => {
         if parameter.length() > 1 {
