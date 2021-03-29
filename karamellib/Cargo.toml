@@ -12,6 +12,7 @@ log-update = "*"
 colored = "2"
 log = "0.4.14"
 lazy_static = "1.4.0"
+unicode-width = "0.1.7"
 
 [features]
 dumpExecutionOpcode = []

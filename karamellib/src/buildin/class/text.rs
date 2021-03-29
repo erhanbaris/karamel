@@ -5,6 +5,7 @@ use crate::compiler::value::BramaPrimative;
 use crate::types::VmObject;
 use crate::{n_parameter_expected, expected_parameter_type};
 
+use unicode_width::UnicodeWidthStr;
 use std::{cell::RefCell, sync::Arc};
 
 
@@ -131,7 +132,7 @@ fn find(parameter: FunctionParameter) -> NativeCallResult {
                 match &*parameter.iter().next().unwrap().deref() {
                     BramaPrimative::Text(search) =>  {
                         match text.find(&**search) {
-                            Some(location) => Ok(VmObject::native_convert(BramaPrimative::Number(location as f64))),
+                            Some(location) => Ok(VmObject::native_convert(BramaPrimative::Number(UnicodeWidthStr::width(&text[..location]) as f64))),
                             _ => Ok(EMPTY_OBJECT)
                         }
                     },
@@ -186,4 +187,5 @@ mod tests {
     nativecall_test_with_params!{test_find_4, find, primative_text!("merhaba dünya"), [VmObject::native_convert(primative_text!(" "))], BramaPrimative::Number(7.0)}
     nativecall_test_with_params!{test_find_5, find, primative_text!("bir karamel miyav dedi minik fare kükredi"), [VmObject::native_convert(primative_text!("minik fare"))], BramaPrimative::Number(23.0)}
     nativecall_test_with_params!{test_find_6, find, primative_text!("kütüphaneciler haftası"), [VmObject::native_convert(primative_text!("hafta"))], BramaPrimative::Number(15.0)}
+    nativecall_test_with_params!{test_find_7, find, primative_text!("şaşkın şakir Gündüz"), [VmObject::native_convert(primative_text!("Gündüz"))], BramaPrimative::Number(13.0)}
 }

@@ -1,3 +1,5 @@
+extern crate unicode_width;
+
 #[macro_use]
 pub mod macros;
 pub mod parser;
