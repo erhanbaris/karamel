@@ -8,8 +8,10 @@
 
 ### büyükharf()
 
-### içeriyormu()
+### içeriyormu(aranan)
 
 ### satırlar()
 
-### parçala()
+### parçala(bununla)
+
+### değiştir(bunu, bununla)

@@ -25,6 +25,8 @@ pub fn get_primative_class() -> BasicInnerClass {
     opcode.add_method("parçala", split);
     opcode.add_method("parcala", split);
     opcode.add_method("ara", find);
+    opcode.add_method("değiştir", replace);
+    opcode.add_method("degistir", replace);
     opcode
 }
 
@@ -145,6 +147,24 @@ fn find(parameter: FunctionParameter) -> NativeCallResult {
     Ok(EMPTY_OBJECT)
 }
 
+fn replace(parameter: FunctionParameter) -> NativeCallResult {
+    if let BramaPrimative::Text(text) = &*parameter.source().unwrap() {
+        return match parameter.length() {
+            0 =>  n_parameter_expected!("değiştir", 2),
+            2 => {
+                let mut iter = parameter.iter();
+                let (from, to) = (&*iter.next().unwrap().deref(), &*iter.next().unwrap().deref());
+                match (&*from, &*to) {
+                    (BramaPrimative::Text(from), BramaPrimative::Text(to)) => Ok(VmObject::native_convert(BramaPrimative::Text(Arc::new(text.replace(&**from, &**to))))),
+                    _ => expected_parameter_type!("değiştir", "Yazı")
+                }
+            },
+            _ => n_parameter_expected!("değiştir", 2, parameter.length())
+        };
+    }
+    Ok(EMPTY_OBJECT)
+}
+
 #[cfg(test)]
 mod tests {
     use std::sync::Arc;
@@ -188,4 +208,7 @@ mod tests {
     nativecall_test_with_params!{test_find_5, find, primative_text!("bir karamel miyav dedi minik fare kükredi"), [VmObject::native_convert(primative_text!("minik fare"))], BramaPrimative::Number(23.0)}
     nativecall_test_with_params!{test_find_6, find, primative_text!("kütüphaneciler haftası"), [VmObject::native_convert(primative_text!("hafta"))], BramaPrimative::Number(15.0)}
     nativecall_test_with_params!{test_find_7, find, primative_text!("şaşkın şakir Gündüz"), [VmObject::native_convert(primative_text!("Gündüz"))], BramaPrimative::Number(13.0)}
-}
+
+    nativecall_test_with_params!{test_replace_1, replace, primative_text!("merhaba dünya"), [VmObject::native_convert(primative_text!("dünya")), VmObject::native_convert(primative_text!("erhan"))], primative_text!("merhaba erhan")}
+    nativecall_test_with_params!{test_replace_2, replace, primative_text!("merhaba dünya"), [VmObject::native_convert(primative_text!("test")), VmObject::native_convert(primative_text!("erhan"))], primative_text!("merhaba dünya")}
+    }

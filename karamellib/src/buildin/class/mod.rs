@@ -68,7 +68,7 @@ macro_rules! nativecall_test_with_params {
             let stdout = Some(RefCell::new(String::new()));
             let stderr = Some(RefCell::new(String::new()));
             
-            let parameter = FunctionParameter::new(&stack, Some(Arc::new($query)), 1, 1, &stdout, &stderr);
+            let parameter = FunctionParameter::new(&stack, Some(Arc::new($query)), stack.len() as usize, stack.len() as u8, &stdout, &stderr);
             let result = $function_name(parameter);
             assert!(result.is_ok());
             let object = result.unwrap().deref();

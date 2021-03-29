@@ -142,7 +142,7 @@ impl fmt::Debug for BramaPrimative {
             BramaPrimative::Atom(b) => write!(f, "{:?}", b),
             BramaPrimative::Text(b) => write!(f, "{:?}", b),
             BramaPrimative::Function(func) => write!(f, "<Fonksiyon='{}'>", func.name),
-            BramaPrimative::ClassFunction(func, _) => write!(f, "<Sınıf='{}'>", func.name),
+            BramaPrimative::ClassFunction(func, _) => write!(f, "<Fonksiyon='{}'>", func.name),
             BramaPrimative::Class(class) => write!(f, "<Sınıf='{}'>", class.get_type())
         }
     }
@@ -159,7 +159,7 @@ impl fmt::Display for BramaPrimative {
             BramaPrimative::Atom(b) => write!(f, "{}", b),
             BramaPrimative::Text(b) => write!(f, "{}", b),
             BramaPrimative::Function(func) => write!(f, "<Fonksiyon='{}'>", func.name),
-            BramaPrimative::ClassFunction(func, _) => write!(f, "<Sınıf='{}'>", func.name),
+            BramaPrimative::ClassFunction(func, _) => write!(f, "<Fonksiyon='{}'>", func.name),
             BramaPrimative::Class(class) => write!(f, "<Sınıf='{}'>", class.get_type())
         }
     }
