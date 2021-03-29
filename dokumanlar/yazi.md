@@ -36,7 +36,7 @@ gç::satıryaz("B değişkeni yeni değeri: ", B)
 # Ak yazacak
 ```
 
-????(bunu, buna, buna, buna, buna, değer)
+### ????(bunu, buna, buna, buna, buna, değer)
 Bir değişkendeki değeri edilgen değişkenler içine koyar. Bu işlem yapılırken ana değişkendeki değer eksilir. Fonksiyon değeri girilmediyse ana değişkendeki değer edilgen değişkenlerin içine olduğu gibi katılır.
 
 ```
