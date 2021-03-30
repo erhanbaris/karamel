@@ -4,4 +4,4 @@
 ### Çekirdek Takım
 
 - Erhan Barış <erhanbaris@gmail.com>
-- Volkan Taş
+- Volkan Taş (datadeveb)
