@@ -34,6 +34,8 @@ pub fn get_primative_class() -> BasicInnerClass {
     opcode.add_method("sonukirp", end_trim);
     opcode.add_method("başıkırp", start_trim);
     opcode.add_method("basikirp", start_trim);
+    opcode.add_method("parçagetir", substring);
+    opcode.add_method("parcagetir", substring);
     opcode
 }
 
@@ -193,6 +195,37 @@ fn start_trim(parameter: FunctionParameter) -> NativeCallResult {
     Ok(EMPTY_OBJECT)
 }
 
+fn substring(parameter: FunctionParameter) -> NativeCallResult {
+    if let BramaPrimative::Text(text) = &*parameter.source().unwrap() {
+        return match parameter.length() {
+            0 =>  n_parameter_expected!("parçagetir", 2),
+            2 => {
+                let mut iter = parameter.iter();
+                let (from, to) = (&*iter.next().unwrap().deref(), &*iter.next().unwrap().deref());
+                match (&*from, &*to) {
+                    (BramaPrimative::Number(start), BramaPrimative::Number(end)) => {
+                        let start_size = if (*start as i64) < 0 {
+                            0 as usize
+                        } else {
+                            *start as usize
+                        };
+
+                        let end_size = if (*end as usize) < text.len() {
+                            *end as usize
+                        } else {
+                            text.len() as usize
+                        };
+                        Ok(VmObject::native_convert(primative_text!(text.get(start_size..end_size).unwrap_or(""))))
+                    },
+                    _ => expected_parameter_type!("parçagetir", "Sayı")
+                }
+            },
+            _ => n_parameter_expected!("parçagetir", 2, parameter.length())
+        };
+    }
+    Ok(EMPTY_OBJECT)
+}
+
 #[cfg(test)]
 mod tests {
     use std::sync::Arc;
@@ -251,4 +284,11 @@ mod tests {
     nativecall_test!{test_end_trim_1, end_trim, primative_text!(" merhaba dünya "), primative_text!(" merhaba dünya")}
     nativecall_test!{test_end_trim_2, end_trim, primative_text!("merhaba dünya "), primative_text!("merhaba dünya")}
     nativecall_test!{test_end_trim_3, end_trim, primative_text!(" merhaba dünya"), primative_text!(" merhaba dünya")}
+
+    nativecall_test_with_params!{test_substring_1, substring, primative_text!("merhaba dünya"), [VmObject::native_convert(BramaPrimative::Number(0.0)), VmObject::native_convert(BramaPrimative::Number(7.0))], primative_text!("merhaba")}
+    nativecall_test_with_params!{test_substring_2, substring, primative_text!("merhaba dünya"), [VmObject::native_convert(BramaPrimative::Number(0.0)), VmObject::native_convert(BramaPrimative::Number(0.0))], primative_text!("")}
+    nativecall_test_with_params!{test_substring_3, substring, primative_text!("merhaba dünya"), [VmObject::native_convert(BramaPrimative::Number(0.0)), VmObject::native_convert(BramaPrimative::Number(11110.0))], primative_text!("merhaba dünya")}
+    nativecall_test_with_params!{test_substring_4, substring, primative_text!("merhaba dünya"), [VmObject::native_convert(BramaPrimative::Number(-100.0)), VmObject::native_convert(BramaPrimative::Number(11110.0))], primative_text!("merhaba dünya")}
+    nativecall_test_with_params!{test_substring_5, substring, primative_text!("merhaba dünya"), [VmObject::native_convert(BramaPrimative::Number(8.0)), VmObject::native_convert(BramaPrimative::Number(14.0))], primative_text!("dünya")}
+
 }
