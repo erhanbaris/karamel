@@ -21,9 +21,10 @@
 ### başıkırp()
 
 ### değiştir(bunu, bununla)
-Bir verinin tüm eşleşmelerini başka bir yazı ile değiştirir. Bu fonksiyon yeni bir yazı _Yazı_ oluşturur ve orjinal _Yazı_ içeriğini kopyalayıp içeriği değiştirir.
+Ele alınan bir **veri bütünlüğü**nde değiştirilmek istenen veriyi silip yerine yeni veri koyma yoluyla veri üzerinde değiştirme yapar. Bu görevle yeni veri, kaldırılmak istenen veri ile değiştirilir. Bir başka deyişle yazının tüm eşleşmelerini başka bir yazı ile değiştirir. Bu fonksiyon yeni bir yazı _Yazı_ oluşturur ve asıl _Yazı_ içeriğini kopyalayıp içeriği değiştirir.
 
-**Örnek**
+**Örnek**  
+"**merhaba dünya**" elimizde olan bir yazımız olsun. "**dünya**" sözcüğünü silip yerine "**karamel**" sözcüğü yazarak "**merhaba karamel**" yazısını elde etmeye çalışalım.
 ```
 değişkenim = "merhaba dünya"
 gç::satıryaz("Orjinal içerik : ", değişkenim) // merhaba dünya
