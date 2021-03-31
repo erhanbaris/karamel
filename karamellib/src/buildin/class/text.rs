@@ -4,6 +4,7 @@ use crate::buildin::class::baseclass::BasicInnerClass;
 use crate::compiler::value::BramaPrimative;
 use crate::types::VmObject;
 use crate::{n_parameter_expected, expected_parameter_type};
+use crate::primative_text;
 
 use unicode_width::UnicodeWidthStr;
 use std::{cell::RefCell, sync::Arc};
@@ -27,6 +28,12 @@ pub fn get_primative_class() -> BasicInnerClass {
     opcode.add_method("ara", find);
     opcode.add_method("değiştir", replace);
     opcode.add_method("degistir", replace);
+    opcode.add_method("kırp", trim);
+    opcode.add_method("kirp", trim);
+    opcode.add_method("sonukırp", end_trim);
+    opcode.add_method("sonukirp", end_trim);
+    opcode.add_method("başıkırp", start_trim);
+    opcode.add_method("basikirp", start_trim);
     opcode
 }
 
@@ -165,6 +172,27 @@ fn replace(parameter: FunctionParameter) -> NativeCallResult {
     Ok(EMPTY_OBJECT)
 }
 
+fn trim(parameter: FunctionParameter) -> NativeCallResult {
+    if let BramaPrimative::Text(text) = &*parameter.source().unwrap() {
+        return Ok(VmObject::native_convert(primative_text!(text.trim())));
+    }
+    Ok(EMPTY_OBJECT)
+}
+
+fn end_trim(parameter: FunctionParameter) -> NativeCallResult {
+    if let BramaPrimative::Text(text) = &*parameter.source().unwrap() {
+        return Ok(VmObject::native_convert(primative_text!(text.trim_end())));
+    }
+    Ok(EMPTY_OBJECT)
+}
+
+fn start_trim(parameter: FunctionParameter) -> NativeCallResult {
+    if let BramaPrimative::Text(text) = &*parameter.source().unwrap() {
+        return Ok(VmObject::native_convert(primative_text!(text.trim_start())));
+    }
+    Ok(EMPTY_OBJECT)
+}
+
 #[cfg(test)]
 mod tests {
     use std::sync::Arc;
@@ -211,4 +239,16 @@ mod tests {
 
     nativecall_test_with_params!{test_replace_1, replace, primative_text!("merhaba dünya"), [VmObject::native_convert(primative_text!("dünya")), VmObject::native_convert(primative_text!("erhan"))], primative_text!("merhaba erhan")}
     nativecall_test_with_params!{test_replace_2, replace, primative_text!("merhaba dünya"), [VmObject::native_convert(primative_text!("test")), VmObject::native_convert(primative_text!("erhan"))], primative_text!("merhaba dünya")}
-    }
+    
+    nativecall_test!{test_trim_1, trim, primative_text!(" merhaba dünya "), primative_text!("merhaba dünya")}
+    nativecall_test!{test_trim_2, trim, primative_text!("merhaba dünya "), primative_text!("merhaba dünya")}
+    nativecall_test!{test_trim_3, trim, primative_text!(" merhaba dünya"), primative_text!("merhaba dünya")}
+
+    nativecall_test!{test_start_trim_1, start_trim, primative_text!(" merhaba dünya "), primative_text!("merhaba dünya ")}
+    nativecall_test!{test_start_trim_2, start_trim, primative_text!("merhaba dünya "), primative_text!("merhaba dünya ")}
+    nativecall_test!{test_start_trim_3, start_trim, primative_text!(" merhaba dünya"), primative_text!("merhaba dünya")}
+
+    nativecall_test!{test_end_trim_1, end_trim, primative_text!(" merhaba dünya "), primative_text!(" merhaba dünya")}
+    nativecall_test!{test_end_trim_2, end_trim, primative_text!("merhaba dünya "), primative_text!("merhaba dünya")}
+    nativecall_test!{test_end_trim_3, end_trim, primative_text!(" merhaba dünya"), primative_text!(" merhaba dünya")}
+}

@@ -14,26 +14,20 @@
 
 ### parçala(bununla)
 
+### kırp()
+
+### sonukırp()
+
+### başıkırp()
+
 ### değiştir(bunu, bununla)
-Değişkenlerin değerlerini birbirleri ile yer değiştirmek için kullanılır. A ve B adında iki değişkenimiz olsun. A değişkeninde bulunan değeri B değişkeni değeri ile değiştirir ve B değişkeninde bulunan değeri A değişkeni değeri ile değiştirir.
+Bir verinin tüm eşleşmelerini başka bir yazı ile değiştirir. Bu fonksiyon yeni bir yazı _Yazı_ oluşturur ve orjinal _Yazı_ içeriğini kopyalayıp içeriği değiştirir.
 
 **Örnek**
 ```
-A = "Ak"
-B = "Kara"
-
-gç::satıryaz("A değişkeni değeri: ", A) 
-# Ak yazacak
-gç::satıryaz("B değişkeni değeri: ", B) 
-# Kara yazacak
-
-değiştir(A,B)
-
-gç::satıryaz("değiştir işlevinden sonra")
-gç::satıryaz("A değişkeni yeni değeri: ", A) 
-# Kara yazacak
-gç::satıryaz("B değişkeni yeni değeri: ", B) 
-# Ak yazacak
+değişkenim = "merhaba dünya"
+gç::satıryaz("Orjinal içerik : ", değişkenim) // merhaba dünya
+gç::satıryaz("Değiştirilmiş içerik : ", değişkenim.değiştir("dünya", "karamel")) // merhaba karamel
 ```
 
 ### ????(bunu, buna, buna, buna, buna, değer)
