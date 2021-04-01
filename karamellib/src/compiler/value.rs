@@ -59,10 +59,10 @@ impl BramaPrimative {
         match self {
             BramaPrimative::Number(_) => 0,
             BramaPrimative::Text(_) => 1,
-
+            BramaPrimative::List(_) => 2,
+            
             BramaPrimative::Empty => 6,
-            BramaPrimative::Bool(_) => 2,
-            BramaPrimative::List(_) => 3,
+            BramaPrimative::Bool(_) => 3,
             BramaPrimative::Dict(_) => 4,
             BramaPrimative::Atom(_) => 5,
             BramaPrimative::Function(_) => 7,

@@ -1,5 +1,6 @@
 pub mod number;
 pub mod text;
+pub mod list;
 pub mod baseclass;
 
 use crate::{buildin::class::baseclass::BasicInnerClass, compiler::{BramaPrimative, GetType, function::NativeCall}};
@@ -20,7 +21,7 @@ lazy_static! {
         let mut m = Vec::new();
         m.push(number::get_primative_class());
         m.push(text::get_primative_class());
-        m.push(get_empty_class());
+        m.push(list::get_primative_class());
         m.push(get_empty_class());
         m.push(get_empty_class());
         m.push(get_empty_class());
