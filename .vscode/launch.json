@@ -7,15 +7,15 @@
                 {
                         "type": "lldb",
                         "request": "launch",
-                        "name": "Debug executable 'jparser'",
+                        "name": "Debug executable 'karamelapp'",
                         "cargo": {
                                 "args": [
                                         "build",
-                                        "--bin=jparser",
-                                        "--package=jparser"
+                                        "--bin=karamelapp",
+                                        "--package=karamelapp"
                                 ],
                                 "filter": {
-                                        "name": "jparser",
+                                        "name": "karamelapp",
                                         "kind": "bin"
                                 }
                         },
@@ -25,16 +25,16 @@
                 {
                         "type": "lldb",
                         "request": "launch",
-                        "name": "Debug unit tests in executable 'jparser'",
+                        "name": "Debug unit tests in executable 'karamelapp'",
                         "cargo": {
                                 "args": [
                                         "test",
                                         "--no-run",
-                                        "--bin=jparser",
-                                        "--package=jparser"
+                                        "--bin=karamelapp",
+                                        "--package=karamelapp"
                                 ],
                                 "filter": {
-                                        "name": "jparser",
+                                        "name": "karamelapp",
                                         "kind": "bin"
                                 }
                         },

@@ -1,0 +1,8 @@
+sayaç = 1
+sonsuz:
+    eğer sayaç == 10:
+        kır
+    gç::satıryaz(sayaç)
+    sayaç += 1
+    devam
+hataayıklama::doğrula(sayaç, 10)

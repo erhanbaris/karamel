@@ -1,0 +1,26 @@
+[package]
+name = "karamellib"
+version = "0.1.0"
+authors = ["Erhan BARIS <erhanbaris@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+bitflags = "1.2"
+log-update = "*"
+colored = "2"
+log = "0.4.14"
+
+[features]
+dumpExecutionOpcode = []
+dumpMemory = []
+dumpOpcodes = []
+liveOpcodeView = []
+wasmBuild = []
+unittest = []
+default = ["dumpOpcodes"]
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+doctest = false
