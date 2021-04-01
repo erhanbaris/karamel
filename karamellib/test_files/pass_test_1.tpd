@@ -4,5 +4,5 @@ sonsuz:
         kır
     gç::satıryaz(sayaç)
     sayaç += 1
-    devamet
+    devam
 hataayıklama::doğrula(sayaç, 10)

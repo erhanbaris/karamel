@@ -30,7 +30,7 @@ mod tests {
 
     test_compare!(if_1, r#"eğer 1024 * 123:
     erhan=123  
-yada: 
+yoksa: 
   erhan=1234
 "#, Ok(BramaAstType::IfStatement {
     condition: Box::new(BramaAstType::Binary {
@@ -93,7 +93,7 @@ yada:
     test_compare!(if_4, r#"eğer 1024 * 123 : 
     erhan=123    
     print(1) 
-yada : 
+yoksa : 
     erhan=321 
     print(2)"#, Ok(BramaAstType::IfStatement {
     condition: Box::new(BramaAstType::Binary {
@@ -128,9 +128,9 @@ yada :
 
     test_compare!(if_5, r#"eğer 1024 * 123:
     erhan=123
-yada 1024 * 123 > 10_000_000:
+yoksa 1024 * 123 > 10_000_000:
     erhan=12345
-yada:
+yoksa:
     erhan=1234
 "#, Ok(BramaAstType::IfStatement {
     condition: Box::new(BramaAstType::Binary {
@@ -165,11 +165,11 @@ yada:
 
     test_compare!(if_6, r#"eğer 1024 * 123:
     erhan=123
-yada 1024 * 123 > 10_000_000:
+yoksa 1024 * 123 > 10_000_000:
     erhan=12345
-yada 1024 * 123 < 10_000_000:
+yoksa 1024 * 123 < 10_000_000:
     erhan=123456
-yada:
+yoksa:
     erhan=1234
 "#, Ok(BramaAstType::IfStatement {
     condition: Box::new(BramaAstType::Binary {
@@ -217,31 +217,31 @@ yada:
 
     test_compare!(if_7, r#"eğer 1024 * 123:
     erhan=123
-yada 1024 * 123 > 10_000_000:
+yoksa 1024 * 123 > 10_000_000:
     erhan=12345
-yada 1024 * 123 < 10_000_000:
+yoksa 1024 * 123 < 10_000_000:
     erhan=123456
-yada:
+yoksa:
     erhan=1234
-yada:
+yoksa:
     erhan=1234
 "#, Err(BramaError {
     error_type: BramaErrorType::ElseIsUsed,
-    column: 5,
+    column: 6,
     line: 8
 }));
 
 test_compare!(if_8, r#"eğer 1024 * 123:
     erhan=123
-yada:
+yoksa:
     erhan=1234
-yada 1024 * 123 > 10_000_000:
+yoksa 1024 * 123 > 10_000_000:
     erhan=12345
-yada 1024 * 123 < 10_000_000:
+yoksa 1024 * 123 < 10_000_000:
     erhan=123456
 "#, Err(BramaError {
     error_type: BramaErrorType::ElseIsUsed,
-    column: 29,
+    column: 30,
     line: 4
 }));
 
@@ -249,7 +249,7 @@ yada 1024 * 123 < 10_000_000:
 
 test_compare!(if_9, r#"eğer 1024 * 123:
     erhan=123
-yada 1024 * 123 > 10_000_000:
+yoksa 1024 * 123 > 10_000_000:
     erhan=12345
 "#, Ok(BramaAstType::IfStatement {
 condition: Box::new(BramaAstType::Binary {

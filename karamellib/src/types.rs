@@ -114,7 +114,7 @@ pub static KEYWORDS: &[(&str, BramaKeywordType)] = &[
     ("sonsuz", BramaKeywordType::Endless),
     ("eğer",   BramaKeywordType::If),
     ("eger",   BramaKeywordType::If),
-    ("yada",   BramaKeywordType::Else),
+    ("yoksa",   BramaKeywordType::Else),
     ("ve",     BramaKeywordType::And),
     ("veya",   BramaKeywordType::Or),
     ("yok",    BramaKeywordType::Empty),
@@ -138,7 +138,7 @@ pub static KEYWORDS: &[(&str, BramaKeywordType)] = &[
     ("dondur",        BramaKeywordType::Return),
     ("kır",           BramaKeywordType::Break),
     ("kir",           BramaKeywordType::Break),
-    ("devamet",       BramaKeywordType::Continue),
+    ("devam",       BramaKeywordType::Continue),
     ("döngü",         BramaKeywordType::WhileStartPart),
     ("dongu",         BramaKeywordType::WhileStartPart),
     ("iken",          BramaKeywordType::WhileEndPart)

@@ -225,14 +225,14 @@ eğer doğru:
 erhan=1
 eğer yanlış:
     erhan=2
-yada:
+yoksa:
    erhan=3"#, BramaPrimative::Number(3.0));
    test_variable_value!(vm_79, "erhan", r#"
 veri = 'erhan'
 eğer veri != 'erhan':
     erhan = "oldu"
     io::printline('Oldu')
-yada veri:
+yoksa veri:
     erhan = "olmadi"
     io::printline('1 == 1')"#, BramaPrimative::Text(Arc::new("olmadi".to_string())));
 
@@ -259,7 +259,7 @@ execute!(vm_89, r#"
 veri = 'erhan'
 eğer veri != 'erhan':
     erhan = "oldu"
-yada veri:
+yoksa veri:
     erhan = "olmadi"
 hataayıklama::doğrula(erhan, 'olmadi')
 "#);
@@ -403,7 +403,7 @@ execute!(vm_107, r#"
 fonk Fibonacci(n):
     eğer n <= 1:
         döndür n
-    yada:
+    yoksa:
         döndür(Fibonacci(n-1) + Fibonacci(n-2))
 hataayıklama::doğrula(Fibonacci(10), 55)
 hataayıklama::doğrula(Fibonacci(20), 6765)

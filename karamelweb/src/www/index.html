@@ -43,20 +43,20 @@
 /* https://codepen.io/Souleste/pen/wvvwJWw */
   window.editor = CodeMirror(document.getElementById("source"), {
     value: `
-// İyi değişkeni topla
+// İki değişkeni topla
 fonk toplam(a,b):
     döndür a + b
   
 
-// Faktoriyel hesapla
-fonk faktoriyel(sayı):
+// Faktöriyel hesapla
+fonk faktöriyel(sayı):
     eğer sayı==1 veya sayı==0:
         döndür 1
-    yada:
-        döndür sayı * faktoriyel(sayı - 1)
+    yoksa:
+        döndür sayı * faktöriyel(sayı - 1)
     
-faktoriyel_sonucu = faktoriyel(10)
-gç::satıryaz('faktoriyel 10 => ', faktoriyel_sonucu)
+faktöriyel_sonucu = faktöriyel(10)
+gç::satıryaz('faktöriyel 10 => ', faktöriyel_sonucu)
 
 gç::satıryaz(toplam("merhaba ", "dünya"))
 
@@ -66,7 +66,7 @@ sonsuz:
         kır
     gç::satıryaz(sayaç * sayaç)
     sayaç += 1
-    devamet
+    devam
 /* Solda ki rakam ile sağda ki rakamların eşit olduğunu doğrula */
 hataayıklama::doğrula(sayaç, 10)`,
     mode:  "kpd",
