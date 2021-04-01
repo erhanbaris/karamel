@@ -38,6 +38,18 @@ _Yazı__'nın sonunda ki _BeyazBoşluk_'ları temizler.
 
 _Yazı__'nın başında ki _BeyazBoşluk_'ları temizler.
 
+### parçagetir(buradan, burayakadar)
+ Bir _Yazı_ içerisinden bir parçayı almak için kullanılır. Eğer _buradan_ değeri 0'dan küçük olursa, başlangıç noktası 0 olarak kabul edilir. Eğer _burayakadar_ değeri _Yazı_'nın uzunluğundan büyük olursa, bitiş değeri _Yazı_'ının uzunluğu olarak kabul edilir.
+
+ **Örnek**
+ 
+ ```
+ değişkenim = "merhaba dünya"
+ gç::satıryaz(değişkenim) // merhaba dünya
+ gç::satıryaz(değişkenim.parçagetir(0, 7)) // merhaba
+ gç::satıryaz(değişkenim.parçagetir(8, 14)) // dünya
+ ```
+
 ### değiştir(bunu, bununla)
 
 Bir _Yazı_'nın tüm eşleşmelerini başka bir _Yazı_ ile değiştirir. Bu fonksiyon yeni bir _Yazı_ oluşturur ve asıl _Yazı_ içeriğini kopyalar sonrasında değiştirme işlemi yapar. Orjinal _Yazı_ içeriği değişmez.
