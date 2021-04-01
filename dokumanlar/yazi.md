@@ -6,11 +6,11 @@
 
 _Yazı_'nın uzunluğunu döndürür.
 
-### küçükharf()
+### harfleriküçült()
 
 Bütün harfleri küçük harfe çevirir. Şu an için sadece türkçe karakterlere yönelik olarak küçültme işlemi yapmaktadır.
 
-### büyükharf()
+### harfleribüyült()
 
 Bütün harfleri büyük harfe çevirir. Şu an için sadece türkçe karakterlere yönelik olarak büyütme işlemi yapmaktadır.
 
@@ -42,7 +42,7 @@ _Yazı__'nın başında ki _BeyazBoşluk_'ları temizler.
  Bir _Yazı_ içerisinden bir parçayı almak için kullanılır. Eğer _buradan_ değeri 0'dan küçük olursa, başlangıç noktası 0 olarak kabul edilir. Eğer _burayakadar_ değeri _Yazı_'nın uzunluğundan büyük olursa, bitiş değeri _Yazı_'ının uzunluğu olarak kabul edilir.
 
  **Örnek**
- 
+
  ```
  değişkenim = "merhaba dünya"
  gç::satıryaz(değişkenim) // merhaba dünya

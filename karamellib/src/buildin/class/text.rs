@@ -15,10 +15,10 @@ pub fn get_primative_class() -> BasicInnerClass {
     opcode.set_name("Yazı");
     
     opcode.add_method("uzunluk", length);
-    opcode.add_method("küçükharf", lowercase);
-    opcode.add_method("kucukharf", lowercase);
-    opcode.add_method("büyükharf", uppercase);
-    opcode.add_method("buyukharf", uppercase);
+    opcode.add_method("harfleriküçült", lowercase);
+    opcode.add_method("harflerikucult", lowercase);
+    opcode.add_method("harfleribüyült", uppercase);
+    opcode.add_method("harfleribuyult", uppercase);
     opcode.add_method("içeriyormu", contains);
     opcode.add_method("iceriyormu", contains);
     opcode.add_method("satırlar", lines);
