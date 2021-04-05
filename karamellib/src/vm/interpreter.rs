@@ -489,7 +489,7 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
                     let object  = pop!(options);
 
                     (*options.current_scope).stack[get_memory_index!(options)] = match &*object {
-                        BramaPrimative::List(value) => {
+                        /*BramaPrimative::List(value) => {
                             let indexer_value = match &*indexer {
                                 BramaPrimative::Number(number) => *number as u64,
                                 _ => return Err("Indexer must be number".to_string())
@@ -499,7 +499,7 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
                                 Some(data) => VmObject::from(data.clone()),
                                 _ => empty_primative
                             }
-                        },
+                        },*/
                         BramaPrimative::Dict(value) => {
                             let indexer_value = match &*indexer {
                                 BramaPrimative::Text(text) => &*text,

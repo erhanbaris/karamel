@@ -6,6 +6,7 @@ pub mod baseclass;
 use crate::{buildin::class::baseclass::BasicInnerClass, compiler::{BramaPrimative, GetType, function::NativeCall}};
 use std::{sync::Arc, vec::Vec};
 use lazy_static::lazy_static;
+use std::cell::RefCell;
 
 use super::ClassProperty;
 
@@ -56,6 +57,48 @@ macro_rules! nativecall_test {
 macro_rules! primative_text {
     ($text:expr) => {
         BramaPrimative::Text(Arc::new($text.to_string()))
+    };
+}
+
+#[macro_export]
+macro_rules! primative_number {
+    ($number:expr) => {
+        BramaPrimative::Number($number as f64)
+    };
+}
+
+#[macro_export]
+macro_rules! primative_list {
+    ($list:expr) => {
+        BramaPrimative::List(RefCell::new($list))
+    };
+}
+
+#[macro_export]
+macro_rules! arc_text {
+    ($text:expr) => {
+        Arc::new(primative_text!($text))
+    };
+}
+
+#[macro_export]
+macro_rules! arc_number {
+    ($number:expr) => {
+        Arc::new(BramaPrimative::Number($number as f64))
+    };
+}
+
+#[macro_export]
+macro_rules! arc_bool {
+    ($bool:expr) => {
+        Arc::new(BramaPrimative::Bool($bool))
+    };
+}
+
+#[macro_export]
+macro_rules! arc_empty {
+    () => {
+        Arc::new(BramaPrimative::Empty)
     };
 }
 

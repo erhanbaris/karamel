@@ -5,7 +5,8 @@ use karamellib::{vm::executer::{ExecutionParameters, ExecutionSource}};
 fn main() {
 
     let parameters = ExecutionParameters {
-        source: ExecutionSource::Code(r#"'erhan barış'.parçala(' ')"#.to_string()),
+        source: ExecutionSource::Code(r#"boyut = ['erhan', 'barış', 1, doğru].uzunluk()
+gç::satıryaz(boyut)"#.to_string()),
         return_opcode: true,
         return_output: true
     };

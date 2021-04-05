@@ -358,7 +358,7 @@ impl InterpreterCompiler {
 
                 options.opcodes.push(VmOpCode::CallStack as u8);
                 options.opcodes.push(arguments.len() as u8);
-                options.opcodes.push(assign_to_temp as u8);
+                options.opcodes.push(true as u8);
                 return Ok(true);
             },
             /* Variable not found, lets check for function */
@@ -433,7 +433,7 @@ impl InterpreterCompiler {
                 self.generate_func_call(func_name_expression, inner_arguments, true, upper_ast, options, storage_index)?;
                 options.opcodes.push(VmOpCode::CallStack as u8);
                 options.opcodes.push(arguments.len() as u8);
-                options.opcodes.push(assign_to_temp as u8);
+                options.opcodes.push(true as u8);
 
                 return Ok(());
             },
@@ -449,7 +449,7 @@ impl InterpreterCompiler {
                 self.generate_opcode(func_name_expression, upper_ast, options, storage_index)?;
                 options.opcodes.push(VmOpCode::CallStack as u8);
                 options.opcodes.push(arguments.len() as u8);
-                options.opcodes.push(assign_to_temp as u8);
+                options.opcodes.push(true as u8);
                 return Ok(());
             }
         }
