@@ -7,6 +7,14 @@ macro_rules! pop {
 }
 
 #[macro_export] 
+macro_rules! pop_raw {
+    ($options: expr) => {{
+        (*$options.current_scope).memory_index -= 1;
+        (*$options.current_scope).stack[(*$options.current_scope).memory_index]
+    }}
+}
+
+#[macro_export] 
 macro_rules! get_memory_index {
     ($options: expr) => {{
         (*$options.current_scope).memory_index

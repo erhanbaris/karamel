@@ -8,14 +8,12 @@ use crate::{inc_memory_index, dec_memory_index, get_memory_index};
 use crate::types::*;
 use crate::compiler::{BramaCompiler, Scope};
 
-use super::BramaPrimative;
-
 pub type NativeCallResult = Result<VmObject, String>;
 pub type NativeCall       = fn(FunctionParameter) -> NativeCallResult;
 
 pub struct FunctionParameter<'a> {
     stack: &'a Vec<VmObject>, 
-    source: Option<Arc<BramaPrimative>>, 
+    source: Option<VmObject>, 
     last_position: usize, 
     arg_size: u8,
     stdout: &'a Option<RefCell<String>>,
@@ -27,13 +25,13 @@ pub struct FunctionParameterIterator<'a> {
 }
 
 impl<'a> FunctionParameter<'a> {
-    pub fn new(stack: &'a Vec<VmObject>, source: Option<Arc<BramaPrimative>>, last_position: usize, arg_size: u8, stdout: &'a Option<RefCell<String>>, stderr: &'a Option<RefCell<String>>) -> Self {
+    pub fn new(stack: &'a Vec<VmObject>, source: Option<VmObject>, last_position: usize, arg_size: u8, stdout: &'a Option<RefCell<String>>, stderr: &'a Option<RefCell<String>>) -> Self {
         FunctionParameter { stack, source, last_position, arg_size, stdout, stderr }
     }
 
-    pub fn source(&self) -> Option<Arc<BramaPrimative>> {
+    pub fn source(&self) -> Option<VmObject> {
         match &self.source {
-            Some(primative) => Some(primative.clone()),
+            Some(primative) => Some(*primative),
             None => None
         }
     }
@@ -96,7 +94,7 @@ impl Default for FunctionType {
 }
 
 impl FunctionReference {
-    pub fn execute(&self, compiler: &mut BramaCompiler, source: Option<Arc<BramaPrimative>>) -> Result<(), String>{
+    pub fn execute(&self, compiler: &mut BramaCompiler, source: Option<VmObject>) -> Result<(), String>{
         unsafe {
             match self.callback {
                 FunctionType::Native(func) => FunctionReference::native_function_call(&self, func, source, compiler),
@@ -150,7 +148,7 @@ impl FunctionReference {
         Arc::new(reference)
     }
 
-    unsafe fn native_function_call(_: &FunctionReference, func: NativeCall, source: Option<Arc<BramaPrimative>>, compiler: &mut BramaCompiler) -> Result<(), String> {            
+    unsafe fn native_function_call(_: &FunctionReference, func: NativeCall, source: Option<VmObject>, compiler: &mut BramaCompiler) -> Result<(), String> {            
         let total_args = compiler.opcodes[compiler.opcode_index + 1];
         let call_return_assign_to_temp = compiler.opcodes[compiler.opcode_index + 2] != 0;
 
@@ -175,7 +173,7 @@ impl FunctionReference {
         }
     }
 
-    fn opcode_function_call(reference: &FunctionReference, _: Option<Arc<BramaPrimative>>, options: &mut BramaCompiler) -> Result<(), String> {
+    fn opcode_function_call(reference: &FunctionReference, _: Option<VmObject>, options: &mut BramaCompiler) -> Result<(), String> {
         let argument_size  = options.opcodes[options.opcode_index + 1];
         let call_return_assign_to_temp = options.opcodes[options.opcode_index + 2] != 0;
         let old_index = options.opcode_index + 2;

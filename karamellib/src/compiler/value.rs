@@ -20,12 +20,12 @@ pub enum BramaPrimative {
     Empty,
     Number(f64),
     Bool(bool),
-    List(RefCell<Vec<Arc<BramaPrimative>>>),
-    Dict(RefCell<HashMap<String, Arc<BramaPrimative>>>),
+    List(RefCell<Vec<VmObject>>),
+    Dict(RefCell<HashMap<String, VmObject>>),
     Atom(u64),
     Text(Arc<String>),
     Function(Arc<FunctionReference>),
-    ClassFunction(Arc<FunctionReference>, Arc<BramaPrimative>),
+    ClassFunction(Arc<FunctionReference>, VmObject),
     Class(Arc<BasicInnerClass>)
 }
 
@@ -113,8 +113,8 @@ impl From<String> for VmObject {
     }
 }
 
-impl From<Vec<Arc<BramaPrimative>>> for VmObject {
-    fn from(source: Vec<Arc<BramaPrimative>>) -> Self {
+impl From<Vec<VmObject>> for VmObject {
+    fn from(source: Vec<VmObject>) -> Self {
         VmObject::convert(Arc::new(BramaPrimative::List(RefCell::new(source))))
     }
 }
@@ -125,8 +125,8 @@ impl From<Arc<BramaPrimative>> for VmObject {
     }
 }
 
-impl From<HashMap<String, Arc<BramaPrimative>>> for VmObject {
-    fn from(source: HashMap<String, Arc<BramaPrimative>>) -> Self {
+impl From<HashMap<String, VmObject>> for VmObject {
+    fn from(source: HashMap<String, VmObject>) -> Self {
         VmObject::convert(Arc::new(BramaPrimative::Dict(RefCell::new(source))))
     }
 }
@@ -137,7 +137,7 @@ impl fmt::Debug for BramaPrimative {
             BramaPrimative::Empty => write!(f, "boş"),
             BramaPrimative::Number(number) => write!(f, "{:?}", number),
             BramaPrimative::Bool(b) => write!(f, "{:?}", b),
-            BramaPrimative::List(b) => write!(f, "{:?}", b),
+            BramaPrimative::List(b) => write!(f, "{:?}", b.borrow()),
             BramaPrimative::Dict(b) => write!(f, "{:?}", b),
             BramaPrimative::Atom(b) => write!(f, "{:?}", b),
             BramaPrimative::Text(b) => write!(f, "{:?}", b),
@@ -154,7 +154,7 @@ impl fmt::Display for BramaPrimative {
             BramaPrimative::Empty => write!(f, "boş"),
             BramaPrimative::Number(number) => write!(f, "{}", number),
             BramaPrimative::Bool(b) => write!(f, "{}", b),
-            BramaPrimative::List(b) => write!(f, "{:?}", b),
+            BramaPrimative::List(b) => write!(f, "{:?}", b.borrow()),
             BramaPrimative::Dict(b) => write!(f, "{:?}", b),
             BramaPrimative::Atom(b) => write!(f, "{}", b),
             BramaPrimative::Text(b) => write!(f, "{}", b),
@@ -185,7 +185,7 @@ impl PartialEq for BramaPrimative {
                 }
 
                 for i in 0..(*l_value).borrow().len() {
-                    if (*l_value).borrow()[i].clone() != (*r_value).borrow()[i].clone() {
+                    if (*l_value).borrow()[i].deref() != (*r_value).borrow()[i].deref() {
                         return false;
                     }
                 }
@@ -216,7 +216,7 @@ impl PartialEq for BramaPrimative {
                 for (key, l_item) in l_value.borrow().iter() {
                     match r_value.borrow().get(key) {
                         Some(r_item) => {
-                            if l_item != r_item {
+                            if l_item.deref() != r_item.deref() {
                                 return false;
                             }
                         },
@@ -255,6 +255,18 @@ impl VmObject {
             BramaPrimative::Bool(false)      => FALSE_OBJECT,
             _                                => {
                 VmObject(QNAN | POINTER_FLAG | (POINTER_MASK & (Arc::into_raw(Arc::new(primative))) as u64))
+            }
+        }
+    }
+
+    pub fn native_convert_by_ref(primative: Arc<BramaPrimative>) -> VmObject {
+        match &*primative {
+            BramaPrimative::Empty            => VmObject(QNAN | EMPTY_FLAG),
+            BramaPrimative::Number(number)   => VmObject(number.to_bits()),
+            BramaPrimative::Bool(true)       => TRUE_OBJECT,
+            BramaPrimative::Bool(false)      => FALSE_OBJECT,
+            _                                => {
+                VmObject(QNAN | POINTER_FLAG | (POINTER_MASK & (Arc::into_raw(primative)) as u64))
             }
         }
     }

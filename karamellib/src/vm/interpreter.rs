@@ -342,7 +342,7 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
                     let function = pop!(options);
                     match &*function {
                         BramaPrimative::Function(reference) => reference.execute(options, None)?,
-                        BramaPrimative::ClassFunction(reference, source) => reference.execute(options, Some(source.clone()))?,
+                        BramaPrimative::ClassFunction(reference, source) => reference.execute(options, Some(*source))?,
                         _ => {
                             log::debug!("{:?}", &*function);
                         return Err("Not callable".to_string());
@@ -382,7 +382,7 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
                     let mut list = Vec::with_capacity(total_item);
 
                     for _ in 0..total_item {
-                        list.push(pop!(options));
+                        list.push(pop_raw!(options));
                     }
                     
                     (*options.current_scope).stack[get_memory_index!(options)] = VmObject::from(list);
@@ -395,7 +395,7 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
                     let mut dict = HashMap::new();
 
                     for _ in 0..total_item {
-                        let value = pop!(options);
+                        let value = pop_raw!(options);
                         let key   = pop!(options);
                         
                         dict.insert(key.get_text(), value);
@@ -446,7 +446,7 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
 
                             match (*value).borrow().get(&indexer_value.to_string()) {
                                 Some(data) => {
-                                    if let BramaPrimative::Function(reference) = &**data {
+                                    if let BramaPrimative::Function(reference) = &*data.deref() {
                                         options.opcode_index += 1;
                                         reference.execute(options, None)?;
                                     }
@@ -459,7 +459,7 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
                  },
                 
                 VmOpCode::SetItem => {
-                    let assign_item  = pop!(options);
+                    let assign_item  = pop_raw!(options);
                     let indexer = pop!(options);
                     let object  = pop!(options);
 
@@ -486,20 +486,9 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
 
                 VmOpCode::GetItem => {
                     let indexer = pop!(options);
-                    let object  = pop!(options);
+                    let object  = pop_raw!(options);
 
-                    (*options.current_scope).stack[get_memory_index!(options)] = match &*object {
-                        /*BramaPrimative::List(value) => {
-                            let indexer_value = match &*indexer {
-                                BramaPrimative::Number(number) => *number as u64,
-                                _ => return Err("Indexer must be number".to_string())
-                            };
-
-                            match (*value).borrow().get(indexer_value as usize) {
-                                Some(data) => VmObject::from(data.clone()),
-                                _ => empty_primative
-                            }
-                        },*/
+                    (*options.current_scope).stack[get_memory_index!(options)] = match &*object.deref() {
                         BramaPrimative::Dict(value) => {
                             let indexer_value = match &*indexer {
                                 BramaPrimative::Text(text) => &*text,
@@ -512,7 +501,7 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
                             }
                         },
                         _ => {
-                            match PRIMATIVE_CLASSES.get_unchecked(object.discriminant()).get_element(indexer.clone()) {
+                            match PRIMATIVE_CLASSES.get_unchecked(object.deref().discriminant()).get_element(indexer.clone()) {
                                 Some(element) => match element {
                                     ClassProperty::Function(function) => VmObject::from(Arc::new(BramaPrimative::ClassFunction(function.clone(), object))),
                                     ClassProperty::Field(field) => VmObject::from(field.clone())

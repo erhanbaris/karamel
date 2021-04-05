@@ -6,7 +6,6 @@ pub mod baseclass;
 use crate::{buildin::class::baseclass::BasicInnerClass, compiler::{BramaPrimative, GetType, function::NativeCall}};
 use std::{sync::Arc, vec::Vec};
 use lazy_static::lazy_static;
-use std::cell::RefCell;
 
 use super::ClassProperty;
 
@@ -44,7 +43,7 @@ macro_rules! nativecall_test {
             let stdout = Some(RefCell::new(String::new()));
             let stderr = Some(RefCell::new(String::new()));
             
-            let parameter = FunctionParameter::new(&stack, Some(Arc::new($query)), 0, 0, &stdout, &stderr);
+            let parameter = FunctionParameter::new(&stack, Some(VmObject::native_convert($query)), 0, 0, &stdout, &stderr);
             let result = $function_name(parameter);
             assert!(result.is_ok());
             let object = result.unwrap().deref();
@@ -77,28 +76,28 @@ macro_rules! primative_list {
 #[macro_export]
 macro_rules! arc_text {
     ($text:expr) => {
-        Arc::new(primative_text!($text))
+        VmObject::native_convert(primative_text!($text))
     };
 }
 
 #[macro_export]
 macro_rules! arc_number {
     ($number:expr) => {
-        Arc::new(BramaPrimative::Number($number as f64))
+        VmObject::native_convert(BramaPrimative::Number($number as f64))
     };
 }
 
 #[macro_export]
 macro_rules! arc_bool {
     ($bool:expr) => {
-        Arc::new(BramaPrimative::Bool($bool))
+        VmObject::native_convert(BramaPrimative::Bool($bool))
     };
 }
 
 #[macro_export]
 macro_rules! arc_empty {
     () => {
-        Arc::new(BramaPrimative::Empty)
+        VmObject::native_convert(BramaPrimative::Empty)
     };
 }
 
@@ -112,7 +111,7 @@ macro_rules! nativecall_test_with_params {
             let stdout = Some(RefCell::new(String::new()));
             let stderr = Some(RefCell::new(String::new()));
             
-            let parameter = FunctionParameter::new(&stack, Some(Arc::new($query)), stack.len() as usize, stack.len() as u8, &stdout, &stderr);
+            let parameter = FunctionParameter::new(&stack, Some(VmObject::native_convert($query)), stack.len() as usize, stack.len() as u8, &stdout, &stderr);
             let result = $function_name(parameter);
             assert!(result.is_ok());
             let object = result.unwrap().deref();

@@ -20,7 +20,7 @@ pub fn get_primative_class() -> BasicInnerClass {
 }
 
 fn hex(parameter: FunctionParameter) -> NativeCallResult {
-    if let BramaPrimative::Number(number) = &*parameter.source().unwrap() {
+    if let BramaPrimative::Number(number) = &*parameter.source().unwrap().deref() {
         if number.fract() != 0.0 {
             let as_int: u64 = unsafe { mem::transmute(*number) };
             return Ok(VmObject::native_convert(BramaPrimative::Text(Arc::new(format!("0x{:x}", as_int)))));
@@ -32,35 +32,35 @@ fn hex(parameter: FunctionParameter) -> NativeCallResult {
 }
 
 fn round(parameter: FunctionParameter) -> NativeCallResult {
-    if let BramaPrimative::Number(number) = &*parameter.source().unwrap() {
+    if let BramaPrimative::Number(number) = &*parameter.source().unwrap().deref() {
         return Ok(VmObject::native_convert(BramaPrimative::Number(number.round())));
     }
     Ok(EMPTY_OBJECT)
 }
 
 fn ceil(parameter: FunctionParameter) -> NativeCallResult {
-    if let BramaPrimative::Number(number) = &*parameter.source().unwrap() {
+    if let BramaPrimative::Number(number) = &*parameter.source().unwrap().deref() {
         return Ok(VmObject::native_convert(BramaPrimative::Number(number.ceil())));
     }
     Ok(EMPTY_OBJECT)
 }
 
 fn floor(parameter: FunctionParameter) -> NativeCallResult {
-    if let BramaPrimative::Number(number) = &*parameter.source().unwrap() {
+    if let BramaPrimative::Number(number) = &*parameter.source().unwrap().deref() {
         return Ok(VmObject::native_convert(BramaPrimative::Number(number.floor())));
     }
     Ok(EMPTY_OBJECT)
 }
 
 fn trunc(parameter: FunctionParameter) -> NativeCallResult {
-    if let BramaPrimative::Number(number) = &*parameter.source().unwrap() {
+    if let BramaPrimative::Number(number) = &*parameter.source().unwrap().deref() {
         return Ok(VmObject::native_convert(BramaPrimative::Number(number.trunc())));
     }
     Ok(EMPTY_OBJECT)
 }
 
 fn fract(parameter: FunctionParameter) -> NativeCallResult {
-    if let BramaPrimative::Number(number) = &*parameter.source().unwrap() {
+    if let BramaPrimative::Number(number) = &*parameter.source().unwrap().deref() {
         return Ok(VmObject::native_convert(BramaPrimative::Number(number.fract())));
     }
     Ok(EMPTY_OBJECT)

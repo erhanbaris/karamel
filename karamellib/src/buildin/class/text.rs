@@ -40,14 +40,14 @@ pub fn get_primative_class() -> BasicInnerClass {
 }
 
 fn length(parameter: FunctionParameter) -> NativeCallResult {
-    if let BramaPrimative::Text(text) = &*parameter.source().unwrap() {
+    if let BramaPrimative::Text(text) = &*parameter.source().unwrap().deref() {
         return Ok(VmObject::native_convert(BramaPrimative::Number(text.chars().count() as f64)));
     }
     Ok(EMPTY_OBJECT)
 }
 
 fn contains(parameter: FunctionParameter) -> NativeCallResult {
-    if let BramaPrimative::Text(text) = &*parameter.source().unwrap() {
+    if let BramaPrimative::Text(text) = &*parameter.source().unwrap().deref() {
         return match parameter.length() {
             0 =>  n_parameter_expected!("içeriyormu", 1),
             1 => {
@@ -63,7 +63,7 @@ fn contains(parameter: FunctionParameter) -> NativeCallResult {
 }
 
 fn lowercase(parameter: FunctionParameter) -> NativeCallResult {
-    if let BramaPrimative::Text(text) = &*parameter.source().unwrap() {
+    if let BramaPrimative::Text(text) = &*parameter.source().unwrap().deref() {
         let text:String = text.chars()
         .map(|x| match x { 
             'I' => 'ı', 
@@ -81,7 +81,7 @@ fn lowercase(parameter: FunctionParameter) -> NativeCallResult {
 }
 
 fn uppercase(parameter: FunctionParameter) -> NativeCallResult {
-    if let BramaPrimative::Text(text) = &*parameter.source().unwrap() {
+    if let BramaPrimative::Text(text) = &*parameter.source().unwrap().deref() {
         let text:String = text.chars()
         .map(|x| match x { 
             'ı' => 'I', 
@@ -99,12 +99,12 @@ fn uppercase(parameter: FunctionParameter) -> NativeCallResult {
 }
 
 fn lines(parameter: FunctionParameter) -> NativeCallResult {
-    if let BramaPrimative::Text(text) = &*parameter.source().unwrap() {
+    if let BramaPrimative::Text(text) = &*parameter.source().unwrap().deref() {
         let splits = text.lines().collect::<Vec<_>>();
         let mut lines = Vec::new();
 
         for line in splits.iter() {
-            lines.push(Arc::new(BramaPrimative::Text(Arc::new(line.to_string()))));
+            lines.push(VmObject::native_convert(BramaPrimative::Text(Arc::new(line.to_string()))));
         }
         return Ok(VmObject::native_convert(BramaPrimative::List(RefCell::new(lines))));
     }
@@ -112,7 +112,7 @@ fn lines(parameter: FunctionParameter) -> NativeCallResult {
 }
 
 fn split(parameter: FunctionParameter) -> NativeCallResult {
-    if let BramaPrimative::Text(text) = &*parameter.source().unwrap() {
+    if let BramaPrimative::Text(text) = &*parameter.source().unwrap().deref() {
         return match parameter.length() {
             0 =>  n_parameter_expected!("parçala", 1),
             1 => {
@@ -122,7 +122,7 @@ fn split(parameter: FunctionParameter) -> NativeCallResult {
                         let mut lines = Vec::new();
 
                         for line in splits.iter() {
-                            lines.push(Arc::new(BramaPrimative::Text(Arc::new(line.to_string()))));
+                            lines.push(VmObject::native_convert(BramaPrimative::Text(Arc::new(line.to_string()))));
                         }
                         return Ok(VmObject::native_convert(BramaPrimative::List(RefCell::new(lines))));
                     },
@@ -136,7 +136,7 @@ fn split(parameter: FunctionParameter) -> NativeCallResult {
 }
 
 fn find(parameter: FunctionParameter) -> NativeCallResult {
-    if let BramaPrimative::Text(text) = &*parameter.source().unwrap() {
+    if let BramaPrimative::Text(text) = &*parameter.source().unwrap().deref() {
         return match parameter.length() {
             0 =>  n_parameter_expected!("parçala", 1),
             1 => {
@@ -157,7 +157,7 @@ fn find(parameter: FunctionParameter) -> NativeCallResult {
 }
 
 fn replace(parameter: FunctionParameter) -> NativeCallResult {
-    if let BramaPrimative::Text(text) = &*parameter.source().unwrap() {
+    if let BramaPrimative::Text(text) = &*parameter.source().unwrap().deref() {
         return match parameter.length() {
             0 =>  n_parameter_expected!("değiştir", 2),
             2 => {
@@ -175,28 +175,28 @@ fn replace(parameter: FunctionParameter) -> NativeCallResult {
 }
 
 fn trim(parameter: FunctionParameter) -> NativeCallResult {
-    if let BramaPrimative::Text(text) = &*parameter.source().unwrap() {
+    if let BramaPrimative::Text(text) = &*parameter.source().unwrap().deref() {
         return Ok(VmObject::native_convert(primative_text!(text.trim())));
     }
     Ok(EMPTY_OBJECT)
 }
 
 fn end_trim(parameter: FunctionParameter) -> NativeCallResult {
-    if let BramaPrimative::Text(text) = &*parameter.source().unwrap() {
+    if let BramaPrimative::Text(text) = &*parameter.source().unwrap().deref() {
         return Ok(VmObject::native_convert(primative_text!(text.trim_end())));
     }
     Ok(EMPTY_OBJECT)
 }
 
 fn start_trim(parameter: FunctionParameter) -> NativeCallResult {
-    if let BramaPrimative::Text(text) = &*parameter.source().unwrap() {
+    if let BramaPrimative::Text(text) = &*parameter.source().unwrap().deref() {
         return Ok(VmObject::native_convert(primative_text!(text.trim_start())));
     }
     Ok(EMPTY_OBJECT)
 }
 
 fn substring(parameter: FunctionParameter) -> NativeCallResult {
-    if let BramaPrimative::Text(text) = &*parameter.source().unwrap() {
+    if let BramaPrimative::Text(text) = &*parameter.source().unwrap().deref() {
         return match parameter.length() {
             0 =>  n_parameter_expected!("parçagetir", 2),
             2 => {
@@ -246,15 +246,15 @@ mod tests {
     nativecall_test!{test_uppercase_1, uppercase, BramaPrimative::Text(Arc::new("türkiye".to_string())), BramaPrimative::Text(Arc::new("TÜRKİYE".to_string()))}
     nativecall_test!{test_uppercase_2, uppercase, BramaPrimative::Text(Arc::new("ığüişçö".to_string())), BramaPrimative::Text(Arc::new("IĞÜİŞÇÖ".to_string()))}
     nativecall_test!{test_uppercase_3, uppercase, BramaPrimative::Text(Arc::new("erhan".to_string())), BramaPrimative::Text(Arc::new("ERHAN".to_string()))}
-    nativecall_test!{test_lines_1, lines, BramaPrimative::Text(Arc::new("erhan\r\n".to_string())), BramaPrimative::List(RefCell::new([Arc::new(BramaPrimative::Text(Arc::new("erhan".to_string())))].to_vec()))}
-    nativecall_test!{test_lines_2, lines, BramaPrimative::Text(Arc::new("\r\n".to_string())), BramaPrimative::List(RefCell::new([Arc::new(BramaPrimative::Text(Arc::new("".to_string())))].to_vec()))}
-    nativecall_test!{test_lines_3, lines, BramaPrimative::Text(Arc::new("erhan\r\nbarış".to_string())), BramaPrimative::List(RefCell::new([Arc::new(BramaPrimative::Text(Arc::new("erhan".to_string()))), Arc::new(BramaPrimative::Text(Arc::new("barış".to_string())))].to_vec()))}
-    nativecall_test!{test_lines_4, lines, BramaPrimative::Text(Arc::new("erhan\r\nbarış\r\n".to_string())), BramaPrimative::List(RefCell::new([Arc::new(BramaPrimative::Text(Arc::new("erhan".to_string()))), Arc::new(BramaPrimative::Text(Arc::new("barış".to_string())))].to_vec()))}
-    nativecall_test!{test_lines_5, lines, BramaPrimative::Text(Arc::new("erhan\r\nbarış\r\nkaramel".to_string())), BramaPrimative::List(RefCell::new([Arc::new(BramaPrimative::Text(Arc::new("erhan".to_string()))), Arc::new(BramaPrimative::Text(Arc::new("barış".to_string()))), Arc::new(BramaPrimative::Text(Arc::new("karamel".to_string())))].to_vec()))}
+    nativecall_test!{test_lines_1, lines, BramaPrimative::Text(Arc::new("erhan\r\n".to_string())), BramaPrimative::List(RefCell::new([VmObject::native_convert(BramaPrimative::Text(Arc::new("erhan".to_string())))].to_vec()))}
+    nativecall_test!{test_lines_2, lines, BramaPrimative::Text(Arc::new("\r\n".to_string())), BramaPrimative::List(RefCell::new([VmObject::native_convert(BramaPrimative::Text(Arc::new("".to_string())))].to_vec()))}
+    nativecall_test!{test_lines_3, lines, BramaPrimative::Text(Arc::new("erhan\r\nbarış".to_string())), BramaPrimative::List(RefCell::new([VmObject::native_convert(BramaPrimative::Text(Arc::new("erhan".to_string()))), VmObject::native_convert(BramaPrimative::Text(Arc::new("barış".to_string())))].to_vec()))}
+    nativecall_test!{test_lines_4, lines, BramaPrimative::Text(Arc::new("erhan\r\nbarış\r\n".to_string())), BramaPrimative::List(RefCell::new([VmObject::native_convert(BramaPrimative::Text(Arc::new("erhan".to_string()))), VmObject::native_convert(BramaPrimative::Text(Arc::new("barış".to_string())))].to_vec()))}
+    nativecall_test!{test_lines_5, lines, BramaPrimative::Text(Arc::new("erhan\r\nbarış\r\nkaramel".to_string())), BramaPrimative::List(RefCell::new([VmObject::native_convert(BramaPrimative::Text(Arc::new("erhan".to_string()))), VmObject::native_convert(BramaPrimative::Text(Arc::new("barış".to_string()))), VmObject::native_convert(BramaPrimative::Text(Arc::new("karamel".to_string())))].to_vec()))}
     
-    nativecall_test_with_params!{test_split_1, split, primative_text!("erhan\r\n"), [VmObject::native_convert(primative_text!("erhan"))], BramaPrimative::List(RefCell::new([Arc::new(primative_text!("")), Arc::new(primative_text!("\r\n"))].to_vec()))}
-    nativecall_test_with_params!{test_split_2, split, primative_text!("erhanbarışerhan"), [VmObject::native_convert(primative_text!("barış"))], BramaPrimative::List(RefCell::new([Arc::new(primative_text!("erhan")), Arc::new(primative_text!("erhan"))].to_vec()))}
-    nativecall_test_with_params!{test_split_3, split, primative_text!("karamel"), [VmObject::native_convert(primative_text!("erhan"))], BramaPrimative::List(RefCell::new([Arc::new(primative_text!("karamel"))].to_vec()))}
+    nativecall_test_with_params!{test_split_1, split, primative_text!("erhan\r\n"), [VmObject::native_convert(primative_text!("erhan"))], BramaPrimative::List(RefCell::new([VmObject::native_convert(primative_text!("")), VmObject::native_convert(primative_text!("\r\n"))].to_vec()))}
+    nativecall_test_with_params!{test_split_2, split, primative_text!("erhanbarışerhan"), [VmObject::native_convert(primative_text!("barış"))], BramaPrimative::List(RefCell::new([VmObject::native_convert(primative_text!("erhan")), VmObject::native_convert(primative_text!("erhan"))].to_vec()))}
+    nativecall_test_with_params!{test_split_3, split, primative_text!("karamel"), [VmObject::native_convert(primative_text!("erhan"))], BramaPrimative::List(RefCell::new([VmObject::native_convert(primative_text!("karamel"))].to_vec()))}
 
     nativecall_test_with_params!{test_contains_1, contains, primative_text!("merhaba dünya"), [VmObject::native_convert(primative_text!("erhan"))], BramaPrimative::Bool(false)}
     nativecall_test_with_params!{test_contains_2, contains, primative_text!("merhaba dünya"), [VmObject::native_convert(primative_text!("merhaba"))], BramaPrimative::Bool(true)}
