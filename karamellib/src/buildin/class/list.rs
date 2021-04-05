@@ -3,17 +3,41 @@ use crate::compiler::value::EMPTY_OBJECT;
 use crate::buildin::class::baseclass::BasicInnerClass;
 use crate::compiler::value::BramaPrimative;
 use crate::types::VmObject;
-use crate::{n_parameter_expected, expected_parameter_type};
+use crate::{n_parameter_expected, expected_parameter_type, arc_bool};
 
 pub fn get_primative_class() -> BasicInnerClass {
     let mut opcode = BasicInnerClass::default();
     opcode.set_name("Liste");
     
+    opcode.add_method("getir", get);
     opcode.add_method("uzunluk", length);
     opcode.add_method("ekle", add);
     opcode.add_method("temizle", clear);
     opcode.add_method("arayaekle", insert);
+    opcode.add_method("pop", pop);
+    opcode.add_method("sil", remove);
     opcode
+}
+
+fn get(parameter: FunctionParameter) -> NativeCallResult {
+    if let BramaPrimative::List(list) = &*parameter.source().unwrap().deref() {
+        return match parameter.length() {
+            0 =>  n_parameter_expected!("getir", 1),
+            1 => {
+                let position = match &*parameter.iter().next().unwrap().deref() {
+                    BramaPrimative::Number(number) => *number as usize,
+                    _ => return expected_parameter_type!("sıra", "Sayı")
+                };
+                
+                return match list.borrow().get(position) {
+                    Some(item) => Ok(*item),
+                    _ => Ok(EMPTY_OBJECT)
+                };
+            },
+            _ => n_parameter_expected!("getir", 1, parameter.length())
+        };
+    }
+    Ok(EMPTY_OBJECT)
 }
 
 fn length(parameter: FunctionParameter) -> NativeCallResult {
@@ -59,9 +83,49 @@ fn insert(parameter: FunctionParameter) -> NativeCallResult {
                     _ => return expected_parameter_type!("arayaekle", "Sayı")
                 };
 
-                list.borrow_mut().insert(position as usize, *item);
+                let is_in_size = position <= list.borrow().len() as f64;
+                return match is_in_size {
+                    true => {
+                        list.borrow_mut().insert(position as usize, *item); 
+                        Ok(arc_bool!(true))
+                    },
+                    false => Ok(arc_bool!(false))
+                };
             },
-            _ => return n_parameter_expected!("arayaekle", 1, parameter.length())
+            _ => return n_parameter_expected!("arayaekle", 2, parameter.length())
+        };
+    }
+    Ok(EMPTY_OBJECT)
+}
+
+fn remove(parameter: FunctionParameter) -> NativeCallResult {
+    if let BramaPrimative::List(list) = &*parameter.source().unwrap().deref() {
+        match parameter.length() {
+            0 => return n_parameter_expected!("sil", 1),
+            1 => {
+                let position = match &*parameter.iter().next().unwrap().deref() {
+                    BramaPrimative::Number(number) => *number as usize,
+                    _ => return expected_parameter_type!("sıra", "Sayı")
+                };
+                
+                let is_in_size = position <= list.borrow().len();
+                return match is_in_size {
+                    true => Ok(list.borrow_mut().remove(position)),
+                    false => Ok(arc_bool!(false))
+                };
+            },
+            _ => return n_parameter_expected!("sil", 1, parameter.length())
+        };
+    }
+    Ok(EMPTY_OBJECT)
+}
+
+fn pop(parameter: FunctionParameter) -> NativeCallResult {
+    if let BramaPrimative::List(list) = &*parameter.source().unwrap().deref() {
+        let item = list.borrow_mut().pop();
+        return match item {
+            Some(data) => Ok(data),
+            _ => Ok(EMPTY_OBJECT)
         };
     }
     Ok(EMPTY_OBJECT)
@@ -152,7 +216,7 @@ mod tests {
         let result = add(FunctionParameter::new(&[arc_text!("dünya")].to_vec(), Some(obj), 1 as usize, 1 as u8, &stdout, &stderr));
         assert!(result.is_ok());
 
-        
+
         let parameter = FunctionParameter::new(&stack, Some(obj), stack.len() as usize, stack.len() as u8, &stdout, &stderr);
         let result = clear(parameter);
         assert!(result.is_ok());
