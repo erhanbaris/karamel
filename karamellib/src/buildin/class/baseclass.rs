@@ -33,6 +33,12 @@ pub struct BasicInnerClass {
     fn get_element(&self, field: Arc<BramaPrimative>) -> Option<&ClassProperty> {
         match &*field {
             BramaPrimative::Text(text) => self.config.properties.get(&**text),
+            BramaPrimative::Number(index) => {
+                match &self.config.indexer {
+                    Some(function) => None,
+                    None => None
+                }
+            }
             _ => None
         }
     }
@@ -67,6 +73,10 @@ pub struct BasicInnerClass {
             },
             _ => None
         }
+    }
+
+    fn set_indexer(&mut self, indexer: Arc<FunctionReference>) {
+        self.config.indexer = Some(indexer);
     }
  }
 

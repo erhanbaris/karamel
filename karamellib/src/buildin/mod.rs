@@ -62,7 +62,8 @@ pub struct ClassConfig {
     pub properties: HashMap<String, ClassProperty>,
     pub is_readonly: bool,
     pub is_buildin: bool,
-    pub is_static: bool
+    pub is_static: bool,
+    pub indexer: Option<Arc<FunctionReference>>
 }
 
 pub trait Class: GetType {
@@ -79,4 +80,6 @@ pub trait Class: GetType {
     
     fn get_method(&self, name: &str) -> Option<Arc<FunctionReference>>;
     fn get_property(&self, name: &str) -> Option<Arc<BramaPrimative>>;
+
+    fn set_indexer(&mut self, indexer: Arc<FunctionReference>);
 }

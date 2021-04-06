@@ -3,6 +3,7 @@ use crate::compiler::value::EMPTY_OBJECT;
 use crate::buildin::class::baseclass::BasicInnerClass;
 use crate::compiler::value::BramaPrimative;
 use crate::types::VmObject;
+use crate::compiler::function::FunctionReference;
 use crate::{n_parameter_expected, expected_parameter_type, arc_bool};
 
 pub fn get_primative_class() -> BasicInnerClass {
@@ -10,12 +11,15 @@ pub fn get_primative_class() -> BasicInnerClass {
     opcode.set_name("Liste");
     
     opcode.add_method("getir", get);
+    opcode.add_method("güncelle", set);
+    opcode.add_method("guncelle", set);
     opcode.add_method("uzunluk", length);
     opcode.add_method("ekle", add);
     opcode.add_method("temizle", clear);
     opcode.add_method("arayaekle", insert);
     opcode.add_method("pop", pop);
     opcode.add_method("sil", remove);
+    opcode.set_indexer(FunctionReference::buildin_function(set, "indexer".to_string()));
     opcode
 }
 
@@ -35,6 +39,34 @@ fn get(parameter: FunctionParameter) -> NativeCallResult {
                 };
             },
             _ => n_parameter_expected!("getir", 1, parameter.length())
+        };
+    }
+    Ok(EMPTY_OBJECT)
+}
+
+fn set(parameter: FunctionParameter) -> NativeCallResult {
+    if let BramaPrimative::List(list) = &*parameter.source().unwrap().deref() {
+        return match parameter.length() {
+            0 =>  n_parameter_expected!("güncelle", 2),
+            2 => {
+                let mut iter = parameter.iter();
+                let (position_object, item) = (&*iter.next().unwrap().deref(), &*iter.next().unwrap());
+
+                let position = match position_object {
+                    BramaPrimative::Number(number) => *number,
+                    _ => return expected_parameter_type!("arayaekle", "Sayı")
+                };
+
+                let is_in_size = position <= list.borrow().len() as f64;
+                return match is_in_size {
+                    true => {
+                        list.borrow_mut()[position as usize] = *item; 
+                        Ok(arc_bool!(true))
+                    },
+                    false => Ok(arc_bool!(false))
+                };
+            },
+            _ => n_parameter_expected!("güncelle", 2, parameter.length())
         };
     }
     Ok(EMPTY_OBJECT)

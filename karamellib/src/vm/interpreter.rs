@@ -486,9 +486,10 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
 
                 VmOpCode::GetItem => {
                     let indexer = pop!(options);
-                    let object  = pop_raw!(options);
+                    let raw_object  = pop_raw!(options);
+                    let object = &*raw_object.deref();
 
-                    (*options.current_scope).stack[get_memory_index!(options)] = match &*object.deref() {
+                    (*options.current_scope).stack[get_memory_index!(options)] = match object {
                         BramaPrimative::Dict(value) => {
                             let indexer_value = match &*indexer {
                                 BramaPrimative::Text(text) => &*text,
@@ -501,9 +502,9 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
                             }
                         },
                         _ => {
-                            match PRIMATIVE_CLASSES.get_unchecked(object.deref().discriminant()).get_element(indexer.clone()) {
+                            match PRIMATIVE_CLASSES.get_unchecked(object.discriminant()).get_element(indexer.clone()) {
                                 Some(element) => match element {
-                                    ClassProperty::Function(function) => VmObject::from(Arc::new(BramaPrimative::ClassFunction(function.clone(), object))),
+                                    ClassProperty::Function(function) => VmObject::from(Arc::new(BramaPrimative::ClassFunction(function.clone(), raw_object))),
                                     ClassProperty::Field(field) => VmObject::from(field.clone())
                                 },
                                 _ => empty_primative
