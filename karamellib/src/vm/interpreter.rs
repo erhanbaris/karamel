@@ -1,13 +1,16 @@
 use crate::{pop, inc_memory_index, dec_memory_index, get_memory_index};
 use crate::types::{VmObject};
 use crate::compiler::*;
-use std::rc::Rc;
+use std::sync::Arc;
 use std::mem;
 use std::collections::HashMap;
 use std::io::stdout;
 use log_update::LogUpdate;
 use colored::*;
 use std::io::{self, Write};
+use crate::buildin::class::PRIMATIVE_CLASSES;
+use crate::buildin::ClassProperty;
+use crate::buildin::Class;
 
 #[cfg(all(feature = "dumpOpcodes"))]
 pub unsafe fn dump_opcode<W: Write>(index: usize, options: &mut BramaCompiler, log_update: &mut LogUpdate<W>) {
@@ -131,11 +134,15 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
 {
     let mut log_update = LogUpdate::new(stdout()).unwrap();
     
+    #[cfg(feature = "dumpMemory")] {
+        options.storages[0].dump();
+    }
+    
     #[cfg(all(feature = "dumpOpcodes"))] {
         dump_opcode(0, options, &mut log_update);
     }
     {
-        let empty_primative: VmObject  = VmObject::convert(Rc::new(BramaPrimative::Empty));
+        let empty_primative: VmObject  = VmObject::convert(Arc::new(BramaPrimative::Empty));
         let opcode_size   = options.opcodes.len();
 
         options.scopes[options.scope_index] = Scope {
@@ -171,7 +178,7 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
 
                     (*options.current_scope).stack[get_memory_index!(options)] = match (&*left, &*right) {
                         (BramaPrimative::Number(l_value),  BramaPrimative::Number(r_value)) => VmObject::from(l_value + r_value),
-                        (BramaPrimative::Text(l_value),    BramaPrimative::Text(r_value))   => VmObject::from(Rc::new((&**l_value).to_owned() + &**r_value)),
+                        (BramaPrimative::Text(l_value),    BramaPrimative::Text(r_value))   => VmObject::from(Arc::new((&**l_value).to_owned() + &**r_value)),
                         _ => empty_primative
                     };
                     inc_memory_index!(options, 1);
@@ -324,7 +331,7 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
                     options.opcode_index += 1;
                     
                     if let BramaPrimative::Function(reference) = &*(*options.current_scope).memory[func_location].deref() {
-                        reference.execute(options)?;
+                        reference.execute(options, None)?;
                     }
                     else {
                         return Err("Not callable".to_string());
@@ -333,14 +340,14 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
 
                 VmOpCode::CallStack => {
                     let function = pop!(options);
-                    
-                    if let BramaPrimative::Function(reference) = &*function {
-                        reference.execute(options)?;
-                    }
-                    else {
-                        log::debug!("{:?}", &*function);
+                    match &*function {
+                        BramaPrimative::Function(reference) => reference.execute(options, None)?,
+                        BramaPrimative::ClassFunction(reference, source) => reference.execute(options, Some(*source))?,
+                        _ => {
+                            log::debug!("{:?}", &*function);
                         return Err("Not callable".to_string());
-                    }
+                        }
+                    };
                 },
 
                 VmOpCode::Return => {
@@ -375,7 +382,7 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
                     let mut list = Vec::with_capacity(total_item);
 
                     for _ in 0..total_item {
-                        list.push(pop!(options));
+                        list.push(pop_raw!(options));
                     }
                     
                     (*options.current_scope).stack[get_memory_index!(options)] = VmObject::from(list);
@@ -388,7 +395,7 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
                     let mut dict = HashMap::new();
 
                     for _ in 0..total_item {
-                        let value = pop!(options);
+                        let value = pop_raw!(options);
                         let key   = pop!(options);
                         
                         dict.insert(key.get_text(), value);
@@ -439,9 +446,9 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
 
                             match (*value).borrow().get(&indexer_value.to_string()) {
                                 Some(data) => {
-                                    if let BramaPrimative::Function(reference) = &**data {
+                                    if let BramaPrimative::Function(reference) = &*data.deref() {
                                         options.opcode_index += 1;
-                                        reference.execute(options)?;
+                                        reference.execute(options, None)?;
                                     }
                                 },
                                 _ => ()
@@ -452,7 +459,7 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
                  },
                 
                 VmOpCode::SetItem => {
-                    let assign_item  = pop!(options);
+                    let assign_item  = pop_raw!(options);
                     let indexer = pop!(options);
                     let object  = pop!(options);
 
@@ -479,20 +486,9 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
 
                 VmOpCode::GetItem => {
                     let indexer = pop!(options);
-                    let object  = pop!(options);
+                    let object  = pop_raw!(options);
 
-                    (*options.current_scope).stack[get_memory_index!(options)] = match &*object {
-                        BramaPrimative::List(value) => {
-                            let indexer_value = match &*indexer {
-                                BramaPrimative::Number(number) => *number as u64,
-                                _ => return Err("Indexer must be number".to_string())
-                            };
-
-                            match (*value).borrow().get(indexer_value as usize) {
-                                Some(data) => VmObject::from(data.clone()),
-                                _ => empty_primative
-                            }
-                        },
+                    (*options.current_scope).stack[get_memory_index!(options)] = match &*object.deref() {
                         BramaPrimative::Dict(value) => {
                             let indexer_value = match &*indexer {
                                 BramaPrimative::Text(text) => &*text,
@@ -503,8 +499,16 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
                                 Some(data) => VmObject::from(data.clone()),
                                 _ => empty_primative
                             }
-                        }
-                        _ => empty_primative
+                        },
+                        _ => {
+                            match PRIMATIVE_CLASSES.get_unchecked(object.deref().discriminant()).get_element(indexer.clone()) {
+                                Some(element) => match element {
+                                    ClassProperty::Function(function) => VmObject::from(Arc::new(BramaPrimative::ClassFunction(function.clone(), object))),
+                                    ClassProperty::Field(field) => VmObject::from(field.clone())
+                                },
+                                _ => empty_primative
+                            }
+                        },
                     };
                     inc_memory_index!(options, 1);
                 },

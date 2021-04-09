@@ -1,9 +1,10 @@
-use crate::compiler::{BramaCompiler, function::{NativeCallResult, NativeCall}};
+use crate::compiler::{EMPTY_OBJECT, function::{FunctionParameter, NativeCall, NativeCallResult}};
 use crate::types::VmObject;
 use crate::buildin::{Module, Class};
 use crate::compiler::GetType;
+use crate::{n_parameter_expected};
 use std::collections::HashMap;
-use std::rc::Rc;
+use std::sync::Arc;
 
 
 #[derive(Clone)]
@@ -31,7 +32,7 @@ impl Module for BaseFunctionsModule {
         }
     }
 
-    fn get_module(&self, _: &str) -> Option<Rc<dyn Module>> {
+    fn get_module(&self, _: &str) -> Option<Arc<dyn Module>> {
         None
     }
 
@@ -39,22 +40,24 @@ impl Module for BaseFunctionsModule {
         [("tür_bilgisi", Self::type_info as NativeCall)].to_vec()
     }
 
-    fn get_modules(&self) -> HashMap<String, Rc<dyn Module>> {
+    fn get_modules(&self) -> HashMap<String, Arc<dyn Module>> {
         HashMap::new()
     }
 
-    fn get_classes(&self) -> Vec<Rc<dyn Class>> {
+    fn get_classes(&self) -> Vec<Arc<dyn Class>> {
         Vec::new()
     }
 }
 
 impl BaseFunctionsModule  {
-    pub fn type_info(compiler: &mut BramaCompiler, last_position: usize, total_args: u8) -> NativeCallResult {        
-        if total_args > 1 {
-            return Err(("More than 1 argument passed".to_string(), 0, 0));
+    pub fn type_info(parameter: FunctionParameter) -> NativeCallResult {        
+        if parameter.length() > 1 {
+            return n_parameter_expected!("tür_bilgisi", 1);
         }
 
-        let arg = unsafe {(*compiler.current_scope).stack[last_position - 1].deref()};
-        Ok(VmObject::from(Rc::new(arg.get_type())))
+        match parameter.iter().next() {
+            Some(arg) => Ok(VmObject::from(Arc::new(arg.deref().get_type()))),
+            None => Ok(EMPTY_OBJECT)
+        }
     }
 }

@@ -1,14 +1,70 @@
-use std::vec::Vec;
-use std::rc::Rc;
+use std::{iter::Skip, sync::Arc, vec::Vec};
 use std::cell::RefCell;
 use std::cell::Cell;
+use std::slice::Iter;
+use std::iter::Take;
 
 use crate::{inc_memory_index, dec_memory_index, get_memory_index};
 use crate::types::*;
 use crate::compiler::{BramaCompiler, Scope};
 
-pub type NativeCallResult = Result<VmObject, (String, u32, u32)>;
-pub type NativeCall       = fn(compiler: &mut BramaCompiler, last_position: usize, arg_size: u8) -> NativeCallResult;
+pub type NativeCallResult = Result<VmObject, String>;
+pub type NativeCall       = fn(FunctionParameter) -> NativeCallResult;
+
+pub struct FunctionParameter<'a> {
+    stack: &'a Vec<VmObject>, 
+    source: Option<VmObject>, 
+    last_position: usize, 
+    arg_size: u8,
+    stdout: &'a Option<RefCell<String>>,
+    stderr: &'a Option<RefCell<String>>
+}
+
+pub struct FunctionParameterIterator<'a> {
+    iter: Take<Skip<Iter<'a, VmObject>>>
+}
+
+impl<'a> FunctionParameter<'a> {
+    pub fn new(stack: &'a Vec<VmObject>, source: Option<VmObject>, last_position: usize, arg_size: u8, stdout: &'a Option<RefCell<String>>, stderr: &'a Option<RefCell<String>>) -> Self {
+        FunctionParameter { stack, source, last_position, arg_size, stdout, stderr }
+    }
+
+    pub fn source(&self) -> Option<VmObject> {
+        match &self.source {
+            Some(primative) => Some(*primative),
+            None => None
+        }
+    }
+
+    pub fn length(&self) -> u8 {
+        self.arg_size
+    }
+
+    pub fn write_to_stdout<'b>(&self, data: &'b str) {
+        match self.stdout {
+            Some(out) => match out.try_borrow_mut() {
+                Ok(mut out_mut) => out_mut.push_str(data),
+                _ => println!("{}", data)
+            },
+            _ => println!("{}", data)
+        };
+    }
+
+    pub fn iter(&self) -> FunctionParameterIterator {
+        FunctionParameterIterator 
+        { 
+            iter: self.stack.iter().skip((self.last_position as usize - 1) - (self.arg_size as usize - 1)).take(self.arg_size as usize).clone()
+        }
+    }
+}
+
+impl<'a> Iterator for FunctionParameterIterator<'a> {
+    type Item = &'a VmObject;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.iter.next()
+    }
+}
 
 #[derive(Clone)]
 #[derive(Default)]
@@ -24,6 +80,9 @@ pub struct FunctionReference {
     pub used_locations: RefCell<Vec<u16>>
 }
 
+unsafe impl Send for FunctionReference {}
+unsafe impl Sync for FunctionReference {}
+
 #[derive(Clone)]
 pub enum FunctionType {
     Native(NativeCall),
@@ -35,16 +94,31 @@ impl Default for FunctionType {
 }
 
 impl FunctionReference {
-    pub fn execute(&self, compiler: &mut BramaCompiler) -> Result<(), String>{
+    pub fn execute(&self, compiler: &mut BramaCompiler, source: Option<VmObject>) -> Result<(), String>{
         unsafe {
             match self.callback {
-                FunctionType::Native(func) => FunctionReference::native_function_call(&self, func, compiler),
-                FunctionType::Opcode => FunctionReference::opcode_function_call(&self,  compiler)
+                FunctionType::Native(func) => FunctionReference::native_function_call(&self, func, source, compiler),
+                FunctionType::Opcode => FunctionReference::opcode_function_call(&self, source,  compiler)
             }
         }
     }
 
-    pub fn native_function(func: NativeCall, name: String, module_path: Vec<String>, framework: String) -> Rc<FunctionReference> {
+    pub fn buildin_function(func: NativeCall, name: String) -> Arc<FunctionReference> {
+        let reference = FunctionReference {
+            callback: FunctionType::Native(func),
+            framework: "".to_string(),
+            module_path: Vec::new(),
+            name,
+            arguments: Vec::new(),
+            storage_index: 0,
+            opcode_location: Cell::new(0),
+            used_locations: RefCell::new(Vec::new()),
+            defined_storage_index: 0
+        };
+        Arc::new(reference)
+    }
+
+    pub fn native_function(func: NativeCall, name: String, module_path: Vec<String>, framework: String) -> Arc<FunctionReference> {
         let reference = FunctionReference {
             callback: FunctionType::Native(func),
             framework,
@@ -56,10 +130,10 @@ impl FunctionReference {
             used_locations: RefCell::new(Vec::new()),
             defined_storage_index: 0
         };
-        Rc::new(reference)
+        Arc::new(reference)
     }
 
-    pub fn opcode_function(name: String, arguments: Vec<String>, module_path: Vec<String>, framework: String, storage_index: usize, defined_storage_index: usize) -> Rc<FunctionReference> {
+    pub fn opcode_function(name: String, arguments: Vec<String>, module_path: Vec<String>, framework: String, storage_index: usize, defined_storage_index: usize) -> Arc<FunctionReference> {
         let reference = FunctionReference {
             callback: FunctionType::Opcode,
             framework,
@@ -71,14 +145,16 @@ impl FunctionReference {
             opcode_location: Cell::new(0),
             used_locations: RefCell::new(Vec::new())
         };
-        Rc::new(reference)
+        Arc::new(reference)
     }
 
-    unsafe fn native_function_call(_: &FunctionReference, func: NativeCall, compiler: &mut BramaCompiler) -> Result<(), String> {            
+    unsafe fn native_function_call(_: &FunctionReference, func: NativeCall, source: Option<VmObject>, compiler: &mut BramaCompiler) -> Result<(), String> {            
         let total_args = compiler.opcodes[compiler.opcode_index + 1];
         let call_return_assign_to_temp = compiler.opcodes[compiler.opcode_index + 2] != 0;
+
+        let parameter = FunctionParameter::new(&(*compiler.current_scope).stack, source, get_memory_index!(compiler), total_args, &compiler.stdout, &compiler.stderr);
         
-        match func(compiler, get_memory_index!(compiler), total_args) {
+        match func(parameter) {
             Ok(result) => {
                 dec_memory_index!(compiler, total_args as usize);
 
@@ -90,14 +166,14 @@ impl FunctionReference {
                 compiler.opcode_index += 2;
                 Ok(())
             },
-            Err((error, _, _)) => {
+            Err(error) => {
                 println!("{:?}", error);
                 Err(error)
             }
         }
     }
 
-    fn opcode_function_call(reference: &FunctionReference, options: &mut BramaCompiler) -> Result<(), String> {
+    fn opcode_function_call(reference: &FunctionReference, _: Option<VmObject>, options: &mut BramaCompiler) -> Result<(), String> {
         let argument_size  = options.opcodes[options.opcode_index + 1];
         let call_return_assign_to_temp = options.opcodes[options.opcode_index + 2] != 0;
         let old_index = options.opcode_index + 2;

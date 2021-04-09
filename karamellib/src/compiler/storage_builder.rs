@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::sync::Arc;
 use std::cmp::max;
 
 use crate::{compiler::ast::BramaAstType};
@@ -61,7 +61,7 @@ impl StorageBuilder {
                 let function_search = options.find_function(string.to_string(), Vec::new(), "".to_string(), storage_index);
                 match function_search {
                     Some(reference) => {
-                        options.storages.get_mut(storage_index).unwrap().add_constant(Rc::new(BramaPrimative::Function(reference)));
+                        options.storages.get_mut(storage_index).unwrap().add_constant(Arc::new(BramaPrimative::Function(reference)));
                     },
                     None => ()
                 };
@@ -77,7 +77,7 @@ impl StorageBuilder {
 
                 let function_search = options.find_function(name, module_path, "".to_string(), storage_index);
                 if let Some(reference) = function_search {
-                    options.storages.get_mut(storage_index).unwrap().add_constant(Rc::new(BramaPrimative::Function(reference)));
+                    options.storages.get_mut(storage_index).unwrap().add_constant(Arc::new(BramaPrimative::Function(reference)));
                 };
                 compiler_option.max_stack = max(1, compiler_option.max_stack);
                 1
@@ -147,28 +147,29 @@ impl StorageBuilder {
                     max_temp += self.get_temp_count_from_ast(arg, ast, options, storage_index, compiler_option);
                 }
 
-                compiler_option.max_stack = max(max_temp, compiler_option.max_stack);
+                //compiler_option.max_stack = max(max_temp, compiler_option.max_stack);
 
                 match &**func_name_expression {
                     BramaAstType::Symbol(function_name) => {
                         let function_search = options.find_function(function_name.to_string(), Vec::new(), "".to_string(), storage_index);
                         if let Some(reference) = function_search {
-                            options.storages.get_mut(storage_index).unwrap().add_constant(Rc::new(BramaPrimative::Function(reference)));
+                            options.storages.get_mut(storage_index).unwrap().add_constant(Arc::new(BramaPrimative::Function(reference)));
                         }
                         else {
-                            options.storages.get_mut(storage_index).unwrap().add_constant(Rc::new(BramaPrimative::Text(Rc::new(function_name.to_string()))));
+                            options.storages.get_mut(storage_index).unwrap().add_constant(Arc::new(BramaPrimative::Text(Arc::new(function_name.to_string()))));
                         }
                     },
                     BramaAstType::FunctionMap(names) => {
                         let function_search = options.find_function(names[names.len() - 1].to_string(), names[0..(names.len()-1)].to_vec(), "".to_string(), storage_index);
                         if let Some(reference) = function_search {
-                            options.storages.get_mut(storage_index).unwrap().add_constant(Rc::new(BramaPrimative::Function(reference)));
+                            options.storages.get_mut(storage_index).unwrap().add_constant(Arc::new(BramaPrimative::Function(reference)));
                         };
                     },
                     _ => {
                         log::debug!("{:?}", func_name_expression);
                         let name_expression_count = self.get_temp_count_from_ast(func_name_expression, ast, options, storage_index, compiler_option);
                         compiler_option.max_stack = max(name_expression_count, compiler_option.max_stack);
+                        compiler_option.max_stack += max_temp;
                     }
                 };
 
@@ -202,7 +203,7 @@ impl StorageBuilder {
             },
 
             BramaAstType::Primative(primative) => {
-                options.storages.get_mut(storage_index).unwrap().add_constant(Rc::clone(primative));
+                options.storages.get_mut(storage_index).unwrap().add_constant(Arc::clone(primative));
                 compiler_option.max_stack = max(1, compiler_option.max_stack);
                 1
             },
@@ -245,7 +246,7 @@ impl StorageBuilder {
                 options.add_function(function.clone());
                 options.storages.push(StaticStorage::new());
                 options.storages[new_storage_index].set_parent_location(storage_index);
-                options.storages[storage_index].add_constant(Rc::new(BramaPrimative::Function(function.clone())));
+                options.storages[storage_index].add_constant(Arc::new(BramaPrimative::Function(function.clone())));
 
                 for argument in arguments {
                     options.storages[new_storage_index].add_variable(argument);
@@ -278,7 +279,7 @@ impl StorageBuilder {
                 },
 
                 BramaAstType::None => {
-                    options.storages.get_mut(storage_index).unwrap().add_constant(Rc::new(BramaPrimative::Empty));
+                    options.storages.get_mut(storage_index).unwrap().add_constant(Arc::new(BramaPrimative::Empty));
                     compiler_option.max_stack = max(1, compiler_option.max_stack);
                     1
                 },

@@ -11,6 +11,8 @@ bitflags = "1.2"
 log-update = "*"
 colored = "2"
 log = "0.4.14"
+lazy_static = "1.4.0"
+unicode-width = "0.1.7"
 
 [features]
 dumpExecutionOpcode = []
@@ -19,7 +21,7 @@ dumpOpcodes = []
 liveOpcodeView = []
 wasmBuild = []
 unittest = []
-default = ["dumpOpcodes"]
+default = []
 
 [lib]
 crate-type = ["cdylib", "rlib"]

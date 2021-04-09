@@ -1,5 +1,5 @@
 use std::vec::Vec;
-use std::rc::Rc;
+use std::sync::Arc;
 use std::cell::RefCell;
 
 use std::ptr;
@@ -40,8 +40,8 @@ impl Scope {
 
 pub struct FunctionDefine {
     arguments: Vec<String>,
-    body: Rc<BramaAstType>,
-    reference: Rc<FunctionReference>
+    body: Arc<BramaAstType>,
+    reference: Arc<FunctionReference>
 }
 
 pub struct BramaCompiler {
@@ -54,9 +54,9 @@ pub struct BramaCompiler {
     pub scopes: Vec<Scope>,
     pub current_scope: *mut Scope,
     pub scope_index: usize,
-    pub functions : Vec<Rc<FunctionReference>>,
-    pub stdout: Option<String>,
-    pub stderr: Option<String>
+    pub functions : Vec<Arc<FunctionReference>>,
+    pub stdout: Option<RefCell<String>>,
+    pub stderr: Option<RefCell<String>>
 }
 
 impl  BramaCompiler {
@@ -104,11 +104,11 @@ impl  BramaCompiler {
         }
     }
 
-    pub fn add_function(&mut self, information: Rc<FunctionReference>) {
+    pub fn add_function(&mut self, information: Arc<FunctionReference>) {
         self.functions.push(information);
     }
 
-    pub fn find_function(&self, name: String, module_path: Vec<String>, framework: String, start_storage_index: usize) -> Option<Rc<FunctionReference>> {
+    pub fn find_function(&self, name: String, module_path: Vec<String>, framework: String, start_storage_index: usize) -> Option<Arc<FunctionReference>> {
         let mut search_storage = start_storage_index;
         loop {
 
@@ -259,7 +259,7 @@ impl InterpreterCompiler {
         }
     }
 
-    fn generate_primative(&self, primative: Rc<BramaPrimative>, _: &BramaAstType, options: &mut BramaCompiler, storage_index: usize) -> CompilerResult {
+    fn generate_primative(&self, primative: Arc<BramaPrimative>, _: &BramaAstType, options: &mut BramaCompiler, storage_index: usize) -> CompilerResult {
         let storage = &options.storages[storage_index];
 
         let result = storage.get_constant_location(primative);
@@ -283,7 +283,7 @@ impl InterpreterCompiler {
         let function_search = options.find_function(name, module_path, "".to_string(), storage_index);
         match function_search {
             Some(reference) => {
-                let result = storage.get_constant_location(Rc::new(BramaPrimative::Function(reference)));
+                let result = storage.get_constant_location(Arc::new(BramaPrimative::Function(reference)));
                 match result {
                     Some(index) => {
                         options.opcodes.push(VmOpCode::Load as u8);
@@ -300,7 +300,7 @@ impl InterpreterCompiler {
     fn generate_none(&self, options: &mut BramaCompiler, storage_index: usize) -> CompilerResult {
         let storage = &options.storages[storage_index];
 
-        let result = storage.get_constant_location(Rc::new(BramaPrimative::Empty));
+        let result = storage.get_constant_location(Arc::new(BramaPrimative::Empty));
         match result {
             Some(index) => {
                 options.opcodes.push(VmOpCode::Load as u8);
@@ -335,7 +335,7 @@ impl InterpreterCompiler {
 
         match function_search {
             Some(function_ref) => {
-                let search_location = options.storages[storage_index].get_constant_location(Rc::new(BramaPrimative::Function(function_ref)));
+                let search_location = options.storages[storage_index].get_constant_location(Arc::new(BramaPrimative::Function(function_ref)));
                 match search_location {
                     Some(location) => {
                         options.opcodes.push(VmOpCode::Call as u8);
@@ -358,7 +358,7 @@ impl InterpreterCompiler {
 
                 options.opcodes.push(VmOpCode::CallStack as u8);
                 options.opcodes.push(arguments.len() as u8);
-                options.opcodes.push(assign_to_temp as u8);
+                options.opcodes.push(true as u8);
                 return Ok(true);
             },
             /* Variable not found, lets check for function */
@@ -381,7 +381,7 @@ impl InterpreterCompiler {
             match &**func_name_expression {
                 BramaAstType::Symbol(function_name) => {
                     
-                    let search_location = options.storages[storage_index].get_constant_location(Rc::new(BramaPrimative::Text(Rc::new(function_name.to_string()))));
+                    let search_location = options.storages[storage_index].get_constant_location(Arc::new(BramaPrimative::Text(Arc::new(function_name.to_string()))));
                     match search_location {
                         Some(location) => {
                             options.opcodes.push(VmOpCode::CallItem as u8);
@@ -433,7 +433,7 @@ impl InterpreterCompiler {
                 self.generate_func_call(func_name_expression, inner_arguments, true, upper_ast, options, storage_index)?;
                 options.opcodes.push(VmOpCode::CallStack as u8);
                 options.opcodes.push(arguments.len() as u8);
-                options.opcodes.push(assign_to_temp as u8);
+                options.opcodes.push(true as u8);
 
                 return Ok(());
             },
@@ -449,7 +449,7 @@ impl InterpreterCompiler {
                 self.generate_opcode(func_name_expression, upper_ast, options, storage_index)?;
                 options.opcodes.push(VmOpCode::CallStack as u8);
                 options.opcodes.push(arguments.len() as u8);
-                options.opcodes.push(assign_to_temp as u8);
+                options.opcodes.push(true as u8);
                 return Ok(());
             }
         }

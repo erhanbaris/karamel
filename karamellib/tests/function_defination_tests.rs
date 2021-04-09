@@ -9,7 +9,7 @@ mod tests {
     use crate::karamellib::syntax::*;
     use crate::karamellib::compiler::value::BramaPrimative;
     use crate::karamellib::compiler::ast::BramaAstType;
-    use std::rc::Rc;
+    use std::sync::Arc;
 
     #[warn(unused_macros)]
     macro_rules! test_compare {
@@ -33,10 +33,10 @@ fonk test():
     erhan=123"#, Ok(BramaAstType::FunctionDefination {
         name: "test".to_string(),
         arguments: [].to_vec(),
-        body: Rc::new(BramaAstType::Block([BramaAstType::Assignment {
+        body: Arc::new(BramaAstType::Block([BramaAstType::Assignment {
             variable: Box::new(BramaAstType::Symbol("erhan".to_string())),
             operator: BramaOperatorType::Assign,
-            expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123.0))))
+            expression: Box::new(BramaAstType::Primative(Arc::new(BramaPrimative::Number(123.0))))
         },
         BramaAstType::Return(Box::new(BramaAstType::None))].to_vec()))
     }));
@@ -45,10 +45,10 @@ fonk test(a):
     erhan=123"#, Ok(BramaAstType::FunctionDefination {
         name: "test".to_string(),
         arguments: ["a".to_string()].to_vec(),
-        body: Rc::new(BramaAstType::Block([BramaAstType::Assignment {
+        body: Arc::new(BramaAstType::Block([BramaAstType::Assignment {
             variable: Box::new(BramaAstType::Symbol("erhan".to_string())),
             operator: BramaOperatorType::Assign,
-            expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123.0))))
+            expression: Box::new(BramaAstType::Primative(Arc::new(BramaPrimative::Number(123.0))))
         },
         BramaAstType::Return(Box::new(BramaAstType::None))].to_vec()))
     }));
@@ -57,10 +57,10 @@ fonk test(a, b    ,   c):
     erhan=123"#, Ok(BramaAstType::FunctionDefination {
         name: "test".to_string(),
         arguments: ["a".to_string(), "b".to_string(), "c".to_string()].to_vec(),
-        body: Rc::new(BramaAstType::Block([BramaAstType::Assignment {
+        body: Arc::new(BramaAstType::Block([BramaAstType::Assignment {
             variable: Box::new(BramaAstType::Symbol("erhan".to_string())),
             operator: BramaOperatorType::Assign,
-            expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123.0))))
+            expression: Box::new(BramaAstType::Primative(Arc::new(BramaPrimative::Number(123.0))))
         },
         BramaAstType::Return(Box::new(BramaAstType::None))].to_vec()))
     }));
@@ -69,10 +69,10 @@ fonk test:
     erhan=123"#, Ok(BramaAstType::FunctionDefination {
             name: "test".to_string(),
             arguments: [].to_vec(),
-            body: Rc::new(BramaAstType::Block([BramaAstType::Assignment {
+            body: Arc::new(BramaAstType::Block([BramaAstType::Assignment {
                 variable: Box::new(BramaAstType::Symbol("erhan".to_string())),
                 operator: BramaOperatorType::Assign,
-                expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123.0))))
+                expression: Box::new(BramaAstType::Primative(Arc::new(BramaPrimative::Number(123.0))))
             },
             BramaAstType::Return(Box::new(BramaAstType::None))].to_vec()))
         }));
@@ -84,10 +84,10 @@ fonk test   :
         erhan=123"#, Ok(BramaAstType::FunctionDefination {
                 name: "test".to_string(),
                 arguments: [].to_vec(),
-                body: Rc::new(BramaAstType::Block([BramaAstType::Assignment {
+                body: Arc::new(BramaAstType::Block([BramaAstType::Assignment {
                     variable: Box::new(BramaAstType::Symbol("erhan".to_string())),
                     operator: BramaOperatorType::Assign,
-                    expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123.0))))
+                    expression: Box::new(BramaAstType::Primative(Arc::new(BramaPrimative::Number(123.0))))
                 },
                 BramaAstType::Return(Box::new(BramaAstType::None))].to_vec()))
             }));
@@ -157,10 +157,10 @@ fonk test():
     return erhan"#, Ok(BramaAstType::FunctionDefination {
     name: "test".to_string(),
     arguments: [].to_vec(),
-    body: Rc::new(BramaAstType::Block([BramaAstType::Assignment {
+    body: Arc::new(BramaAstType::Block([BramaAstType::Assignment {
         variable: Box::new(BramaAstType::Symbol("erhan".to_string())),
         operator: BramaOperatorType::Assign,
-        expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123.0))))
+        expression: Box::new(BramaAstType::Primative(Arc::new(BramaPrimative::Number(123.0))))
     },
     BramaAstType::Return(Box::new(BramaAstType::Symbol("erhan".to_string())))].to_vec()))
 }));
@@ -170,10 +170,10 @@ fonk test():
     return"#, Ok(BramaAstType::FunctionDefination {
     name: "test".to_string(),
     arguments: [].to_vec(),
-    body: Rc::new(BramaAstType::Block([BramaAstType::Assignment {
+    body: Arc::new(BramaAstType::Block([BramaAstType::Assignment {
         variable: Box::new(BramaAstType::Symbol("erhan".to_string())),
         operator: BramaOperatorType::Assign,
-        expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123.0))))
+        expression: Box::new(BramaAstType::Primative(Arc::new(BramaPrimative::Number(123.0))))
     },
     BramaAstType::Return(Box::new(BramaAstType::None))].to_vec()))
 }));

@@ -1,12 +1,11 @@
+use std::cell::RefCell;
+
 use crate::{types::Token, vm::interpreter::run_vm};
 use crate::parser::*;
 use crate::compiler::*;
 use crate::syntax::SyntaxParser;
 use crate::logger::{CONSOLE_LOGGER};
 use crate::error::generate_error_message;
-
-use std::io::{self};
-use std::io::Write;
 
 use log;
 use crate::types::VmObject;
@@ -28,8 +27,8 @@ pub struct ExecutionStatus {
     pub compiled: bool,
     pub executed: bool,
     pub memory_output: Option<Vec<VmObject>>,
-    pub stdout: Option<String>,
-    pub stderr: Option<String>,
+    pub stdout: Option<RefCell<String>>,
+    pub stderr: Option<RefCell<String>>,
     pub opcodes: Option<Vec<Token>>
 }
 
@@ -76,30 +75,31 @@ pub fn code_executer(parameters: ExecutionParameters) -> ExecutionStatus {
     let mut compiler_options: BramaCompiler = BramaCompiler::new();
 
     if parameters.return_output {
-        compiler_options.stdout = Some(String::new());
-        compiler_options.stderr = Some(String::new());
+        compiler_options.stdout = Some(RefCell::new(String::new()));
+        compiler_options.stderr = Some(RefCell::new(String::new()));
     }
 
-    let execution_memory = match opcode_compiler.compile(&ast, &mut compiler_options) {
+    let execution_status = match opcode_compiler.compile(&ast, &mut compiler_options) {
         Ok(_) => unsafe { run_vm(&mut compiler_options) },
         Err(message) => {
             log::error!("Program hata ile sonlandırıldı: {}", message);
             return status;
         }
     };
-    log::info!("Program başarıyla çalıştırıldı");
 
-    match execution_memory {
+    match execution_status {
         Ok(memory) => {
             status.compiled = true;
             status.executed = true;
             status.memory_output = Some(memory)
         },
         Err(error) => {
-            log::error!("Hafızada ki bilgileri okuma sırasında hata oluştu fakat program hatasız olarak Çalıştı. Hata mesajı: {}", error);
+            log::error!("Program hata ile sonlandırıldı: {}", error);
+            return status;
         }
     };
 
+    log::info!("Program başarıyla çalıştırıldı");
     if parameters.return_opcode {
         status.opcodes = Some(parser.tokens());
     }
