@@ -10,6 +10,8 @@ use crate::compiler::{BramaCompiler, Scope};
 
 pub type NativeCallResult = Result<VmObject, String>;
 pub type NativeCall       = fn(FunctionParameter) -> NativeCallResult;
+pub type IndexerGetCall   = fn (VmObject, usize) -> NativeCallResult ;
+pub type IndexerSetCall   = fn (VmObject, usize, VmObject) -> NativeCallResult ;
 
 pub struct FunctionParameter<'a> {
     stack: &'a Vec<VmObject>, 

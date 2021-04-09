@@ -60,10 +60,10 @@ impl BramaPrimative {
             BramaPrimative::Number(_) => 0,
             BramaPrimative::Text(_) => 1,
             BramaPrimative::List(_) => 2,
+            BramaPrimative::Dict(_) => 3,
             
             BramaPrimative::Empty => 6,
-            BramaPrimative::Bool(_) => 3,
-            BramaPrimative::Dict(_) => 4,
+            BramaPrimative::Bool(_) => 4,
             BramaPrimative::Atom(_) => 5,
             BramaPrimative::Function(_) => 7,
             BramaPrimative::ClassFunction(_, _) => 8,

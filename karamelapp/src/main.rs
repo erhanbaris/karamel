@@ -5,16 +5,15 @@ use karamellib::{vm::executer::{ExecutionParameters, ExecutionSource}};
 fn main() {
 
     let parameters = ExecutionParameters {
-        source: ExecutionSource::Code(r#"
-listem = ['merhaba', 'dünya']
+        source: ExecutionSource::Code(r#"fonk test:
+    fonk test_erhan:
+        döndür 'erhan'
+    döndür test_erhan
 
-hataayıklama::doğrula(listem.sil(0), "merhaba")
-hataayıklama::doğrula(listem.uzunluk(), 1)
+data      = { }
+data.func = test
 
-hataayıklama::doğrula(listem.sil(0), "dünya")
-hataayıklama::doğrula(listem.uzunluk(), 0)
-        
-        
+hataayıklama::doğrula(data.func()(), 'erhan')
 "#.to_string()),
         return_opcode: true,
         return_output: true

@@ -6,7 +6,7 @@ pub mod base_functions;
 #[macro_use]
 pub mod class;
 
-use crate::compiler::GetType;
+use crate::compiler::{GetType, function::{IndexerGetCall, IndexerSetCall}};
 
 use std::collections::HashMap;
 use std::vec::Vec;
@@ -63,15 +63,22 @@ pub struct ClassConfig {
     pub is_readonly: bool,
     pub is_buildin: bool,
     pub is_static: bool,
-    pub indexer: Option<Arc<FunctionReference>>
+    pub indexer: Indexer
 }
+
+#[derive(Default)]
+pub struct Indexer {
+    pub get: Option<IndexerGetCall>,
+    pub set: Option<IndexerSetCall>
+}
+
 
 pub trait Class: GetType {
     fn set_class_config(&mut self, config: ClassConfig);
     fn get_class_name(&self) -> String;
     
-    fn has_element(&self, field: Arc<BramaPrimative>) -> bool;
-    fn get_element(&self, field: Arc<BramaPrimative>) -> Option<&ClassProperty>;
+    fn has_element(&self, field: Arc<String>) -> bool;
+    fn get_element(&self, field: Arc<String>) -> Option<&ClassProperty>;
     fn property_count(&self) -> usize;
     fn properties(&self) -> std::collections::hash_map::Iter<'_, String, ClassProperty>;
     
@@ -81,5 +88,9 @@ pub trait Class: GetType {
     fn get_method(&self, name: &str) -> Option<Arc<FunctionReference>>;
     fn get_property(&self, name: &str) -> Option<Arc<BramaPrimative>>;
 
-    fn set_indexer(&mut self, indexer: Arc<FunctionReference>);
+    fn set_getter(&mut self, indexer: IndexerGetCall);
+    fn get_getter(&self) -> Option<IndexerGetCall>;
+    
+    fn set_setter(&mut self, indexer: IndexerSetCall);
+    fn get_setter(&self) -> Option<IndexerSetCall>;
 }

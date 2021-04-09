@@ -489,20 +489,9 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
                     let raw_object  = pop_raw!(options);
                     let object = &*raw_object.deref();
 
-                    (*options.current_scope).stack[get_memory_index!(options)] = match object {
-                        BramaPrimative::Dict(value) => {
-                            let indexer_value = match &*indexer {
-                                BramaPrimative::Text(text) => &*text,
-                                _ => return Err("Indexer must be string".to_string())
-                            };
-
-                            match (*value).borrow().get(&indexer_value.to_string()) {
-                                Some(data) => VmObject::from(data.clone()),
-                                _ => empty_primative
-                            }
-                        },
-                        _ => {
-                            match PRIMATIVE_CLASSES.get_unchecked(object.discriminant()).get_element(indexer.clone()) {
+                    (*options.current_scope).stack[get_memory_index!(options)] =match &*indexer {
+                        BramaPrimative::Text(text) => {
+                             match PRIMATIVE_CLASSES.get_unchecked(object.discriminant()).get_element(text.clone()) {
                                 Some(element) => match element {
                                     ClassProperty::Function(function) => VmObject::from(Arc::new(BramaPrimative::ClassFunction(function.clone(), raw_object))),
                                     ClassProperty::Field(field) => VmObject::from(field.clone())
@@ -510,7 +499,13 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
                                 _ => empty_primative
                             }
                         },
+                        BramaPrimative::Number(index) => match PRIMATIVE_CLASSES.get_unchecked(object.discriminant()).get_getter() {
+                            Some(function) => function(raw_object, *index as usize)?,
+                            _ => empty_primative
+                        }
+                        _ => empty_primative
                     };
+
                     inc_memory_index!(options, 1);
                 },
 

@@ -1,4 +1,4 @@
-use crate::{buildin::{Class, ClassProperty}, compiler::function::NativeCall};
+use crate::{buildin::{Class, ClassProperty}, compiler::function::{IndexerGetCall, IndexerSetCall, NativeCall}};
 use crate::compiler::{BramaPrimative, function::{FunctionReference}};
 
 use std::{sync::Arc};
@@ -19,28 +19,16 @@ pub struct BasicInnerClass {
         self.config.name.clone()
     }
 
-    fn has_element(&self, field: Arc<BramaPrimative>) -> bool {
-        match &*field {
-            BramaPrimative::Text(text) => self.config.properties.get(&**text).is_some(),
-            _ => false
-        }
+    fn has_element(&self, field: Arc<String>) -> bool {
+        self.config.properties.get(&*field).is_some()
     }
     
     fn properties(&self) -> std::collections::hash_map::Iter<'_, String, ClassProperty> {
         self.config.properties.iter()
     }
 
-    fn get_element(&self, field: Arc<BramaPrimative>) -> Option<&ClassProperty> {
-        match &*field {
-            BramaPrimative::Text(text) => self.config.properties.get(&**text),
-            BramaPrimative::Number(index) => {
-                match &self.config.indexer {
-                    Some(function) => None,
-                    None => None
-                }
-            }
-            _ => None
-        }
+    fn get_element(&self, field: Arc<String>) -> Option<&ClassProperty> {
+        self.config.properties.get(&*field)
     }
     
     fn property_count(&self) -> usize {
@@ -75,8 +63,26 @@ pub struct BasicInnerClass {
         }
     }
 
-    fn set_indexer(&mut self, indexer: Arc<FunctionReference>) {
-        self.config.indexer = Some(indexer);
+    fn set_getter(&mut self, indexer: IndexerGetCall) {
+        self.config.indexer.get = Some(indexer);
+    }
+
+    fn get_getter(&self) -> Option<IndexerGetCall> {
+        match &self.config.indexer.get {
+            Some(indexer) => Some(*indexer),
+            None => None
+        }
+    }
+
+    fn set_setter(&mut self, indexer: IndexerSetCall) {
+        self.config.indexer.set = Some(indexer);
+    }
+
+    fn get_setter(&self) -> Option<IndexerSetCall> {
+        match &self.config.indexer.set {
+            Some(indexer) => Some(*indexer),
+            None => None
+        }
     }
  }
 

@@ -1,6 +1,7 @@
 pub mod number;
 pub mod text;
 pub mod list;
+pub mod dict;
 pub mod baseclass;
 
 use crate::{buildin::class::baseclass::BasicInnerClass, compiler::{BramaPrimative, GetType, function::NativeCall}};
@@ -22,7 +23,7 @@ lazy_static! {
         m.push(number::get_primative_class());
         m.push(text::get_primative_class());
         m.push(list::get_primative_class());
-        m.push(get_empty_class());
+        m.push(dict::get_primative_class());
         m.push(get_empty_class());
         m.push(get_empty_class());
         m.push(get_empty_class());
@@ -144,9 +145,9 @@ macro_rules! expected_parameter_type {
 
 trait Class: GetType {
     fn get_type(&self) -> String;
-    fn has_element(&self, field: Arc<BramaPrimative>) -> bool;
+    fn has_element(&self, field: Arc<String>) -> bool;
     fn element_count(&self) -> usize;
     fn add_method(&mut self, name: &String, function: NativeCall);
     fn add_property(&mut self, name: &String, property: Arc<BramaPrimative>);
-    fn get_element(&self, field: Arc<BramaPrimative>) -> Option<&ClassProperty>;
+    fn get_element(&self, field: Arc<String>) -> Option<&ClassProperty>;
 }
