@@ -10,7 +10,7 @@ use unicode_width::UnicodeWidthStr;
 use std::{cell::RefCell, sync::Arc};
 
 
-pub fn get_primative_class() -> BasicInnerClass {
+pub fn get_primative_class() -> Box<dyn Class + Send + Sync> {
     let mut opcode = BasicInnerClass::default();
     opcode.set_name("Yazı");
     
@@ -36,7 +36,7 @@ pub fn get_primative_class() -> BasicInnerClass {
     opcode.add_method("basikirp", start_trim);
     opcode.add_method("parçagetir", substring);
     opcode.add_method("parcagetir", substring);
-    opcode
+    Box::new(opcode)
 }
 
 fn length(parameter: FunctionParameter) -> NativeCallResult {

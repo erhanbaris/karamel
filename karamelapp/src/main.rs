@@ -5,15 +5,9 @@ use karamellib::{vm::executer::{ExecutionParameters, ExecutionSource}};
 fn main() {
 
     let parameters = ExecutionParameters {
-        source: ExecutionSource::Code(r#"fonk test:
-    fonk test_erhan:
-        döndür 'erhan'
-    döndür test_erhan
-
-data      = { }
-data.func = test
-
-hataayıklama::doğrula(data.func()(), 'erhan')
+        source: ExecutionSource::Code(r#"
+data = { 'key_1': 'evet' }
+a = data.anahtarlar() == ['key_1', 'key_2']
 "#.to_string()),
         return_opcode: true,
         return_output: true

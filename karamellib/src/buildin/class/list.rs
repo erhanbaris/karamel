@@ -5,7 +5,7 @@ use crate::compiler::value::BramaPrimative;
 use crate::types::VmObject;
 use crate::{n_parameter_expected, expected_parameter_type, arc_bool, arc_empty};
 
-pub fn get_primative_class() -> BasicInnerClass {
+pub fn get_primative_class() -> Box<dyn Class + Send + Sync> {
     let mut opcode = BasicInnerClass::default();
     opcode.set_name("Liste");
     
@@ -20,7 +20,7 @@ pub fn get_primative_class() -> BasicInnerClass {
     opcode.add_method("sil", remove);
     opcode.set_getter(getter);
     opcode.set_setter(setter);
-    opcode
+    Box::new(opcode)
 }
 
 fn get(parameter: FunctionParameter) -> NativeCallResult {
@@ -54,7 +54,7 @@ fn set(parameter: FunctionParameter) -> NativeCallResult {
 
                 let position = match position_object {
                     BramaPrimative::Number(number) => *number,
-                    _ => return expected_parameter_type!("arayaekle", "Sayı")
+                    _ => return expected_parameter_type!("güncelle", "Sayı")
                 };
 
                 let is_in_size = position <= list.borrow().len() as f64;

@@ -10,7 +10,6 @@ use colored::*;
 use std::io::{self, Write};
 use crate::buildin::class::PRIMATIVE_CLASSES;
 use crate::buildin::ClassProperty;
-use crate::buildin::Class;
 
 #[cfg(all(feature = "dumpOpcodes"))]
 pub unsafe fn dump_opcode<W: Write>(index: usize, options: &mut BramaCompiler, log_update: &mut LogUpdate<W>) {
@@ -491,7 +490,7 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
 
                     (*options.current_scope).stack[get_memory_index!(options)] =match &*indexer {
                         BramaPrimative::Text(text) => {
-                             match PRIMATIVE_CLASSES.get_unchecked(object.discriminant()).get_element(text.clone()) {
+                             match PRIMATIVE_CLASSES.get_unchecked(object.discriminant()).get_element(Some(raw_object), text.clone()) {
                                 Some(element) => match element {
                                     ClassProperty::Function(function) => VmObject::from(Arc::new(BramaPrimative::ClassFunction(function.clone(), raw_object))),
                                     ClassProperty::Field(field) => VmObject::from(field.clone())

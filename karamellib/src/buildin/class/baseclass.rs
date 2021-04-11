@@ -1,4 +1,4 @@
-use crate::{buildin::{Class, ClassProperty}, compiler::function::{IndexerGetCall, IndexerSetCall, NativeCall}};
+use crate::{buildin::{Class, ClassProperty}, compiler::function::{IndexerGetCall, IndexerSetCall, NativeCall}, types::VmObject};
 use crate::compiler::{BramaPrimative, function::{FunctionReference}};
 
 use std::{sync::Arc};
@@ -19,7 +19,7 @@ pub struct BasicInnerClass {
         self.config.name.clone()
     }
 
-    fn has_element(&self, field: Arc<String>) -> bool {
+    fn has_element(&self, _: Option<VmObject>, field: Arc<String>) -> bool {
         self.config.properties.get(&*field).is_some()
     }
     
@@ -27,8 +27,11 @@ pub struct BasicInnerClass {
         self.config.properties.iter()
     }
 
-    fn get_element(&self, field: Arc<String>) -> Option<&ClassProperty> {
-        self.config.properties.get(&*field)
+    fn get_element(&self, _: Option<VmObject>, field: Arc<String>) -> Option<ClassProperty> {
+        match self.config.properties.get(&*field) {
+            Some(data) => Some((*data).clone()),
+            None => None
+        }
     }
     
     fn property_count(&self) -> usize {
@@ -41,26 +44,6 @@ pub struct BasicInnerClass {
 
     fn add_property(&mut self, name: &str, property: Arc<BramaPrimative>) {
         self.config.properties.insert(name.to_string(), ClassProperty::Field(property));
-    }
-
-    fn get_method(&self, name: &str) -> Option<Arc<FunctionReference>> {
-        match self.config.properties.get(name) {
-            Some(property) => match property {
-                ClassProperty::Function(function) => Some(function.clone()),
-                _ => None
-            },
-            _ => None
-        }
-    }
-
-    fn get_property(&self, name: &str) -> Option<Arc<BramaPrimative>> {
-        match self.config.properties.get(name) {
-            Some(property) => match property {
-                ClassProperty::Field(field) => Some(field.clone()),
-                _ => None
-            },
-            _ => None
-        }
     }
 
     fn set_getter(&mut self, indexer: IndexerGetCall) {
@@ -104,17 +87,9 @@ impl GetType for BasicInnerClass {
 mod test {
     use std::sync::Arc;
     use crate::buildin::Class;
-    use crate::compiler::{GetType, function::FunctionParameter};
-    use crate::{buildin::class::baseclass::BasicInnerClass, compiler::{EMPTY_OBJECT, function::NativeCallResult}};
-    use crate::compiler::{BramaPrimative, function::{FunctionReference}};
-
-    pub fn tmp_func_1(_: FunctionParameter) -> NativeCallResult {        
-        Ok(EMPTY_OBJECT)
-    }
-
-    pub fn tmp_func_2(_: FunctionParameter) -> NativeCallResult {        
-        Ok(EMPTY_OBJECT)
-    }
+    use crate::compiler::GetType;
+    use crate::buildin::class::baseclass::BasicInnerClass;
+    use crate::compiler::BramaPrimative;
 
     #[test]
     fn test_opcode_class_1() {
@@ -135,39 +110,6 @@ mod test {
     }
 
     #[test]
-    fn test_opcode_class_3() {
-        let mut opcode_class: BasicInnerClass = BasicInnerClass::default();
-        opcode_class.set_name("test_class");
-
-
-        opcode_class.add_property("field_1", Arc::new(BramaPrimative::Number(1024.0)));
-        opcode_class.add_property("field_2", Arc::new(BramaPrimative::Number(2048.0)));
-
-        assert_eq!(opcode_class.get_class_name(), "test_class".to_string());
-        assert_eq!(opcode_class.property_count(), 2);
-
-        let field_1 = opcode_class.get_property("field_1");
-        let field_2 = opcode_class.get_property("field_2");
-
-        assert_eq!(field_1.is_some(), true);
-        assert_eq!(field_2.is_some(), true);
-        
-        assert_eq!(opcode_class.get_method("field_1").is_none(), true);
-        assert_eq!(opcode_class.get_method("field_2").is_none(), true);
-
-        match &*field_1.unwrap() {
-            BramaPrimative::Number(number) => assert_eq!(1024.0, *number),
-            _ => assert_eq!(false, true),
-        };
-        match &*field_2.unwrap() {
-            BramaPrimative::Number(number) => assert_eq!(2048.0, *number),
-            _ => assert_eq!(false, true),
-        };
-
-        assert_eq!(opcode_class.get_property("field_3").is_none(), true);
-    }
-
-    #[test]
     fn test_opcode_class_4() {
         let mut opcode_class: BasicInnerClass = BasicInnerClass::default();
         opcode_class.set_name("test_class");
@@ -177,35 +119,5 @@ mod test {
 
         assert_eq!(opcode_class.get_class_name(), "test_class".to_string());
         assert_eq!(opcode_class.property_count(), 2);
-    }
-
-    #[test]
-    fn test_opcode_class_5() {
-        let mut opcode_class: BasicInnerClass = BasicInnerClass::default();
-        opcode_class.set_name("test_class");
-
-        let mut function_1 = FunctionReference::default();
-        let mut function_2 = FunctionReference::default();
-
-        function_1.name = "function_1".to_string();
-        function_2.name = "function_2".to_string();
-
-        opcode_class.add_method("function_1", tmp_func_1);
-        opcode_class.add_method("function_2", tmp_func_2);
-
-        assert_eq!(opcode_class.get_class_name(), "test_class".to_string());
-        assert_eq!(opcode_class.property_count(), 2);
-
-        let function_1 = opcode_class.get_method("function_1");
-        let function_2 = opcode_class.get_method("function_2");
-
-        assert_eq!(function_1.is_some(), true);
-        assert_eq!(function_2.is_some(), true);
-
-        assert_eq!(function_1.unwrap().name, "function_1".to_string());
-        assert_eq!(function_2.unwrap().name, "function_2".to_string());
-        
-        assert_eq!(opcode_class.get_property("function_1").is_none(), true);
-        assert_eq!(opcode_class.get_property("function_2").is_none(), true);
     }
 }

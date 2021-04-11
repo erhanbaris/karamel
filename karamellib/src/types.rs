@@ -23,7 +23,7 @@ pub const FALSE_FLAG:   u64 = QNAN | TAG_FALSE;
 pub const TRUE_FLAG:    u64 = QNAN | TAG_TRUE;
 pub const EMPTY_FLAG:   u64 = QNAN | TAG_NULL;
 
-#[derive(PartialEq, Debug, Hash, Clone, Copy)]
+#[derive(PartialEq, Hash, Clone, Copy)]
 #[repr(transparent)]
 pub struct VmObject(pub u64);
 

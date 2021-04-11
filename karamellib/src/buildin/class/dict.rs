@@ -1,36 +1,119 @@
-use crate::{buildin::Class, compiler::function::{FunctionParameter, NativeCallResult}};
+use std::sync::Arc;
+use std::cell::RefCell;
+
+use crate::{buildin::{Class, ClassConfig, ClassProperty}, compiler::{GetType, function::{FunctionParameter, IndexerGetCall, IndexerSetCall, NativeCall, NativeCallResult}}};
 use crate::compiler::value::EMPTY_OBJECT;
 use crate::buildin::class::baseclass::BasicInnerClass;
 use crate::compiler::value::BramaPrimative;
 use crate::types::VmObject;
-use crate::{n_parameter_expected, expected_parameter_type, arc_bool};
+use crate::{n_parameter_expected, expected_parameter_type, arc_bool, primative_list};
 
-pub fn get_primative_class() -> BasicInnerClass {
-    let mut opcode = BasicInnerClass::default();
-    opcode.set_name("Sözlük");
+#[derive(Default)]
+pub struct DictClass {
+    base: BasicInnerClass
+ }
+
+ impl GetType for DictClass {
+    fn get_type(&self) -> String {
+        "Sözlük".to_string()
+    }
+}
+
+impl DictClass {
+    pub fn new() -> Self {
+        let mut dict = DictClass::default();
+        dict.add_method("getir", get);
+        dict.add_method("güncelle", set);
+        dict.add_method("guncelle", set);
+        dict.add_method("uzunluk", length);
+        dict.add_method("ekle", add);
+        dict.add_method("temizle", clear);
+        dict.add_method("sil", remove);
+        dict.add_method("anahtarlar", keys);
+        dict
+    }
+}
+
+ impl Class for DictClass {
+    fn set_class_config(&mut self, config: ClassConfig) {
+        self.base.set_class_config(config);
+    }
+
+    fn get_class_name(&self) -> String {
+        self.get_type()
+    }
+
+    fn has_element(&self, source: Option<VmObject>, field: Arc<String>) -> bool {
+        self.base.has_element(source, field)
+    }
     
-    opcode.add_method("getir", get);
-    opcode.add_method("güncelle", set);
-    opcode.add_method("guncelle", set);
-    opcode.add_method("uzunluk", length);
-    opcode.add_method("ekle", add);
-    opcode.add_method("temizle", clear);
-    opcode.add_method("pop", pop);
-    opcode.add_method("sil", remove);
-    opcode
+    fn properties(&self) -> std::collections::hash_map::Iter<'_, String, ClassProperty> {
+        self.base.properties()
+    }
+
+    fn get_element(&self, source: Option<VmObject>, field: Arc<String>) -> Option<ClassProperty> {
+        match self.base.get_element(source, field.clone()) {
+            Some(property) => Some(property),
+            None => match source {
+                Some(object) => {
+                    match &*object.deref() {
+                        BramaPrimative::Dict(dict) => match dict.borrow().get(&*field.clone()) {
+                            Some(data) => Some(ClassProperty::Field(data.deref())),
+                            None => None
+                        },
+                        _ => None
+                    }
+                },
+                None => None
+            }
+        }
+    }
+    
+    fn property_count(&self) -> usize {
+        self.base.property_count()
+    }
+
+    fn add_method(&mut self, name: &str, function: NativeCall) {
+        self.base.add_method(name, function);
+    }
+
+    fn add_property(&mut self, name: &str, property: Arc<BramaPrimative>) {
+        self.base.add_property(name, property);
+    }
+
+    fn set_getter(&mut self, indexer: IndexerGetCall) {
+        self.base.set_getter(indexer);
+    }
+
+    fn get_getter(&self) -> Option<IndexerGetCall> {
+        self.base.get_getter()
+    }
+
+    fn set_setter(&mut self, indexer: IndexerSetCall) {
+        self.base.set_setter(indexer);
+    }
+
+    fn get_setter(&self) -> Option<IndexerSetCall> {
+        self.base.get_setter()
+    }
+ }
+
+
+pub fn get_primative_class() -> Box<dyn Class + Send + Sync> {
+    Box::new(DictClass::new())
 }
 
 fn get(parameter: FunctionParameter) -> NativeCallResult {
-    if let BramaPrimative::List(list) = &*parameter.source().unwrap().deref() {
+    if let BramaPrimative::Dict(dict) = &*parameter.source().unwrap().deref() {
         return match parameter.length() {
             0 =>  n_parameter_expected!("getir", 1),
             1 => {
-                let position = match &*parameter.iter().next().unwrap().deref() {
-                    BramaPrimative::Number(number) => *number as usize,
-                    _ => return expected_parameter_type!("sıra", "Sayı")
+                let key = match &*parameter.iter().next().unwrap().deref() {
+                    BramaPrimative::Text(yazi) => yazi.clone(),
+                    _ => return expected_parameter_type!("anahtar", "Yazı")
                 };
                 
-                return match list.borrow().get(position) {
+                return match dict.borrow().get(&*key) {
                     Some(item) => Ok(*item),
                     _ => Ok(EMPTY_OBJECT)
                 };
@@ -42,28 +125,29 @@ fn get(parameter: FunctionParameter) -> NativeCallResult {
 }
 
 fn set(parameter: FunctionParameter) -> NativeCallResult {
-    if let BramaPrimative::List(list) = &*parameter.source().unwrap().deref() {
+    insert_or_update(parameter, "güncelle")
+}
+
+fn add(parameter: FunctionParameter) -> NativeCallResult {
+    insert_or_update(parameter, "ekle")
+}
+
+fn insert_or_update(parameter: FunctionParameter, function_name: &str) -> NativeCallResult {
+    if let BramaPrimative::Dict(dict) = &*parameter.source().unwrap().deref() {
         return match parameter.length() {
-            0 =>  n_parameter_expected!("güncelle", 2),
+            0 =>  n_parameter_expected!(function_name, 2),
             2 => {
                 let mut iter = parameter.iter();
                 let (position_object, item) = (&*iter.next().unwrap().deref(), &*iter.next().unwrap());
 
                 let position = match position_object {
-                    BramaPrimative::Number(number) => *number,
-                    _ => return expected_parameter_type!("arayaekle", "Sayı")
+                    BramaPrimative::Text(text) => text.clone(),
+                    _ => return expected_parameter_type!("anahtar", "Yazı")
                 };
-
-                let is_in_size = position <= list.borrow().len() as f64;
-                return match is_in_size {
-                    true => {
-                        list.borrow_mut()[position as usize] = *item; 
-                        Ok(arc_bool!(true))
-                    },
-                    false => Ok(arc_bool!(false))
-                };
+                *dict.borrow_mut().entry((&position).to_string()).or_insert(*item) = *item;
+                Ok(arc_bool!(true))
             },
-            _ => n_parameter_expected!("güncelle", 2, parameter.length())
+            _ => n_parameter_expected!(function_name, 2, parameter.length())
         };
     }
     Ok(EMPTY_OBJECT)
@@ -78,153 +162,42 @@ fn length(parameter: FunctionParameter) -> NativeCallResult {
 }
 
 fn clear(parameter: FunctionParameter) -> NativeCallResult {
-    if let BramaPrimative::List(list) = &*parameter.source().unwrap().deref() {
-        list.borrow_mut().clear();
-    }
-    Ok(EMPTY_OBJECT)
-}
-
-fn add(parameter: FunctionParameter) -> NativeCallResult {
-    if let BramaPrimative::List(list) = &*parameter.source().unwrap().deref() {
-        return match parameter.length() {
-            0 =>  n_parameter_expected!("ekle", 1),
-            1 => {
-                let length = list.borrow().len() as f64;
-                list.borrow_mut().push(*parameter.iter().next().unwrap());
-                return Ok(VmObject::native_convert(BramaPrimative::Number(length)));
-            },
-            _ => n_parameter_expected!("ekle", 1, parameter.length())
-        };
+    if let BramaPrimative::Dict(dict) = &*parameter.source().unwrap().deref() {
+        dict.borrow_mut().clear();
     }
     Ok(EMPTY_OBJECT)
 }
 
 fn remove(parameter: FunctionParameter) -> NativeCallResult {
-    if let BramaPrimative::List(list) = &*parameter.source().unwrap().deref() {
-        match parameter.length() {
-            0 => return n_parameter_expected!("sil", 1),
+    if let BramaPrimative::Dict(dict) = &*parameter.source().unwrap().deref() {
+        return match parameter.length() {
+            0 => n_parameter_expected!("sil", 1),
             1 => {
-                let position = match &*parameter.iter().next().unwrap().deref() {
-                    BramaPrimative::Number(number) => *number as usize,
-                    _ => return expected_parameter_type!("sıra", "Sayı")
+                let key = match &*parameter.iter().next().unwrap().deref() {
+                    BramaPrimative::Text(text) => text.clone(),
+                    _ => return expected_parameter_type!("anahtar", "Yazı")
                 };
                 
-                let is_in_size = position <= list.borrow().len();
-                return match is_in_size {
-                    true => Ok(list.borrow_mut().remove(position)),
-                    false => Ok(arc_bool!(false))
-                };
+                Ok(match dict.borrow_mut().remove(&key.to_string()) {
+                    Some(_) => arc_bool!(true),
+                    None => arc_bool!(false)
+                })
             },
-            _ => return n_parameter_expected!("sil", 1, parameter.length())
+            _ => n_parameter_expected!("sil", 1, parameter.length())
         };
     }
     Ok(EMPTY_OBJECT)
 }
 
-fn pop(parameter: FunctionParameter) -> NativeCallResult {
-    if let BramaPrimative::List(list) = &*parameter.source().unwrap().deref() {
-        let item = list.borrow_mut().pop();
-        return match item {
-            Some(data) => Ok(data),
-            _ => Ok(EMPTY_OBJECT)
-        };
+fn keys(parameter: FunctionParameter) -> NativeCallResult {
+    if let BramaPrimative::Dict(dict) = &*parameter.source().unwrap().deref() {
+        let mut keys = Vec::new();
+        for key in dict.borrow().keys() {
+            keys.push(VmObject::native_convert(BramaPrimative::Text(Arc::new(key.to_string()))));
+        }
+
+        return Ok(VmObject::native_convert(primative_list!(keys)));
     }
+
     Ok(EMPTY_OBJECT)
-}
-
-
-#[cfg(test)]
-mod tests {
-    use std::sync::Arc;
-    use crate::compiler::value::BramaPrimative;
-    use super::*;
-
-    use crate::nativecall_test_with_params;
-    use crate::nativecall_test;
-    use crate::primative_list;
-    use crate::primative_text;
-    use crate::arc_text;
-    use crate::arc_bool;
-    use crate::arc_empty;
-    use crate::arc_number;
-    use crate::primative_number;
-
-
-    nativecall_test!{test_length_1, length,  primative_list!([arc_text!("")].to_vec()), BramaPrimative::Number(1.0)}
-    nativecall_test!{test_length_2, length,  primative_list!([].to_vec()), BramaPrimative::Number(0.0)}
-    nativecall_test!{test_length_3, length,  primative_list!([arc_text!(""), arc_empty!(), arc_number!(123), arc_bool!(true)].to_vec()), BramaPrimative::Number(4.0)}
-
-
-    nativecall_test_with_params!{test_add_1, add, primative_list!([arc_text!("")].to_vec()), [VmObject::native_convert(BramaPrimative::Number(8.0))], primative_number!(1)}
-    nativecall_test_with_params!{test_add_2, add, primative_list!([].to_vec()), [VmObject::native_convert(BramaPrimative::Bool(true))], primative_number!(0)}
-    #[test]
-    fn test_add_3 () {
-        use std::cell::RefCell;
-        let stack: Vec<VmObject> = [arc_text!("merhaba")].to_vec();
-        let stdout = Some(RefCell::new(String::new()));
-        let stderr = Some(RefCell::new(String::new()));
-        let list = BramaPrimative::List(RefCell::new([].to_vec()));
-        let obj = VmObject::native_convert(list);
-        
-        let parameter = FunctionParameter::new(&stack, Some(obj), stack.len() as usize, stack.len() as u8, &stdout, &stderr);
-        let result = add(parameter);
-        assert!(result.is_ok());
-
-        match &*result.unwrap().deref() {
-            BramaPrimative::Number(p) => assert_eq!(*p, 0.0),
-            _ => assert_eq!(true, false)
-        };
-    }
-
-    #[test]
-    fn test_insert_1 () {
-        use std::cell::RefCell;
-        let stdout = Some(RefCell::new(String::new()));
-        let stderr = Some(RefCell::new(String::new()));
-        let list = Arc::new(BramaPrimative::List(RefCell::new([].to_vec())));
-        let obj = VmObject::native_convert_by_ref(list.clone());
-        
-        let result = add(FunctionParameter::new(&[arc_text!("dünya")].to_vec(), Some(obj), 1 as usize, 1 as u8, &stdout, &stderr));
-        assert!(result.is_ok());
-
-        match &*list {
-            BramaPrimative::List(l) => assert_eq!(l.borrow().len(), 1),
-            _ => assert_eq!(true, false)
-        };
-
-        let result = insert(FunctionParameter::new(&[arc_number!(0), arc_text!("merhaba")].to_vec(), Some(obj), 2 as usize, 2 as u8, &stdout, &stderr));
-        assert!(result.is_ok());
-
-        match &*list {
-            BramaPrimative::List(l) => {
-                assert_eq!(l.borrow().len(), 2);
-                assert_eq!(l.borrow().get(0).unwrap().deref(), Arc::new(primative_text!("merhaba")));
-                assert_eq!(l.borrow().get(1).unwrap().deref(), Arc::new(primative_text!("dünya")));
-            },
-            _ => assert_eq!(true, false)
-        };
-    }
-
-    #[test]
-    fn test_clear_1 () {
-        use std::cell::RefCell;
-        let stack: Vec<VmObject> = Vec::new();
-        let stdout = Some(RefCell::new(String::new()));
-        let stderr = Some(RefCell::new(String::new()));
-        let list = Arc::new(BramaPrimative::List(RefCell::new([arc_bool!(true), arc_empty!(), arc_number!(1)].to_vec())));
-        let obj = VmObject::native_convert_by_ref(list.clone());
-        
-        let result = add(FunctionParameter::new(&[arc_text!("dünya")].to_vec(), Some(obj), 1 as usize, 1 as u8, &stdout, &stderr));
-        assert!(result.is_ok());
-
-
-        let parameter = FunctionParameter::new(&stack, Some(obj), stack.len() as usize, stack.len() as u8, &stdout, &stderr);
-        let result = clear(parameter);
-        assert!(result.is_ok());
-
-        match &*list {
-            BramaPrimative::List(l) => assert_eq!(l.borrow().len(), 0),
-            _ => assert_eq!(true, false)
-        };
-    }
 }
