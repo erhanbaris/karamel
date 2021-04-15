@@ -1,0 +1,5 @@
+# KPD Terim Sözlüğü
+
+değiştir  
+
+
