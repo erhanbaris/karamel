@@ -15,13 +15,13 @@
 
 ## Welcome
 
-Hello and welcome to Karamel. We are making turkish programming language, but you probably knew that already. If you are considering contributing to Karamel this document will be hopefully be a helpful resource.
+Hello and welcome to **Karamel**. We are making **Turkish programming language**, but you probably knew that already. If you are considering contributing to **Karamel** this document will be hopefully be a helpful resource.
 
 Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are greatly appreciated.
 
 **You do not have to be a programmer.** There are many ways to contribute::
 
-* Hang out on our [Discord](https://discord.com/channels/777350275887398923/823648651339235328) and help answers questions as they come up
+* Hang out on our [Discord](https://discord.gg/8ymtm9XPyQ) and help answers questions as they come up
 * Report [new issues or bugs](https://github.com/erhanbaris/karamel/issues/new/choose) or join the existing discussion on open issues
 * Submit pull requests to resolve issues
 * Improve our documentation to better explain all the things to all the peoples

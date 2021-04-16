@@ -1,26 +1,45 @@
+---
+description: Türkçe tabanlı yazılım dili.
+---
+
 # Karamel Programlama Dili \(KPD\)
 
-Türkçe Programlama Dili \(kısaca TPD\) sıfırdan kendi sanal makinesi üzerinde çalışan, birden fazla platformda çalışan, dinamik olarak değişkenlerin tanımlandığı, Türkçe konuşanlara yönelik geliştirilmekte olan bir programlama dilidir. Python dilinde bulunan özelliklerden ilham alınarak geliştirilmeye başlanan dil, şu anda windows ve macosx üzerinde sorunsuz olarak çalışmaktadır. Asıl amacı yeni başlayanlara kullanımı ve öğrenmesi kolay bir geliştirme ortamı sağlamaktadır. Dilin tamamı Rust Programlama Dili kullanılarak geliştirilmektedir. Kendi sanal makinesi üzerinde çalışan dil ve WebAssembly yardımı ile web üzerinde de kullanılabilir.
+**Karamel Programlama Dili**, Türkçe tabanlı yazılım dilidir. Kendi sanal düzeneği üzerinde çalışır. Ayrıca birçok düzlemde bile çalıştırılabilir. Başlıca amacı, bilişime ve yazılım alanına yeni başlayanlar için kolay kullanımlı ve kolay öğrenmeli bir geliştirme ortamı sağlamaktır.  
+  
+Anadili Türkçe olanlarla birlikte tüm Türkçe konuşanlara yönelik kullanılabilir bir kodlama dili, programlama dili başka bir deyişle yazılım dili olarak karşınızdadır.  
+Dinamik olarak değişken tanımlayabilir ve dahasını yapabilirsiniz.  
+  
+Gözde dillerde bulunan özelliklerden esinlenerek geliştirilmeye başlanan **Karamel dili**, bilinen iki işletim sistemi **Windows** ve **MacOsX** üzerinde sorunsuzca çalışmaktadır.  
+  
+Bütün dil **Rust Programlama Dili** kullanılarak geliştirilmektedir. Kendi sanal düzeneği üzerinde çalışan dil olması yanısıra, WebAssembly yardımı ile ağ üzerinde de kullanılabilir.
 
-### Peki hangi ne tip sanal makine kullanıyor?
+### İndirilebilir Durumda Mı?
 
-TPD, stack machine isimli sanal makine mimarisini kullanıyoruz. Bunu kullanmamızın nedeni yeni özelliklerin daha hızlı bir şekilde entegre edebilmemizden dolayı. Diğer Register Machine yaklaşımına kıyasla daha yavaş olsada ilk amacımız performanstan ziyade özellik ekleyip, stabil hale getirmek.
+Üzgünüz, henüz indirilebilir bir örneği yok. Ancak en kısa sürede ağ üzerinden çalışabilir bir sürümü yayınlamayı düşünüyoruz. Denemelik sürüme bir süreliğine şuradan erişebilirsiniz.  
+[https://erhanbaris.github.io/karamel/karamelweb/src/www/](https://erhanbaris.github.io/karamel/karamelweb/src/www/)
 
-### Peki Stack Machine tam olarak nasıl çalışıyor?
+### Karamel Hangi Düzeyde?
 
-Bu mimaride kullanılacak olan değişkenler bir yığın olarak üst üste istiflenir ve sonrasında LIFO \(Last In First Out\) yaklaşımına göre değişkenler istiflerden geri alınıp işleme tabii tutulur. Bu yapının avantajı kodlar en basit haline dönüştürülerek daha performanslı olarak çalışması sağlanmaktadır. Yazılımcının yazdığı yüksek seviyeli olan kodlar işlenerek ara kodlara dönüştürülmektedir. Dönüştürülen ara kodlar TPD sanal makinesinde çalıştırılmaktadır. Aslında Üst düzey yazmış olduğunuz kodlar ve sanal makinenin işledi kodlar olarak iki farklı programlama dili içermektedir.
+* Geliştirilme aşamasında olup emekleme sürecindedir.
+* Dört bir yandan gelecek düşünce, görüş ve kodlama gibi türlü yardımlara gerek duymaktadır.
+* Terim dağarcığında oturmamış konuları bulunmaktadır.
+* Sözdizimi üzerinde esnek tutum sergilense bile kömek yani yardım gerekmektedir.
 
-### Peki bunu başka hangi diller kullanıyor?
+### Karamel Hangi Ölçünlere Göre Geliştiriliyor?
 
-Python, PHP, Ruby gibi oldukça popüler olan diller Stack Machine yaklaşımını kullanmaktadırlar.
+Türkçe tabanlı yazılım dillerinde kullanılmak üzere oluşturulan kararlı ölçünler henüz bulunmuyor. Bu nedenle şimdilik böyle bir durum söz konusu değil. Ancak [Türkçe Yazılım Konatı](https://github.com/turkce-yazilim-konati/) altında geliştirilmekte olan [**YAZILIMCA**](https://github.com/turkce-yazilim-konati/yazilimca) ****ölçünlerini izliyor, uygun bulduğu yanlarını değerlendirip kullanıyor.
 
-### Dilin şu anda ki durumu nedir?
+### Takıma Katıl
 
-Halen geliştirme aşamasında olup, yardımlara her zaman açığız. Mutlaka kodlama yapmanıza gerek yok. Fikirleriniz ilede gelip destek olabilirsiniz.
+Karamel, Türkçe Yazılım Konatı altında birleşen kişilerle birlikte geliştiriliyor. Bu takımda yer almak için aşağıdaki yerlere başvurman yeterlidir.
 
-### İndirilebilir durumda mı?
+* **Github**'da [Türkçe Yazılım Konatı](https://github.com/turkce-yazilim-konati)'na katıl.
+* **Discord**'da [Türkçe Yazılım Konatı](%20https://discord.gg/8ymtm9XPyQ)'na katıl.
+* **Facebook**'ta [Türkçe Yazılım Konatı](https://www.facebook.com/groups/815710512519539)'na katıl.
 
-Şu anda indirilebilir bir örneği yok ama en kısa zamanda web üzerinden çalışabilir bir versiyonu yapıp yayınlamayı düşünüyoruz.
+### 
+
+
 
 ### Temel Tipler
 
