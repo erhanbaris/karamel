@@ -53,7 +53,7 @@ pub trait SyntaxParserTrait {
 
 pub trait ExtensionSyntaxParser: Sized {
     fn parsable    (parser: &SyntaxParser) -> bool;
-    fn parse_suffix(ast: Box<BramaAstType>, parser: &SyntaxParser) -> AstResult;
+    fn parse_suffix(ast: &mut BramaAstType, parser: &SyntaxParser) -> AstResult;
 }
 
 impl SyntaxParser {

@@ -1,4 +1,5 @@
-use crate::types::*;
+use crate::{compiler::BramaPrimative, types::*};
+use crate::syntax::util::update_functions_for_temp_return;
 use crate::syntax::{SyntaxParser, SyntaxParserTrait, SyntaxFlag, ExtensionSyntaxParser};
 use crate::syntax::expression::ExpressionParser;
 use crate::syntax::primative::PrimativeParser;
@@ -19,12 +20,12 @@ impl SyntaxParserTrait for FuncCallParser {
         let token = parser.peek_token();
 
         if token.is_ok() {
-            let function_name = map_parser(parser, &[PrimativeParser::parse_function_map, PrimativeParser::parse_symbol])?;
+            let mut function_name = map_parser(parser, &[PrimativeParser::parse_function_map, PrimativeParser::parse_symbol])?;
 
-            match function_name {
+            match &function_name {
                 BramaAstType::None => (),
                 _ => { 
-                    let parse_result = FuncCallParser::parse_suffix(Box::new(function_name), parser)?;
+                    let parse_result = FuncCallParser::parse_suffix(&mut function_name, parser)?;
                     match parse_result {
                         BramaAstType::None => (),
                         _ => return Ok(parse_result)
@@ -47,7 +48,7 @@ impl ExtensionSyntaxParser for FuncCallParser {
         parser.check_operator(&BramaOperatorType::LeftParentheses)
     }
 
-    fn parse_suffix(ast: Box<BramaAstType>, parser: &SyntaxParser) -> AstResult {
+    fn parse_suffix(ast: &mut BramaAstType, parser: &SyntaxParser) -> AstResult {
 
         let index_backup = parser.get_index();
         let parser_flags  = parser.flags.get();
@@ -95,13 +96,46 @@ impl ExtensionSyntaxParser for FuncCallParser {
 
             parser.flags.set(inner_parser_flags);
             return Ok(BramaAstType::FuncCall {
-                func_name_expression: ast,
+                func_name_expression: Box::new(ast.clone()),
                 arguments,
                 assign_to_temp: parser.flags.get().contains(SyntaxFlag::IN_EXPRESSION)
                                 || parser.flags.get().contains(SyntaxFlag::IN_ASSIGNMENT)
                                 || parser.flags.get().contains(SyntaxFlag::IN_FUNCTION_ARG)
                                 || parser.flags.get().contains(SyntaxFlag::IN_RETURN)
             });
+        }
+        /* parse for 'object.method()' */
+        else if let Some(_) = parser.match_operator(&[BramaOperatorType::Dot]) {
+            
+
+            let sub_ast = ExpressionParser::parse(parser)?;
+
+            return match &sub_ast {
+                BramaAstType::FuncCall {
+                    func_name_expression,
+                    arguments: _,
+                    assign_to_temp: _ 
+                } => {
+                    match &**func_name_expression {
+                        BramaAstType::Symbol(_) => {
+                            update_functions_for_temp_return(ast);
+                            Ok(BramaAstType::AccessorFuncCall {
+                                source: Box::new(ast.clone()),
+                                indexer: Box::new(sub_ast),
+                                assign_to_temp: true
+                            })
+                        },
+                        _ => {
+                            log::debug!("Function call syntax not valid {:?}", func_name_expression);
+                            Err(BramaErrorType::FunctionCallSyntaxNotValid)
+                        }
+                    }
+                }
+                _ => {
+                    log::debug!("Function call syntax not valid {:?}", sub_ast);
+                    Err(BramaErrorType::FunctionCallSyntaxNotValid)
+                }
+            };
         }
 
         parser.flags.set(parser_flags);
