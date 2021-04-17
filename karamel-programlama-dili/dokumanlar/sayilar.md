@@ -78,3 +78,68 @@ _-123.456_
 _-123.4e-4_  
 _123.4e+4_
 
+\_\_
+
+### Temel Tipler
+
+* Tam Sayı \(_1024_, _1\_204_, _2048_\)
+* Noktalı Sayı \(_1.234_, _1\_234.56789_, _123.4e+4_, _1\_230.4e+4_\)
+* Yazı \(_"Merhaba Dünya"_, _'Merhaba Dünya'_\)
+* Bool \(_doğru_, _yanlış_\)
+* Atom \(_:bilgi_, _:başarılı_, _:hatalı_\)
+* Liste \(_\[1,2,3\]_, _\[\]_, _\[:kayıt\_başarılı, 'Kullanıcı Bilgisi'\]_\)
+* Sözlük \(_{'ad':'erhan', 'soyad':'barış'}_\)
+
+### Döngü
+
+```text
+kayıt = 10
+toplam = 0
+döngü kayıt iken:
+    gç::satıryaz(kayıt)
+    kayıt -= 1
+    toplam += 1
+hataayıklama::doğrula(toplam, 10)
+hataayıklama::doğrula(kayıt, 0)
+```
+
+```text
+sonsuz:
+    gç::satıryaz("Sonsuza kadar devam")
+```
+
+Döngü kontrolü için _devam_, _continue_, _kır_, _break_.
+
+### Sorgulama
+
+```text
+eğer a == b:  
+    gç::satıryaz('a eşittir b')
+yoksa a == c:  
+    gç::satıryaz('a eşittir c')
+yoksa:  
+    gç::satıryaz('a hiçbirine eşit değil')
+```
+
+## Fonksiyon tanımlama
+
+```text
+fonk metod_1(a):
+    gç::yaz(a)
+
+fonk merhaba_dünya:
+    gç::yaz('Merhaba dünya')
+
+fonk metod_1(a):
+    gç::yaz(a)
+
+fonk faktoriyel(sayı):    
+    eğer sayı==1 veya sayı==0:
+        döndür 1
+    yoksa:
+        döndür sayı * faktoriyel(sayı - 1)
+
+faktoriyel_sonucu = faktoriyel(10)
+gç::satıryaz('faktoriyel 10 => ', faktoriyel_sonucu)
+```
+
