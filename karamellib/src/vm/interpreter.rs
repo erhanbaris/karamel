@@ -108,12 +108,6 @@ pub unsafe fn dump_opcode<W: Write>(index: usize, options: &mut BramaCompiler, l
                 let data = format!("║ {:4} ║ {:15} ║ {:^5?} ║ {:^5} ║", opcode_index, format!("{:?}", opcode), options.opcodes[opcode_index + 1], options.opcodes[opcode_index + 2]);
                 build_arrow(index, opcode_index, 2, &mut buffer, &data);
                 opcode_index += 2;
-            },
-            
-            VmOpCode::CallItem => {
-                let data = format!("║ {:4} ║ {:15} ║ {:^5?} ║ {:^5} ║", opcode_index, format!("{:?}", opcode), options.opcodes[opcode_index + 1], options.opcodes[opcode_index + 2]);
-                build_arrow(index, opcode_index, 2, &mut buffer, &data);
-                opcode_index += 3;
             }
         }
 
@@ -431,31 +425,6 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
                     options.opcode_index = location as usize;
                     continue;
                 },
-                
-                VmOpCode::CallItem => {
-                    let object    = pop!(options);
-                    let func_name = (*options.current_scope).memory[options.opcodes[options.opcode_index + 1] as usize].deref();
-
-                    match &*object {
-                        BramaPrimative::Dict(value) => {
-                            let indexer_value = match &*func_name {
-                                BramaPrimative::Text(text) => &*text,
-                                _ => return Err("Indexer must be string".to_string())
-                            };
-
-                            match (*value).borrow().get(&indexer_value.to_string()) {
-                                Some(data) => {
-                                    if let BramaPrimative::Function(reference) = &*data.deref() {
-                                        options.opcode_index += 1;
-                                        reference.execute(options, None)?;
-                                    }
-                                },
-                                _ => ()
-                            }
-                        }
-                        _ => ()
-                    };
-                 },
                 
                 VmOpCode::SetItem => {
                     let assign_item  = pop_raw!(options);
