@@ -1,28 +1,29 @@
 pub mod number;
 pub mod text;
 pub mod list;
+pub mod dict;
 pub mod baseclass;
 
-use crate::{buildin::class::baseclass::BasicInnerClass, compiler::{BramaPrimative, GetType, function::NativeCall}};
-use std::{sync::Arc, vec::Vec};
+use crate::buildin::class::baseclass::BasicInnerClass;
+use std::vec::Vec;
 use lazy_static::lazy_static;
 
-use super::ClassProperty;
+use super::Class;
 
 
-pub fn get_empty_class() -> BasicInnerClass {
+pub fn get_empty_class() -> Box<dyn Class + Send + Sync> {
     let mut opcode = BasicInnerClass::default();
     opcode.set_name("__NO__CLASS__");
-    opcode
+    Box::new(opcode)
 }
 
 lazy_static! {
-    pub static ref PRIMATIVE_CLASSES: Vec<BasicInnerClass> = {
+    pub static ref PRIMATIVE_CLASSES: Vec<Box<dyn Class  + Send + Sync>> = {
         let mut m = Vec::new();
         m.push(number::get_primative_class());
         m.push(text::get_primative_class());
         m.push(list::get_primative_class());
-        m.push(get_empty_class());
+        m.push(dict::get_primative_class());
         m.push(get_empty_class());
         m.push(get_empty_class());
         m.push(get_empty_class());
@@ -138,15 +139,4 @@ macro_rules! n_parameter_expected {
 #[macro_export]
 macro_rules! expected_parameter_type {
     ($function_name:expr, $expected_type:expr) => { Err((format!("'{}' sadece {} parametresini kabul ediyor", $function_name, $expected_type))) };
-}
-
-
-
-trait Class: GetType {
-    fn get_type(&self) -> String;
-    fn has_element(&self, field: Arc<BramaPrimative>) -> bool;
-    fn element_count(&self) -> usize;
-    fn add_method(&mut self, name: &String, function: NativeCall);
-    fn add_property(&mut self, name: &String, property: Arc<BramaPrimative>);
-    fn get_element(&self, field: Arc<BramaPrimative>) -> Option<&ClassProperty>;
 }

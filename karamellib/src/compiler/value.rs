@@ -32,6 +32,9 @@ pub enum BramaPrimative {
 unsafe impl Send for BramaPrimative {}
 unsafe impl Sync for BramaPrimative {}
 
+unsafe impl Send for VmObject {}
+unsafe impl Sync for VmObject {}
+
 impl BramaPrimative {
     pub fn is_true(&self) -> bool {
         match self {
@@ -60,10 +63,10 @@ impl BramaPrimative {
             BramaPrimative::Number(_) => 0,
             BramaPrimative::Text(_) => 1,
             BramaPrimative::List(_) => 2,
+            BramaPrimative::Dict(_) => 3,
             
             BramaPrimative::Empty => 6,
-            BramaPrimative::Bool(_) => 3,
-            BramaPrimative::Dict(_) => 4,
+            BramaPrimative::Bool(_) => 4,
             BramaPrimative::Atom(_) => 5,
             BramaPrimative::Function(_) => 7,
             BramaPrimative::ClassFunction(_, _) => 8,
@@ -163,6 +166,40 @@ impl fmt::Debug for BramaPrimative {
 impl fmt::Display for BramaPrimative {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            BramaPrimative::Empty => write!(f, "boş"),
+            BramaPrimative::Number(number) => write!(f, "{}", number),
+            BramaPrimative::Bool(b) => write!(f, "{}", b),
+            BramaPrimative::List(b) => write!(f, "{:?}", b.borrow()),
+            BramaPrimative::Dict(b) => write!(f, "{:?}", b),
+            BramaPrimative::Atom(b) => write!(f, "{}", b),
+            BramaPrimative::Text(b) => write!(f, "{}", b),
+            BramaPrimative::Function(func) => write!(f, "<Fonksiyon='{}'>", func.name),
+            BramaPrimative::ClassFunction(func, _) => write!(f, "<Fonksiyon='{}'>", func.name),
+            BramaPrimative::Class(class) => write!(f, "<Sınıf='{}'>", class.get_type())
+        }
+    }
+}
+
+impl fmt::Debug for VmObject {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match &*self.deref() {
+            BramaPrimative::Empty => write!(f, "boş"),
+            BramaPrimative::Number(number) => write!(f, "{:?}", number),
+            BramaPrimative::Bool(b) => write!(f, "{:?}", b),
+            BramaPrimative::List(b) => write!(f, "{:?}", b.borrow()),
+            BramaPrimative::Dict(b) => write!(f, "{:?}", b),
+            BramaPrimative::Atom(b) => write!(f, "{:?}", b),
+            BramaPrimative::Text(b) => write!(f, "{:?}", b),
+            BramaPrimative::Function(func) => write!(f, "<Fonksiyon='{}'>", func.name),
+            BramaPrimative::ClassFunction(func, _) => write!(f, "<Fonksiyon='{}'>", func.name),
+            BramaPrimative::Class(class) => write!(f, "<Sınıf='{}'>", class.get_type())
+        }
+    }
+}
+
+impl fmt::Display for VmObject {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match &*self.deref() {
             BramaPrimative::Empty => write!(f, "boş"),
             BramaPrimative::Number(number) => write!(f, "{}", number),
             BramaPrimative::Bool(b) => write!(f, "{}", b),

@@ -3,20 +3,24 @@ use crate::compiler::value::EMPTY_OBJECT;
 use crate::buildin::class::baseclass::BasicInnerClass;
 use crate::compiler::value::BramaPrimative;
 use crate::types::VmObject;
-use crate::{n_parameter_expected, expected_parameter_type, arc_bool};
+use crate::{n_parameter_expected, expected_parameter_type, arc_bool, arc_empty};
 
-pub fn get_primative_class() -> BasicInnerClass {
+pub fn get_primative_class() -> Box<dyn Class + Send + Sync> {
     let mut opcode = BasicInnerClass::default();
     opcode.set_name("Liste");
     
     opcode.add_method("getir", get);
+    opcode.add_method("güncelle", set);
+    opcode.add_method("guncelle", set);
     opcode.add_method("uzunluk", length);
     opcode.add_method("ekle", add);
     opcode.add_method("temizle", clear);
     opcode.add_method("arayaekle", insert);
     opcode.add_method("pop", pop);
     opcode.add_method("sil", remove);
-    opcode
+    opcode.set_getter(getter);
+    opcode.set_setter(setter);
+    Box::new(opcode)
 }
 
 fn get(parameter: FunctionParameter) -> NativeCallResult {
@@ -35,6 +39,64 @@ fn get(parameter: FunctionParameter) -> NativeCallResult {
                 };
             },
             _ => n_parameter_expected!("getir", 1, parameter.length())
+        };
+    }
+    Ok(EMPTY_OBJECT)
+}
+
+fn set(parameter: FunctionParameter) -> NativeCallResult {
+    if let BramaPrimative::List(list) = &*parameter.source().unwrap().deref() {
+        return match parameter.length() {
+            0 =>  n_parameter_expected!("güncelle", 2),
+            2 => {
+                let mut iter = parameter.iter();
+                let (position_object, item) = (&*iter.next().unwrap().deref(), &*iter.next().unwrap());
+
+                let position = match position_object {
+                    BramaPrimative::Number(number) => *number,
+                    _ => return expected_parameter_type!("güncelle", "Sayı")
+                };
+
+                let is_in_size = position <= list.borrow().len() as f64;
+                return match is_in_size {
+                    true => {
+                        list.borrow_mut()[position as usize] = *item; 
+                        Ok(arc_bool!(true))
+                    },
+                    false => Ok(arc_bool!(false))
+                };
+            },
+            _ => n_parameter_expected!("güncelle", 2, parameter.length())
+        };
+    }
+    Ok(EMPTY_OBJECT)
+}
+
+fn getter(source: VmObject, index: usize) -> NativeCallResult {
+    if let BramaPrimative::List(list) = &*source.deref() {
+
+        let is_in_size = index <= list.borrow().len();
+        return match is_in_size {
+            true => match list.borrow().get(index) {
+                Some(item) => Ok(*item),
+                _ => Ok(EMPTY_OBJECT)
+            },
+            false => Ok(arc_empty!())
+        };
+    }
+    Ok(EMPTY_OBJECT)
+}
+
+fn setter(source: VmObject, index: usize, item: VmObject) -> NativeCallResult {
+    if let BramaPrimative::List(list) = &*source.deref() {
+
+        let is_in_size = index <= list.borrow().len();
+        return match is_in_size {
+            true => {
+                list.borrow_mut()[index as usize] = item; 
+                Ok(arc_bool!(true))
+            },
+            false => Ok(arc_bool!(false))
         };
     }
     Ok(EMPTY_OBJECT)

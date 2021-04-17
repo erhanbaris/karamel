@@ -6,15 +6,8 @@ fn main() {
 
     let parameters = ExecutionParameters {
         source: ExecutionSource::Code(r#"
-listem = ['merhaba', 'dünya']
-
-hataayıklama::doğrula(listem.sil(0), "merhaba")
-hataayıklama::doğrula(listem.uzunluk(), 1)
-
-hataayıklama::doğrula(listem.sil(0), "dünya")
-hataayıklama::doğrula(listem.uzunluk(), 0)
-        
-        
+data = { 'key_1': 'evet' }
+a = data.anahtarlar() == ['key_1', 'key_2']
 "#.to_string()),
         return_opcode: true,
         return_output: true
