@@ -134,18 +134,6 @@ impl From<HashMap<String, VmObject>> for VmObject {
     }
 }
 
-impl fmt::Display for VmObject {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{:?}", &*self.deref())
-    }
-}
-
-impl fmt::Debug for VmObject {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{:?}", &*self.deref())
-    }
-}
-
 impl fmt::Debug for BramaPrimative {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
