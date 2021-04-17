@@ -29,7 +29,7 @@ impl SyntaxParserTrait for ExpressionParser {
                 parser.flags.set(inner_parser_flags);
             }
             
-            /* parse for 'object.method()' or 'object.method' */
+            /* parse for 'object.method' */
             else if let Some(_) = parser.match_operator(&[BramaOperatorType::Dot]) {
 
                 let inner_parser_flags  = parser.flags.get();

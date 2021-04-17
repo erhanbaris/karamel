@@ -59,7 +59,6 @@ pub unsafe fn dump_opcode<W: Write>(index: usize, options: &mut BramaCompiler, l
             },
 
             
-            VmOpCode::CallStack |
             VmOpCode::Compare => {
                 let location = opcode_index + ((options.opcodes[opcode_index+2] as u16 * 256) + options.opcodes[opcode_index+1] as u16) as usize;
                 let data = format!("║ {:4} ║ {:15} ║ {:^5?} ║ {:^5} ║", opcode_index, format!("{:?}", opcode), location, "");
@@ -97,6 +96,7 @@ pub unsafe fn dump_opcode<W: Write>(index: usize, options: &mut BramaCompiler, l
                 build_arrow(index, opcode_index, 0, &mut buffer, &data);
             },
 
+            VmOpCode::CallStack |
             VmOpCode::Call => {
                 let location = (options.opcodes[opcode_index+1] as u16) as usize;
                 let data = format!("║ {:4} ║ {:15} ║ {:^5?} ║ {:^5} ║", opcode_index, format!("{:?}", opcode), location, options.opcodes[opcode_index + 2]);
@@ -343,7 +343,7 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
                         BramaPrimative::Function(reference) => reference.execute(options, None)?,
                         BramaPrimative::ClassFunction(reference, source) => reference.execute(options, Some(*source))?,
                         _ => {
-                            log::debug!("{:?}", &*function);
+                            log::debug!("{:?} not callable", &*function);
                         return Err("Not callable".to_string());
                         }
                     };

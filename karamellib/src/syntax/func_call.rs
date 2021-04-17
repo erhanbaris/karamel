@@ -108,7 +108,7 @@ impl ExtensionSyntaxParser for FuncCallParser {
         else if let Some(_) = parser.match_operator(&[BramaOperatorType::Dot]) {
             
 
-            let sub_ast = ExpressionParser::parse(parser)?;
+            let sub_ast = FuncCallParser::parse(parser)?;
 
             return match &sub_ast {
                 BramaAstType::FuncCall {
@@ -131,10 +131,7 @@ impl ExtensionSyntaxParser for FuncCallParser {
                         }
                     }
                 }
-                _ => {
-                    log::debug!("Function call syntax not valid {:?}", sub_ast);
-                    Err(BramaErrorType::FunctionCallSyntaxNotValid)
-                }
+                _ => Ok(sub_ast)
             };
         }
 
