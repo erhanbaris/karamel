@@ -6,7 +6,7 @@ use std::fmt;
 use std::collections::HashMap;
 
 
-use crate::{buildin::class::baseclass::BasicInnerClass, types::*};
+use crate::{buildin::Class, types::*};
 use crate::compiler::function::FunctionReference;
 use crate::compiler::GetType;
 
@@ -22,11 +22,10 @@ pub enum BramaPrimative {
     Bool(bool),
     List(RefCell<Vec<VmObject>>),
     Dict(RefCell<HashMap<String, VmObject>>),
-    Atom(u64),
     Text(Arc<String>),
     Function(Arc<FunctionReference>),
     ClassFunction(Arc<FunctionReference>, VmObject),
-    Class(Arc<BasicInnerClass>)
+    Class(Arc<dyn Class + Send + Sync>)
 }
 
 unsafe impl Send for BramaPrimative {}
@@ -41,7 +40,6 @@ impl BramaPrimative {
             BramaPrimative::Text(value)       => !value.is_empty(),
             BramaPrimative::Number(value)     => *value > 0.0,
             BramaPrimative::Bool(value)       => *value,
-            BramaPrimative::Atom(_)           => true,
             BramaPrimative::List(items)       => !items.borrow().is_empty(),
             BramaPrimative::Dict(items) => !items.borrow().is_empty(),
             BramaPrimative::Empty             => false,
@@ -65,12 +63,11 @@ impl BramaPrimative {
             BramaPrimative::List(_) => 2,
             BramaPrimative::Dict(_) => 3,
             
-            BramaPrimative::Empty => 6,
-            BramaPrimative::Bool(_) => 4,
-            BramaPrimative::Atom(_) => 5,
-            BramaPrimative::Function(_) => 7,
-            BramaPrimative::ClassFunction(_, _) => 8,
-            BramaPrimative::Class(_) => 9
+            BramaPrimative::Empty => 4,
+            BramaPrimative::Bool(_) => 5,
+            BramaPrimative::Function(_) => 6,
+            BramaPrimative::ClassFunction(_, _) => 7,
+            BramaPrimative::Class(_) => 8
         }
     }
 }
@@ -81,7 +78,6 @@ impl GetType for BramaPrimative {
             BramaPrimative::Text(_)     => "yazı".to_string(),
             BramaPrimative::Number(_)   => "sayı".to_string(),
             BramaPrimative::Bool(_)     => "bool".to_string(),
-            BramaPrimative::Atom(_)     => "atom".to_string(),
             BramaPrimative::List(_)     => "liste".to_string(),
             BramaPrimative::Dict(_)     => "sözlük".to_string(),
             BramaPrimative::Empty       => "boş".to_string(),
@@ -142,7 +138,6 @@ impl fmt::Debug for BramaPrimative {
             BramaPrimative::Bool(b) => write!(f, "{:?}", b),
             BramaPrimative::List(b) => write!(f, "{:?}", b.borrow()),
             BramaPrimative::Dict(b) => write!(f, "{:?}", b),
-            BramaPrimative::Atom(b) => write!(f, "{:?}", b),
             BramaPrimative::Text(b) => write!(f, "{:?}", b),
             BramaPrimative::Function(func) => write!(f, "<Fonksiyon='{}'>", func.name),
             BramaPrimative::ClassFunction(func, _) => write!(f, "<Fonksiyon='{}'>", func.name),
@@ -159,7 +154,6 @@ impl fmt::Display for BramaPrimative {
             BramaPrimative::Bool(b) => write!(f, "{}", b),
             BramaPrimative::List(b) => write!(f, "{:?}", b.borrow()),
             BramaPrimative::Dict(b) => write!(f, "{:?}", b),
-            BramaPrimative::Atom(b) => write!(f, "{}", b),
             BramaPrimative::Text(b) => write!(f, "{}", b),
             BramaPrimative::Function(func) => write!(f, "<Fonksiyon='{}'>", func.name),
             BramaPrimative::ClassFunction(func, _) => write!(f, "<Fonksiyon='{}'>", func.name),
@@ -176,7 +170,6 @@ impl fmt::Debug for VmObject {
             BramaPrimative::Bool(b) => write!(f, "{:?}", b),
             BramaPrimative::List(b) => write!(f, "{:?}", b.borrow()),
             BramaPrimative::Dict(b) => write!(f, "{:?}", b),
-            BramaPrimative::Atom(b) => write!(f, "{:?}", b),
             BramaPrimative::Text(b) => write!(f, "{:?}", b),
             BramaPrimative::Function(func) => write!(f, "<Fonksiyon='{}'>", func.name),
             BramaPrimative::ClassFunction(func, _) => write!(f, "<Fonksiyon='{}'>", func.name),
@@ -193,7 +186,6 @@ impl fmt::Display for VmObject {
             BramaPrimative::Bool(b) => write!(f, "{}", b),
             BramaPrimative::List(b) => write!(f, "{:?}", b.borrow()),
             BramaPrimative::Dict(b) => write!(f, "{:?}", b),
-            BramaPrimative::Atom(b) => write!(f, "{}", b),
             BramaPrimative::Text(b) => write!(f, "{}", b),
             BramaPrimative::Function(func) => write!(f, "<Fonksiyon='{}'>", func.name),
             BramaPrimative::ClassFunction(func, _) => write!(f, "<Fonksiyon='{}'>", func.name),
@@ -212,7 +204,6 @@ impl PartialEq for BramaPrimative {
     fn eq(&self, other: &Self) -> bool {
         match (self, &other) {
             (BramaPrimative::Bool(lvalue),            BramaPrimative::Bool(rvalue)) => lvalue == rvalue,
-            (BramaPrimative::Atom(lvalue),            BramaPrimative::Atom(rvalue)) => lvalue == rvalue,
             (BramaPrimative::Empty,                   BramaPrimative::Empty)        => true,
             (BramaPrimative::Number(n),               BramaPrimative::Number(m))    => if n.is_nan() && m.is_nan() { true } else { n == m },
             (BramaPrimative::Text(lvalue),            BramaPrimative::Text(rvalue)) => lvalue == rvalue,

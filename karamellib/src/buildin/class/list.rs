@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use crate::{buildin::Class, compiler::function::{FunctionParameter, NativeCallResult}};
 use crate::compiler::value::EMPTY_OBJECT;
 use crate::buildin::class::baseclass::BasicInnerClass;
@@ -5,9 +7,9 @@ use crate::compiler::value::BramaPrimative;
 use crate::types::VmObject;
 use crate::{n_parameter_expected, expected_parameter_type, arc_bool, arc_empty};
 
-pub fn get_primative_class() -> Box<dyn Class + Send + Sync> {
+pub fn get_primative_class() -> Arc<dyn Class + Send + Sync> {
     let mut opcode = BasicInnerClass::default();
-    opcode.set_name("Liste");
+    opcode.set_name("liste");
     
     opcode.add_method("getir", get);
     opcode.add_method("güncelle", set);
@@ -20,7 +22,7 @@ pub fn get_primative_class() -> Box<dyn Class + Send + Sync> {
     opcode.add_method("sil", remove);
     opcode.set_getter(getter);
     opcode.set_setter(setter);
-    Box::new(opcode)
+    Arc::new(opcode)
 }
 
 fn get(parameter: FunctionParameter) -> NativeCallResult {

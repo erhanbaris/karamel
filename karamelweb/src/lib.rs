@@ -34,7 +34,6 @@ pub fn execute_code(name: &str) -> Object {
                             BramaPrimative::Number(number) => results.push(&JsValue::from_f64(*number).into()),
                             BramaPrimative::Bool(bool) => results.push(&JsValue::from_bool(*bool).into()),
                             BramaPrimative::Empty => results.push(&JsValue::undefined().into()),
-                            BramaPrimative::Atom(atom) => results.push(&JsValue::from_f64(*atom as f64).into()),
                             _ => 0
                         };
                     }

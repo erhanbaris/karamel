@@ -28,7 +28,6 @@ Halen geliştirme aşamasında olup, yardımlara her zaman açığız. Mutlaka k
 * Noktalı Sayı \(_1.234_, _1\_234.56789_, _123.4e+4_, _1\_230.4e+4_\)
 * Yazı \(_"Merhaba Dünya"_, _'Merhaba Dünya'_\)
 * Bool \(_doğru_, _yanlış_\)
-* Atom \(_:bilgi_, _:başarılı_, _:hatalı_\)
 * Liste \(_\[1,2,3\]_, _\[\]_, _\[:kayıt\_başarılı, 'Kullanıcı Bilgisi'\]_\)
 * Sözlük \(_{'ad':'erhan', 'soyad':'barış'}_\)
 

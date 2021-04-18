@@ -156,17 +156,12 @@ mod tests {
     test_last_memory!(vm_41, "10/2", BramaPrimative::Number(5.0));
     test_last_memory!(vm_42, "9/2", BramaPrimative::Number(4.5));
     test_last_memory!(vm_43, "0/0", BramaPrimative::Empty);
-    test_last_memory!(vm_44, ":erhan eşittir :erhan", BramaPrimative::Bool(true));
     test_last_memory!(vm_45, "10 küçüktür 100 ve 'erhan' eşitdeğildir 'barış' eşittir doğru", BramaPrimative::Bool(true));
-    test_last_memory!(vm_46, ":erhan eşitdeğildir :erhan", BramaPrimative::Bool(false));
-    test_last_memory!(vm_47, ":erhan eşittir :barış", BramaPrimative::Bool(false));
-    test_last_memory!(vm_48, ":erhan eşitdeğildir :barış", BramaPrimative::Bool(true));
     test_last_memory!(vm_49, "1_024 * 1_024 == 1_048_576", BramaPrimative::Bool(true));
     test_last_memory!(vm_50, "empty == empty", BramaPrimative::Bool(true));
     test_last_memory!(vm_51, "empty != empty", BramaPrimative::Bool(false));
     test_last_memory!(vm_52, "yok == yok", BramaPrimative::Bool(true));
     test_last_memory!(vm_53, "yok != yok", BramaPrimative::Bool(false));
-    test_last_memory!(vm_54, ":ok - 1 == yok", BramaPrimative::Bool(true));
     test_last_memory!(vm_55, "test_1 == test_2", BramaPrimative::Bool(true));
     test_variable_value!(vm_56, "text", "text = 1024", BramaPrimative::Number(1024.0));
     test_variable_value!(vm_57, "result", r#"text = 1024

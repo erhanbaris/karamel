@@ -1,4 +1,4 @@
-use std::vec::Vec;
+use std::{borrow::Borrow, vec::Vec};
 use std::sync::Arc;
 use std::cell::RefCell;
 
@@ -12,6 +12,7 @@ use crate::compiler::value::BramaPrimative;
 use crate::compiler::ast::{BramaAstType, BramaIfStatementElseItem};
 use crate::compiler::storage_builder::StorageBuilder;
 use crate::compiler::function::{FunctionReference, FunctionType};
+use crate::buildin::class::PRIMATIVE_CLASSES;
 
 use log;
 
@@ -55,6 +56,7 @@ pub struct BramaCompiler {
     pub current_scope: *mut Scope,
     pub scope_index: usize,
     pub functions : Vec<Arc<FunctionReference>>,
+    pub classes : Vec<Arc<dyn Class  + Send + Sync>>,
     pub stdout: Option<RefCell<String>>,
     pub stderr: Option<RefCell<String>>
 }
@@ -72,6 +74,7 @@ impl  BramaCompiler {
             current_scope: ptr::null_mut(),
             scope_index: 0,
             functions: Vec::new(),
+            classes: Vec::new(),
             stdout: None,
             stderr: None
         };
@@ -108,6 +111,10 @@ impl  BramaCompiler {
         self.functions.push(information);
     }
 
+    pub fn add_class(&mut self, class_info: Arc<dyn Class + Sync + Send>) {
+        self.classes.push(class_info.clone());
+    }
+
     pub fn find_function(&self, name: String, module_path: Vec<String>, framework: String, start_storage_index: usize) -> Option<Arc<FunctionReference>> {
         let mut search_storage = start_storage_index;
         loop {
@@ -136,6 +143,14 @@ impl  BramaCompiler {
                 Some(location) => location as usize,
                 None => return None
             };
+        }
+    }
+
+    pub fn find_class(&self, name: String, _module_path: Vec<String>, _framework: String, _start_storage_index: usize) -> Option<Arc<dyn Class  + Send + Sync>> {
+        let primative_search = PRIMATIVE_CLASSES.borrow().iter().find(|&item| item.get_class_name() == name);
+        match primative_search {
+            Some(class) => Some(class.clone()),
+            None => None
         }
     }
 
@@ -368,7 +383,7 @@ impl InterpreterCompiler {
         Ok(false)
     }
 
-    fn generate_accessor_func_call(&self, source: &BramaAstType, indexer: &BramaAstType, assign_to_temp: bool,  upper_ast: &BramaAstType, options: &mut BramaCompiler, storage_index: usize) -> CompilerResult {
+    fn generate_accessor_func_call(&self, source: &BramaAstType, indexer: &BramaAstType, _assign_to_temp: bool,  upper_ast: &BramaAstType, options: &mut BramaCompiler, storage_index: usize) -> CompilerResult {
 
         if let BramaAstType::FuncCall { func_name_expression, arguments, assign_to_temp: _ } = indexer {
             match &**func_name_expression {
@@ -566,20 +581,30 @@ impl InterpreterCompiler {
             Some(index) => {
                 options.opcodes.push(VmOpCode::Load as u8);
                 options.opcodes.push(index as u8);
+                return Ok(())
+            },
+            _ => ()
+        };
+
+        let result = storage.get_class_constant(variable.to_string(), Vec::new(), "".to_string());
+        match result {
+            Some(index) => {
+                options.opcodes.push(VmOpCode::Load as u8);
+                options.opcodes.push(index as u8);
+                return Ok(())
+            },
+            _ => ()
+        };
+
+        match options.storages.get_mut(storage_index).unwrap().get_variable_location(variable) {
+            /* Variable found */
+            Some(location) => {
+                options.opcodes.push(VmOpCode::Load as u8);
+                options.opcodes.push(location as u8);
                 Ok(())
             },
-            _ => {
-                match options.storages.get_mut(storage_index).unwrap().get_variable_location(variable) {
-                    /* Variable found */
-                    Some(location) => {
-                        options.opcodes.push(VmOpCode::Load as u8);
-                        options.opcodes.push(location as u8);
-                        Ok(())
-                    },
-                    /* Variable not found, lets check for function */
-                    None => return Err("Value not found in storage")
-                }
-            }
+            /* Variable not found, lets check for function */
+            None => return Err("Value not found in storage")
         }
     }
 

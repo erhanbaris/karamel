@@ -6,9 +6,9 @@ use crate::types::VmObject;
 
 use std::{mem, sync::Arc};
 
-pub fn get_primative_class() -> Box<dyn Class + Send + Sync> {
+pub fn get_primative_class() -> Arc<dyn Class + Send + Sync> {
     let mut opcode = BasicInnerClass::default();
-    opcode.set_name("Sayı");
+    opcode.set_name("sayı");
     
     opcode.add_method("hex", hex);
     opcode.add_method("yuvarla", round);
@@ -16,7 +16,7 @@ pub fn get_primative_class() -> Box<dyn Class + Send + Sync> {
     opcode.add_method("taban", floor);
     opcode.add_method("tamsayı", trunc);
     opcode.add_method("kesir", fract);
-    Box::new(opcode)
+    Arc::new(opcode)
 }
 
 fn hex(parameter: FunctionParameter) -> NativeCallResult {

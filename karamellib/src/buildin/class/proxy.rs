@@ -1,0 +1,122 @@
+use crate::compiler::BramaPrimative;
+use crate::{
+    buildin::{Class, ClassProperty},
+    compiler::function::{IndexerGetCall, IndexerSetCall, NativeCall},
+    types::VmObject,
+};
+
+use crate::buildin::ClassConfig;
+use crate::compiler::GetType;
+use std::sync::Arc;
+
+#[derive(Default)]
+pub struct ProxyClass {
+    config: ClassConfig
+}
+
+impl Class for ProxyClass {
+    fn set_class_config(&mut self, _: ClassConfig) {}
+
+    fn get_class_name(&self) -> String {
+        "".to_string()
+    }
+
+    fn has_element(&self, source: Option<VmObject>, field: Arc<String>) -> bool {
+        match source {
+            Some(source_object) => match &*source_object.deref() {
+                BramaPrimative::Class(class) => class.has_element(source, field),
+                _ => false
+            },
+            None => false,
+        }
+    }
+
+    fn properties(&self) -> std::collections::hash_map::Iter<'_, String, ClassProperty> {
+        self.config.properties.iter()
+    }
+
+fn get_element(&self, source: Option<VmObject>, field: Arc<String>) -> Option<ClassProperty> {
+        match source {
+            Some(source_object) => match &*source_object.deref() {
+                BramaPrimative::Class(class) => class.get_element(source, field),
+                _ => None
+            },
+            None => None,
+        }
+    }
+
+    fn property_count(&self) -> usize {
+        0
+    }
+
+    fn add_method(&mut self, _: &str, _: NativeCall) {}
+
+    fn add_property(&mut self, _: &str, _: Arc<BramaPrimative>) {}
+
+    fn set_getter(&mut self, _: IndexerGetCall) {}
+
+    fn get_getter(&self) -> Option<IndexerGetCall> {
+        None
+    }
+
+    fn set_setter(&mut self, _: IndexerSetCall) {}
+
+    fn get_setter(&self) -> Option<IndexerSetCall> {
+        None
+    }
+}
+
+pub fn get_primative_class() -> Arc<dyn Class + Send + Sync> {
+    Arc::new(ProxyClass { 
+        config: ClassConfig::default()
+    })
+}
+
+impl ProxyClass {
+    pub fn set_name(&mut self, _: &str) {}
+}
+
+impl GetType for ProxyClass {
+    fn get_type(&self) -> String {
+        "".to_string()
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::buildin::class::baseclass::BasicInnerClass;
+    use crate::buildin::Class;
+    use crate::compiler::BramaPrimative;
+    use crate::compiler::GetType;
+    use std::sync::Arc;
+
+    #[test]
+    fn test_opcode_class_1() {
+        let opcode_class = BasicInnerClass::default();
+        assert_eq!(opcode_class.get_type().len(), 0);
+        assert_eq!(opcode_class.property_count(), 0);
+    }
+
+    #[test]
+    fn test_opcode_class_2() {
+        let mut opcode_class: BasicInnerClass = BasicInnerClass::default();
+        opcode_class.set_name("test_class");
+
+        assert_eq!(opcode_class.get_class_name(), "test_class".to_string());
+        assert_eq!(opcode_class.property_count(), 0);
+        assert_eq!(opcode_class.get_type(), opcode_class.get_class_name());
+        assert_eq!(opcode_class.get_type(), "test_class".to_string());
+    }
+
+    #[test]
+    fn test_opcode_class_4() {
+        let mut opcode_class: BasicInnerClass = BasicInnerClass::default();
+        opcode_class.set_name("test_class");
+
+        opcode_class.add_property("field_1", Arc::new(BramaPrimative::Number(1024.0)));
+        opcode_class.add_property("field_2", Arc::new(BramaPrimative::Number(2048.0)));
+
+        assert_eq!(opcode_class.get_class_name(), "test_class".to_string());
+        assert_eq!(opcode_class.property_count(), 2);
+    }
+}

@@ -15,7 +15,7 @@ pub struct DictClass {
 
  impl GetType for DictClass {
     fn get_type(&self) -> String {
-        "Sözlük".to_string()
+        "sözlük".to_string()
     }
 }
 
@@ -25,6 +25,8 @@ impl DictClass {
         dict.add_method("getir", get);
         dict.add_method("güncelle", set);
         dict.add_method("guncelle", set);
+        dict.add_method("içeriyormu", contains);
+        dict.add_method("iceriyormu", contains);
         dict.add_method("uzunluk", length);
         dict.add_method("ekle", add);
         dict.add_method("temizle", clear);
@@ -99,8 +101,8 @@ impl DictClass {
  }
 
 
-pub fn get_primative_class() -> Box<dyn Class + Send + Sync> {
-    Box::new(DictClass::new())
+pub fn get_primative_class() -> Arc<dyn Class + Send + Sync> {
+    Arc::new(DictClass::new())
 }
 
 fn get(parameter: FunctionParameter) -> NativeCallResult {
@@ -145,7 +147,7 @@ fn insert_or_update(parameter: FunctionParameter, function_name: &str) -> Native
                     _ => return expected_parameter_type!("anahtar", "Yazı")
                 };
                 *dict.borrow_mut().entry((&position).to_string()).or_insert(*item) = *item;
-                Ok(arc_bool!(true))
+                Ok(EMPTY_OBJECT)
             },
             _ => n_parameter_expected!(function_name, 2, parameter.length())
         };
@@ -199,5 +201,21 @@ fn keys(parameter: FunctionParameter) -> NativeCallResult {
         return Ok(VmObject::native_convert(primative_list!(keys)));
     }
 
+    Ok(EMPTY_OBJECT)
+}
+
+fn contains(parameter: FunctionParameter) -> NativeCallResult {
+    if let BramaPrimative::Dict(dict) = &*parameter.source().unwrap().deref() {
+        return match parameter.length() {
+            0 =>  n_parameter_expected!("içeriyormu", 1),
+            1 => {
+                match &*parameter.iter().next().unwrap().deref() {
+                    BramaPrimative::Text(search) =>  Ok(VmObject::native_convert(BramaPrimative::Bool(dict.borrow().contains_key(&**search)))),
+                    _ => expected_parameter_type!("içeriyormu", "Yazı")
+                }
+            },
+            _ => n_parameter_expected!("içeriyormu", 1, parameter.length())
+        };
+    }
     Ok(EMPTY_OBJECT)
 }

@@ -66,6 +66,14 @@ impl StorageBuilder {
                     None => ()
                 };
 
+                let class_search = options.find_class(string.to_string(), Vec::new(), "".to_string(), storage_index);
+                match class_search {
+                    Some(reference) => {
+                        options.storages.get_mut(storage_index).unwrap().add_constant(Arc::new(BramaPrimative::Class(reference)));
+                    },
+                    None => ()
+                };
+
                 options.storages.get_mut(storage_index).unwrap().add_variable(&string);
                 compiler_option.max_stack = max(1, compiler_option.max_stack);
                 1
@@ -112,15 +120,13 @@ impl StorageBuilder {
             BramaAstType::AccessorFuncCall {
                 source,
                 indexer,
-                assign_to_temp
+                assign_to_temp: _
             } => {
-                compiler_option.max_stack = max(self.get_temp_count_from_ast(source, ast, options, storage_index, compiler_option), compiler_option.max_stack);
-                compiler_option.max_stack = max(self.get_temp_count_from_ast(indexer, ast, options, storage_index, compiler_option), compiler_option.max_stack);
-                if *assign_to_temp {
-                    1
-                } else {
-                    0
-                }
+                let source_tmp  = self.get_temp_count_from_ast(source, ast, options, storage_index, compiler_option);
+                let indexer_tmp = self.get_temp_count_from_ast(indexer, ast, options, storage_index, compiler_option);
+
+                compiler_option.max_stack = max(source_tmp + indexer_tmp, compiler_option.max_stack);
+                source_tmp + indexer_tmp
             },
 
 /*

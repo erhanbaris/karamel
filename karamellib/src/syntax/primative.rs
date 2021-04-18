@@ -1,5 +1,3 @@
-use std::hash::{Hash, Hasher};
-use std::collections::hash_map::DefaultHasher;
 use std::sync::Arc;
 
 use crate::types::*;
@@ -31,25 +29,6 @@ impl PrimativeParser {
                     BramaKeywordType::True  => Ok(BramaAstType::Primative(Arc::new(BramaPrimative::Bool(true)))),
                     BramaKeywordType::False => Ok(BramaAstType::Primative(Arc::new(BramaPrimative::Bool(false)))),
                     BramaKeywordType::Empty => Ok(BramaAstType::Primative(Arc::new(BramaPrimative::Empty))),
-                    _ => Ok(BramaAstType::None)
-                }
-            },
-            BramaTokenType::Operator(BramaOperatorType::ColonMark) => {
-                let next_token = parser.next_token();
-                if next_token.is_err() {
-                    parser.set_index(index_backup);
-                    return Ok(BramaAstType::None)
-                }
-
-                match &next_token.unwrap().token_type {
-                    BramaTokenType::Symbol(symbol) => {
-                        parser.consume_token();
-
-                        let mut hasher = DefaultHasher::new();
-                        symbol.hash(&mut hasher);
-
-                        Ok(BramaAstType::Primative(Arc::new(BramaPrimative::Atom(hasher.finish()))))
-                    },
                     _ => Ok(BramaAstType::None)
                 }
             },

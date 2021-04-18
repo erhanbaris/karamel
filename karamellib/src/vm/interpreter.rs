@@ -404,7 +404,6 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
 
                     let status = match &*condition {
                         BramaPrimative::Empty => false,
-                        BramaPrimative::Atom(_) => true,
                         BramaPrimative::Bool(l_value) => *l_value,
                         BramaPrimative::Number(l_value) => *l_value > 0.0,
                         BramaPrimative::Text(l_value) => !(*l_value).is_empty(),
@@ -483,7 +482,6 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
                     for i in 0..size {
                         dec_memory_index!(options, 1);
                         (*options.current_scope).memory[i + const_size] = (*options.current_scope).stack[get_memory_index!(options)];
-                        //println!("{:?}", (*options.current_scope).memory[i].deref());
                     }
 
                     options.opcode_index += 1;
