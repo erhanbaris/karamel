@@ -1,0 +1,2 @@
+# Genel Sözlük
+
