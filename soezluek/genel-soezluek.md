@@ -1,13 +1,11 @@
 # Genel Sözlük
 
-#### Çart
+## Çart
 
 1. Parça
 2. Suların getirdiği çer çöp
 
-#### Kılavuzlama
+## Kılavuzlama
 
 1. yol gösterme, rehberlik etme
-
-
 

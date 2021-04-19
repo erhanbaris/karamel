@@ -4,7 +4,7 @@
 
 Değme türlü yazıların kaç birim uzunlukta yer tuttuğunu sağışlar ve çıktı olarak verir.
 
-#### Örnek
+### Örnek
 
 > yazı\_uzunluğu değişkenine "Sarartamadıklarımızdan geriye kalan." yazısının kaç birim yazıdan oluştuğunu sayıp sağışlayalım.
 
@@ -17,7 +17,7 @@ gç::satıryaz('Yazı uzunluğu: ', yazı_uzunluğu)
 
 ## harfleriküçült\(\)
 
-Abecelerde küçük ve büyük türde yazımları olan bütün büyük harfleri küçük harflere çevirir. 
+Abecelerde küçük ve büyük türde yazımları olan bütün büyük harfleri küçük harflere çevirir.
 
 {% code title="sına.krml" %}
 ```bash
@@ -38,7 +38,7 @@ Bu işlev, küçültme işini bir süreliğine yalnızca Türk abecesi üzerinde
 
 ## harfleribüyült\(\)
 
-Abecelerde küçük ve büyük türde yazımları olan bütün küçük harfleri büyük harflere çevirir. 
+Abecelerde küçük ve büyük türde yazımları olan bütün küçük harfleri büyük harflere çevirir.
 
 {% code title="sına.krml" %}
 ```bash
