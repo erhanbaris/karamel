@@ -1,7 +1,7 @@
 use std::sync::Arc;
 use std::cell::RefCell;
 
-use crate::{buildin::{Class, ClassConfig, ClassProperty}, compiler::{GetType, function::{FunctionParameter, IndexerGetCall, IndexerSetCall, NativeCall, NativeCallResult}}};
+use crate::{buildin::{Class, ClassConfig, ClassProperty}, compiler::{GetType, function::{FunctionParameter, IndexerGetCall, IndexerSetCall, NativeCall, NativeCallResult, FunctionFlag}}};
 use crate::compiler::value::EMPTY_OBJECT;
 use crate::buildin::class::baseclass::BasicInnerClass;
 use crate::compiler::value::BramaPrimative;
@@ -22,16 +22,16 @@ pub struct DictClass {
 impl DictClass {
     pub fn new() -> Self {
         let mut dict = DictClass::default();
-        dict.add_method("getir", get);
-        dict.add_method("güncelle", set);
-        dict.add_method("guncelle", set);
-        dict.add_method("içeriyormu", contains);
-        dict.add_method("iceriyormu", contains);
-        dict.add_method("uzunluk", length);
-        dict.add_method("ekle", add);
-        dict.add_method("temizle", clear);
-        dict.add_method("sil", remove);
-        dict.add_method("anahtarlar", keys);
+        dict.add_class_method("getir", get);
+        dict.add_class_method("güncelle", set);
+        dict.add_class_method("guncelle", set);
+        dict.add_class_method("içeriyormu", contains);
+        dict.add_class_method("iceriyormu", contains);
+        dict.add_class_method("uzunluk", length);
+        dict.add_class_method("ekle", add);
+        dict.add_class_method("temizle", clear);
+        dict.add_class_method("sil", remove);
+        dict.add_class_method("anahtarlar", keys);
         dict
     }
 }
@@ -75,8 +75,8 @@ impl DictClass {
         self.base.property_count()
     }
 
-    fn add_method(&mut self, name: &str, function: NativeCall) {
-        self.base.add_method(name, function);
+    fn add_method(&mut self, name: &str, function: NativeCall, flags: FunctionFlag) {
+        self.base.add_method(name, function, flags);
     }
 
     fn add_property(&mut self, name: &str, property: Arc<BramaPrimative>) {
@@ -218,4 +218,14 @@ fn contains(parameter: FunctionParameter) -> NativeCallResult {
         };
     }
     Ok(EMPTY_OBJECT)
+}
+
+impl DictClass {
+    pub fn add_static_method(&mut self, name: &str, function: NativeCall) {
+        self.base.add_method(name, function, FunctionFlag::IN_CLASS & FunctionFlag::STATIC);
+    }
+
+    pub fn add_class_method(&mut self, name: &str, function: NativeCall) {
+        self.base.add_method(name, function, FunctionFlag::IN_CLASS);
+    }
 }

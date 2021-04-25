@@ -11,15 +11,15 @@ pub fn get_primative_class() -> Arc<dyn Class + Send + Sync> {
     let mut opcode = BasicInnerClass::default();
     opcode.set_name("liste");
     
-    opcode.add_method("getir", get);
-    opcode.add_method("güncelle", set);
-    opcode.add_method("guncelle", set);
-    opcode.add_method("uzunluk", length);
-    opcode.add_method("ekle", add);
-    opcode.add_method("temizle", clear);
-    opcode.add_method("arayaekle", insert);
-    opcode.add_method("pop", pop);
-    opcode.add_method("sil", remove);
+    opcode.add_class_method("getir", get);
+    opcode.add_class_method("güncelle", set);
+    opcode.add_class_method("guncelle", set);
+    opcode.add_class_method("uzunluk", length);
+    opcode.add_class_method("ekle", add);
+    opcode.add_class_method("temizle", clear);
+    opcode.add_class_method("arayaekle", insert);
+    opcode.add_class_method("pop", pop);
+    opcode.add_class_method("sil", remove);
     opcode.set_getter(getter);
     opcode.set_setter(setter);
     Arc::new(opcode)

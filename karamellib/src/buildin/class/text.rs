@@ -14,28 +14,28 @@ pub fn get_primative_class() -> Arc<dyn Class + Send + Sync> {
     let mut opcode = BasicInnerClass::default();
     opcode.set_name("yazı");
     
-    opcode.add_method("uzunluk", length);
-    opcode.add_method("harfleriküçült", lowercase);
-    opcode.add_method("harflerikucult", lowercase);
-    opcode.add_method("harfleribüyült", uppercase);
-    opcode.add_method("harfleribuyult", uppercase);
-    opcode.add_method("içeriyormu", contains);
-    opcode.add_method("iceriyormu", contains);
-    opcode.add_method("satırlar", lines);
-    opcode.add_method("satirlar", lines);
-    opcode.add_method("parçala", split);
-    opcode.add_method("parcala", split);
-    opcode.add_method("ara", find);
-    opcode.add_method("değiştir", replace);
-    opcode.add_method("degistir", replace);
-    opcode.add_method("kırp", trim);
-    opcode.add_method("kirp", trim);
-    opcode.add_method("sonukırp", end_trim);
-    opcode.add_method("sonukirp", end_trim);
-    opcode.add_method("başıkırp", start_trim);
-    opcode.add_method("basikirp", start_trim);
-    opcode.add_method("parçagetir", substring);
-    opcode.add_method("parcagetir", substring);
+    opcode.add_class_method("uzunluk", length);
+    opcode.add_class_method("harfleriküçült", lowercase);
+    opcode.add_class_method("harflerikucult", lowercase);
+    opcode.add_class_method("harfleribüyült", uppercase);
+    opcode.add_class_method("harfleribuyult", uppercase);
+    opcode.add_class_method("içeriyormu", contains);
+    opcode.add_class_method("iceriyormu", contains);
+    opcode.add_class_method("satırlar", lines);
+    opcode.add_class_method("satirlar", lines);
+    opcode.add_class_method("parçala", split);
+    opcode.add_class_method("parcala", split);
+    opcode.add_class_method("ara", find);
+    opcode.add_class_method("değiştir", replace);
+    opcode.add_class_method("degistir", replace);
+    opcode.add_class_method("kırp", trim);
+    opcode.add_class_method("kirp", trim);
+    opcode.add_class_method("sonukırp", end_trim);
+    opcode.add_class_method("sonukirp", end_trim);
+    opcode.add_class_method("başıkırp", start_trim);
+    opcode.add_class_method("basikirp", start_trim);
+    opcode.add_class_method("parçagetir", substring);
+    opcode.add_class_method("parcagetir", substring);
     Arc::new(opcode)
 }
 

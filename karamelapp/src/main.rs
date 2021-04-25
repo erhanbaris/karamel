@@ -7,7 +7,9 @@ fn main() {
     let parameters = ExecutionParameters {
         source: ExecutionSource::Code(r#"
 data = { 'key_1': 'evet' }
-a = data.anahtarlar() == ['key_1', 'key_2']
+data.key_1 = 'hayır'
+hataayıklama::doğrula(data.getir('key_1'), 'hayır')
+        
 "#.to_string()),
         return_opcode: true,
         return_output: true

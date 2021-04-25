@@ -324,7 +324,7 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
                     options.opcode_index += 1;
                     
                     if let BramaPrimative::Function(reference) = &*(*options.current_scope).memory[func_location].deref() {
-                        reference.execute(options, None)?;
+                        reference.execute(options)?;
                     }
                     else {
                         return Err("Not callable".to_string());
@@ -332,12 +332,11 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
                 },
 
                 VmOpCode::CallStack => {
-                    let function = pop!(options);
-                    match &*function {
-                        BramaPrimative::Function(reference) => reference.execute(options, None)?,
-                        BramaPrimative::ClassFunction(reference, source) => reference.execute(options, Some(*source))?,
+                    let function = pop_raw!(options);
+                    match &*function.deref() {
+                        BramaPrimative::Function(reference) => reference.execute(options)?,
                         _ => {
-                            log::debug!("{:?} not callable", &*function);
+                            log::debug!("{:?} not callable", &*function.deref());
                         return Err("Not callable".to_string());
                         }
                     };
@@ -456,17 +455,17 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
                     let raw_object  = pop_raw!(options);
                     let object = &*raw_object.deref();
 
-                    (*options.current_scope).stack[get_memory_index!(options)] =match &*indexer {
+                    (*options.current_scope).stack[get_memory_index!(options)] = match &*indexer {
                         BramaPrimative::Text(text) => {
-                             match PRIMATIVE_CLASSES.get_unchecked(object.discriminant()).get_element(Some(raw_object), text.clone()) {
+                             match object.get_class().get_element(Some(raw_object), text.clone()) {
                                 Some(element) => match element {
-                                    ClassProperty::Function(function) => VmObject::from(Arc::new(BramaPrimative::ClassFunction(function.clone(), raw_object))),
+                                    ClassProperty::Function(function) => VmObject::from(Arc::new(BramaPrimative::Function(function.clone()))),
                                     ClassProperty::Field(field) => VmObject::from(field.clone())
                                 },
                                 _ => empty_primative
                             }
                         },
-                        BramaPrimative::Number(index) => match PRIMATIVE_CLASSES.get_unchecked(object.discriminant()).get_getter() {
+                        BramaPrimative::Number(index) => match object.get_class().get_getter() {
                             Some(function) => function(raw_object, *index as usize)?,
                             _ => empty_primative
                         }

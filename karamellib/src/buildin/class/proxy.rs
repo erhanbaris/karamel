@@ -1,7 +1,7 @@
 use crate::compiler::BramaPrimative;
 use crate::{
     buildin::{Class, ClassProperty},
-    compiler::function::{IndexerGetCall, IndexerSetCall, NativeCall},
+    compiler::function::{IndexerGetCall, IndexerSetCall, NativeCall, FunctionFlag},
     types::VmObject,
 };
 
@@ -49,7 +49,7 @@ fn get_element(&self, source: Option<VmObject>, field: Arc<String>) -> Option<Cl
         0
     }
 
-    fn add_method(&mut self, _: &str, _: NativeCall) {}
+    fn add_method(&mut self, _: &str, _: NativeCall, flags: FunctionFlag) {}
 
     fn add_property(&mut self, _: &str, _: Arc<BramaPrimative>) {}
 
