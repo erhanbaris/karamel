@@ -5,7 +5,7 @@ use std::slice::Iter;
 use std::iter::Take;
 use bitflags::bitflags;
 
-use crate::{inc_memory_index, dec_memory_index, get_memory_index};
+use crate::{inc_memory_index, dec_memory_index, get_memory_index, current_raw};
 use crate::types::*;
 use crate::compiler::{BramaCompiler, Scope};
 
@@ -169,7 +169,7 @@ impl FunctionReference {
         let call_return_assign_to_temp = compiler.opcodes[compiler.opcode_index + 2] != 0;
         let parameter = match reference.flags {
             FunctionFlag::IN_CLASS => {
-                let source = fetch_raw!(compiler);
+                let source = current_raw!(compiler);
                 FunctionParameter::new(&(*compiler.current_scope).stack, Some(source), get_memory_index!(compiler), total_args, &compiler.stdout, &compiler.stderr)
             },
             _ => FunctionParameter::new(&(*compiler.current_scope).stack, None, get_memory_index!(compiler), total_args, &compiler.stdout, &compiler.stderr)

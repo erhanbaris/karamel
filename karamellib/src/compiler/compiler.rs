@@ -394,7 +394,7 @@ impl InterpreterCompiler {
                     }
                     
                     self.generate_opcode(source, &BramaAstType::None, options, storage_index)?;
-                    
+                    //todo: Pass real object to function as a parameter.
                     
                     let search_location = options.storages[storage_index].get_constant_location(Arc::new(BramaPrimative::Text(Arc::new(function_name.to_string()))));
                     match search_location {
