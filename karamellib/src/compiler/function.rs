@@ -107,11 +107,11 @@ impl Default for FunctionType {
 }
 
 impl FunctionReference {
-    pub fn execute(&self, compiler: &mut BramaCompiler) -> Result<(), String>{
+    pub fn execute(&self, compiler: &mut BramaCompiler, base: Option<VmObject>) -> Result<(), String>{
         unsafe {
             match self.callback {
-                FunctionType::Native(func) => FunctionReference::native_function_call(&self, func, compiler),
-                FunctionType::Opcode => FunctionReference::opcode_function_call(&self,  compiler)
+                FunctionType::Native(func) => FunctionReference::native_function_call(&self, func, compiler, base),
+                FunctionType::Opcode => FunctionReference::opcode_function_call(&self,  compiler, base)
             }
         }
     }
@@ -164,15 +164,12 @@ impl FunctionReference {
         Arc::new(reference)
     }
 
-    unsafe fn native_function_call(reference: &FunctionReference, func: NativeCall, compiler: &mut BramaCompiler) -> Result<(), String> {            
+    unsafe fn native_function_call(reference: &FunctionReference, func: NativeCall, compiler: &mut BramaCompiler, source: Option<VmObject>) -> Result<(), String> {            
         let total_args = compiler.opcodes[compiler.opcode_index + 1];
         let call_return_assign_to_temp = compiler.opcodes[compiler.opcode_index + 2] != 0;
         let parameter = match reference.flags {
-            FunctionFlag::IN_CLASS => {
-                let source = current_raw!(compiler);
-                FunctionParameter::new(&(*compiler.current_scope).stack, Some(source), get_memory_index!(compiler), total_args, &compiler.stdout, &compiler.stderr)
-            },
-            _ => FunctionParameter::new(&(*compiler.current_scope).stack, None, get_memory_index!(compiler), total_args, &compiler.stdout, &compiler.stderr)
+            FunctionFlag::IN_CLASS => FunctionParameter::new(&(*compiler.current_scope).stack, source, get_memory_index!(compiler), total_args, &compiler.stdout, &compiler.stderr),
+            _ => FunctionParameter::new(&(*compiler.current_scope).stack, source, get_memory_index!(compiler), total_args, &compiler.stdout, &compiler.stderr)
         };
         
         match func(parameter) {
@@ -194,7 +191,7 @@ impl FunctionReference {
         }
     }
 
-    fn opcode_function_call(reference: &FunctionReference, options: &mut BramaCompiler) -> Result<(), String> {
+    fn opcode_function_call(reference: &FunctionReference, options: &mut BramaCompiler, source: Option<VmObject>) -> Result<(), String> {
 
         let argument_size  = options.opcodes[options.opcode_index + 1];
         let call_return_assign_to_temp = options.opcodes[options.opcode_index + 2] != 0;

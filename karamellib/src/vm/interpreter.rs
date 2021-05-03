@@ -323,8 +323,8 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
                     let func_location = options.opcodes[options.opcode_index + 1] as usize;
                     options.opcode_index += 1;
                     
-                    if let BramaPrimative::Function(reference) = &*(*options.current_scope).memory[func_location].deref() {
-                        reference.execute(options)?;
+                    if let BramaPrimative::Function(reference, _) = &*(*options.current_scope).memory[func_location].deref() {
+                        reference.execute(options, None)?;
                     }
                     else {
                         return Err("Not callable".to_string());
@@ -334,7 +334,7 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
                 VmOpCode::CallStack => {
                     let function = pop_raw!(options);
                     match &*function.deref() {
-                        BramaPrimative::Function(reference) => reference.execute(options)?,
+                        BramaPrimative::Function(reference, base) => reference.execute(options, *base)?,
                         _ => {
                             log::debug!("{:?} not callable", &*function.deref());
                         return Err("Not callable".to_string());
@@ -459,7 +459,7 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
                         BramaPrimative::Text(text) => {
                              match object.get_class().get_element(Some(raw_object), text.clone()) {
                                 Some(element) => match element {
-                                    ClassProperty::Function(function) => VmObject::from(Arc::new(BramaPrimative::Function(function.clone()))),
+                                    ClassProperty::Function(function) => VmObject::from(Arc::new(BramaPrimative::Function(function.clone(), Some(raw_object)))),
                                     ClassProperty::Field(field) => VmObject::from(field.clone())
                                 },
                                 _ => empty_primative

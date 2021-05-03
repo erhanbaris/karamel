@@ -298,7 +298,7 @@ impl InterpreterCompiler {
         let function_search = options.find_function(name, module_path, "".to_string(), storage_index);
         match function_search {
             Some(reference) => {
-                let result = storage.get_constant_location(Arc::new(BramaPrimative::Function(reference)));
+                let result = storage.get_constant_location(Arc::new(BramaPrimative::Function(reference, None)));
                 match result {
                     Some(index) => {
                         options.opcodes.push(VmOpCode::Load as u8);
@@ -350,7 +350,7 @@ impl InterpreterCompiler {
 
         match function_search {
             Some(function_ref) => {
-                let search_location = options.storages[storage_index].get_constant_location(Arc::new(BramaPrimative::Function(function_ref)));
+                let search_location = options.storages[storage_index].get_constant_location(Arc::new(BramaPrimative::Function(function_ref, None)));
                 match search_location {
                     Some(location) => {
                         options.opcodes.push(VmOpCode::Call as u8);
