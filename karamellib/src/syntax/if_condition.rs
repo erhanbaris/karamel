@@ -4,6 +4,7 @@ use crate::syntax::expression::ExpressionParser;
 use crate::compiler::ast::{BramaAstType, BramaIfStatementElseItem};
 use crate::syntax::block::{SingleLineBlockParser, MultiLineBlockParser};
 use crate::error::BramaErrorType;
+use crate::syntax::control::OrParser;
 
 pub struct IfConditiontParser;
 
@@ -12,17 +13,11 @@ impl SyntaxParserTrait for IfConditiontParser {
         let index_backup = parser.get_index();
         parser.indentation_check()?;
 
+        let indentation = parser.get_indentation();
+        let expression = OrParser::parse(parser)?;
+        parser.cleanup_whitespaces();
+
         if parser.match_keyword(BramaKeywordType::If) {
-            let indentation = parser.get_indentation();
-            parser.cleanup_whitespaces();
-
-            let expression = ExpressionParser::parse(parser);
-            match expression {
-                Ok(BramaAstType::None) => return expression,
-                Ok(_) => (),
-                Err(_) => return expression
-            };
-
             parser.cleanup_whitespaces();
             if let None = parser.match_operator(&[BramaOperatorType::ColonMark]) {
                 return Err(BramaErrorType::ColonMarkMissing);
@@ -48,7 +43,7 @@ impl SyntaxParserTrait for IfConditiontParser {
             let mut else_if: Vec<Box<BramaIfStatementElseItem>> = Vec::new();
 
             while parser.is_same_indentation(indentation) {
-                if parser.match_keyword(BramaKeywordType::Else) {
+                if parser.match_keyword(BramaKeywordType::Or) {
                     parser.cleanup_whitespaces();
 
                     let else_condition = ExpressionParser::parse(parser)?;
@@ -96,7 +91,7 @@ impl SyntaxParserTrait for IfConditiontParser {
             }
 
             let assignment_ast = BramaAstType::IfStatement {
-                condition: Box::new(expression.unwrap()),
+                condition: Box::new(expression),
                 body: Box::new(true_body),
                 else_body,
                 else_if: else_if.to_vec()
