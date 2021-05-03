@@ -19,3 +19,7 @@ hataayıklama::doğrula(data.içeriyormu("key"), yanlış)
 data.temizle()
 hataayıklama::doğrula(data.uzunluk(), 0)
 
+
+fonk a(): döndür 10
+data.key_2 = a
+hataayıklama::doğrula(data.getir('key_2')(), 10)    
