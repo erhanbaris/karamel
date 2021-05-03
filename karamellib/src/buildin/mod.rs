@@ -6,7 +6,7 @@ pub mod base_functions;
 #[macro_use]
 pub mod class;
 
-use crate::{compiler::{GetType, function::{IndexerGetCall, IndexerSetCall}}, types::VmObject};
+use crate::{compiler::{GetType, function::{IndexerGetCall, IndexerSetCall, FunctionFlag}}, types::VmObject};
 
 use std::collections::HashMap;
 use std::vec::Vec;
@@ -83,7 +83,7 @@ pub trait Class: GetType {
     fn property_count(&self) -> usize;
     fn properties(&self) -> std::collections::hash_map::Iter<'_, String, ClassProperty>;
     
-    fn add_method(&mut self, name: &str, function: NativeCall);
+    fn add_method(&mut self, name: &str, function: NativeCall, flags: FunctionFlag);
     fn add_property(&mut self, name: &str, property: Arc<BramaPrimative>);
     
     fn set_getter(&mut self, indexer: IndexerGetCall);

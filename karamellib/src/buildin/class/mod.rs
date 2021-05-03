@@ -3,22 +3,23 @@ pub mod text;
 pub mod list;
 pub mod dict;
 pub mod baseclass;
+pub mod proxy;
 
 use crate::buildin::class::baseclass::BasicInnerClass;
-use std::vec::Vec;
+use std::{sync::Arc, vec::Vec};
 use lazy_static::lazy_static;
 
 use super::Class;
 
 
-pub fn get_empty_class() -> Box<dyn Class + Send + Sync> {
+pub fn get_empty_class() -> Arc<dyn Class + Send + Sync> {
     let mut opcode = BasicInnerClass::default();
     opcode.set_name("__NO__CLASS__");
-    Box::new(opcode)
+    Arc::new(opcode)
 }
 
 lazy_static! {
-    pub static ref PRIMATIVE_CLASSES: Vec<Box<dyn Class  + Send + Sync>> = {
+    pub static ref PRIMATIVE_CLASSES: Vec<Arc<dyn Class  + Send + Sync>> = {
         let mut m = Vec::new();
         m.push(number::get_primative_class());
         m.push(text::get_primative_class());
@@ -28,7 +29,7 @@ lazy_static! {
         m.push(get_empty_class());
         m.push(get_empty_class());
         m.push(get_empty_class());
-        m.push(get_empty_class());
+        m.push(proxy::get_primative_class());
         m.push(get_empty_class());
         m
     };

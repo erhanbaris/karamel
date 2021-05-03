@@ -1,4 +1,4 @@
-use crate::{buildin::{Class, ClassProperty}, compiler::function::{IndexerGetCall, IndexerSetCall, NativeCall}, types::VmObject};
+use crate::{buildin::{Class, ClassProperty}, compiler::function::{IndexerGetCall, IndexerSetCall, NativeCall, FunctionFlag}, types::VmObject};
 use crate::compiler::{BramaPrimative, function::{FunctionReference}};
 
 use std::{sync::Arc};
@@ -38,8 +38,8 @@ pub struct BasicInnerClass {
         self.config.properties.len()
     }
 
-    fn add_method(&mut self, name: &str, function: NativeCall) {
-        self.config.properties.insert(name.to_string(), ClassProperty::Function(FunctionReference::buildin_function(function, name.to_string())));
+    fn add_method(&mut self, name: &str, function: NativeCall, flags: FunctionFlag) {
+        self.config.properties.insert(name.to_string(), ClassProperty::Function(FunctionReference::buildin_function(function, name.to_string(), flags)));
     }
 
     fn add_property(&mut self, name: &str, property: Arc<BramaPrimative>) {
@@ -74,6 +74,14 @@ impl BasicInnerClass {
         if self.config.name.len() == 0 {
             self.config.name = name.to_string();
         }
+    }
+
+    pub fn add_static_method(&mut self, name: &str, function: NativeCall) {
+        self.add_method(name, function, FunctionFlag::IN_CLASS & FunctionFlag::STATIC);
+    }
+
+    pub fn add_class_method(&mut self, name: &str, function: NativeCall) {
+        self.add_method(name, function, FunctionFlag::IN_CLASS);
     }
 }
 

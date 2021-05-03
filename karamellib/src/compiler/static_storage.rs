@@ -88,14 +88,27 @@ impl StaticStorage {
     
     pub fn set_temp_size(&mut self, value: u8) { self.temp_size = value; }
 
-    pub fn add_constant(&mut self, value: Arc<BramaPrimative>) {
-        let has = self.constants.iter().any(|x| {
+    /// add variable and constant data same time. Assign constant location to variable reference.
+    /// If variable or constant data already assigned before, it will try to update variable value with constant.
+    pub fn add_static_data(&mut self, name: &str, value: Arc<BramaPrimative>) {
+        let variable_location = self.add_variable(name);
+        let constant_location = self.add_constant(value.clone());
+        
+        self.variables[variable_location as usize].1 = constant_location as u8;
+    }
+
+    pub fn add_constant(&mut self, value: Arc<BramaPrimative>) -> usize {
+        let constant_position = self.constants.iter().position(|x| {
             *x.deref() == *value
         });
         
-        if !has { 
-            self.constants.push(VmObject::convert(value));
-        };
+        match constant_position {
+            Some(position) => position,
+            None => {
+                self.constants.push(VmObject::convert(value));
+                self.constants.len() -1
+            }
+        }
     }
 
     pub fn add_variable(&mut self, name: &str) -> u8 {
@@ -135,7 +148,7 @@ impl StaticStorage {
     pub fn get_function_constant(&self, name: String, module_path: Vec<String>, framework: String) -> Option<u8> {
         
         for (index, item) in self.memory.borrow().iter().enumerate() {
-            if let BramaPrimative::Function(reference) = &*item.deref() {
+            if let BramaPrimative::Function(reference, _) = &*item.deref() {
                 if reference.name        == name && 
                    reference.module_path == module_path && 
                    reference.framework   == framework {
@@ -146,6 +159,20 @@ impl StaticStorage {
 
         None
     }
+
+    pub fn get_class_constant(&self, name: String, _module_path: Vec<String>, _framework: String) -> Option<u8> {
+        
+        for (index, item) in self.memory.borrow().iter().enumerate() {
+            if let BramaPrimative::Class(reference) = &*item.deref() {
+                if reference.get_class_name() == name {
+                    return Some(index as u8);
+                }
+            }
+        }
+
+        None
+    }
+
     #[cfg(feature = "unittest")]
     pub fn dump(&self) {}
 

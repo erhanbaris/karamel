@@ -2,8 +2,7 @@ use std::vec::Vec;
 use std::str::Chars;
 use std::iter::Peekable;
 use std::result::Result;
-use std::hash::{Hash, Hasher};
-use std::collections::hash_map::DefaultHasher;
+use std::hash::Hash;
 use std::sync::Arc;
 use crate::{compiler::ast::BramaAstType, error::BramaError};
 use crate::error::BramaErrorType;
@@ -346,17 +345,5 @@ impl BramaTokenType {
             BramaTokenType::Keyword(keyword) => *keyword,
             _ => BramaKeywordType::None
         }
-    }
-}
-
-pub trait StrTrait {
-    fn atom(&self) -> u64;
-}
-
-impl StrTrait for str {
-    fn atom(&self) -> u64 {
-        let mut hasher = DefaultHasher::new();
-        self.hash(&mut hasher);
-        hasher.finish()
     }
 }
