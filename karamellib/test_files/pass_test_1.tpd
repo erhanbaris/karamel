@@ -1,6 +1,6 @@
 sayaç = 1
 sonsuz:
-    eğer sayaç == 10:
+    sayaç == 10 ise:
         kır
     gç::satıryaz(sayaç)
     sayaç += 1

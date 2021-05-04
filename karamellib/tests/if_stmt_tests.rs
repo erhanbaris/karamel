@@ -28,9 +28,9 @@ mod tests {
         };
     }
 
-    test_compare!(if_1, r#"eğer 1024 * 123:
+    test_compare!(if_1, r#"1024 * 123 ise:
     erhan=123  
-yoksa: 
+veya: 
   erhan=1234
 "#, Ok(BramaAstType::IfStatement {
     condition: Box::new(BramaAstType::Binary {
@@ -51,7 +51,7 @@ yoksa:
     else_if: Vec::new()
     }));
 
-    test_compare!(if_2, r#"eğer 1024 * 123:
+    test_compare!(if_2, r#"1024 * 123 ise:
     erhan=123   "#, Ok(BramaAstType::IfStatement {
     condition: Box::new(BramaAstType::Binary {
         left: Box::new(BramaAstType::Primative(Arc::new(BramaPrimative::Number(1024.0)))), 
@@ -67,7 +67,7 @@ yoksa:
     else_if: Vec::new()
     }));
 
-    test_compare!(if_3, r#"eğer 1024 * 123:
+    test_compare!(if_3, r#"1024 * 123 ise:
     erhan=123   
     print(1)"#, Ok(BramaAstType::IfStatement {
     condition: Box::new(BramaAstType::Binary {
@@ -90,10 +90,10 @@ yoksa:
     else_if: Vec::new()
     }));
 
-    test_compare!(if_4, r#"eğer 1024 * 123 : 
+    test_compare!(if_4, r#"1024 * 123 ise : 
     erhan=123    
     print(1) 
-yoksa : 
+veya : 
     erhan=321 
     print(2)"#, Ok(BramaAstType::IfStatement {
     condition: Box::new(BramaAstType::Binary {
@@ -126,11 +126,11 @@ yoksa :
     else_if: Vec::new()
     }));
 
-    test_compare!(if_5, r#"eğer 1024 * 123:
+    test_compare!(if_5, r#"1024 * 123 ise:
     erhan=123
-yoksa 1024 * 123 > 10_000_000:
+veya 1024 * 123 > 10_000_000 ise:
     erhan=12345
-yoksa:
+veya:
     erhan=1234
 "#, Ok(BramaAstType::IfStatement {
     condition: Box::new(BramaAstType::Binary {
@@ -163,13 +163,13 @@ yoksa:
     })))].to_vec()
     }));
 
-    test_compare!(if_6, r#"eğer 1024 * 123:
+    test_compare!(if_6, r#"1024 * 123 ise:
     erhan=123
-yoksa 1024 * 123 > 10_000_000:
+veya 1024 * 123 > 10_000_000 ise:
     erhan=12345
-yoksa 1024 * 123 < 10_000_000:
+veya 1024 * 123 < 10_000_000 ise:
     erhan=123456
-yoksa:
+veya:
     erhan=1234
 "#, Ok(BramaAstType::IfStatement {
     condition: Box::new(BramaAstType::Binary {
@@ -215,41 +215,41 @@ yoksa:
     })))].to_vec()
     }));
 
-    test_compare!(if_7, r#"eğer 1024 * 123:
+    test_compare!(if_7, r#"1024 * 123 ise:
     erhan=123
-yoksa 1024 * 123 > 10_000_000:
+veya 1024 * 123 > 10_000_000 ise:
     erhan=12345
-yoksa 1024 * 123 < 10_000_000:
+veya 1024 * 123 < 10_000_000 ise:
     erhan=123456
-yoksa:
+veya:
     erhan=1234
-yoksa:
+veya:
     erhan=1234
 "#, Err(BramaError {
     error_type: BramaErrorType::ElseIsUsed,
-    column: 6,
+    column: 5,
     line: 8
 }));
 
-test_compare!(if_8, r#"eğer 1024 * 123:
+test_compare!(if_8, r#"1024 * 123 ise:
     erhan=123
-yoksa:
+veya:
     erhan=1234
-yoksa 1024 * 123 > 10_000_000:
+veya 1024 * 123 > 10_000_000 ise:
     erhan=12345
-yoksa 1024 * 123 < 10_000_000:
+veya 1024 * 123 < 10_000_000 ise:
     erhan=123456
 "#, Err(BramaError {
     error_type: BramaErrorType::ElseIsUsed,
-    column: 30,
+    column: 28,
     line: 4
 }));
 
 
 
-test_compare!(if_9, r#"eğer 1024 * 123:
+test_compare!(if_9, r#"1024 * 123 ise:
     erhan=123
-yoksa 1024 * 123 > 10_000_000:
+veya 1024 * 123 > 10_000_000 ise:
     erhan=12345
 "#, Ok(BramaAstType::IfStatement {
 condition: Box::new(BramaAstType::Binary {

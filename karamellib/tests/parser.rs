@@ -293,8 +293,6 @@ mod tests {
     test_number!(double_6, Double, "1_23.4_e+4_", 1234000.0);
     test_number!(double_7, Double, "09__9_999.9_", 99999.9);
 
-    test_keyword!(keyword_1, "true", BramaKeywordType::True);
     test_keyword!(keyword_2, "doğru", BramaKeywordType::True);
-    test_keyword!(keyword_3, "false", BramaKeywordType::False);
     test_keyword!(keyword_4, "yanlış", BramaKeywordType::False);
 }

@@ -177,12 +177,12 @@ full_text = text_1 + ' ' + text_2"#, BramaPrimative::Text(Arc::new("erhan baris"
 --erhan
 --erhan
 --erhan"#, BramaPrimative::Number(97.0));
-    test_variable_value!(vm_61, "erhan", r#"erhan=true
+    test_variable_value!(vm_61, "erhan", r#"erhan=doğru
 erhan=!erhan"#, BramaPrimative::Bool(false));
-    test_variable_value!(vm_62, "erhan", r#"erhan=false
+    test_variable_value!(vm_62, "erhan", r#"erhan=yanlış
 erhan=!erhan"#, BramaPrimative::Bool(true));
-    test_variable_value!(vm_63, "erhan", r#"erhan=!false"#, BramaPrimative::Bool(true));
-    test_variable_value!(vm_64, "erhan", r#"erhan=!true"#, BramaPrimative::Bool(false));
+    test_variable_value!(vm_63, "erhan", r#"erhan=!yanlış"#, BramaPrimative::Bool(true));
+    test_variable_value!(vm_64, "erhan", r#"erhan=!doğru"#, BramaPrimative::Bool(false));
     test_variable_value!(vm_65, "erhan", r#"erhan=!-100"#, BramaPrimative::Bool(true));
     test_variable_value!(vm_66, "erhan", r#"erhan=1
 barış=erhan++"#, BramaPrimative::Number(2.0));
@@ -200,34 +200,34 @@ erhan*=2"#, BramaPrimative::Number(10.0));
     test_variable_value!(vm_73, "erhan", r#"erhan=9/3"#, BramaPrimative::Number(3.0));
     test_variable_value!(vm_74, "erhan", r#"
 erhan=1
-eğer erhan == 1:
+erhan == 1 ise:
     erhan=2"#, BramaPrimative::Number(2.0));
     test_variable_value!(vm_75, "erhan", r#"
 erhan=1
-eğer erhan != 1:
+erhan != 1 ise:
     erhan=2"#, BramaPrimative::Number(1.0));
     test_variable_value!(vm_76, "baris", r#"
 erhan=1
 baris=2
-eğer erhan > 0:
+erhan > 0 ise:
  erhan=2
  baris=3"#, BramaPrimative::Number(3.0));
  test_variable_value!(vm_77, "erhan", r#"
 erhan=1
-eğer doğru:
+doğru ise:
   erhan=2"#, BramaPrimative::Number(2.0));
   test_variable_value!(vm_78, "erhan", r#"
 erhan=1
-eğer yanlış:
+yanlış ise:
     erhan=2
-yoksa:
+veya:
    erhan=3"#, BramaPrimative::Number(3.0));
    test_variable_value!(vm_79, "erhan", r#"
 veri = 'erhan'
-eğer veri != 'erhan':
+veri != 'erhan' ise:
     erhan = "oldu"
     io::printline('Oldu')
-yoksa veri:
+veya veri ise:
     erhan = "olmadi"
     io::printline('1 == 1')"#, BramaPrimative::Text(Arc::new("olmadi".to_string())));
 
@@ -249,12 +249,12 @@ a = 'erhan'
 b = 'barış'
 hataayıklama::doğrula(a != b)"#);
 execute!(vm_87, r#"hataayıklama::doğrula(doğru ve doğru)"#);
-execute!(vm_88, r#"hataayıklama::doğrula(doğru or yanlış)"#);
+execute!(vm_88, r#"hataayıklama::doğrula(doğru veya yanlış)"#);
 execute!(vm_89, r#"
 veri = 'erhan'
-eğer veri != 'erhan':
+veri != 'erhan' ise:
     erhan = "oldu"
-yoksa veri:
+veya veri ise:
     erhan = "olmadi"
 hataayıklama::doğrula(erhan, 'olmadi')
 "#);
@@ -389,16 +389,16 @@ execute!(vm_106, r#"
 fonk test(a):
     fonk __test_1(a):
         fonk __test_2(a):
-            return a
-        return __test_2(a)
-    return __test_1(a)
+            döndür a
+        döndür __test_2(a)
+    döndür __test_1(a)
 hataayıklama::doğrula(test("erhan"), 'erhan')
 "#);
 execute!(vm_107, r#"
 fonk Fibonacci(n):
-    eğer n <= 1:
+    n <= 1 ise:
         döndür n
-    yoksa:
+    veya:
         döndür(Fibonacci(n-1) + Fibonacci(n-2))
 hataayıklama::doğrula(Fibonacci(10), 55)
 hataayıklama::doğrula(Fibonacci(20), 6765)
