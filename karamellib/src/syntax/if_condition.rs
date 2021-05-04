@@ -43,7 +43,7 @@ impl SyntaxParserTrait for IfConditiontParser {
             let mut else_if: Vec<Box<BramaIfStatementElseItem>> = Vec::new();
 
             while parser.is_same_indentation(indentation) {
-                if parser.match_keyword(BramaKeywordType::Or) {
+                if let Some(_) = parser.match_operator(&[BramaOperatorType::Or]) {
                     parser.cleanup_whitespaces();
 
                     let else_condition = ExpressionParser::parse(parser)?;
@@ -52,9 +52,21 @@ impl SyntaxParserTrait for IfConditiontParser {
                         return Err(BramaErrorType::ElseIsUsed);
                     }
 
+                    match else_condition {
+                        BramaAstType::None => (),
+                        _                  => {
+                            parser.cleanup_whitespaces();
+                            if !parser.match_keyword(BramaKeywordType::If) {
+                                return Err(BramaErrorType::MissingIf);
+                            }
+                        }
+                    };
+                    
+                    parser.cleanup_whitespaces();
                     if let None = parser.match_operator(&[BramaOperatorType::ColonMark]) {
                         return Err(BramaErrorType::ColonMarkMissing);
                     }
+
                     else if !else_body.is_none() {
                         return Err(BramaErrorType::MultipleElseUsageNotValid);
                     }
@@ -78,8 +90,6 @@ impl SyntaxParserTrait for IfConditiontParser {
                         BramaAstType::None => else_body = Some(Box::new(body)),
                         _                  => else_if.push(Box::new(BramaIfStatementElseItem::new(Box::new(else_condition), Box::new(body))))
                     };
-
-                    
                 }
                 else {
                     break;

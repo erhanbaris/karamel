@@ -10,11 +10,11 @@ a = 1
 b = 2
 c = 1
 
-a eşittir b ise:
+a == b ise:
     gç::satıryaz('a eşittir b')
-yada a eşittir c ise:  
+veya a == c ise:  
     gç::satıryaz('a eşittir c')
-yoksa:  
+veya:
     gç::satıryaz('a hiçbirine eşit değil')
 "#.to_string()),
         return_opcode: true,
