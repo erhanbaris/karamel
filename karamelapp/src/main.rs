@@ -6,10 +6,16 @@ fn main() {
 
     let parameters = ExecutionParameters {
         source: ExecutionSource::Code(r#"
-data = { 'key_1': 'evet' }
-data.key_1 = 'hayır'
-hataayıklama::doğrula(data.getir('key_1'), 'hayır')
-        
+a = 1
+b = 2
+c = 1
+
+a == b ise:
+    gç::satıryaz('a eşittir b')
+veya a == c ise:  
+    gç::satıryaz('a eşittir c')
+veya:
+    gç::satıryaz('a hiçbirine eşit değil')
 "#.to_string()),
         return_opcode: true,
         return_output: true

@@ -58,13 +58,13 @@ mod tests {
         })
     }));
     
-    test_compare!(and_1, "10 and 10", Ok(BramaAstType::Control {
+    test_compare!(and_1, "10 ve 10", Ok(BramaAstType::Control {
         left: Box::new(BramaAstType::Primative(Arc::new(BramaPrimative::Number(10.0)))), 
         operator: BramaOperatorType::And, 
         right: Box::new(BramaAstType::Primative(Arc::new(BramaPrimative::Number(10.0))))
     }));
     
-    test_compare!(or_1, "10 or 10", Ok(BramaAstType::Control {
+    test_compare!(or_1, "10 veya 10", Ok(BramaAstType::Control {
         left: Box::new(BramaAstType::Primative(Arc::new(BramaPrimative::Number(10.0)))), 
         operator: BramaOperatorType::Or, 
         right: Box::new(BramaAstType::Primative(Arc::new(BramaPrimative::Number(10.0))))

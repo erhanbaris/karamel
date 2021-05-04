@@ -20,7 +20,10 @@ Halen geliştirme aşamasında olup, yardımlara her zaman açığız. Mutlaka k
 
 ### İndirilebilir durumda mı?
 
-Şu anda indirilebilir bir örneği yok ama en kısa zamanda web üzerinden çalışabilir bir versiyonu yapıp yayınlamayı düşünüyoruz.
+Ne yazık ki indirilebilir değil fakat tarayıcı üzerinden çalıştırabilirsiniz.
+Aşağıda ki linki tarayıcınızda açarsanız denemeye devam başlayabilirsiniz.
+
+https://erhanbaris.github.io/karamel/karamelweb/src/www/
 
 ### Temel Tipler
 
@@ -54,11 +57,11 @@ Döngü kontrolü için _devam_, _continue_, _kır_, _break_.
 ### Sorgulama
 
 ```text
-eğer a == b:  
+a == b ise:
     gç::satıryaz('a eşittir b')
-yoksa a == c:  
+veya a == c ise:  
     gç::satıryaz('a eşittir c')
-yoksa:  
+veya:  
     gç::satıryaz('a hiçbirine eşit değil')
 ```
 
@@ -74,11 +77,11 @@ fonk merhaba_dünya:
 fonk metod_1(a):
     gç::yaz(a)
 
-fonk faktoriyel(sayı):    
-    eğer sayı==1 veya sayı==0:
+fonk faktoriyel(faktoriyel_sayısı):    
+    faktoriyel_sayısı==1 veya faktoriyel_sayısı==0 ise:
         döndür 1
-    yoksa:
-        döndür sayı * faktoriyel(sayı - 1)
+    veya:
+        döndür faktoriyel_sayısı * faktoriyel(faktoriyel_sayısı - 1)
 
 faktoriyel_sonucu = faktoriyel(10)
 gç::satıryaz('faktoriyel 10 => ', faktoriyel_sonucu)

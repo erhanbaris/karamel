@@ -154,7 +154,7 @@ döndür test
 test_compare!(func_def_15, r#"
 fonk test():
     erhan=123
-    return erhan"#, Ok(BramaAstType::FunctionDefination {
+    döndür erhan"#, Ok(BramaAstType::FunctionDefination {
     name: "test".to_string(),
     arguments: [].to_vec(),
     body: Arc::new(BramaAstType::Block([BramaAstType::Assignment {
@@ -167,7 +167,7 @@ fonk test():
 test_compare!(func_def_16, r#"
 fonk test():
     erhan=123
-    return"#, Ok(BramaAstType::FunctionDefination {
+    döndür"#, Ok(BramaAstType::FunctionDefination {
     name: "test".to_string(),
     arguments: [].to_vec(),
     body: Arc::new(BramaAstType::Block([BramaAstType::Assignment {

@@ -108,13 +108,13 @@ mod tests {
         right: Box::new(BramaAstType::Primative(Arc::new(BramaPrimative::Number(10.0))))
     }));
 
-    test_compare!(multiply_divide_6, "true * true", Ok(BramaAstType::Binary {
+    test_compare!(multiply_divide_6, "doğru * doğru", Ok(BramaAstType::Binary {
         left: Box::new(BramaAstType::Primative(Arc::new(BramaPrimative::Bool(true)))),
         operator: BramaOperatorType::Multiplication, 
         right: Box::new(BramaAstType::Primative(Arc::new(BramaPrimative::Bool(true)))), 
     }));
 
-    test_compare!(multiply_divide_7, "true / true", Ok(BramaAstType::Binary {
+    test_compare!(multiply_divide_7, "doğru / doğru", Ok(BramaAstType::Binary {
         left: Box::new(BramaAstType::Primative(Arc::new(BramaPrimative::Bool(true)))),
         operator: BramaOperatorType::Division, 
         right: Box::new(BramaAstType::Primative(Arc::new(BramaPrimative::Bool(true)))), 

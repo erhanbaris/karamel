@@ -62,41 +62,41 @@ mod tests {
 123"#);
     test_fail!(indentation_6, r#" 
 123"#);
-test_success!(indentation_7, r#"eğer 1024 * 123:
+test_success!(indentation_7, r#"1024 * 123 ise:
     erhan=123
-yoksa: 
+veya: 
     erhan=1234"#);
-    test_success!(indentation_8, r#"eğer 1024 * 123:
+    test_success!(indentation_8, r#"1024 * 123 ise:
     erhan=123
-yoksa: 
+veya: 
   erhan=1234
 "#);
-test_success!(indentation_9, r#"eğer 1024 * 123:
+test_success!(indentation_9, r#"1024 * 123 ise:
     erhan=123
-yoksa: 
+veya: 
     erhan=1234
 erhan=22"#);
-test_success!(indentation_10, r#"eğer 1024 * 123:
+test_success!(indentation_10, r#"1024 * 123 ise:
  erhan=123
-yoksa: 
+veya: 
  erhan=1234
 erhan=22"#);
-test_success!(indentation_11, r#"eğer 1024 * 123:
+test_success!(indentation_11, r#"1024 * 123 ise:
     erhan=123
-    eğer doğru:
+    doğru ise:
         erhan=123
-yoksa: 
+veya: 
     erhan=1234
 erhan=22"#);
 
 test_success!(indentation_12, r#"
-eğer 1024 * 123:
+1024 * 123 ise:
     erhan=123
 
-    eğer doğru:
+    doğru ise:
         io::print('merhaba dünya')
         erhan=123
-yoksa:
+veya:
     erhan=1234
 erhan=22"#);
 }

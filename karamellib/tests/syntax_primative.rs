@@ -71,9 +71,7 @@ mod tests {
         line: 0
     }));
 
-    test_success!(bool_1, "true", Ok(BramaAstType::Primative(Arc::new(BramaPrimative::Bool(true)))));
     test_success!(bool_2, "doğru", Ok(BramaAstType::Primative(Arc::new(BramaPrimative::Bool(true)))));
-    test_success!(bool_3, "false", Ok(BramaAstType::Primative(Arc::new(BramaPrimative::Bool(false)))));
     test_success!(bool_4, "yanlış", Ok(BramaAstType::Primative(Arc::new(BramaPrimative::Bool(false)))));
 
     test_success!(dict_1, "{}", Ok(BramaAstType::Dict([].to_vec())));
@@ -125,7 +123,6 @@ mod tests {
     test_success!(list_8, "[data]", Ok(BramaAstType::List([Box::new(BramaAstType::Symbol("data".to_string()))].to_vec())));
 
     test_success!(empty_1, "yok", Ok(BramaAstType::Primative(Arc::new(BramaPrimative::Empty))));
-    test_success!(empty_2, "empty", Ok(BramaAstType::Primative(Arc::new(BramaPrimative::Empty))));
 
     test_success!(symbol_1, "data", Ok(BramaAstType::Symbol("data".to_string())));
     test_success!(symbol_2, "data_test", Ok(BramaAstType::Symbol("data_test".to_string())));

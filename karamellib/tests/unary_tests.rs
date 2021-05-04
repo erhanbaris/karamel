@@ -32,10 +32,10 @@ mod tests {
     test_compare!(unary_2, "-1024", Ok(BramaAstType::Primative(Arc::new(BramaPrimative::Number(-1024.0)))));
     test_compare!(unary_3, "+1024.0", Ok(BramaAstType::Primative(Arc::new(BramaPrimative::Number(1024.0)))));
     test_compare!(unary_4, "-1024.0", Ok(BramaAstType::Primative(Arc::new(BramaPrimative::Number(-1024.0)))));
-    test_compare!(unary_5, "değil true", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Not, Box::new(BramaAstType::Primative(Arc::new(BramaPrimative::Bool(true)))))));
-    test_compare!(unary_6, "değil false", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Not, Box::new(BramaAstType::Primative(Arc::new(BramaPrimative::Bool(false)))))));
-    test_compare!(unary_7, "not doğru", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Not, Box::new(BramaAstType::Primative(Arc::new(BramaPrimative::Bool(true)))))));
-    test_compare!(unary_8, "not yanlış", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Not, Box::new(BramaAstType::Primative(Arc::new(BramaPrimative::Bool(false)))))));
+    test_compare!(unary_5, "değil doğru", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Not, Box::new(BramaAstType::Primative(Arc::new(BramaPrimative::Bool(true)))))));
+    test_compare!(unary_6, "değil yanlış", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Not, Box::new(BramaAstType::Primative(Arc::new(BramaPrimative::Bool(false)))))));
+    test_compare!(unary_7, "değil doğru", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Not, Box::new(BramaAstType::Primative(Arc::new(BramaPrimative::Bool(true)))))));
+    test_compare!(unary_8, "değil yanlış", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Not, Box::new(BramaAstType::Primative(Arc::new(BramaPrimative::Bool(false)))))));
     
     test_compare!(unary_9, "+[]", Err(BramaError {
         error_type: BramaErrorType::UnaryWorksWithNumber,
@@ -52,7 +52,7 @@ mod tests {
         column: 2,
         line: 0
     }));
-    test_compare!(unary_12, "--true", Err(BramaError {
+    test_compare!(unary_12, "--doğru", Err(BramaError {
         error_type: BramaErrorType::InvalidUnaryOperation,
         column: 2,
         line: 0
