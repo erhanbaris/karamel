@@ -49,11 +49,11 @@ fonk toplam(a,b):
   
 
 // Faktöriyel hesapla
-fonk faktöriyel(sayı):
-    eğer sayı==1 veya sayı==0:
+fonk faktöriyel(faktöriyel_sayısı):
+    eğer faktöriyel_sayısı==1 veya faktöriyel_sayısı==0:
         döndür 1
     yoksa:
-        döndür sayı * faktöriyel(sayı - 1)
+        döndür faktöriyel_sayısı * faktöriyel(faktöriyel_sayısı - 1)
     
 faktöriyel_sonucu = faktöriyel(10)
 gç::satıryaz('faktöriyel 10 => ', faktöriyel_sonucu)
