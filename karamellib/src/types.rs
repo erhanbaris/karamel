@@ -56,7 +56,8 @@ pub enum BramaKeywordType {
     Break,
     Continue,
     WhileStartPart,
-    WhileEndPart
+    WhileEndPart,
+    Load
 }
 
 impl BramaKeywordType {
@@ -115,7 +116,9 @@ pub static KEYWORDS: &[(&str, BramaKeywordType)] = &[
     ("devam",       BramaKeywordType::Continue),
     ("döngü",         BramaKeywordType::WhileStartPart),
     ("dongu",         BramaKeywordType::WhileStartPart),
-    ("iken",          BramaKeywordType::WhileEndPart)
+    ("iken",          BramaKeywordType::WhileEndPart),
+    ("yükle",          BramaKeywordType::Load),
+    ("yukle",          BramaKeywordType::Load)
 ];
 
 #[derive(Clone, Copy)]

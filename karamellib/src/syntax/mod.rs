@@ -14,6 +14,7 @@ pub mod function_return;
 pub mod while_loop;
 pub mod loop_item;
 pub mod expression;
+pub mod load_module;
 
 use std::vec::Vec;
 use std::cell::Cell;

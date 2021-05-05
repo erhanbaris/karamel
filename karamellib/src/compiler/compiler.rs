@@ -270,7 +270,8 @@ impl InterpreterCompiler {
             BramaAstType::Indexer {body, indexer} => self.generate_indexer(body, indexer, upper_ast, options, storage_index),
             BramaAstType::None => self.generate_none(options, storage_index),
             BramaAstType::FunctionDefination{name: _, arguments: _, body: _} => Ok(()),
-            BramaAstType::FunctionMap(name) => self.generate_function_map(name, options, storage_index)
+            BramaAstType::FunctionMap(name) => self.generate_function_map(name, options, storage_index),
+            BramaAstType::Load(names) => Ok(())
         }
     }
 
