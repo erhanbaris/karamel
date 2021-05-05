@@ -11,6 +11,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.59.2/addon/lint/javascript-lint.min.js" integrity="sha512-zwusqVz1qn+JyCHc09C0naAEMMZKn3K8deUOpDMnC4WCM59kfg8rmF+dJNyNW9AmfIELag6MeALrEBD33rJVpA==" crossorigin="anonymous"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.59.2/addon/hint/javascript-hint.min.js" integrity="sha512-2zi+0HSB5MXoy+BenDX/EKjqN6eUnsG2Lh9cpx+Ckua3Yi2XupO8ife9VELSg8iR7AT98yHQNyyaAL4ImVHcoQ==" crossorigin="anonymous"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.59.2/mode/javascript/javascript.min.js" integrity="sha512-+tn2IYnLwD2J9p6Nrn/Dl7ag9lluHA0GAblT/vnMiJV8DU/iDsldgf+9XbEqZUee2ThyDtfmSDb+IDZ9u7jrSA==" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.59.2/addon/mode/simple.min.js" integrity="sha512-LHMXt9MP5dNaw+AnqAuxPnO2vVlaDnwPOHoGjiqj78RS0vySPYUKAYLkyR5xhtGJTFhCJ7z/wcA34umuCf1zhQ==" crossorigin="anonymous"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.59.2/codemirror.min.css" integrity="sha512-MWdvo/Qqcf4pY1ecQUB1uBn0qLp19U/qJ1Rpp2BDZeuBA7YsFEwkvqR/+aG4BroPiAYDunKJ6X8R/Pmdt3p7oA==" crossorigin="anonymous" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.59.2/theme/ayu-mirage.min.css" integrity="sha512-McHJYTvQc4LZQBg2bCgKgDbvGWaSe2ZiDbc3UoMS+ihFI103kl54eKblXb8tBtwhLAh0Yoogy8VXkmZTekMlzA==" crossorigin="anonymous" />
   <script src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
@@ -40,6 +41,46 @@
   </div>
 </div>
 <script type="module">
+
+
+
+CodeMirror.defineSimpleMode("simplemode", {
+  // The start state contains the rules that are initially used
+  start: [
+    // The regex matches the token, the token property contains the type
+    {regex: /"(?:[^\\]|\\.)*?(?:"|$)/, token: "string"},
+    {regex: /'(?:[^\\]|\\.)*?(?:'|$)/, token: "string"},
+    // You can match multiple tokens at once. Note that the captured
+    // groups must span the whole string in this case
+    {regex: /(fonk)(\s+)([^( )]+)/, token: ["keyword", null, "def"]},
+    // Rules are matched in the order in which they appear, so there is
+    // no ambiguity between this one and the one above
+    {regex: /(?:fonk|döndür|dondur|ise|sonsuz|kır|kir|veya|kadar|ve|devam)\b/, token: "keyword"},
+    {regex: /(?:doğru|dogru|yanlış|yanlis|bos|boş|degil|değil)\b/, token: "atom"},
+    {regex: /0x[a-f\d]+|[-+]?(?:\.\d+|\d+\.?\d*)(?:e[-+]?\d+)?/i, token: "number"},
+    {regex: /\/\/.*/, token: "comment"},
+    {regex: /([a-zA-Z0-9_]+[^( )]+)(\()/, token: ["funccall", null]},
+    // A next property will cause the mode to move to a different state
+    {regex: /\/\*/, token: "comment", next: "comment"},
+    {regex: /[-+\/*=<>!]+/, token: "operator"},
+    {regex: /[a-zA-ZıİğĞüÜşŞçÇöÖ$][\w$]*/, token: "variable"},
+  ],
+  // The multi-line comment state.
+  comment: [
+    {regex: /.*?\*\//, token: "comment", next: "start"},
+    {regex: /.*/, token: "comment"}
+  ],
+  // The meta property contains global information about the mode. It
+  // can contain properties like lineComment, which are supported by
+  // all modes, and also directives like dontIndentStates, which are
+  // specific to simple modes.
+  meta: {
+    dontIndentStates: ["comment"],
+    lineComment: "//"
+  }
+});
+
+
 /* https://codepen.io/Souleste/pen/wvvwJWw */
   window.editor = CodeMirror(document.getElementById("source"), {
     value: `
@@ -68,7 +109,7 @@ sonsuz:
     devam
 /* Solda ki rakam ile sağda ki rakamların eşit olduğunu doğrula */
 hataayıklama::doğrula(sayaç, 10)`,
-    mode:  "kpd",
+    mode:  "simplemode",
     //lineNumbers: true,
     theme: "ayu-mirage",
     styleSelectedText: true,
@@ -91,7 +132,7 @@ hataayıklama::doğrula(sayaç, 10)`,
 
   window.target = CodeMirror(document.getElementById("target"), {
     value: ``,
-    mode:  "kpd",
+    mode:  "",
     readOnly: true,
     styleSelectedText: true,
     styleActiveLine: true,
@@ -154,6 +195,10 @@ hataayıklama::doğrula(sayaç, 10)`,
 </script>
 </body>
 <style>
+  .cm-funccall {
+    text-decoration: underline
+  }
+
   #result {
     background-color: cornflowerblue;
   }
