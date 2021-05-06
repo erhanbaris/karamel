@@ -6,16 +6,9 @@ fn main() {
 
     let parameters = ExecutionParameters {
         source: ExecutionSource::Code(r#"
-a = 1
-b = 2
-c = 1
-
-a == b ise:
-    gç::satıryaz('a eşittir b')
-veya a == c ise:  
-    gç::satıryaz('a eşittir c')
-veya:
-    gç::satıryaz('a hiçbirine eşit değil')
+data = 'erhan'
+data[0] = '1'
+gç::satıryaz('erhan'[0])
 "#.to_string()),
         return_opcode: true,
         return_output: true

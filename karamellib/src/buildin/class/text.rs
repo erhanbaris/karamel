@@ -3,7 +3,7 @@ use crate::compiler::value::EMPTY_OBJECT;
 use crate::buildin::class::baseclass::BasicInnerClass;
 use crate::compiler::value::BramaPrimative;
 use crate::types::VmObject;
-use crate::{n_parameter_expected, expected_parameter_type};
+use crate::{n_parameter_expected, expected_parameter_type, arc_text};
 use crate::primative_text;
 
 use unicode_width::UnicodeWidthStr;
@@ -36,8 +36,49 @@ pub fn get_primative_class() -> Arc<dyn Class + Send + Sync> {
     opcode.add_class_method("basikirp", start_trim);
     opcode.add_class_method("parçagetir", substring);
     opcode.add_class_method("parcagetir", substring);
+    opcode.set_getter(getter);
     Arc::new(opcode)
 }
+
+
+fn getter(source: VmObject, index: usize) -> NativeCallResult {
+    if let BramaPrimative::Text(text) = &*source.deref() {
+
+        return match text.chars().nth(index) {
+            Some(item) => Ok(arc_text!(item.to_string())),
+            _ => Ok(EMPTY_OBJECT)
+        };
+    }
+    Ok(EMPTY_OBJECT)
+}
+
+/*fn setter(source: VmObject, index: usize, item: VmObject) -> NativeCallResult {
+    if let BramaPrimative::Text(text) = &*source.deref() {
+
+        let is_in_size = index <= text.len();
+        return match is_in_size {
+            true => {
+                match &*item.deref() {
+                    BramaPrimative::Text(data) => {
+                        if data.len() != 1 {
+                            return Ok(EMPTY_OBJECT);
+                        }
+                
+                        let mut new_string = String::new();
+                        new_string.push_str(&text[0..index]);
+                        new_string.push(data.chars().nth(0).unwrap());
+                        new_string.push_str(&text[index..]);
+
+                        Ok(arc_bool!(true))
+                    },
+                    _ => Ok(EMPTY_OBJECT) //We cant use other types in text
+                }
+            },
+            false => Ok(arc_bool!(false))
+        };
+    }
+    Ok(EMPTY_OBJECT)
+}*/
 
 fn length(parameter: FunctionParameter) -> NativeCallResult {
     if let BramaPrimative::Text(text) = &*parameter.source().unwrap().deref() {
