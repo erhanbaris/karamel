@@ -55,27 +55,44 @@ fn getter(source: VmObject, index: usize) -> NativeCallResult {
 
 fn setter(source: VmObject, index: usize, item: VmObject) -> NativeCallResult {
     if let BramaPrimative::Text(text) = &*source.deref() {
-
-        let is_in_size = index <= text.len();
-        return match is_in_size {
-            true => {
+        return match text.chars().nth(index) {
+            Some(old_char) => {
                 match &*item.deref() {
                     BramaPrimative::Text(data) => {
-                        if data.len() != 1 {
+                        if data.chars().count() != 1 {
                             return Ok(EMPTY_OBJECT);
                         }
-                        
-                        let mut new_string = String::new();
-                        new_string.push_str(&text[0..index]);
-                        new_string.push(data.chars().nth(0).unwrap());
-                        new_string.push_str(&text[index+1..]);
 
-                        Ok(arc_bool!(true))
+                        let new_char = data.chars().nth(0).unwrap();
+                        let mut real_index = 0;
+                        let mut real_total = 0;
+
+                        for (i, ch) in text.chars().enumerate() {
+                            if i < index {
+                                real_index += ch.len_utf8();
+                            }
+                            real_total += ch.len_utf8();
+                        }
+                        
+                        /* full text size + new char size - old char size */
+                        let mut new_string = String::with_capacity(real_total + data.len() - old_char.len_utf8());
+                        new_string.push_str(&text[0..real_index]);
+                        new_string.push(new_char);
+                        let aaa = &text[real_index..];
+                        new_string.push_str(&text[real_index+1..]);
+
+                        unsafe {
+                            /* Update text with new one */
+                            let text_ptr = text as *const Arc<String> as *mut Arc<String>;
+                            *Arc::make_mut(&mut *text_ptr) = new_string;
+                        }
+
+                        Ok(EMPTY_OBJECT)
                     },
                     _ => Ok(EMPTY_OBJECT) //We cant use other types in text
                 }
             },
-            false => Ok(arc_bool!(false))
+            None => Ok(EMPTY_OBJECT)
         };
     }
     Ok(EMPTY_OBJECT)

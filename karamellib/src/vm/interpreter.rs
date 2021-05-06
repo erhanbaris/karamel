@@ -449,7 +449,7 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
 
                             value.borrow_mut().insert(indexer_value.to_string(), assign_item);
                         },
-                        BramaPrimative::Text(value) => {
+                        BramaPrimative::Text(_) => {
                             let indexer_value = match &*indexer {
                                 BramaPrimative::Number(number) => *number as usize,
                                 _ => return Err("Indexer must be number".to_string())

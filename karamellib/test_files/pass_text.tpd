@@ -1,0 +1,12 @@
+isim = "erhan"
+isim[0] = "E"
+hataayıklama::doğrula(isim, "Erhan")
+
+isim[5] = "E"
+hataayıklama::doğrula(isim, "Erhan")
+
+soyisim = "barış"
+soyisim[0] = "B"
+soyisim[4] = "i"
+soyisim[5] = "s"
+hataayıklama::doğrula(soyisim, "Baris")
