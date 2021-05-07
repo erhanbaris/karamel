@@ -5,14 +5,14 @@ use std::slice::Iter;
 use std::iter::Take;
 use bitflags::bitflags;
 
-use crate::{inc_memory_index, dec_memory_index, get_memory_index, current_raw};
+use crate::{inc_memory_index, dec_memory_index, get_memory_index};
 use crate::types::*;
 use crate::compiler::{BramaCompiler, Scope};
 
 pub type NativeCallResult = Result<VmObject, String>;
 pub type NativeCall       = fn(FunctionParameter) -> NativeCallResult;
-pub type IndexerGetCall   = fn (VmObject, usize) -> NativeCallResult ;
-pub type IndexerSetCall   = fn (VmObject, usize, VmObject) -> NativeCallResult ;
+pub type IndexerGetCall   = fn (VmObject, f64) -> NativeCallResult ;
+pub type IndexerSetCall   = fn (VmObject, f64, VmObject) -> NativeCallResult ;
 
 pub struct FunctionParameter<'a> {
     stack: &'a Vec<VmObject>, 

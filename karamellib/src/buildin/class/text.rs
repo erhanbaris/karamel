@@ -3,7 +3,7 @@ use crate::compiler::value::EMPTY_OBJECT;
 use crate::buildin::class::baseclass::BasicInnerClass;
 use crate::compiler::value::BramaPrimative;
 use crate::types::VmObject;
-use crate::{n_parameter_expected, expected_parameter_type};
+use crate::{n_parameter_expected, expected_parameter_type, arc_bool, arc_empty, arc_text};
 use crate::primative_text;
 
 use unicode_width::UnicodeWidthStr;
@@ -36,7 +36,75 @@ pub fn get_primative_class() -> Arc<dyn Class + Send + Sync> {
     opcode.add_class_method("basikirp", start_trim);
     opcode.add_class_method("parçagetir", substring);
     opcode.add_class_method("parcagetir", substring);
+    opcode.set_getter(getter);
+    opcode.set_setter(setter);
     Arc::new(opcode)
+}
+
+
+fn getter(source: VmObject, index: f64) -> NativeCallResult {
+    let index = match index >= 0.0 {
+        true => index as usize,
+        false =>  return Ok(EMPTY_OBJECT)
+    };
+    
+    if let BramaPrimative::Text(text) = &*source.deref() {
+
+        return match text.chars().nth(index) {
+            Some(item) => Ok(arc_text!(item.to_string())),
+            _ => Ok(EMPTY_OBJECT)
+        };
+    }
+    Ok(EMPTY_OBJECT)
+}
+
+fn setter(source: VmObject, index: f64, item: VmObject) -> NativeCallResult {
+    let index = match index >= 0.0 {
+        true => index as usize,
+        false =>  return Ok(EMPTY_OBJECT)
+    };
+
+    if let BramaPrimative::Text(text) = &*source.deref() {
+        return match text.chars().nth(index) {
+            Some(old_char) => {
+                match &*item.deref() {
+                    BramaPrimative::Text(data) => {
+                        if data.chars().count() != 1 {
+                            return Ok(EMPTY_OBJECT);
+                        }
+
+                        let new_char = data.chars().nth(0).unwrap();
+                        let mut real_index = 0;
+                        let mut real_total = 0;
+
+                        for (i, ch) in text.chars().enumerate() {
+                            if i < index{
+                                real_index += ch.len_utf8();
+                            }
+                            real_total += ch.len_utf8();
+                        }
+                        
+                        /* full text size + new char size - old char size */
+                        let mut new_string = String::with_capacity(real_total + data.len() - old_char.len_utf8());
+                        new_string.push_str(&text[0..real_index]);
+                        new_string.push(new_char);
+                        new_string.push_str(&text[real_index+old_char.len_utf8()..]);
+
+                        unsafe {
+                            /* Update text with new one */
+                            let text_ptr = text as *const Arc<String> as *mut Arc<String>;
+                            *Arc::make_mut(&mut *text_ptr) = new_string;
+                        }
+
+                        Ok(EMPTY_OBJECT)
+                    },
+                    _ => Ok(EMPTY_OBJECT) //We cant use other types in text
+                }
+            },
+            None => Ok(EMPTY_OBJECT)
+        };
+    }
+    Ok(EMPTY_OBJECT)
 }
 
 fn length(parameter: FunctionParameter) -> NativeCallResult {

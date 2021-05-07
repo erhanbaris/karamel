@@ -24,11 +24,11 @@ impl SyntaxParserTrait for UnaryParser {
         if parser.match_operator(&[BramaOperatorType::SquareBracketStart]).is_some() {
             parser.cleanup_whitespaces();
 
-            let indexer_ast = ExpressionParser::parse(parser);
+            let indexer_ast = ExpressionParser::parse(parser)?;
             parser.cleanup_whitespaces();
 
-            if parser.match_operator(&[BramaOperatorType::SquareBracketEnd]).is_some() && !is_ast_empty(&indexer_ast) {
-                return Ok(BramaAstType::Indexer { body: Box::new(ast), indexer: Box::new(indexer_ast.unwrap()) });   
+            if parser.match_operator(&[BramaOperatorType::SquareBracketEnd]).is_some() {
+                return Ok(BramaAstType::Indexer { body: Box::new(ast), indexer: Box::new(indexer_ast) });   
             }
         }
 

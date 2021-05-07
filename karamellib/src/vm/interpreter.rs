@@ -427,7 +427,11 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
                 VmOpCode::SetItem => {
                     let assign_item  = pop_raw!(options);
                     let indexer = pop!(options);
-                    let object  = pop!(options);
+                    let raw_object = pop_raw!(options);
+                    let object  = raw_object.deref();
+                    
+                    println!("{:?}", object);
+                    // todo: change all those codes with setter implementation
 
                     match &*object {
                         BramaPrimative::List(value) => {
@@ -445,7 +449,19 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
                             };
 
                             value.borrow_mut().insert(indexer_value.to_string(), assign_item);
-                        }
+                        },
+                        BramaPrimative::Text(_) => {
+                            let indexer_value = match &*indexer {
+                                BramaPrimative::Number(number) => *number,
+                                _ => return Err("Indexer must be number".to_string())
+                            };
+
+                            match object.get_class().get_setter() {
+                                Some(function) => function(raw_object, indexer_value, assign_item)?,
+                                _ => empty_primative
+                            };
+                        },
+                        
                         _ => ()
                     };
                 },
@@ -466,7 +482,7 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
                             }
                         },
                         BramaPrimative::Number(index) => match object.get_class().get_getter() {
-                            Some(function) => function(raw_object, *index as usize)?,
+                            Some(function) => function(raw_object, *index)?,
                             _ => empty_primative
                         }
                         _ => empty_primative

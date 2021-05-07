@@ -43,16 +43,12 @@ mod tests {
                                         if !is_pass {
                                             log::error!("# {} failed ({})", __path, "Not failed".red());
                                             test_status = false;
-                                        } else {
-                                            log::info!("# {} passed", __path);
                                         }
                                     },
                                     false => {
                                         if is_pass {
                                             log::error!("# {} failed", __path);
                                             test_status = false;
-                                        } else {
-                                            log::info!("# {} passed", __path);
                                         }
                                     }
                                 }

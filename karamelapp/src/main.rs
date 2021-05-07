@@ -3,19 +3,14 @@ extern crate karamellib;
 use karamellib::{vm::executer::{ExecutionParameters, ExecutionSource}};
 
 fn main() {
-
     let parameters = ExecutionParameters {
         source: ExecutionSource::Code(r#"
-a = 1
-b = 2
-c = 1
-
-a == b ise:
-    gç::satıryaz('a eşittir b')
-veya a == c ise:  
-    gç::satıryaz('a eşittir c')
-veya:
-    gç::satıryaz('a hiçbirine eşit değil')
+soyisim = "barış"
+soyisim[0] = "B"
+soyisim[3] = "i"
+soyisim[4] = "s"
+soyisim[-1] = "!"
+hataayıklama::doğrula(soyisim, "Baris")
 "#.to_string()),
         return_opcode: true,
         return_output: true
