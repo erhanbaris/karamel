@@ -431,6 +431,7 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
                     let object  = raw_object.deref();
                     
                     println!("{:?}", object);
+                    // todo: change all those codes with setter implementation
 
                     match &*object {
                         BramaPrimative::List(value) => {
@@ -451,7 +452,7 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
                         },
                         BramaPrimative::Text(_) => {
                             let indexer_value = match &*indexer {
-                                BramaPrimative::Number(number) => *number as usize,
+                                BramaPrimative::Number(number) => *number,
                                 _ => return Err("Indexer must be number".to_string())
                             };
 
@@ -481,7 +482,7 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
                             }
                         },
                         BramaPrimative::Number(index) => match object.get_class().get_getter() {
-                            Some(function) => function(raw_object, *index as usize)?,
+                            Some(function) => function(raw_object, *index)?,
                             _ => empty_primative
                         }
                         _ => empty_primative

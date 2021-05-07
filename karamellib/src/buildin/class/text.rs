@@ -42,7 +42,12 @@ pub fn get_primative_class() -> Arc<dyn Class + Send + Sync> {
 }
 
 
-fn getter(source: VmObject, index: usize) -> NativeCallResult {
+fn getter(source: VmObject, index: f64) -> NativeCallResult {
+    let index = match index >= 0.0 {
+        true => index as usize,
+        false =>  return Ok(EMPTY_OBJECT)
+    };
+    
     if let BramaPrimative::Text(text) = &*source.deref() {
 
         return match text.chars().nth(index) {
@@ -53,7 +58,12 @@ fn getter(source: VmObject, index: usize) -> NativeCallResult {
     Ok(EMPTY_OBJECT)
 }
 
-fn setter(source: VmObject, index: usize, item: VmObject) -> NativeCallResult {
+fn setter(source: VmObject, index: f64, item: VmObject) -> NativeCallResult {
+    let index = match index >= 0.0 {
+        true => index as usize,
+        false =>  return Ok(EMPTY_OBJECT)
+    };
+
     if let BramaPrimative::Text(text) = &*source.deref() {
         return match text.chars().nth(index) {
             Some(old_char) => {
@@ -68,7 +78,7 @@ fn setter(source: VmObject, index: usize, item: VmObject) -> NativeCallResult {
                         let mut real_total = 0;
 
                         for (i, ch) in text.chars().enumerate() {
-                            if i < index {
+                            if i < index{
                                 real_index += ch.len_utf8();
                             }
                             real_total += ch.len_utf8();
@@ -78,8 +88,7 @@ fn setter(source: VmObject, index: usize, item: VmObject) -> NativeCallResult {
                         let mut new_string = String::with_capacity(real_total + data.len() - old_char.len_utf8());
                         new_string.push_str(&text[0..real_index]);
                         new_string.push(new_char);
-                        let aaa = &text[real_index..];
-                        new_string.push_str(&text[real_index+1..]);
+                        new_string.push_str(&text[real_index+old_char.len_utf8()..]);
 
                         unsafe {
                             /* Update text with new one */

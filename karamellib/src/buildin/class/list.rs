@@ -74,7 +74,12 @@ fn set(parameter: FunctionParameter) -> NativeCallResult {
     Ok(EMPTY_OBJECT)
 }
 
-fn getter(source: VmObject, index: usize) -> NativeCallResult {
+fn getter(source: VmObject, index: f64) -> NativeCallResult {
+    let index = match index >= 0.0 {
+        true => index as usize,
+        false =>  return Ok(EMPTY_OBJECT)
+    };
+
     if let BramaPrimative::List(list) = &*source.deref() {
 
         let is_in_size = index <= list.borrow().len();
@@ -89,13 +94,18 @@ fn getter(source: VmObject, index: usize) -> NativeCallResult {
     Ok(EMPTY_OBJECT)
 }
 
-fn setter(source: VmObject, index: usize, item: VmObject) -> NativeCallResult {
+fn setter(source: VmObject, index: f64, item: VmObject) -> NativeCallResult {
+    let index = match index >= 0.0 {
+        true => index as usize,
+        false =>  return Ok(EMPTY_OBJECT)
+    };
+
     if let BramaPrimative::List(list) = &*source.deref() {
 
         let is_in_size = index <= list.borrow().len();
         return match is_in_size {
             true => {
-                list.borrow_mut()[index as usize] = item; 
+                list.borrow_mut()[index] = item; 
                 Ok(arc_bool!(true))
             },
             false => Ok(arc_bool!(false))

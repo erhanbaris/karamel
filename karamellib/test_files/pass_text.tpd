@@ -7,6 +7,12 @@ hataayıklama::doğrula(isim, "Erhan")
 
 soyisim = "barış"
 soyisim[0] = "B"
-soyisim[4] = "i"
-soyisim[5] = "s"
+soyisim[3] = "i"
+soyisim[4] = "s"
+hataayıklama::doğrula(soyisim, "Baris")
+
+soyisim[-1] = "!"
+hataayıklama::doğrula(soyisim, "Baris")
+
+soyisim[10] = "s"
 hataayıklama::doğrula(soyisim, "Baris")
