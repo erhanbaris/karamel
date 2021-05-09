@@ -214,19 +214,14 @@ impl FunctionReference {
         }
 
         if options.scopes.len() <= options.scope_index {
-            let scope_count = options.scopes.len();
-            for _ in 0..scope_count {
-                let scope_handle = options.add_scope(Scope::empty());
-                options.scopes.push(scope_handle);
-            }
-
+            options.scopes.resize(options.scopes.len() * 2, std::ptr::null_mut());
         }
 
         unsafe {
             let memory = options.storages[reference.storage_index].get_memory().borrow().clone();
             let stack = options.storages[reference.storage_index].get_stack().borrow().clone();
 
-            let new_scope = options.add_scope(Scope {
+            let new_scope = options.heap.add_scope(Scope {
                 memory: memory,
                 stack: stack,
                 location: old_index,
@@ -237,7 +232,7 @@ impl FunctionReference {
 
             options.scopes[options.scope_index] = new_scope;
 
-            options.current_scope = options.scopes[options.scope_index].get_mut_unchecked();
+            options.current_scope = options.scopes[options.scope_index];
             (*options.current_scope).memory_index = 0;
         }
 

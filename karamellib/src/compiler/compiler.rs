@@ -8,6 +8,7 @@ use std::ptr;
 use ast::BramaDictItem;
 use crate::{types::*};
 use crate::compiler::*;
+use crate::gc::HeapAllocator;
 use crate::buildin::*;
 use crate::compiler::value::BramaPrimative;
 use crate::compiler::ast::{BramaAstType, BramaIfStatementElseItem};
@@ -25,6 +26,12 @@ pub struct Scope {
     pub memory_index: usize,
     pub call_return_assign_to_temp: bool,
     pub const_size: u8
+}
+
+impl Drop for Scope {
+    fn drop(&mut self) {
+        println!("> 1111");
+    }
 }
 
 pub static EMPTY_SCOPE: Scope = Scope { 
@@ -66,14 +73,14 @@ pub struct BramaCompiler {
     pub opcode_index: usize,
     pub loop_breaks: Vec<usize>,
     pub loop_continues: Vec<usize>,
-    pub scopes: Vec<Handle<Scope>>,
+    pub scopes: Vec<*mut Scope>,
     pub current_scope: *mut Scope,
     pub scope_index: usize,
     pub functions : Vec<Arc<FunctionReference>>,
     pub classes : Vec<Arc<dyn Class  + Send + Sync>>,
     pub stdout: Option<RefCell<String>>,
     pub stderr: Option<RefCell<String>>,
-    pub scope_heap: Heap<Scope>
+    pub heap: HeapAllocator
 }
 
 impl BramaCompiler {
@@ -92,30 +99,15 @@ impl BramaCompiler {
             classes: Vec::new(),
             stdout: None,
             stderr: None,
-            scope_heap: Heap::default()
+            heap: HeapAllocator::new()
         };
 
         for _ in 0..32 {
-            let scope = Scope { 
-                const_size: 0, 
-                call_return_assign_to_temp: false, 
-                memory_index: 0, 
-                location: 0, 
-                memory: Vec::new(), 
-                stack: Vec::new()
-            };
-            let scope_ref = compiler.add_scope(scope);
-            compiler.scopes.push(scope_ref);
+            compiler.scopes.push(std::ptr::null_mut());
         }
 
-        unsafe {        
-            compiler.current_scope = compiler.scopes[0].get_mut_unchecked();
-        }
+        compiler.current_scope = compiler.scopes[0];
         compiler
-    }
-
-    pub fn add_scope(&mut self, object: Scope) -> Handle<Scope> {
-        self.scope_heap.insert(object).handle()
     }
 
     pub fn prepare_modules(&mut self) {

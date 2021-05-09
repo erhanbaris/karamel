@@ -148,9 +148,9 @@ pub unsafe fn run_vm<'a>(options: &'a mut BramaCompiler) -> Result<Vec<VmObject>
             call_return_assign_to_temp: false
         };
 
-        let scope_ref = options.add_scope(scope);
+        let scope_ref = options.heap.add_scope(scope);
         options.scopes[options.scope_index] = scope_ref;
-        options.current_scope               = scope_ref.get_mut_unchecked();
+        options.current_scope               = scope_ref;
 
         while opcode_size > options.opcode_index {
             let opcode = mem::transmute::<u8, VmOpCode>(options.opcodes[options.opcode_index]);
@@ -352,14 +352,14 @@ pub unsafe fn run_vm<'a>(options: &'a mut BramaCompiler) -> Result<Vec<VmObject>
                     options.opcode_index = (*options.current_scope).location;
                     let call_return_assign_to_temp = (*options.current_scope).call_return_assign_to_temp;
                     options.scope_index -= 1;
-                    options.current_scope = options.scopes[options.scope_index].get_mut_unchecked();
+                    options.current_scope = options.scopes[options.scope_index];
 
                     if call_return_assign_to_temp {
                         (*options.current_scope).stack[get_memory_index!(options)] = return_value;
                         inc_memory_index!(options, 1);
                     }
 
-                    options.scope_heap.clean();
+                    options.heap.clean();
                 },
 
                 VmOpCode::Increment => {
@@ -516,11 +516,11 @@ pub unsafe fn run_vm<'a>(options: &'a mut BramaCompiler) -> Result<Vec<VmObject>
         }
 
         
-        for (index, item) in options.scopes[0].get_unchecked().stack.iter().enumerate() {
+        for (index, item) in (*options.scopes[0]).stack.iter().enumerate() {
             options.storages[0].get_stack().borrow_mut()[index] = *item;
         }
 
-        for (index, item) in options.scopes[0].get_unchecked().memory.iter().enumerate() {
+        for (index, item) in (*options.scopes[0]).memory.iter().enumerate() {
             options.storages[0].get_memory().borrow_mut()[index] = *item;
         }
         

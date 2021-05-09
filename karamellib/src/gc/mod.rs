@@ -26,9 +26,10 @@ impl HeapAllocator {
         }
     }
 
-    pub fn add_scope(&mut self, scope: Scope) -> &Scope {
+    pub fn add_scope(&mut self, scope: Scope) -> *mut Scope {
+        let address = &scope as *const Scope as *mut Scope;
         self.heap.insert(HeapItem::Scope(scope));
-        &scope
+        address
     }
 
     pub fn add_string(&mut self, text: Arc<String>) {
@@ -37,13 +38,6 @@ impl HeapAllocator {
 
     pub fn add_primative(&mut self, primative: Arc<BramaPrimative>) {
         self.heap.insert(HeapItem::Primative(primative));
-    }
-
-    pub fn to_scope(&self, heap_item: Handle<HeapItem>) -> &mut Scope {
-        if let HeapItem::Scope(scope) = heap_item.get_mut_unchecked() {
-            return scope;
-        }
-        panic!("Heap crashed! Item not scope");
     }
 
     pub fn clean(&mut self) {
