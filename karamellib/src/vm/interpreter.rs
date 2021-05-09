@@ -123,8 +123,9 @@ pub unsafe fn dump_opcode<W: Write>(index: usize, options: &mut BramaCompiler, l
     }
 }
 
-pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, String>
+pub unsafe fn run_vm<'a>(options: &'a mut BramaCompiler) -> Result<Vec<VmObject>, String>
 {
+    #[cfg(all(feature = "dumpOpcodes"))]
     let mut log_update = LogUpdate::new(stdout()).unwrap();
     
     #[cfg(feature = "dumpMemory")] {
@@ -138,7 +139,7 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
         let empty_primative: VmObject  = VmObject::convert(Arc::new(BramaPrimative::Empty));
         let opcode_size   = options.opcodes.len();
 
-        options.scopes[options.scope_index] = Scope {
+        let scope = Scope {
             memory: options.storages[0].get_memory().borrow().to_vec(),
             stack: options.storages[0].get_stack().borrow().to_vec(),
             location: 0,
@@ -146,6 +147,10 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
             const_size: 0,
             call_return_assign_to_temp: false
         };
+
+        let scope_ref = options.add_scope(scope);
+        options.scopes[options.scope_index] = scope_ref;
+        options.current_scope               = scope_ref.get_mut_unchecked();
 
         while opcode_size > options.opcode_index {
             let opcode = mem::transmute::<u8, VmOpCode>(options.opcodes[options.opcode_index]);
@@ -347,12 +352,14 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
                     options.opcode_index = (*options.current_scope).location;
                     let call_return_assign_to_temp = (*options.current_scope).call_return_assign_to_temp;
                     options.scope_index -= 1;
-                    options.current_scope = &mut options.scopes[options.scope_index] as *mut Scope;
+                    options.current_scope = options.scopes[options.scope_index].get_mut_unchecked();
 
                     if call_return_assign_to_temp {
                         (*options.current_scope).stack[get_memory_index!(options)] = return_value;
                         inc_memory_index!(options, 1);
                     }
+
+                    options.scope_heap.clean();
                 },
 
                 VmOpCode::Increment => {
@@ -509,11 +516,11 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
         }
 
         
-        for (index, item) in options.scopes[0].stack.iter().enumerate() {
+        for (index, item) in options.scopes[0].get_unchecked().stack.iter().enumerate() {
             options.storages[0].get_stack().borrow_mut()[index] = *item;
         }
 
-        for (index, item) in options.scopes[0].memory.iter().enumerate() {
+        for (index, item) in options.scopes[0].get_unchecked().memory.iter().enumerate() {
             options.storages[0].get_memory().borrow_mut()[index] = *item;
         }
         

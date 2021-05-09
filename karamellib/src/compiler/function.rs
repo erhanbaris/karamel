@@ -107,7 +107,7 @@ impl Default for FunctionType {
 }
 
 impl FunctionReference {
-    pub fn execute(&self, compiler: &mut BramaCompiler, base: Option<VmObject>) -> Result<(), String>{
+    pub fn execute<'a>(&self, compiler: &'a mut BramaCompiler, base: Option<VmObject>) -> Result<(), String>{
         unsafe {
             match self.callback {
                 FunctionType::Native(func) => FunctionReference::native_function_call(&self, func, compiler, base),
@@ -164,7 +164,7 @@ impl FunctionReference {
         Arc::new(reference)
     }
 
-    unsafe fn native_function_call(reference: &FunctionReference, func: NativeCall, compiler: &mut BramaCompiler, source: Option<VmObject>) -> Result<(), String> {            
+    unsafe fn native_function_call<'a>(reference: &FunctionReference, func: NativeCall, compiler: &'a mut BramaCompiler, source: Option<VmObject>) -> Result<(), String> {            
         let total_args = compiler.opcodes[compiler.opcode_index + 1];
         let call_return_assign_to_temp = compiler.opcodes[compiler.opcode_index + 2] != 0;
         let parameter = match reference.flags {
@@ -191,7 +191,7 @@ impl FunctionReference {
         }
     }
 
-    fn opcode_function_call(reference: &FunctionReference, options: &mut BramaCompiler, source: Option<VmObject>) -> Result<(), String> {
+    fn opcode_function_call<'a>(reference: &FunctionReference, options: &'a mut BramaCompiler, source: Option<VmObject>) -> Result<(), String> {
 
         let argument_size  = options.opcodes[options.opcode_index + 1];
         let call_return_assign_to_temp = options.opcodes[options.opcode_index + 2] != 0;
@@ -214,20 +214,30 @@ impl FunctionReference {
         }
 
         if options.scopes.len() <= options.scope_index {
-            options.scopes.resize(options.scopes.len() * 2, Scope::empty());
+            let scope_count = options.scopes.len();
+            for _ in 0..scope_count {
+                let scope_handle = options.add_scope(Scope::empty());
+                options.scopes.push(scope_handle);
+            }
+
         }
 
         unsafe {
-            options.scopes[options.scope_index] = Scope {
-                memory: options.storages[reference.storage_index].get_memory().borrow().clone(),
-                stack: options.storages[reference.storage_index].get_stack().borrow().clone(),
+            let memory = options.storages[reference.storage_index].get_memory().borrow().clone();
+            let stack = options.storages[reference.storage_index].get_stack().borrow().clone();
+
+            let new_scope = options.add_scope(Scope {
+                memory: memory,
+                stack: stack,
                 location: old_index,
                 memory_index: get_memory_index!(options),
                 const_size: options.storages[reference.storage_index].get_constant_size(),
                 call_return_assign_to_temp
-            };
+            });
 
-            options.current_scope = &mut options.scopes[options.scope_index] as *mut Scope;
+            options.scopes[options.scope_index] = new_scope;
+
+            options.current_scope = options.scopes[options.scope_index].get_mut_unchecked();
             (*options.current_scope).memory_index = 0;
         }
 

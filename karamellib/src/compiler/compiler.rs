@@ -1,6 +1,7 @@
 use std::{borrow::Borrow, vec::Vec};
 use std::sync::Arc;
 use std::cell::RefCell;
+use broom::prelude::*;
 
 use std::ptr;
 
@@ -26,6 +27,15 @@ pub struct Scope {
     pub const_size: u8
 }
 
+pub static EMPTY_SCOPE: Scope = Scope { 
+    const_size: 0, 
+    call_return_assign_to_temp: false, 
+    memory_index: 0, 
+    location: 0, 
+    memory: Vec::new(), 
+    stack: Vec::new()
+};
+
 impl Scope {
     pub fn empty() -> Scope {
         Scope { 
@@ -37,6 +47,10 @@ impl Scope {
             stack: Vec::new()
         }
     }
+}
+
+impl Trace<Self> for Scope {
+    fn trace(&self, _: &mut Tracer<Self>) {}
 }
 
 pub struct FunctionDefine {
@@ -52,16 +66,17 @@ pub struct BramaCompiler {
     pub opcode_index: usize,
     pub loop_breaks: Vec<usize>,
     pub loop_continues: Vec<usize>,
-    pub scopes: Vec<Scope>,
+    pub scopes: Vec<Handle<Scope>>,
     pub current_scope: *mut Scope,
     pub scope_index: usize,
     pub functions : Vec<Arc<FunctionReference>>,
     pub classes : Vec<Arc<dyn Class  + Send + Sync>>,
     pub stdout: Option<RefCell<String>>,
-    pub stderr: Option<RefCell<String>>
+    pub stderr: Option<RefCell<String>>,
+    pub scope_heap: Heap<Scope>
 }
 
-impl  BramaCompiler {
+impl BramaCompiler {
     pub fn new() -> BramaCompiler {
         let mut compiler = BramaCompiler {
             opcodes: Vec::new(),
@@ -76,15 +91,31 @@ impl  BramaCompiler {
             functions: Vec::new(),
             classes: Vec::new(),
             stdout: None,
-            stderr: None
+            stderr: None,
+            scope_heap: Heap::default()
         };
 
-        for _ in 0..32{
-            compiler.scopes.push(Scope::empty());
+        for _ in 0..32 {
+            let scope = Scope { 
+                const_size: 0, 
+                call_return_assign_to_temp: false, 
+                memory_index: 0, 
+                location: 0, 
+                memory: Vec::new(), 
+                stack: Vec::new()
+            };
+            let scope_ref = compiler.add_scope(scope);
+            compiler.scopes.push(scope_ref);
         }
-        
-        compiler.current_scope = &mut compiler.scopes[0] as *mut Scope;
+
+        unsafe {        
+            compiler.current_scope = compiler.scopes[0].get_mut_unchecked();
+        }
         compiler
+    }
+
+    pub fn add_scope(&mut self, object: Scope) -> Handle<Scope> {
+        self.scope_heap.insert(object).handle()
     }
 
     pub fn prepare_modules(&mut self) {

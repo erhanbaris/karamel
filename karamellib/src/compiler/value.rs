@@ -4,12 +4,15 @@ use std::cell::RefCell;
 use std::mem::ManuallyDrop;
 use std::fmt;
 use std::collections::HashMap;
+use broom::prelude::*;
 
 
 use crate::{buildin::Class, types::*};
 use crate::compiler::function::FunctionReference;
 use crate::compiler::GetType;
 use crate::buildin::class::PRIMATIVE_CLASSES;
+use crate::buildin::ClassProperty;
+
 
 pub const EMPTY_OBJECT: VmObject = VmObject(QNAN | EMPTY_FLAG);
 pub const TRUE_OBJECT: VmObject  = VmObject(QNAN | TRUE_FLAG);
@@ -26,6 +29,36 @@ pub enum BramaPrimative {
     Text(Arc<String>),
     Function(Arc<FunctionReference>, Option<VmObject>),
     Class(Arc<dyn Class + Send + Sync>)
+}
+
+impl Trace<Self> for BramaPrimative {
+    fn trace(&self, tracer: &mut Tracer<Self>) {
+        match self {
+            BramaPrimative::Empty => (),
+            BramaPrimative::Number(_) => (),
+            BramaPrimative::Bool(_) => (),
+            BramaPrimative::List(list) => {
+                for item in &*list.borrow() {
+                    item.deref().trace(tracer)
+                }
+            },
+            BramaPrimative::Dict(dict) => {
+                for (_, item) in &*dict.borrow() {
+                    item.deref().trace(tracer)
+                }
+            },
+            BramaPrimative::Text(_) => (),
+            BramaPrimative::Function(_, _) => (),
+            BramaPrimative::Class(class) => {
+                for (_, value) in class.properties() {
+                    match value {
+                        ClassProperty::Function(_) => (),
+                        ClassProperty::Field(field) => field.trace(tracer)
+                    };
+                }
+            },
+        }
+    }
 }
 
 unsafe impl Send for BramaPrimative {}
