@@ -165,20 +165,24 @@ impl FunctionReference {
     }
 
     unsafe fn native_function_call<'a>(reference: &FunctionReference, func: NativeCall, compiler: &'a mut BramaCompiler, source: Option<VmObject>) -> Result<(), String> {            
+        
+        let mut scope = compiler.current_scope.borrow_mut();
         let total_args = compiler.opcodes[compiler.opcode_index + 1];
         let call_return_assign_to_temp = compiler.opcodes[compiler.opcode_index + 2] != 0;
+        let stack = &scope.stack;
         let parameter = match reference.flags {
-            FunctionFlag::IN_CLASS => FunctionParameter::new(&(*compiler.current_scope).stack, source, get_memory_index!(compiler), total_args, &compiler.stdout, &compiler.stderr),
-            _ => FunctionParameter::new(&(*compiler.current_scope).stack, source, get_memory_index!(compiler), total_args, &compiler.stdout, &compiler.stderr)
+            FunctionFlag::IN_CLASS => FunctionParameter::new(stack, source, scope.memory_index, total_args, &compiler.stdout, &compiler.stderr),
+            _ => FunctionParameter::new(stack, source, scope.memory_index, total_args, &compiler.stdout, &compiler.stderr)
         };
         
-        match func(parameter) {
+        let func_call_result = func(parameter);
+        match func_call_result {
             Ok(result) => {
-                dec_memory_index!(compiler, total_args as usize);
+                scope.memory_index -= total_args as usize;
 
                 if call_return_assign_to_temp {
-                    (*compiler.current_scope).stack[get_memory_index!(compiler)] = result;
-                    inc_memory_index!(compiler, 1);
+                    scope.stack[get_memory_index!(compiler)] = result;
+                    scope.memory_index += 1;
                 }
 
                 compiler.opcode_index += 2;
@@ -208,40 +212,37 @@ impl FunctionReference {
             for _ in 0..argument_size {
                 unsafe {
                     dec_memory_index!(options, 1);
-                    args.push((*options.current_scope).stack[get_memory_index!(options)]);
+                    args.push(options.current_scope.borrow().stack[get_memory_index!(options)]);
                 }
             }
         }
 
         if options.scopes.len() <= options.scope_index {
-            options.scopes.resize(options.scopes.len() * 2, std::ptr::null_mut());
+            let empty_scope = Arc::new(RefCell::new(Scope::empty()));
+            options.scopes.resize(options.scopes.len() * 2, empty_scope.clone());
         }
 
-        unsafe {
-            let memory = options.storages[reference.storage_index].get_memory().borrow().clone();
-            let stack = options.storages[reference.storage_index].get_stack().borrow().clone();
+        let memory = options.storages[reference.storage_index].get_memory().borrow().clone();
+        let stack = options.storages[reference.storage_index].get_stack().borrow().clone();
 
-            let new_scope = options.heap.add_scope(Scope {
-                memory: memory,
-                stack: stack,
-                location: old_index,
-                memory_index: get_memory_index!(options),
-                const_size: options.storages[reference.storage_index].get_constant_size(),
-                call_return_assign_to_temp
-            });
+        let new_scope = options.heap.add_scope(Arc::new(RefCell::new(Scope {
+            memory: memory,
+            stack: stack,
+            location: old_index,
+            memory_index: get_memory_index!(options),
+            const_size: options.storages[reference.storage_index].get_constant_size(),
+            call_return_assign_to_temp
+        })));
 
-            options.scopes[options.scope_index] = new_scope;
+        options.scopes[options.scope_index] = new_scope.clone();
 
-            options.current_scope = options.scopes[options.scope_index];
-            (*options.current_scope).memory_index = 0;
-        }
+        options.current_scope = options.scopes[options.scope_index].clone();
+        options.current_scope.borrow_mut().memory_index = 0;
 
         if argument_size > 0 {
             for _ in 0..argument_size {
-                unsafe {
-                    (*options.current_scope).stack[get_memory_index!(options)] = args[get_memory_index!(options)];
-                    inc_memory_index!(options, 1);
-                }
+                options.current_scope.borrow_mut().stack[get_memory_index!(options)] = args[get_memory_index!(options)];
+                inc_memory_index!(options, 1);
             }
         }
         Ok(())

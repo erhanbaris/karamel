@@ -73,8 +73,8 @@ pub struct BramaCompiler {
     pub opcode_index: usize,
     pub loop_breaks: Vec<usize>,
     pub loop_continues: Vec<usize>,
-    pub scopes: Vec<*mut Scope>,
-    pub current_scope: *mut Scope,
+    pub scopes: Vec<Arc<RefCell<Scope>>>,
+    pub current_scope: Arc<RefCell<Scope>>,
     pub scope_index: usize,
     pub functions : Vec<Arc<FunctionReference>>,
     pub classes : Vec<Arc<dyn Class  + Send + Sync>>,
@@ -85,6 +85,7 @@ pub struct BramaCompiler {
 
 impl BramaCompiler {
     pub fn new() -> BramaCompiler {
+        let main_scope = Arc::new(RefCell::new(Scope::empty()));
         let mut compiler = BramaCompiler {
             opcodes: Vec::new(),
             storages: vec![StaticStorage::new()],
@@ -93,7 +94,7 @@ impl BramaCompiler {
             loop_breaks: Vec::new(),
             loop_continues: Vec::new(),
             scopes: Vec::new(),
-            current_scope: ptr::null_mut(),
+            current_scope: main_scope.clone(),
             scope_index: 0,
             functions: Vec::new(),
             classes: Vec::new(),
@@ -102,11 +103,8 @@ impl BramaCompiler {
             heap: HeapAllocator::new()
         };
 
-        for _ in 0..32 {
-            compiler.scopes.push(std::ptr::null_mut());
-        }
-
-        compiler.current_scope = compiler.scopes[0];
+        compiler.scopes.push(main_scope.clone());
+        compiler.current_scope = compiler.scopes[0].clone();
         compiler
     }
 

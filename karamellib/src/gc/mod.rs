@@ -1,6 +1,7 @@
 use crate::compiler::BramaPrimative;
 use crate::compiler::Scope;
 use std::sync::Arc;
+use std::cell::RefCell;
 
 use broom::prelude::*;
 
@@ -8,7 +9,7 @@ pub enum HeapItem {
     Number(f64),
     Text(Arc<String>),
     Primative(Arc<BramaPrimative>),
-    Scope(Scope)
+    Scope(Arc<RefCell<Scope>>)
 }
 
 impl Trace<Self> for HeapItem {
@@ -26,10 +27,9 @@ impl HeapAllocator {
         }
     }
 
-    pub fn add_scope(&mut self, scope: Scope) -> *mut Scope {
-        let address = &scope as *const Scope as *mut Scope;
-        self.heap.insert(HeapItem::Scope(scope));
-        address
+    pub fn add_scope(&mut self, scope: Arc<RefCell<Scope>>) -> Arc<RefCell<Scope>> {
+        self.heap.insert(HeapItem::Scope(scope.clone()));
+        scope.clone()
     }
 
     pub fn add_string(&mut self, text: Arc<String>) {

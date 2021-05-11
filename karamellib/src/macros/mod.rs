@@ -1,51 +1,51 @@
 #[macro_export] 
 macro_rules! pop {
     ($options: expr) => {{
-        (*$options.current_scope).memory_index -= 1;
-        (*$options.current_scope).stack[(*$options.current_scope).memory_index].deref()
+        $options.current_scope.borrow_mut().memory_index -= 1;
+        $options.current_scope.borrow().stack[$options.current_scope.borrow().memory_index].deref()
     }}
 }
 
 #[macro_export] 
 macro_rules! pop_raw {
     ($options: expr) => {{
-        (*$options.current_scope).memory_index -= 1;
-        (*$options.current_scope).stack[(*$options.current_scope).memory_index]
+        $options.current_scope.borrow_mut().memory_index -= 1;
+        $options.current_scope.borrow_mut().stack[$options.current_scope.borrow().memory_index]
     }}
 }
 
 #[macro_export] 
 macro_rules! fetch_raw {
     ($options: expr) => {{
-        (*$options.current_scope).stack[(*$options.current_scope).memory_index-1]
+        *$options.current_scope.borrow().stack[$options.current_scope.borrow().memory_index-1]
     }}
 }
 
 #[macro_export] 
 macro_rules! current_raw {
     ($options: expr) => {{
-        (*$options.current_scope).stack[(*$options.current_scope).memory_index]
+        $options.current_scope.borrow().stack[$options.current_scope.borrow().memory_index]
     }}
 }
 
 #[macro_export] 
 macro_rules! get_memory_index {
     ($options: expr) => {{
-        (*$options.current_scope).memory_index
+        $options.current_scope.borrow().memory_index
     }}
 }
 
 #[macro_export] 
 macro_rules! inc_memory_index {
     ($options: expr, $count: expr) => {{
-        (*$options.current_scope).memory_index += $count
+        $options.current_scope.borrow_mut().memory_index += $count
     }}
 }
 
 #[macro_export] 
 macro_rules! dec_memory_index {
     ($options: expr, $count: expr) => {{
-        (*$options.current_scope).memory_index -= $count
+        $options.current_scope.borrow_mut().memory_index -= $count
     }}
 }
 
