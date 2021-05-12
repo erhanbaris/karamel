@@ -214,31 +214,38 @@ pub unsafe fn run_vm<'a>(options: &'a mut BramaCompiler) -> Result<Vec<VmObject>
                 VmOpCode::FastStore => {
                     let destination = options.opcodes[options.opcode_index + 1] as usize;
                     let source      = options.opcodes[options.opcode_index + 2] as usize;
-                    options.current_scope.borrow_mut().memory[destination as usize] = options.current_scope.borrow().memory[source];
+                    let tmp         = options.current_scope.borrow().memory[source];
+
+                    options.current_scope.borrow_mut().memory[destination as usize] = tmp;
                     options.opcode_index += 2;
                 },
 
                 VmOpCode::Not => {
-                    options.current_scope.borrow_mut().stack[get_memory_index!(options) - 1] = VmObject::from(!options.current_scope.borrow().stack[get_memory_index!(options) - 1].deref().is_true());
+                    let index = get_memory_index!(options) - 1;
+                    let tmp   = VmObject::from(!options.current_scope.borrow().stack[index].deref().is_true());
+                    options.current_scope.borrow_mut().stack[index] = tmp;
                 },
 
                 VmOpCode::Dublicate => {
-                    options.current_scope.borrow_mut().stack[get_memory_index!(options)] = options.current_scope.borrow().stack[get_memory_index!(options) - 1];
+                    let index = get_memory_index!(options);
+                    let tmp   = options.current_scope.borrow().stack[index - 1];
+                    options.current_scope.borrow_mut().stack[index] = tmp;
                     inc_memory_index!(options, 1);
                 },
 
                 VmOpCode::And => {
                     let left = pop!(options);
                     let right = pop!(options);
-
-                    options.current_scope.borrow_mut().stack[get_memory_index!(options)] = VmObject::from(left.is_true() && right.is_true());
+                    let index = get_memory_index!(options);
+                    options.current_scope.borrow_mut().stack[index] = VmObject::from(left.is_true() && right.is_true());
                     inc_memory_index!(options, 1);
                 },
 
                 VmOpCode::Or => {
                     let left = pop!(options);
                     let right = pop!(options);
-                    options.current_scope.borrow_mut().stack[get_memory_index!(options)] = VmObject::from(left.is_true() || right.is_true());
+                    let index = get_memory_index!(options);
+                    options.current_scope.borrow_mut().stack[index] = VmObject::from(left.is_true() || right.is_true());
                     inc_memory_index!(options, 1);
                 },
 
@@ -279,7 +286,8 @@ pub unsafe fn run_vm<'a>(options: &'a mut BramaCompiler) -> Result<Vec<VmObject>
                     let right = pop!(options);
                     let left  = pop!(options);
                     
-                    options.current_scope.borrow_mut().stack[get_memory_index!(options)] = VmObject::from(left == right);
+                    let index = get_memory_index!(options);
+                    options.current_scope.borrow_mut().stack[index] = VmObject::from(left == right);
                     inc_memory_index!(options, 1);
                 },
 
@@ -288,7 +296,8 @@ pub unsafe fn run_vm<'a>(options: &'a mut BramaCompiler) -> Result<Vec<VmObject>
                     let right = pop!(options);
                     let left  = pop!(options);
                     
-                    options.current_scope.borrow_mut().stack[get_memory_index!(options)] = VmObject::from(left != right);
+                    let index = get_memory_index!(options);
+                    options.current_scope.borrow_mut().stack[index] = VmObject::from(left != right);
                     inc_memory_index!(options, 1);
                 },
 
@@ -385,17 +394,21 @@ pub unsafe fn run_vm<'a>(options: &'a mut BramaCompiler) -> Result<Vec<VmObject>
                 },
 
                 VmOpCode::Increment => {
-                    options.current_scope.borrow_mut().stack[get_memory_index!(options) - 1] = match &*options.current_scope.borrow().stack[get_memory_index!(options) - 1].deref() {
+                    let index = get_memory_index!(options) - 1;
+                    let item  = match &*options.current_scope.borrow().stack[index].deref() {
                         BramaPrimative::Number(value) => VmObject::from(*value + 1 as f64),
                         _ => empty_primative
                     };
+                    options.current_scope.borrow_mut().stack[index] = item;
                 },
 
                 VmOpCode::Decrement => {
-                    options.current_scope.borrow_mut().stack[get_memory_index!(options) - 1] = match &*options.current_scope.borrow().stack[get_memory_index!(options) - 1].deref() {
+                    let index = get_memory_index!(options) - 1;
+                    let item  = match &*options.current_scope.borrow().stack[get_memory_index!(options) - 1].deref() {
                         BramaPrimative::Number(value) => VmObject::from(*value - 1 as f64),
                         _ => empty_primative
                     };
+                    options.current_scope.borrow_mut().stack[index] = item;
                 },
 
                 VmOpCode::InitList => {
@@ -406,7 +419,8 @@ pub unsafe fn run_vm<'a>(options: &'a mut BramaCompiler) -> Result<Vec<VmObject>
                         list.push(pop_raw!(options));
                     }
                     
-                    options.current_scope.borrow_mut().stack[get_memory_index!(options)] = VmObject::from(list);
+                    let index = get_memory_index!(options);
+                    options.current_scope.borrow_mut().stack[index] = VmObject::from(list);
                     inc_memory_index!(options, 1);
                     options.opcode_index += 1;
                 },
@@ -528,7 +542,9 @@ pub unsafe fn run_vm<'a>(options: &'a mut BramaCompiler) -> Result<Vec<VmObject>
                     let const_size = options.current_scope.borrow().const_size as usize;
                     for i in 0..size {
                         dec_memory_index!(options, 1);
-                        options.current_scope.borrow_mut().memory[i + const_size] = options.current_scope.borrow().stack[get_memory_index!(options)];
+                        let index = get_memory_index!(options);
+                        let tmp   = options.current_scope.borrow().stack[index];
+                        options.current_scope.borrow_mut().memory[i + const_size] = tmp;
                     }
 
                     options.opcode_index += 1;

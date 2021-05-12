@@ -184,7 +184,7 @@ impl FunctionReference {
                 if call_return_assign_to_temp {
                     let index = scope.memory_index.load(Ordering::Relaxed);
                     scope.stack[index] = result;
-                    scope.memory_index.fetch_add(total_args as usize, Ordering::Relaxed);
+                    scope.memory_index.fetch_add(1 as usize, Ordering::Relaxed);
                 }
 
                 compiler.opcode_index += 2;
@@ -241,7 +241,8 @@ impl FunctionReference {
 
         if argument_size > 0 {
             for _ in 0..argument_size {
-                options.current_scope.borrow_mut().stack[get_memory_index!(options)] = args[get_memory_index!(options)];
+                let index = get_memory_index!(options);
+                options.current_scope.borrow_mut().stack[index] = args[index];
                 inc_memory_index!(options, 1);
             }
         }
