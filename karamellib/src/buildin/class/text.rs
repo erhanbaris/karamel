@@ -3,7 +3,7 @@ use crate::compiler::value::EMPTY_OBJECT;
 use crate::buildin::class::baseclass::BasicInnerClass;
 use crate::compiler::value::BramaPrimative;
 use crate::types::VmObject;
-use crate::{n_parameter_expected, expected_parameter_type, arc_bool, arc_empty, arc_text};
+use crate::{n_parameter_expected, expected_parameter_type, arc_text};
 use crate::primative_text;
 
 use unicode_width::UnicodeWidthStr;
@@ -47,7 +47,7 @@ fn getter(source: VmObject, index: f64) -> NativeCallResult {
         true => index as usize,
         false =>  return Ok(EMPTY_OBJECT)
     };
-    
+
     if let BramaPrimative::Text(text) = &*source.deref() {
 
         return match text.chars().nth(index) {

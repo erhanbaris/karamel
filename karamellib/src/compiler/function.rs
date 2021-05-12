@@ -4,6 +4,7 @@ use std::cell::Cell;
 use std::slice::Iter;
 use std::iter::Take;
 use bitflags::bitflags;
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 use crate::{inc_memory_index, dec_memory_index, get_memory_index};
 use crate::types::*;
@@ -171,18 +172,18 @@ impl FunctionReference {
         let call_return_assign_to_temp = compiler.opcodes[compiler.opcode_index + 2] != 0;
         let stack = &scope.stack;
         let parameter = match reference.flags {
-            FunctionFlag::IN_CLASS => FunctionParameter::new(stack, source, scope.memory_index, total_args, &compiler.stdout, &compiler.stderr),
-            _ => FunctionParameter::new(stack, source, scope.memory_index, total_args, &compiler.stdout, &compiler.stderr)
+            FunctionFlag::IN_CLASS => FunctionParameter::new(stack, source, scope.memory_index.load(Ordering::Relaxed), total_args, &compiler.stdout, &compiler.stderr),
+            _ => FunctionParameter::new(stack, source, scope.memory_index.load(Ordering::Relaxed), total_args, &compiler.stdout, &compiler.stderr)
         };
         
         let func_call_result = func(parameter);
         match func_call_result {
             Ok(result) => {
-                scope.memory_index -= total_args as usize;
+                scope.memory_index.fetch_sub(total_args as usize, Ordering::Relaxed);
 
                 if call_return_assign_to_temp {
                     scope.stack[get_memory_index!(compiler)] = result;
-                    scope.memory_index += 1;
+                    scope.memory_index.fetch_add(total_args as usize, Ordering::Relaxed);
                 }
 
                 compiler.opcode_index += 2;
@@ -210,10 +211,8 @@ impl FunctionReference {
 
         if argument_size > 0 {
             for _ in 0..argument_size {
-                unsafe {
-                    dec_memory_index!(options, 1);
-                    args.push(options.current_scope.borrow().stack[get_memory_index!(options)]);
-                }
+                dec_memory_index!(options, 1);
+                args.push(options.current_scope.borrow().stack[get_memory_index!(options)]);
             }
         }
 
@@ -229,7 +228,7 @@ impl FunctionReference {
             memory: memory,
             stack: stack,
             location: old_index,
-            memory_index: get_memory_index!(options),
+            memory_index: AtomicUsize::new(get_memory_index!(options)),
             const_size: options.storages[reference.storage_index].get_constant_size(),
             call_return_assign_to_temp
         })));
@@ -237,7 +236,7 @@ impl FunctionReference {
         options.scopes[options.scope_index] = new_scope.clone();
 
         options.current_scope = options.scopes[options.scope_index].clone();
-        options.current_scope.borrow_mut().memory_index = 0;
+        options.current_scope.borrow().memory_index.store(0, Ordering::Relaxed);
 
         if argument_size > 0 {
             for _ in 0..argument_size {

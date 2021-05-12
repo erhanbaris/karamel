@@ -1,6 +1,8 @@
 use std::{borrow::Borrow, vec::Vec};
 use std::sync::Arc;
 use std::cell::RefCell;
+use std::sync::atomic::{AtomicUsize};
+
 use broom::prelude::*;
 
 use std::ptr;
@@ -18,26 +20,25 @@ use crate::buildin::class::PRIMATIVE_CLASSES;
 
 use log;
 
-#[derive(Clone)]
 pub struct Scope {
     pub memory: Vec<VmObject>, 
     pub stack: Vec<VmObject>, 
     pub location: usize,
-    pub memory_index: usize,
+    pub memory_index: AtomicUsize,
     pub call_return_assign_to_temp: bool,
     pub const_size: u8
 }
 
 impl Drop for Scope {
     fn drop(&mut self) {
-        println!("> 1111");
+        println!("> Scope Dropped");
     }
 }
 
 pub static EMPTY_SCOPE: Scope = Scope { 
     const_size: 0, 
     call_return_assign_to_temp: false, 
-    memory_index: 0, 
+    memory_index: AtomicUsize::new(0), 
     location: 0, 
     memory: Vec::new(), 
     stack: Vec::new()
@@ -48,7 +49,7 @@ impl Scope {
         Scope { 
             const_size: 0, 
             call_return_assign_to_temp: false, 
-            memory_index: 0, 
+            memory_index: AtomicUsize::new(0), 
             location: 0, 
             memory: Vec::new(), 
             stack: Vec::new()

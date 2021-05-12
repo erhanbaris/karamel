@@ -5,6 +5,7 @@ use std::sync::Arc;
 use std::cell::RefCell;
 use std::mem;
 use std::collections::HashMap;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::io::stdout;
 use log_update::LogUpdate;
 use colored::*;
@@ -144,7 +145,7 @@ pub unsafe fn run_vm<'a>(options: &'a mut BramaCompiler) -> Result<Vec<VmObject>
             memory: options.storages[0].get_memory().borrow().to_vec(),
             stack: options.storages[0].get_stack().borrow().to_vec(),
             location: 0,
-            memory_index: 0,
+            memory_index: AtomicUsize::new(0),
             const_size: 0,
             call_return_assign_to_temp: false
         }));
@@ -366,14 +367,14 @@ pub unsafe fn run_vm<'a>(options: &'a mut BramaCompiler) -> Result<Vec<VmObject>
                 },
 
                 VmOpCode::Increment => {
-                    options.current_scope.borrow_mut().stack[get_memory_index!(options) - 1] = match &*options.current_scope.borrow_mut().stack[get_memory_index!(options) - 1].deref() {
+                    options.current_scope.borrow_mut().stack[get_memory_index!(options) - 1] = match &*options.current_scope.borrow().stack[get_memory_index!(options) - 1].deref() {
                         BramaPrimative::Number(value) => VmObject::from(*value + 1 as f64),
                         _ => empty_primative
                     };
                 },
 
                 VmOpCode::Decrement => {
-                    options.current_scope.borrow_mut().stack[get_memory_index!(options) - 1] = match &*options.current_scope.borrow_mut().stack[get_memory_index!(options) - 1].deref() {
+                    options.current_scope.borrow_mut().stack[get_memory_index!(options) - 1] = match &*options.current_scope.borrow().stack[get_memory_index!(options) - 1].deref() {
                         BramaPrimative::Number(value) => VmObject::from(*value - 1 as f64),
                         _ => empty_primative
                     };
@@ -503,10 +504,10 @@ pub unsafe fn run_vm<'a>(options: &'a mut BramaCompiler) -> Result<Vec<VmObject>
 
                 VmOpCode::InitArguments => {
                     let size = options.opcodes[options.opcode_index + 1] as usize;
-                    let const_size = options.current_scope.borrow_mut().const_size as usize;
+                    let const_size = options.current_scope.borrow().const_size as usize;
                     for i in 0..size {
                         dec_memory_index!(options, 1);
-                        options.current_scope.borrow_mut().memory[i + const_size] = options.current_scope.borrow_mut().stack[get_memory_index!(options)];
+                        options.current_scope.borrow_mut().memory[i + const_size] = options.current_scope.borrow().stack[get_memory_index!(options)];
                     }
 
                     options.opcode_index += 1;
@@ -532,9 +533,10 @@ pub unsafe fn run_vm<'a>(options: &'a mut BramaCompiler) -> Result<Vec<VmObject>
         }
     }
     
-    let mut result = Vec::with_capacity(options.current_scope.borrow().memory_index);
-    for index in 0..options.current_scope.borrow().memory_index {
-        result.push(options.current_scope.borrow_mut().stack[index]);
+    let scope = options.current_scope.borrow();
+    let mut result = Vec::with_capacity(scope.memory_index.load(Ordering::Relaxed));
+    for index in 0..scope.memory_index.load(Ordering::Relaxed) {
+        result.push(scope.stack[index]);
     }
 
     Ok(result)
