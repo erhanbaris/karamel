@@ -50,6 +50,14 @@ macro_rules! dec_memory_index {
     }}
 }
 
+#[macro_export] 
+macro_rules! update_stack {
+    ($options: expr, $item: expr) => {{
+        let index = get_memory_index!($options);
+        $options.current_scope.borrow_mut().stack[index] = $item;
+    }}
+}
+
 // The debug version
 #[allow(dead_code)]
 #[macro_export]

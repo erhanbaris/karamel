@@ -182,7 +182,8 @@ impl FunctionReference {
                 scope.memory_index.fetch_sub(total_args as usize, Ordering::Relaxed);
 
                 if call_return_assign_to_temp {
-                    scope.stack[get_memory_index!(compiler)] = result;
+                    let index = scope.memory_index.load(Ordering::Relaxed);
+                    scope.stack[index] = result;
                     scope.memory_index.fetch_add(total_args as usize, Ordering::Relaxed);
                 }
 
