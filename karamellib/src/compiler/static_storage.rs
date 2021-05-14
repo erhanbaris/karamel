@@ -6,6 +6,20 @@ use std::sync::Arc;
 #[cfg(not(feature = "unittest"))]
 use crate::{debug_println};
 
+use std::ptr;
+
+unsafe fn from_buf_raw<T>(ptr: *const T, elts: usize) -> Vec<T> {
+    let mut dst = Vec::with_capacity(elts);
+
+    // SAFETY: Our precondition ensures the source is aligned and valid,
+    // and `Vec::with_capacity` ensures that we have usable space to write them.
+    ptr::copy(ptr, dst.as_mut_ptr(), elts);
+
+    // SAFETY: We created it with this much capacity earlier,
+    // and the previous `copy` has initialized these elements.
+    dst.set_len(elts);
+    dst
+}
 
 pub struct StaticStorage {
     pub index                 : usize,
@@ -14,8 +28,8 @@ pub struct StaticStorage {
     pub temp_size             : u8,
     pub temp_counter          : u8,
     pub variables             : Vec<(String, u8)>,
-    pub memory                : Arc<RefCell<Vec<VmObject>>>,
-    pub stack                 : Arc<RefCell<Vec<VmObject>>>,
+    pub memory                : Vec<VmObject>,
+    pub stack                 : Vec<VmObject>,
     pub total_const_variables : u8,
     pub parent_location       : Option<usize>
 }
@@ -39,8 +53,8 @@ impl StaticStorage {
             temp_size: 0,
             temp_counter: 0,
             total_const_variables: 0,
-            memory: Arc::new(RefCell::new(Vec::new())),
-            stack: Arc::new(RefCell::new(Vec::new())),
+            memory: Vec::new(),
+            stack: Vec::new(),
             variables: Vec::new(),
             parent_location: None
         }
@@ -48,33 +62,39 @@ impl StaticStorage {
 
     pub fn build(&mut self) {
         self.constant_size = self.constants.len() as u8;
-        let mut memory = self.memory.borrow_mut();
-        let mut stack  = self.stack.borrow_mut();
 
         /* Allocate memory */
         let memory_size = self.get_constant_size() 
                         + self.get_variable_size() 
                         + self.get_temp_size();
         
-        memory.reserve(memory_size.into());
+        self.memory.reserve(memory_size.into());
 
         /* Move all constants informations to memory location */
-        memory.append(&mut self.constants);
+        self.memory.append(&mut self.constants);
 
         /*  Allocate variable memory and update references */
         let mut index = self.get_constant_size();
         for (_, value) in self.variables.iter_mut() {
-            memory.push(VmObject::convert(Arc::new(BramaPrimative::Empty)));
+            self.memory.push(VmObject::convert(Arc::new(BramaPrimative::Empty)));
             *value = index;
             index += 1;
         }
 
         for _ in 0..self.temp_size {
-            stack.push(VmObject::convert(Arc::new(BramaPrimative::Empty)));
+            self.stack.push(VmObject::convert(Arc::new(BramaPrimative::Empty)));
         }
     }
-    pub fn get_memory(&mut self) -> Arc<RefCell<Vec<VmObject>>> { self.memory.clone() }
-    pub fn get_stack(&mut self) -> Arc<RefCell<Vec<VmObject>>> { self.stack.clone() }
+    pub fn get_memory(&mut self) -> Vec<VmObject> { 
+        unsafe {
+            from_buf_raw(self.memory.as_mut_ptr(), self.memory.len())
+        }
+    }
+    pub fn get_stack(&mut self) -> Vec<VmObject> { 
+        unsafe {
+            from_buf_raw(self.stack.as_mut_ptr(), self.stack.len())
+        }
+    }
     pub fn get_constant_size(&self) -> u8 { self.constant_size }
     pub fn get_variable_size(&self) -> u8 { self.variables.len() as u8 }
     pub fn get_temp_size(&self) -> u8     { self.temp_size }
@@ -133,13 +153,13 @@ impl StaticStorage {
     #[allow(dead_code)]
     pub fn get_variable_value(&self, name: &str) -> Option<Arc<BramaPrimative>> {
         match self.get_variable_location(name) {
-            Some(loc) => Some(self.memory.borrow_mut()[loc as usize].deref()),
+            Some(loc) => Some(self.memory[loc as usize].deref()),
             _ => None
         }
     }
 
     pub fn get_constant_location(&self, value: Arc<BramaPrimative>) -> Option<u8> {
-        return match self.memory.borrow().iter().position(|x| { *x.deref() == *value }) {
+        return match self.memory.iter().position(|x| { *x.deref() == *value }) {
             Some(number) => Some(number as u8),
             _ => None
         };
@@ -147,7 +167,7 @@ impl StaticStorage {
 
     pub fn get_function_constant(&self, name: String, module_path: Vec<String>, framework: String) -> Option<u8> {
         
-        for (index, item) in self.memory.borrow().iter().enumerate() {
+        for (index, item) in self.memory.iter().enumerate() {
             if let BramaPrimative::Function(reference, _) = &*item.deref() {
                 if reference.name        == name && 
                    reference.module_path == module_path && 
@@ -162,7 +182,7 @@ impl StaticStorage {
 
     pub fn get_class_constant(&self, name: String, _module_path: Vec<String>, _framework: String) -> Option<u8> {
         
-        for (index, item) in self.memory.borrow().iter().enumerate() {
+        for (index, item) in self.memory.iter().enumerate() {
             if let BramaPrimative::Class(reference) = &*item.deref() {
                 if reference.get_class_name() == name {
                     return Some(index as u8);
@@ -185,7 +205,7 @@ impl StaticStorage {
         let consts    = self.constant_size;
         let variables = self.constant_size as usize + self.variables.len();
 
-        for (index, item) in self.memory.borrow().iter().enumerate() {
+        for (index, item) in self.memory.iter().enumerate() {
             let last_type = if consts as usize == index {
                 "V"
             } else if variables as usize == index {
@@ -209,9 +229,9 @@ impl StaticStorage {
         debug_println!("╔════════════════════════════════════════╗");
         debug_println!("║                  STACK                 ║");
         debug_println!("╠════════════════════════════════════════╣");
-        debug_println!("║ Stack size: {:<10}                 ║", self.stack.borrow().len());
+        debug_println!("║ Stack size: {:<10}                 ║", self.stack.len());
         debug_println!("╠════════════════════════════════════════╣");
-        for item in self.stack.borrow().iter() {
+        for item in self.stack.iter() {
             debug_println!("║ {:38} ║", format!("{:?}", item.deref()));
         }
         debug_println!("╚════════════════════════════════════════╝");

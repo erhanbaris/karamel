@@ -93,5 +93,6 @@ pub enum VmOpCode {
     CopyToStore,
     Dublicate,
     GetItem,
-    SetItem
+    SetItem,
+    Halt
 }

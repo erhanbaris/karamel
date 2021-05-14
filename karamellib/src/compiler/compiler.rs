@@ -20,7 +20,7 @@ use log;
 pub struct Scope {
     pub memory: Vec<VmObject>, 
     pub stack: Vec<VmObject>, 
-    pub location: usize,
+    pub location: *mut u8,
     pub memory_index: usize,
     pub call_return_assign_to_temp: bool,
     pub const_size: u8
@@ -32,7 +32,7 @@ impl Scope {
             const_size: 0, 
             call_return_assign_to_temp: false, 
             memory_index: 0, 
-            location: 0, 
+            location: ptr::null_mut(), 
             memory: Vec::new(), 
             stack: Vec::new()
         }
@@ -49,7 +49,6 @@ pub struct BramaCompiler {
     pub opcodes : Vec<u8>,
     pub storages: Vec<StaticStorage>,
     pub modules: ModuleCollection,
-    pub opcode_index: usize,
     pub loop_breaks: Vec<usize>,
     pub loop_continues: Vec<usize>,
     pub scopes: Vec<Scope>,
@@ -58,7 +57,8 @@ pub struct BramaCompiler {
     pub functions : Vec<Arc<FunctionReference>>,
     pub classes : Vec<Arc<dyn Class  + Send + Sync>>,
     pub stdout: Option<RefCell<String>>,
-    pub stderr: Option<RefCell<String>>
+    pub stderr: Option<RefCell<String>>,
+    pub opcodes_ptr: *mut u8
 }
 
 impl  BramaCompiler {
@@ -67,7 +67,6 @@ impl  BramaCompiler {
             opcodes: Vec::new(),
             storages: vec![StaticStorage::new()],
             modules: ModuleCollection::new(),
-            opcode_index: 0,
             loop_breaks: Vec::new(),
             loop_continues: Vec::new(),
             scopes: Vec::new(),
@@ -76,7 +75,8 @@ impl  BramaCompiler {
             functions: Vec::new(),
             classes: Vec::new(),
             stdout: None,
-            stderr: None
+            stderr: None,
+            opcodes_ptr: ptr::null_mut()
         };
 
         for _ in 0..32{
@@ -196,6 +196,8 @@ impl Compiler for InterpreterCompiler {
 
         /* Generate main function code */
         self.generate_opcode(ast, &BramaAstType::None, options, 0)?;
+        options.opcodes.push(VmOpCode::Halt as u8);
+        options.opcodes_ptr = options.opcodes.as_mut_ptr();
 
         Ok(())
     }

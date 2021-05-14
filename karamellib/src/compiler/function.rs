@@ -165,8 +165,8 @@ impl FunctionReference {
     }
 
     unsafe fn native_function_call(reference: &FunctionReference, func: NativeCall, compiler: &mut BramaCompiler, source: Option<VmObject>) -> Result<(), String> {            
-        let total_args = compiler.opcodes[compiler.opcode_index + 1];
-        let call_return_assign_to_temp = compiler.opcodes[compiler.opcode_index + 2] != 0;
+        let total_args                 = *compiler.opcodes_ptr.offset(1);
+        let call_return_assign_to_temp = *compiler.opcodes_ptr.offset(2) != 0;
         let parameter = match reference.flags {
             FunctionFlag::IN_CLASS => FunctionParameter::new(&(*compiler.current_scope).stack, source, get_memory_index!(compiler), total_args, &compiler.stdout, &compiler.stderr),
             _ => FunctionParameter::new(&(*compiler.current_scope).stack, source, get_memory_index!(compiler), total_args, &compiler.stdout, &compiler.stderr)
@@ -181,7 +181,7 @@ impl FunctionReference {
                     inc_memory_index!(compiler, 1);
                 }
 
-                compiler.opcode_index += 2;
+                compiler.opcodes_ptr = compiler.opcodes_ptr.offset(2);
                 Ok(())
             },
             Err(error) => {
@@ -192,52 +192,49 @@ impl FunctionReference {
     }
 
     fn opcode_function_call(reference: &FunctionReference, options: &mut BramaCompiler, source: Option<VmObject>) -> Result<(), String> {
-
-        let argument_size  = options.opcodes[options.opcode_index + 1];
-        let call_return_assign_to_temp = options.opcodes[options.opcode_index + 2] != 0;
-        let old_index = options.opcode_index + 2;
-        options.opcode_index = reference.opcode_location.get() as usize;
-        options.scope_index += 1;
-
-        if argument_size != options.opcodes[options.opcode_index] {
-            return Err("Function argument error".to_string());
-        }
-        let mut args: Vec<VmObject> = Vec::with_capacity(argument_size as usize);
-
-        if argument_size > 0 {
-            for _ in 0..argument_size {
-                unsafe {
-                    dec_memory_index!(options, 1);
-                    args.push((*options.current_scope).stack[get_memory_index!(options)]);
-                }
-            }
-        }
-
-        if options.scopes.len() <= options.scope_index {
-            options.scopes.resize(options.scopes.len() * 2, Scope::empty());
-        }
-
         unsafe {
-            options.scopes[options.scope_index] = Scope {
-                memory: options.storages[reference.storage_index].get_memory().borrow().clone(),
-                stack: options.storages[reference.storage_index].get_stack().borrow().clone(),
-                location: old_index,
-                memory_index: get_memory_index!(options),
-                const_size: options.storages[reference.storage_index].get_constant_size(),
-                call_return_assign_to_temp
-            };
+            let argument_size              = *options.opcodes_ptr.offset(1);
+            let call_return_assign_to_temp = *options.opcodes_ptr.offset(2) != 0;
+            let old_index                  = options.opcodes_ptr.offset(2);
+            options.opcodes_ptr            = options.opcodes.as_mut_ptr().offset(reference.opcode_location.get() as isize);
+            options.scope_index           += 1;
+
+            if argument_size != *options.opcodes_ptr {
+                return Err("Function argument error".to_string());
+            }
+            //let mut args: Vec<VmObject> = Vec::with_capacity(argument_size as usize);
+
+            let arguments = &(*options.current_scope).stack[(*options.current_scope).memory_index - argument_size as usize..(*options.current_scope).memory_index];
+            dec_memory_index!(options, argument_size as usize);
+
+            if options.scopes.len() <= options.scope_index {
+                options.scopes.resize(options.scopes.len() * 2, Scope::empty());
+            }
+
+            //println!("Scope: {}", options.scope_index);
+
+            let mut scope                    = &mut options.scopes[options.scope_index];
+            scope.memory                     = options.storages[reference.storage_index].get_memory();
+            scope.stack                      = options.storages[reference.storage_index].get_stack();
+            scope.location                   = old_index;
+            scope.memory_index               = get_memory_index!(options);
+            scope.const_size                 = options.storages[reference.storage_index].get_constant_size();
+            scope.call_return_assign_to_temp = call_return_assign_to_temp;
 
             options.current_scope = &mut options.scopes[options.scope_index] as *mut Scope;
             (*options.current_scope).memory_index = 0;
-        }
+            //println!("Sonrası {:?}", arguments);
+            
 
-        if argument_size > 0 {
-            for _ in 0..argument_size {
-                unsafe {
-                    (*options.current_scope).stack[get_memory_index!(options)] = args[get_memory_index!(options)];
+            if argument_size > 0 {
+                for index in 0..argument_size {
+                    (*options.current_scope).stack[get_memory_index!(options)] = arguments[argument_size as usize-index as usize - 1];// args[get_memory_index!(options)];
+                    // (*options.current_scope).stack[get_memory_index!(options)] = (*old_scope).stack[(*old_scope).memory_index - 1 - index];
                     inc_memory_index!(options, 1);
                 }
             }
+
+            //println!("--------");
         }
         Ok(())
     }

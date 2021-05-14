@@ -6,6 +6,7 @@ use std::mem;
 use std::collections::HashMap;
 use std::io::stdout;
 use log_update::LogUpdate;
+use std::ptr;
 use colored::*;
 use std::io::{self, Write};
 use crate::buildin::class::PRIMATIVE_CLASSES;
@@ -139,16 +140,16 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
         let opcode_size   = options.opcodes.len();
 
         options.scopes[options.scope_index] = Scope {
-            memory: options.storages[0].get_memory().borrow().to_vec(),
-            stack: options.storages[0].get_stack().borrow().to_vec(),
-            location: 0,
+            memory: options.storages[0].get_memory().to_vec(),
+            stack: options.storages[0].get_stack().to_vec(),
+            location: ptr::null_mut(),
             memory_index: 0,
             const_size: 0,
             call_return_assign_to_temp: false
         };
 
-        while opcode_size > options.opcode_index {
-            let opcode = mem::transmute::<u8, VmOpCode>(options.opcodes[options.opcode_index]);
+        loop {
+            let opcode = mem::transmute::<u8, VmOpCode>(*options.opcodes_ptr);
             #[cfg(all(feature = "liveOpcodeView"))] {
                 dump_opcode(options.opcode_index, options, &mut log_update);
             }
@@ -178,30 +179,31 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
                 },
 
                 VmOpCode::Load => {
-                    let tmp = options.opcodes[options.opcode_index + 1] as usize;
-                    (*options.current_scope).stack[get_memory_index!(options)] = (*options.current_scope).memory[tmp];
-                    options.opcode_index += 1;
+                    let tmp   = *options.opcodes_ptr.offset(1) as usize;
+                    let scope = &mut *options.current_scope;
+                    scope.stack[scope.memory_index] = scope.memory[tmp];
+                    options.opcodes_ptr = options.opcodes_ptr.offset(1);
                     inc_memory_index!(options, 1);
                 },
 
                 VmOpCode::Store => {
-                    let tmp = options.opcodes[options.opcode_index + 1] as usize;
+                    let tmp = *options.opcodes_ptr.offset(1) as usize;
                     dec_memory_index!(options, 1);
                     (*options.current_scope).memory[tmp] = (*options.current_scope).stack[get_memory_index!(options)];
-                    options.opcode_index += 1;
+                    options.opcodes_ptr = options.opcodes_ptr.offset(1);
                 },
 
                 VmOpCode::CopyToStore => {
-                    let tmp = options.opcodes[options.opcode_index + 1] as usize;
+                    let tmp = *options.opcodes_ptr.offset(1) as usize;
                     (*options.current_scope).memory[tmp] = (*options.current_scope).stack[get_memory_index!(options) - 1];
-                    options.opcode_index += 1;
+                    options.opcodes_ptr = options.opcodes_ptr.offset(1);
                 },
 
                 VmOpCode::FastStore => {
-                    let destination = options.opcodes[options.opcode_index + 1] as usize;
-                    let source      = options.opcodes[options.opcode_index + 2] as usize;
+                    let destination = *options.opcodes_ptr.offset(1) as usize;
+                    let source      = *options.opcodes_ptr.offset(2) as usize;
                     (*options.current_scope).memory[destination as usize] = (*options.current_scope).memory[source];
-                    options.opcode_index += 2;
+                    options.opcodes_ptr = options.opcodes_ptr.offset(2);
                 },
 
                 VmOpCode::Not => {
@@ -320,8 +322,8 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
                 },
 
                 VmOpCode::Call => {
-                    let func_location = options.opcodes[options.opcode_index + 1] as usize;
-                    options.opcode_index += 1;
+                    let func_location   = *options.opcodes_ptr.offset(1) as usize;
+                    options.opcodes_ptr = options.opcodes_ptr.offset(1);
                     
                     if let BramaPrimative::Function(reference, _) = &*(*options.current_scope).memory[func_location].deref() {
                         reference.execute(options, None)?;
@@ -343,11 +345,11 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
                 },
 
                 VmOpCode::Return => {
-                    let return_value = (*options.current_scope).stack[get_memory_index!(options)-1];
-                    options.opcode_index = (*options.current_scope).location;
+                    let return_value               = (*options.current_scope).stack[get_memory_index!(options)-1];
+                    options.opcodes_ptr            = (*options.current_scope).location;
                     let call_return_assign_to_temp = (*options.current_scope).call_return_assign_to_temp;
-                    options.scope_index -= 1;
-                    options.current_scope = &mut options.scopes[options.scope_index] as *mut Scope;
+                    options.scope_index           -= 1;
+                    options.current_scope          = &mut options.scopes[options.scope_index] as *mut Scope;
 
                     if call_return_assign_to_temp {
                         (*options.current_scope).stack[get_memory_index!(options)] = return_value;
@@ -370,8 +372,8 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
                 },
 
                 VmOpCode::InitList => {
-                    let total_item = options.opcodes[options.opcode_index + 1] as usize;
-                    let mut list = Vec::with_capacity(total_item);
+                    let total_item = *options.opcodes_ptr.offset(1);
+                    let mut list = Vec::with_capacity(total_item.into());
 
                     for _ in 0..total_item {
                         list.push(pop_raw!(options));
@@ -379,12 +381,12 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
                     
                     (*options.current_scope).stack[get_memory_index!(options)] = VmObject::from(list);
                     inc_memory_index!(options, 1);
-                    options.opcode_index += 1;
+                    options.opcodes_ptr = options.opcodes_ptr.offset(1);
                 },
 
                 VmOpCode::InitDict => {
-                    let total_item = options.opcodes[options.opcode_index + 1] as usize;
-                    let mut dict = HashMap::new();
+                    let total_item = *options.opcodes_ptr.offset(1) as usize;
+                    let mut dict   = HashMap::new();
 
                     for _ in 0..total_item {
                         let value = pop_raw!(options);
@@ -395,7 +397,7 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
                     
                     (*options.current_scope).stack[get_memory_index!(options)] = VmObject::from(dict);
                     inc_memory_index!(options, 1);
-                    options.opcode_index += 1;
+                    options.opcodes_ptr = options.opcodes_ptr.offset(1);
                 },
 
                 VmOpCode::Compare => {
@@ -410,17 +412,17 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
                     };
 
                     if status {
-                        options.opcode_index += 2 as usize;
+                        options.opcodes_ptr = options.opcodes_ptr.offset(2);
                     }
                     else {
-                        let location = ((options.opcodes[options.opcode_index + 2] as u16 * 256) + options.opcodes[options.opcode_index + 1] as u16) as usize;
-                        options.opcode_index += location as usize;
+                        let location = ((*options.opcodes_ptr.offset(2) as u16 * 256) + *options.opcodes_ptr.offset(1) as u16) as usize;
+                        options.opcodes_ptr = options.opcodes_ptr.offset(location as isize);
                     }
                 },
 
                 VmOpCode::Jump => {
-                    let location = ((options.opcodes[options.opcode_index + 2] as u16 * 256) + options.opcodes[options.opcode_index + 1] as u16) as usize;
-                    options.opcode_index = location as usize;
+                    let location = ((*options.opcodes_ptr.offset(2)  as u16 * 256) + *options.opcodes_ptr.offset(1)  as u16) as usize;
+                    options.opcodes_ptr = options.opcodes.as_mut_ptr().offset(location as isize);
                     continue;
                 },
                 
@@ -492,29 +494,32 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
                 },
 
                 VmOpCode::InitArguments => {
-                    let size = options.opcodes[options.opcode_index + 1] as usize;
+                    let size = *options.opcodes_ptr.offset(1) as usize;
                     let const_size = (*options.current_scope).const_size as usize;
                     for i in 0..size {
                         dec_memory_index!(options, 1);
                         (*options.current_scope).memory[i + const_size] = (*options.current_scope).stack[get_memory_index!(options)];
                     }
 
-                    options.opcode_index += 1;
+                    options.opcodes_ptr = options.opcodes_ptr.offset(1);
                 },
                 VmOpCode::Func => (),
                 VmOpCode::None => (),
+                VmOpCode::Halt => {
+                    break;
+                },
             }
 
-            options.opcode_index += 1;
+            options.opcodes_ptr = options.opcodes_ptr.offset(1);
         }
 
         
         for (index, item) in options.scopes[0].stack.iter().enumerate() {
-            options.storages[0].get_stack().borrow_mut()[index] = *item;
+            options.storages[0].get_stack()[index] = *item;
         }
 
         for (index, item) in options.scopes[0].memory.iter().enumerate() {
-            options.storages[0].get_memory().borrow_mut()[index] = *item;
+            options.storages[0].get_memory()[index] = *item;
         }
         
         #[cfg(feature = "dumpMemory")] {
