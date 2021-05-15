@@ -14,6 +14,7 @@ use crate::buildin::class::PRIMATIVE_CLASSES;
 pub const EMPTY_OBJECT: VmObject = VmObject(QNAN | EMPTY_FLAG);
 pub const TRUE_OBJECT: VmObject  = VmObject(QNAN | TRUE_FLAG);
 pub const FALSE_OBJECT: VmObject = VmObject(QNAN | FALSE_FLAG);
+pub static EMPTY_PRIMATIVE: BramaPrimative = BramaPrimative::Empty;
 
 #[repr(C)]
 #[derive(Clone)]
@@ -286,6 +287,35 @@ impl VmObject {
                 Arc::clone(&data)
             },
             _ => Arc::new(BramaPrimative::Empty)
+        }
+    }
+
+    pub fn deref_clean(&self) -> BramaPrimative {
+        match self.0 {
+            n if (n & QNAN) != QNAN       => BramaPrimative::Number(f64::from_bits(n)),
+            e if e == (QNAN | EMPTY_FLAG) => BramaPrimative::Empty,
+            f if f == (QNAN | FALSE_FLAG) => BramaPrimative::Bool(false),
+            t if t == (QNAN | TRUE_FLAG)  => BramaPrimative::Bool(true),
+            p if (p & POINTER_FLAG) == POINTER_FLAG => {
+                let pointer = (self.0 & POINTER_MASK) as *mut BramaPrimative;
+                let data = unsafe { ManuallyDrop::new(Arc::from_raw(pointer)) };
+                match &**data {
+                    BramaPrimative::Text(text) => BramaPrimative::Text(text.clone()),
+                    BramaPrimative::List(list) => BramaPrimative::List(list.clone()),
+                    BramaPrimative::Dict(dict) => BramaPrimative::Dict(dict.clone()),
+                    BramaPrimative::Function(func, base) => BramaPrimative::Function(func.clone(), *base),
+                    BramaPrimative::Class(klass) => BramaPrimative::Class(klass.clone()),
+                    _ => BramaPrimative::Empty
+                }
+            },
+            _ => BramaPrimative::Empty
+        }
+    }
+
+    pub fn as_number(&self) -> Option<f64> {
+        match (self.0 & QNAN) != QNAN {
+            true => Some(f64::from_bits(self.0)),
+            false => None
         }
     }
 }

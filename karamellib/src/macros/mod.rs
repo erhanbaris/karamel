@@ -1,51 +1,50 @@
 #[macro_export] 
 macro_rules! pop {
     ($options: expr) => {{
-        (*$options.current_scope).memory_index -= 1;
-        (*$options.current_scope).stack[(*$options.current_scope).memory_index].deref()
+        pop_raw!($options).deref()
     }}
 }
 
 #[macro_export] 
 macro_rules! pop_raw {
     ($options: expr) => {{
-        (*$options.current_scope).memory_index -= 1;
-        (*$options.current_scope).stack[(*$options.current_scope).memory_index]
+        (*$options.current_scope).stack_ptr = (*$options.current_scope).stack_ptr.sub(1);
+        (*(*$options.current_scope).stack_ptr)
     }}
 }
 
 #[macro_export] 
 macro_rules! fetch_raw {
     ($options: expr) => {{
-        (*$options.current_scope).stack[(*$options.current_scope).memory_index-1]
+        *(*$options.current_scope).stack_ptr.sub(1)
     }}
 }
 
 #[macro_export] 
 macro_rules! current_raw {
     ($options: expr) => {{
-        (*$options.current_scope).stack[(*$options.current_scope).memory_index]
+        *(*$options.current_scope).stack_ptr
     }}
 }
 
 #[macro_export] 
 macro_rules! get_memory_index {
     ($options: expr) => {{
-        (*$options.current_scope).memory_index
+        ((*$options.current_scope).stack_ptr.offset_from((*$options.current_scope).stack.as_mut_ptr()))
     }}
 }
 
 #[macro_export] 
 macro_rules! inc_memory_index {
     ($options: expr, $count: expr) => {{
-        (*$options.current_scope).memory_index += $count
+        (*$options.current_scope).stack_ptr = (*$options.current_scope).stack_ptr.add($count);
     }}
 }
 
 #[macro_export] 
 macro_rules! dec_memory_index {
     ($options: expr, $count: expr) => {{
-        (*$options.current_scope).memory_index -= $count
+        (*$options.current_scope).stack_ptr = (*$options.current_scope).stack_ptr.sub($count);
     }}
 }
 

@@ -21,20 +21,22 @@ pub struct Scope {
     pub memory: Vec<VmObject>, 
     pub stack: Vec<VmObject>, 
     pub location: *mut u8,
-    pub memory_index: usize,
     pub call_return_assign_to_temp: bool,
-    pub const_size: u8
+    pub const_size: u8,
+    pub stack_ptr: *mut VmObject 
 }
 
 impl Scope {
     pub fn empty() -> Scope {
+        let mut stack = Vec::new();
+        let stack_ptr = stack.as_mut_ptr();
         Scope { 
             const_size: 0, 
             call_return_assign_to_temp: false, 
-            memory_index: 0, 
             location: ptr::null_mut(), 
             memory: Vec::new(), 
-            stack: Vec::new()
+            stack: stack,
+            stack_ptr: stack_ptr
         }
     }
 }

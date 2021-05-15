@@ -111,7 +111,7 @@ impl FunctionReference {
         unsafe {
             match self.callback {
                 FunctionType::Native(func) => FunctionReference::native_function_call(&self, func, compiler, base),
-                FunctionType::Opcode => FunctionReference::opcode_function_call(&self,  compiler, base)
+                FunctionType::Opcode => FunctionReference::opcode_function_call(&self,  compiler)
             }
         }
     }
@@ -168,8 +168,8 @@ impl FunctionReference {
         let total_args                 = *compiler.opcodes_ptr.offset(1);
         let call_return_assign_to_temp = *compiler.opcodes_ptr.offset(2) != 0;
         let parameter = match reference.flags {
-            FunctionFlag::IN_CLASS => FunctionParameter::new(&(*compiler.current_scope).stack, source, get_memory_index!(compiler), total_args, &compiler.stdout, &compiler.stderr),
-            _ => FunctionParameter::new(&(*compiler.current_scope).stack, source, get_memory_index!(compiler), total_args, &compiler.stdout, &compiler.stderr)
+            FunctionFlag::IN_CLASS => FunctionParameter::new(&(*compiler.current_scope).stack, source, get_memory_index!(compiler) as usize, total_args, &compiler.stdout, &compiler.stderr),
+            _ => FunctionParameter::new(&(*compiler.current_scope).stack, source, get_memory_index!(compiler) as usize, total_args, &compiler.stdout, &compiler.stderr)
         };
         
         match func(parameter) {
@@ -177,7 +177,7 @@ impl FunctionReference {
                 dec_memory_index!(compiler, total_args as usize);
 
                 if call_return_assign_to_temp {
-                    (*compiler.current_scope).stack[get_memory_index!(compiler)] = result;
+                    *(*compiler.current_scope).stack_ptr = result;
                     inc_memory_index!(compiler, 1);
                 }
 
@@ -191,7 +191,7 @@ impl FunctionReference {
         }
     }
 
-    fn opcode_function_call(reference: &FunctionReference, options: &mut BramaCompiler, source: Option<VmObject>) -> Result<(), String> {
+    fn opcode_function_call(reference: &FunctionReference, options: &mut BramaCompiler) -> Result<(), String> {
         unsafe {
             let argument_size              = *options.opcodes_ptr.offset(1);
             let call_return_assign_to_temp = *options.opcodes_ptr.offset(2) != 0;
@@ -202,39 +202,35 @@ impl FunctionReference {
             if argument_size != *options.opcodes_ptr {
                 return Err("Function argument error".to_string());
             }
-            //let mut args: Vec<VmObject> = Vec::with_capacity(argument_size as usize);
 
-            let arguments = &(*options.current_scope).stack[(*options.current_scope).memory_index - argument_size as usize..(*options.current_scope).memory_index];
-            dec_memory_index!(options, argument_size as usize);
+            let memory_index = get_memory_index!(options) as usize;
+            let arguments = &(*options.current_scope).stack[memory_index - argument_size as usize..memory_index];
+            dec_memory_index!(options, argument_size.into());
 
             if options.scopes.len() <= options.scope_index {
                 options.scopes.resize(options.scopes.len() * 2, Scope::empty());
             }
 
-            //println!("Scope: {}", options.scope_index);
+            let mut stack = options.storages[reference.storage_index].get_memory();
+            let stack_ptr = stack.as_mut_ptr();
 
             let mut scope                    = &mut options.scopes[options.scope_index];
             scope.memory                     = options.storages[reference.storage_index].get_memory();
-            scope.stack                      = options.storages[reference.storage_index].get_stack();
+            scope.stack                      = stack;
+            scope.stack_ptr                  = stack_ptr;
             scope.location                   = old_index;
-            scope.memory_index               = get_memory_index!(options);
             scope.const_size                 = options.storages[reference.storage_index].get_constant_size();
             scope.call_return_assign_to_temp = call_return_assign_to_temp;
 
             options.current_scope = &mut options.scopes[options.scope_index] as *mut Scope;
-            (*options.current_scope).memory_index = 0;
-            //println!("Sonrası {:?}", arguments);
             
 
             if argument_size > 0 {
                 for index in 0..argument_size {
-                    (*options.current_scope).stack[get_memory_index!(options)] = arguments[argument_size as usize-index as usize - 1];// args[get_memory_index!(options)];
-                    // (*options.current_scope).stack[get_memory_index!(options)] = (*old_scope).stack[(*old_scope).memory_index - 1 - index];
+                    *(*options.current_scope).stack_ptr = arguments[argument_size as usize-index as usize - 1];// args[get_memory_index!(options)];
                     inc_memory_index!(options, 1);
                 }
             }
-
-            //println!("--------");
         }
         Ok(())
     }
