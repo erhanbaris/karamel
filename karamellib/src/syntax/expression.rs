@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::rc::Rc;
 
 use crate::types::*;
 use crate::syntax::{SyntaxParser, SyntaxParserTrait, SyntaxFlag, ExtensionSyntaxParser};
@@ -45,7 +45,7 @@ impl SyntaxParserTrait for ExpressionParser {
                             body: Box::new(ast),
                             
                             /* Convert symbol to text */
-                            indexer: Box::new(BramaAstType::Primative(Arc::new(BramaPrimative::Text(Arc::new(symbol.to_string()))))) 
+                            indexer: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Text(Rc::new(symbol.to_string()))))) 
                         }
                     },
                     _ => return Err(BramaErrorType::FunctionCallSyntaxNotValid)

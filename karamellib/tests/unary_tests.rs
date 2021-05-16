@@ -9,7 +9,7 @@ mod tests {
     use crate::karamellib::syntax::*;
     use crate::karamellib::compiler::value::BramaPrimative;
     use crate::karamellib::compiler::ast::BramaAstType;
-    use std::sync::Arc;
+    use std::rc::Rc;
 
     #[warn(unused_macros)]
     macro_rules! test_compare {
@@ -28,14 +28,14 @@ mod tests {
         };
     }
 
-    test_compare!(unary_1, "+1024", Ok(BramaAstType::Primative(Arc::new(BramaPrimative::Number(1024.0)))));
-    test_compare!(unary_2, "-1024", Ok(BramaAstType::Primative(Arc::new(BramaPrimative::Number(-1024.0)))));
-    test_compare!(unary_3, "+1024.0", Ok(BramaAstType::Primative(Arc::new(BramaPrimative::Number(1024.0)))));
-    test_compare!(unary_4, "-1024.0", Ok(BramaAstType::Primative(Arc::new(BramaPrimative::Number(-1024.0)))));
-    test_compare!(unary_5, "değil doğru", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Not, Box::new(BramaAstType::Primative(Arc::new(BramaPrimative::Bool(true)))))));
-    test_compare!(unary_6, "değil yanlış", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Not, Box::new(BramaAstType::Primative(Arc::new(BramaPrimative::Bool(false)))))));
-    test_compare!(unary_7, "değil doğru", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Not, Box::new(BramaAstType::Primative(Arc::new(BramaPrimative::Bool(true)))))));
-    test_compare!(unary_8, "değil yanlış", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Not, Box::new(BramaAstType::Primative(Arc::new(BramaPrimative::Bool(false)))))));
+    test_compare!(unary_1, "+1024", Ok(BramaAstType::Primative(Rc::new(BramaPrimative::Number(1024.0)))));
+    test_compare!(unary_2, "-1024", Ok(BramaAstType::Primative(Rc::new(BramaPrimative::Number(-1024.0)))));
+    test_compare!(unary_3, "+1024.0", Ok(BramaAstType::Primative(Rc::new(BramaPrimative::Number(1024.0)))));
+    test_compare!(unary_4, "-1024.0", Ok(BramaAstType::Primative(Rc::new(BramaPrimative::Number(-1024.0)))));
+    test_compare!(unary_5, "değil doğru", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Not, Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Bool(true)))))));
+    test_compare!(unary_6, "değil yanlış", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Not, Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Bool(false)))))));
+    test_compare!(unary_7, "değil doğru", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Not, Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Bool(true)))))));
+    test_compare!(unary_8, "değil yanlış", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Not, Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Bool(false)))))));
     
     test_compare!(unary_9, "+[]", Err(BramaError {
         error_type: BramaErrorType::UnaryWorksWithNumber,
@@ -64,11 +64,11 @@ mod tests {
     test_compare!(unary_16, "data--", Ok(BramaAstType::SuffixUnary(BramaOperatorType::Deccrement, Box::new(BramaAstType::Symbol("data".to_string())))));
     test_compare!(unary_17, "data++", Ok(BramaAstType::SuffixUnary(BramaOperatorType::Increment, Box::new(BramaAstType::Symbol("data".to_string())))));
 
-    test_compare!(unary_18, "+ 1024", Ok(BramaAstType::Primative(Arc::new(BramaPrimative::Number(1024.0)))));
+    test_compare!(unary_18, "+ 1024", Ok(BramaAstType::Primative(Rc::new(BramaPrimative::Number(1024.0)))));
     test_compare!(unary_19, "++data - 1", Ok(BramaAstType::Binary {
         left: Box::new(BramaAstType::PrefixUnary(BramaOperatorType::Increment, Box::new(BramaAstType::Symbol("data".to_string())))),
         operator: BramaOperatorType::Subtraction,
-        right: Box::new(BramaAstType::Primative(Arc::new(BramaPrimative::Number(1.0))))
+        right: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(1.0))))
     }));
-    //test_compare!(unary_19, "doğru değil", Ok(BramaAstType::SuffixUnary(BramaOperatorType::Not, Box::new(BramaAstType::Primative(Arc::new(BramaPrimative::Bool(true))))));
+    //test_compare!(unary_19, "doğru değil", Ok(BramaAstType::SuffixUnary(BramaOperatorType::Not, Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Bool(true))))));
 }

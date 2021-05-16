@@ -1,7 +1,7 @@
 use crate::{pop, inc_memory_index, dec_memory_index, get_memory_index};
 use crate::types::{VmObject};
 use crate::compiler::*;
-use std::sync::Arc;
+use std::rc::Rc;
 use std::mem;
 use std::collections::HashMap;
 use std::io::stdout;
@@ -9,7 +9,6 @@ use log_update::LogUpdate;
 use std::ptr;
 use colored::*;
 use std::io::{self, Write};
-use crate::buildin::class::PRIMATIVE_CLASSES;
 use crate::buildin::ClassProperty;
 
 #[cfg(all(feature = "dumpOpcodes"))]
@@ -136,7 +135,7 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
         dump_opcode(0, options, &mut log_update);
     }
     {
-        let empty_primative: VmObject  = VmObject::convert(Arc::new(BramaPrimative::Empty));
+        let empty_primative: VmObject  = VmObject::convert(Rc::new(BramaPrimative::Empty));
         let mut stack = options.storages[0].get_stack().to_vec();
         let stack_ptr = stack.as_mut_ptr();
 
@@ -173,7 +172,7 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
 
                     *(*options.current_scope).stack_ptr = match (&left.deref_clean(), &right.deref_clean()) {
                         (BramaPrimative::Number(l_value),  BramaPrimative::Number(r_value)) => VmObject::from(l_value + r_value),
-                        (BramaPrimative::Text(l_value),    BramaPrimative::Text(r_value))   => VmObject::from(Arc::new((&**l_value).to_owned() + &**r_value)),
+                        (BramaPrimative::Text(l_value),    BramaPrimative::Text(r_value))   => VmObject::from(Rc::new((&**l_value).to_owned() + &**r_value)),
                         _ => empty_primative
                     };
                     inc_memory_index!(options, 1);
@@ -459,7 +458,7 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
                                 _ => return Err("Indexer must be number".to_string())
                             };
 
-                            match object.get_class().get_setter() {
+                            match options.get_class(&object).get_setter() {
                                 Some(function) => function(raw_object, indexer_value, assign_item)?,
                                 _ => empty_primative
                             };
@@ -476,15 +475,15 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
 
                     *(*options.current_scope).stack_ptr = match &*indexer {
                         BramaPrimative::Text(text) => {
-                             match object.get_class().get_element(Some(raw_object), text.clone()) {
+                             match options.get_class(object).get_element(Some(raw_object), text.clone()) {
                                 Some(element) => match element {
-                                    ClassProperty::Function(function) => VmObject::from(Arc::new(BramaPrimative::Function(function.clone(), Some(raw_object)))),
+                                    ClassProperty::Function(function) => VmObject::from(Rc::new(BramaPrimative::Function(function.clone(), Some(raw_object)))),
                                     ClassProperty::Field(field) => VmObject::from(field.clone())
                                 },
                                 _ => empty_primative
                             }
                         },
-                        BramaPrimative::Number(index) => match object.get_class().get_getter() {
+                        BramaPrimative::Number(index) => match options.get_class(object).get_getter() {
                             Some(function) => function(raw_object, *index)?,
                             _ => empty_primative
                         }
