@@ -276,7 +276,8 @@ impl VmObject {
             t if t == (QNAN | TRUE_FLAG)  => Rc::new(BramaPrimative::Bool(true)),
             p if (p & POINTER_FLAG) == POINTER_FLAG => {
                 let pointer = (self.0 & POINTER_MASK) as *mut BramaPrimative;
-                let data = unsafe { ManuallyDrop::new(Rc::from_raw(pointer)) };
+                let data = unsafe { Rc::from_raw(pointer) };
+                std::mem::forget(&*data);
                 Rc::clone(&data)
             },
             _ => Rc::new(BramaPrimative::Empty)
@@ -291,8 +292,9 @@ impl VmObject {
             t if t == (QNAN | TRUE_FLAG)  => BramaPrimative::Bool(true),
             p if (p & POINTER_FLAG) == POINTER_FLAG => {
                 let pointer = (self.0 & POINTER_MASK) as *mut BramaPrimative;
-                let data = unsafe { ManuallyDrop::new(Rc::from_raw(pointer)) };
-                match &**data {
+                let data = unsafe { &*pointer };
+                std::mem::forget(&data);
+                match &*data {
                     BramaPrimative::Text(text) => BramaPrimative::Text(text.clone()),
                     BramaPrimative::List(list) => BramaPrimative::List(list.clone()),
                     BramaPrimative::Dict(dict) => BramaPrimative::Dict(dict.clone()),
