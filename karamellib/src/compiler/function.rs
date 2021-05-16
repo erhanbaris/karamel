@@ -221,6 +221,8 @@ impl FunctionReference {
             }
 
             scope.stack_ptr = scope.stack.as_mut_ptr();
+            scope.memory_ptr = scope.memory.as_mut_ptr();
+
             scope.location                   = old_index;
             scope.const_size                 = storage.get_constant_size();
             scope.call_return_assign_to_temp = call_return_assign_to_temp;

@@ -136,16 +136,20 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
     }
     {
         let empty_primative: VmObject  = VmObject::convert(Rc::new(BramaPrimative::Empty));
-        let mut stack = options.storages[0].get_stack().to_vec();
+        let mut stack = options.storages[0].get_stack();
         let stack_ptr = stack.as_mut_ptr();
 
+        let mut memory = options.storages[0].get_memory();
+        let memory_ptr = memory.as_mut_ptr();
+
         options.scopes[options.scope_index] = Scope {
-            memory: options.storages[0].get_memory().to_vec(),
+            memory: memory,
             stack: stack,
             location: ptr::null_mut(),
             const_size: 0,
             call_return_assign_to_temp: false,
             stack_ptr: stack_ptr,
+            memory_ptr: memory_ptr,
             storage_index: 0
         };
 
@@ -182,7 +186,7 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
                 VmOpCode::Load => {
                     let tmp   = *options.opcodes_ptr.offset(1) as usize;
                     let scope = &mut *options.current_scope;
-                    *scope.stack_ptr = scope.memory[tmp];
+                    *scope.stack_ptr = *scope.memory_ptr.offset(tmp as isize);
                     options.opcodes_ptr = options.opcodes_ptr.offset(1);
                     inc_memory_index!(options, 1);
                 },
@@ -190,20 +194,20 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
                 VmOpCode::Store => {
                     let tmp = *options.opcodes_ptr.offset(1) as usize;
                     dec_memory_index!(options, 1);
-                    (*options.current_scope).memory[tmp] = *(*options.current_scope).stack_ptr;
+                    *(*options.current_scope).memory_ptr.offset(tmp as isize) = *(*options.current_scope).stack_ptr;
                     options.opcodes_ptr = options.opcodes_ptr.offset(1);
                 },
 
                 VmOpCode::CopyToStore => {
                     let tmp = *options.opcodes_ptr.offset(1) as usize;
-                    (*options.current_scope).memory[tmp] = *(*options.current_scope).stack_ptr.sub(1);
+                    *(*options.current_scope).memory_ptr.offset(tmp as isize) = *(*options.current_scope).stack_ptr.sub(1);
                     options.opcodes_ptr = options.opcodes_ptr.offset(1);
                 },
 
                 VmOpCode::FastStore => {
                     let destination = *options.opcodes_ptr.offset(1) as usize;
                     let source      = *options.opcodes_ptr.offset(2) as usize;
-                    (*options.current_scope).memory[destination as usize] = (*options.current_scope).memory[source];
+                    *(*options.current_scope).memory_ptr.offset(destination as isize) = *(*options.current_scope).memory_ptr.offset(source as isize);
                     options.opcodes_ptr = options.opcodes_ptr.offset(2);
                 },
 
@@ -326,7 +330,7 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
                     let func_location   = *options.opcodes_ptr.offset(1) as usize;
                     options.opcodes_ptr = options.opcodes_ptr.offset(1);
                     
-                    if let BramaPrimative::Function(reference, _) = &(*options.current_scope).memory[func_location].deref_clean() {
+                    if let BramaPrimative::Function(reference, _) = &(*(*options.current_scope).memory_ptr.offset(func_location as isize)).deref_clean() {
                         reference.execute(options, None)?;
                     }
                     else {
@@ -499,7 +503,7 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
                     let const_size = (*options.current_scope).const_size as usize;
                     for i in 0..size {
                         dec_memory_index!(options, 1);
-                        (*options.current_scope).memory[i + const_size] = *(*options.current_scope).stack_ptr;
+                        *(*options.current_scope).memory_ptr.offset((i + const_size) as isize) = *(*options.current_scope).stack_ptr;
                     }
 
                     options.opcodes_ptr = options.opcodes_ptr.offset(1);
