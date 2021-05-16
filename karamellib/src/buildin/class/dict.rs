@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::rc::Rc;
 use std::cell::RefCell;
 
 use crate::{buildin::{Class, ClassConfig, ClassProperty}, compiler::{GetType, function::{FunctionParameter, IndexerGetCall, IndexerSetCall, NativeCall, NativeCallResult, FunctionFlag}}};
@@ -45,7 +45,7 @@ impl DictClass {
         self.get_type()
     }
 
-    fn has_element(&self, source: Option<VmObject>, field: Arc<String>) -> bool {
+    fn has_element(&self, source: Option<VmObject>, field: Rc<String>) -> bool {
         self.base.has_element(source, field)
     }
     
@@ -53,7 +53,7 @@ impl DictClass {
         self.base.properties()
     }
 
-    fn get_element(&self, source: Option<VmObject>, field: Arc<String>) -> Option<ClassProperty> {
+    fn get_element(&self, source: Option<VmObject>, field: Rc<String>) -> Option<ClassProperty> {
         match self.base.get_element(source, field.clone()) {
             Some(property) => Some(property),
             None => match source {
@@ -79,7 +79,7 @@ impl DictClass {
         self.base.add_method(name, function, flags);
     }
 
-    fn add_property(&mut self, name: &str, property: Arc<BramaPrimative>) {
+    fn add_property(&mut self, name: &str, property: Rc<BramaPrimative>) {
         self.base.add_property(name, property);
     }
 
@@ -101,8 +101,8 @@ impl DictClass {
  }
 
 
-pub fn get_primative_class() -> Arc<dyn Class + Send + Sync> {
-    Arc::new(DictClass::new())
+pub fn get_primative_class() -> Rc<dyn Class> {
+    Rc::new(DictClass::new())
 }
 
 fn get(parameter: FunctionParameter) -> NativeCallResult {
@@ -195,7 +195,7 @@ fn keys(parameter: FunctionParameter) -> NativeCallResult {
     if let BramaPrimative::Dict(dict) = &*parameter.source().unwrap().deref() {
         let mut keys = Vec::new();
         for key in dict.borrow().keys() {
-            keys.push(VmObject::native_convert(BramaPrimative::Text(Arc::new(key.to_string()))));
+            keys.push(VmObject::native_convert(BramaPrimative::Text(Rc::new(key.to_string()))));
         }
 
         return Ok(VmObject::native_convert(primative_list!(keys)));

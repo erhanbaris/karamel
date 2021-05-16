@@ -7,7 +7,7 @@ use crate::{
 
 use crate::buildin::ClassConfig;
 use crate::compiler::GetType;
-use std::sync::Arc;
+use std::rc::Rc;
 
 #[derive(Default)]
 pub struct ProxyClass {
@@ -21,7 +21,7 @@ impl Class for ProxyClass {
         "".to_string()
     }
 
-    fn has_element(&self, source: Option<VmObject>, field: Arc<String>) -> bool {
+    fn has_element(&self, source: Option<VmObject>, field: Rc<String>) -> bool {
         match source {
             Some(source_object) => match &*source_object.deref() {
                 BramaPrimative::Class(class) => class.has_element(source, field),
@@ -35,7 +35,7 @@ impl Class for ProxyClass {
         self.config.properties.iter()
     }
 
-fn get_element(&self, source: Option<VmObject>, field: Arc<String>) -> Option<ClassProperty> {
+fn get_element(&self, source: Option<VmObject>, field: Rc<String>) -> Option<ClassProperty> {
         match source {
             Some(source_object) => match &*source_object.deref() {
                 BramaPrimative::Class(class) => class.get_element(source, field),
@@ -51,7 +51,7 @@ fn get_element(&self, source: Option<VmObject>, field: Arc<String>) -> Option<Cl
 
     fn add_method(&mut self, _: &str, _: NativeCall, flags: FunctionFlag) {}
 
-    fn add_property(&mut self, _: &str, _: Arc<BramaPrimative>) {}
+    fn add_property(&mut self, _: &str, _: Rc<BramaPrimative>) {}
 
     fn set_getter(&mut self, _: IndexerGetCall) {}
 
@@ -66,8 +66,8 @@ fn get_element(&self, source: Option<VmObject>, field: Arc<String>) -> Option<Cl
     }
 }
 
-pub fn get_primative_class() -> Arc<dyn Class + Send + Sync> {
-    Arc::new(ProxyClass { 
+pub fn get_primative_class() -> Rc<dyn Class> {
+    Rc::new(ProxyClass { 
         config: ClassConfig::default()
     })
 }
@@ -88,7 +88,7 @@ mod test {
     use crate::buildin::Class;
     use crate::compiler::BramaPrimative;
     use crate::compiler::GetType;
-    use std::sync::Arc;
+    use std::rc::Rc;
 
     #[test]
     fn test_opcode_class_1() {
@@ -113,8 +113,8 @@ mod test {
         let mut opcode_class: BasicInnerClass = BasicInnerClass::default();
         opcode_class.set_name("test_class");
 
-        opcode_class.add_property("field_1", Arc::new(BramaPrimative::Number(1024.0)));
-        opcode_class.add_property("field_2", Arc::new(BramaPrimative::Number(2048.0)));
+        opcode_class.add_property("field_1", Rc::new(BramaPrimative::Number(1024.0)));
+        opcode_class.add_property("field_2", Rc::new(BramaPrimative::Number(2048.0)));
 
         assert_eq!(opcode_class.get_class_name(), "test_class".to_string());
         assert_eq!(opcode_class.property_count(), 2);

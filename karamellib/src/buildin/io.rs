@@ -3,7 +3,7 @@ use crate::types::{VmObject};
 use crate::compiler::value::EMPTY_OBJECT;
 use crate::buildin::{Module, Class};
 use std::collections::HashMap;
-use std::sync::Arc;
+use std::rc::Rc;
 use std::io;
 
 use log;
@@ -33,7 +33,7 @@ impl Module for IoModule {
         self.methods.get(name).map(|method| *method)
     }
 
-    fn get_module(&self, _: &str) -> Option<Arc<dyn Module>> {
+    fn get_module(&self, _: &str) -> Option<Rc<dyn Module>> {
         None
     }
 
@@ -43,11 +43,11 @@ impl Module for IoModule {
          ("satıryaz", Self::printline as NativeCall)].to_vec()
     }
 
-    fn get_modules(&self) -> HashMap<String, Arc<dyn Module>> {
+    fn get_modules(&self) -> HashMap<String, Rc<dyn Module>> {
         HashMap::new()
     }
 
-    fn get_classes(&self) -> Vec<Arc<dyn Class>> {
+    fn get_classes(&self) -> Vec<Rc<dyn Class>> {
         Vec::new()
     }
 }
@@ -56,7 +56,7 @@ impl IoModule  {
     pub fn readline(_: FunctionParameter) -> NativeCallResult {        
         let mut line = String::new();
         match io::stdin().read_line(&mut line) {
-            Ok(_) => return Ok(VmObject::from(Arc::new(line.trim().to_string()))),
+            Ok(_) => return Ok(VmObject::from(Rc::new(line.trim().to_string()))),
             _ => Ok(EMPTY_OBJECT)
         }
     }

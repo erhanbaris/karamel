@@ -1,4 +1,4 @@
-use std::{iter::Skip, sync::Arc, vec::Vec};
+use std::{iter::Skip, rc::Rc, vec::Vec};
 use std::cell::RefCell;
 use std::cell::Cell;
 use std::slice::Iter;
@@ -116,7 +116,7 @@ impl FunctionReference {
         }
     }
 
-    pub fn buildin_function(func: NativeCall, name: String, flags: FunctionFlag) -> Arc<FunctionReference> {
+    pub fn buildin_function(func: NativeCall, name: String, flags: FunctionFlag) -> Rc<FunctionReference> {
         let reference = FunctionReference {
             callback: FunctionType::Native(func),
             flags: flags,
@@ -129,10 +129,10 @@ impl FunctionReference {
             used_locations: RefCell::new(Vec::new()),
             defined_storage_index: 0
         };
-        Arc::new(reference)
+        Rc::new(reference)
     }
 
-    pub fn native_function(func: NativeCall, name: String, module_path: Vec<String>, framework: String) -> Arc<FunctionReference> {
+    pub fn native_function(func: NativeCall, name: String, module_path: Vec<String>, framework: String) -> Rc<FunctionReference> {
         let reference = FunctionReference {
             callback: FunctionType::Native(func),
             flags: FunctionFlag::STATIC,
@@ -145,10 +145,10 @@ impl FunctionReference {
             used_locations: RefCell::new(Vec::new()),
             defined_storage_index: 0
         };
-        Arc::new(reference)
+        Rc::new(reference)
     }
 
-    pub fn opcode_function(name: String, arguments: Vec<String>, module_path: Vec<String>, framework: String, storage_index: usize, defined_storage_index: usize) -> Arc<FunctionReference> {
+    pub fn opcode_function(name: String, arguments: Vec<String>, module_path: Vec<String>, framework: String, storage_index: usize, defined_storage_index: usize) -> Rc<FunctionReference> {
         let reference = FunctionReference {
             callback: FunctionType::Opcode,
             flags: FunctionFlag::STATIC,
@@ -161,7 +161,7 @@ impl FunctionReference {
             opcode_location: Cell::new(0),
             used_locations: RefCell::new(Vec::new())
         };
-        Arc::new(reference)
+        Rc::new(reference)
     }
 
     unsafe fn native_function_call(reference: &FunctionReference, func: NativeCall, compiler: &mut BramaCompiler, source: Option<VmObject>) -> Result<(), String> {            

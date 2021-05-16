@@ -1,7 +1,7 @@
 use crate::types::*;
 use crate::compiler::*;
 use std::cell::RefCell;
-use std::sync::Arc;
+use std::rc::Rc;
 
 #[cfg(not(feature = "unittest"))]
 use crate::{debug_println};
@@ -76,13 +76,13 @@ impl StaticStorage {
         /*  Allocate variable memory and update references */
         let mut index = self.get_constant_size();
         for (_, value) in self.variables.iter_mut() {
-            self.memory.push(VmObject::convert(Arc::new(BramaPrimative::Empty)));
+            self.memory.push(VmObject::convert(Rc::new(BramaPrimative::Empty)));
             *value = index;
             index += 1;
         }
 
         for _ in 0..self.temp_size {
-            self.stack.push(VmObject::convert(Arc::new(BramaPrimative::Empty)));
+            self.stack.push(VmObject::convert(Rc::new(BramaPrimative::Empty)));
         }
     }
     pub fn get_memory(&mut self) -> Vec<VmObject> { 
@@ -110,14 +110,14 @@ impl StaticStorage {
 
     /// add variable and constant data same time. Assign constant location to variable reference.
     /// If variable or constant data already assigned before, it will try to update variable value with constant.
-    pub fn add_static_data(&mut self, name: &str, value: Arc<BramaPrimative>) {
+    pub fn add_static_data(&mut self, name: &str, value: Rc<BramaPrimative>) {
         let variable_location = self.add_variable(name);
         let constant_location = self.add_constant(value.clone());
         
         self.variables[variable_location as usize].1 = constant_location as u8;
     }
 
-    pub fn add_constant(&mut self, value: Arc<BramaPrimative>) -> usize {
+    pub fn add_constant(&mut self, value: Rc<BramaPrimative>) -> usize {
         let constant_position = self.constants.iter().position(|x| {
             *x.deref() == *value
         });
@@ -151,14 +151,14 @@ impl StaticStorage {
     }
 
     #[allow(dead_code)]
-    pub fn get_variable_value(&self, name: &str) -> Option<Arc<BramaPrimative>> {
+    pub fn get_variable_value(&self, name: &str) -> Option<Rc<BramaPrimative>> {
         match self.get_variable_location(name) {
             Some(loc) => Some(self.memory[loc as usize].deref()),
             _ => None
         }
     }
 
-    pub fn get_constant_location(&self, value: Arc<BramaPrimative>) -> Option<u8> {
+    pub fn get_constant_location(&self, value: Rc<BramaPrimative>) -> Option<u8> {
         return match self.memory.iter().position(|x| { *x.deref() == *value }) {
             Some(number) => Some(number as u8),
             _ => None

@@ -4,9 +4,9 @@ use crate::buildin::class::BasicInnerClass;
 use crate::compiler::value::BramaPrimative;
 use crate::types::VmObject;
 
-use std::{mem, sync::Arc};
+use std::{mem, rc::Rc};
 
-pub fn get_primative_class() -> Arc<dyn Class + Send + Sync> {
+pub fn get_primative_class() -> Rc<dyn Class> {
     let mut opcode = BasicInnerClass::default();
     opcode.set_name("sayı");
     
@@ -16,17 +16,17 @@ pub fn get_primative_class() -> Arc<dyn Class + Send + Sync> {
     opcode.add_class_method("taban", floor);
     opcode.add_class_method("tamsayı", trunc);
     opcode.add_class_method("kesir", fract);
-    Arc::new(opcode)
+    Rc::new(opcode)
 }
 
 fn hex(parameter: FunctionParameter) -> NativeCallResult {
     if let BramaPrimative::Number(number) = &*parameter.source().unwrap().deref() {
         if number.fract() != 0.0 {
             let as_int: u64 = unsafe { mem::transmute(*number) };
-            return Ok(VmObject::native_convert(BramaPrimative::Text(Arc::new(format!("0x{:x}", as_int)))));
+            return Ok(VmObject::native_convert(BramaPrimative::Text(Rc::new(format!("0x{:x}", as_int)))));
         }
 
-        return Ok(VmObject::native_convert(BramaPrimative::Text(Arc::new(format!("0x{:x}", number.trunc() as i64)))));
+        return Ok(VmObject::native_convert(BramaPrimative::Text(Rc::new(format!("0x{:x}", number.trunc() as i64)))));
     }
     Ok(EMPTY_OBJECT)
 }
@@ -68,14 +68,14 @@ fn fract(parameter: FunctionParameter) -> NativeCallResult {
 
 #[cfg(test)]
 mod tests {
-    use std::sync::Arc;
+    use std::rc::Rc;
     use crate::compiler::value::BramaPrimative;
     use super::*;
     use crate::nativecall_test;
 
-    nativecall_test!{test_hex_1, hex, BramaPrimative::Number(-1.51), BramaPrimative::Text(Arc::new("0xbff828f5c28f5c29".to_string()))}
-    nativecall_test!{test_hex_2, hex, BramaPrimative::Number(22.0), BramaPrimative::Text(Arc::new("0x16".to_string()))}
-    nativecall_test!{test_hex_3, hex, BramaPrimative::Number(-16.0), BramaPrimative::Text(Arc::new("0xfffffffffffffff0".to_string()))}
+    nativecall_test!{test_hex_1, hex, BramaPrimative::Number(-1.51), BramaPrimative::Text(Rc::new("0xbff828f5c28f5c29".to_string()))}
+    nativecall_test!{test_hex_2, hex, BramaPrimative::Number(22.0), BramaPrimative::Text(Rc::new("0x16".to_string()))}
+    nativecall_test!{test_hex_3, hex, BramaPrimative::Number(-16.0), BramaPrimative::Text(Rc::new("0xfffffffffffffff0".to_string()))}
 
     nativecall_test!{test_yuvarla_1, round, BramaPrimative::Number(1.51), BramaPrimative::Number(2.0)}
     nativecall_test!{test_yuvarla_2, round, BramaPrimative::Number(1.5), BramaPrimative::Number(2.0)}

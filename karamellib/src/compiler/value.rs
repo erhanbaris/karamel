@@ -1,5 +1,5 @@
 use std::vec::Vec;
-use std::sync::Arc;
+use std::rc::Rc;
 use std::cell::RefCell;
 use std::mem::ManuallyDrop;
 use std::fmt;
@@ -9,7 +9,6 @@ use std::collections::HashMap;
 use crate::{buildin::Class, types::*};
 use crate::compiler::function::FunctionReference;
 use crate::compiler::GetType;
-use crate::buildin::class::PRIMATIVE_CLASSES;
 
 pub const EMPTY_OBJECT: VmObject = VmObject(QNAN | EMPTY_FLAG);
 pub const TRUE_OBJECT: VmObject  = VmObject(QNAN | TRUE_FLAG);
@@ -24,9 +23,9 @@ pub enum BramaPrimative {
     Bool(bool),
     List(RefCell<Vec<VmObject>>),
     Dict(RefCell<HashMap<String, VmObject>>),
-    Text(Arc<String>),
-    Function(Arc<FunctionReference>, Option<VmObject>),
-    Class(Arc<dyn Class + Send + Sync>)
+    Text(Rc<String>),
+    Function(Rc<FunctionReference>, Option<VmObject>),
+    Class(Rc<dyn Class>)
 }
 
 unsafe impl Send for BramaPrimative {}
@@ -53,12 +52,6 @@ impl BramaPrimative {
         match self {
             BramaPrimative::Text(value) => value.to_string(),
             _ => "".to_string()
-        }
-    }
-
-    pub fn get_class(&self) -> Arc<dyn Class  + Send + Sync> {
-        unsafe {
-            PRIMATIVE_CLASSES.get_unchecked(self.discriminant()).clone()
         }
     }
 
@@ -94,43 +87,43 @@ impl GetType for BramaPrimative {
 
 impl From<f64> for VmObject {
     fn from(source: f64) -> Self {
-        VmObject::convert(Arc::new(BramaPrimative::Number(source)))
+        VmObject::convert(Rc::new(BramaPrimative::Number(source)))
     }
 }
 
 impl From<bool> for VmObject {
     fn from(source: bool) -> Self {
-        VmObject::convert(Arc::new(BramaPrimative::Bool(source)))
+        VmObject::convert(Rc::new(BramaPrimative::Bool(source)))
     }
 }
 
-impl From<Arc<String>> for VmObject {
-    fn from(source: Arc<String>) -> Self {
-        VmObject::convert(Arc::new(BramaPrimative::Text(source)))
+impl From<Rc<String>> for VmObject {
+    fn from(source: Rc<String>) -> Self {
+        VmObject::convert(Rc::new(BramaPrimative::Text(source)))
     }
 }
 
 impl From<String> for VmObject {
     fn from(source: String) -> Self {
-        VmObject::convert(Arc::new(BramaPrimative::Text(Arc::new(source))))
+        VmObject::convert(Rc::new(BramaPrimative::Text(Rc::new(source))))
     }
 }
 
 impl From<Vec<VmObject>> for VmObject {
     fn from(source: Vec<VmObject>) -> Self {
-        VmObject::convert(Arc::new(BramaPrimative::List(RefCell::new(source))))
+        VmObject::convert(Rc::new(BramaPrimative::List(RefCell::new(source))))
     }
 }
 
-impl From<Arc<BramaPrimative>> for VmObject {
-    fn from(source: Arc<BramaPrimative>) -> Self {
+impl From<Rc<BramaPrimative>> for VmObject {
+    fn from(source: Rc<BramaPrimative>) -> Self {
         VmObject::convert(source)
     }
 }
 
 impl From<HashMap<String, VmObject>> for VmObject {
     fn from(source: HashMap<String, VmObject>) -> Self {
-        VmObject::convert(Arc::new(BramaPrimative::Dict(RefCell::new(source))))
+        VmObject::convert(Rc::new(BramaPrimative::Dict(RefCell::new(source))))
     }
 }
 
@@ -239,14 +232,14 @@ impl PartialEq for BramaPrimative {
 }
 
 impl VmObject {
-    pub fn convert(primative: Arc<BramaPrimative>) -> VmObject {
+    pub fn convert(primative: Rc<BramaPrimative>) -> VmObject {
         match *primative {
             BramaPrimative::Empty            => VmObject(QNAN | EMPTY_FLAG),
             BramaPrimative::Number(number)   => VmObject(number.to_bits()),
             BramaPrimative::Bool(true)       => TRUE_OBJECT,
             BramaPrimative::Bool(false)      => FALSE_OBJECT,
             _                                => {
-                VmObject(QNAN | POINTER_FLAG | (POINTER_MASK & (Arc::into_raw(primative)) as u64))
+                VmObject(QNAN | POINTER_FLAG | (POINTER_MASK & (Rc::into_raw(primative)) as u64))
             }
         }
     }
@@ -258,35 +251,35 @@ impl VmObject {
             BramaPrimative::Bool(true)       => TRUE_OBJECT,
             BramaPrimative::Bool(false)      => FALSE_OBJECT,
             _                                => {
-                VmObject(QNAN | POINTER_FLAG | (POINTER_MASK & (Arc::into_raw(Arc::new(primative))) as u64))
+                VmObject(QNAN | POINTER_FLAG | (POINTER_MASK & (Rc::into_raw(Rc::new(primative))) as u64))
             }
         }
     }
 
-    pub fn native_convert_by_ref(primative: Arc<BramaPrimative>) -> VmObject {
+    pub fn native_convert_by_ref(primative: Rc<BramaPrimative>) -> VmObject {
         match &*primative {
             BramaPrimative::Empty            => VmObject(QNAN | EMPTY_FLAG),
             BramaPrimative::Number(number)   => VmObject(number.to_bits()),
             BramaPrimative::Bool(true)       => TRUE_OBJECT,
             BramaPrimative::Bool(false)      => FALSE_OBJECT,
             _                                => {
-                VmObject(QNAN | POINTER_FLAG | (POINTER_MASK & (Arc::into_raw(primative)) as u64))
+                VmObject(QNAN | POINTER_FLAG | (POINTER_MASK & (Rc::into_raw(primative)) as u64))
             }
         }
     }
 
-    pub fn deref(&self) -> Arc<BramaPrimative> {
+    pub fn deref(&self) -> Rc<BramaPrimative> {
         match self.0 {
-            n if (n & QNAN) != QNAN       => Arc::new(BramaPrimative::Number(f64::from_bits(n))),
-            e if e == (QNAN | EMPTY_FLAG) => Arc::new(BramaPrimative::Empty),
-            f if f == (QNAN | FALSE_FLAG) => Arc::new(BramaPrimative::Bool(false)),
-            t if t == (QNAN | TRUE_FLAG)  => Arc::new(BramaPrimative::Bool(true)),
+            n if (n & QNAN) != QNAN       => Rc::new(BramaPrimative::Number(f64::from_bits(n))),
+            e if e == (QNAN | EMPTY_FLAG) => Rc::new(BramaPrimative::Empty),
+            f if f == (QNAN | FALSE_FLAG) => Rc::new(BramaPrimative::Bool(false)),
+            t if t == (QNAN | TRUE_FLAG)  => Rc::new(BramaPrimative::Bool(true)),
             p if (p & POINTER_FLAG) == POINTER_FLAG => {
                 let pointer = (self.0 & POINTER_MASK) as *mut BramaPrimative;
-                let data = unsafe { ManuallyDrop::new(Arc::from_raw(pointer)) };
-                Arc::clone(&data)
+                let data = unsafe { ManuallyDrop::new(Rc::from_raw(pointer)) };
+                Rc::clone(&data)
             },
-            _ => Arc::new(BramaPrimative::Empty)
+            _ => Rc::new(BramaPrimative::Empty)
         }
     }
 
@@ -298,7 +291,7 @@ impl VmObject {
             t if t == (QNAN | TRUE_FLAG)  => BramaPrimative::Bool(true),
             p if (p & POINTER_FLAG) == POINTER_FLAG => {
                 let pointer = (self.0 & POINTER_MASK) as *mut BramaPrimative;
-                let data = unsafe { ManuallyDrop::new(Arc::from_raw(pointer)) };
+                let data = unsafe { ManuallyDrop::new(Rc::from_raw(pointer)) };
                 match &**data {
                     BramaPrimative::Text(text) => BramaPrimative::Text(text.clone()),
                     BramaPrimative::List(list) => BramaPrimative::List(list.clone()),

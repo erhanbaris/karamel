@@ -10,7 +10,7 @@ use crate::{compiler::{GetType, function::{IndexerGetCall, IndexerSetCall, Funct
 
 use std::collections::HashMap;
 use std::vec::Vec;
-use std::sync::Arc;
+use std::rc::Rc;
 
 use crate::compiler::{BramaPrimative, function::{FunctionReference, NativeCall}};
 
@@ -19,16 +19,16 @@ pub trait Module {
     fn get_module_name(&self) -> String;
     
     fn get_method(&self, name: &str) -> Option<NativeCall>;
-    fn get_module(&self, name: &str) -> Option<Arc<dyn Module>>;
+    fn get_module(&self, name: &str) -> Option<Rc<dyn Module>>;
 
     fn get_methods(&self) -> Vec<(&'static str, NativeCall)>;
-    fn get_modules(&self) -> HashMap<String, Arc<dyn Module>>;
+    fn get_modules(&self) -> HashMap<String, Rc<dyn Module>>;
 
-    fn get_classes(&self) -> Vec<Arc<dyn Class>>;
+    fn get_classes(&self) -> Vec<Rc<dyn Class>>;
 }
 
 pub struct ModuleCollection {
-    pub modules: HashMap<String, Arc<dyn Module>>
+    pub modules: HashMap<String, Rc<dyn Module>>
 }
 
 impl ModuleCollection
@@ -37,14 +37,14 @@ impl ModuleCollection
         let mut collection = ModuleCollection {
             modules: HashMap::new()
         };
-        collection.add_module(Arc::new(base_functions::BaseFunctionsModule::new()));
-        collection.add_module(Arc::new(io::IoModule::new()));
-        collection.add_module(Arc::new(num::NumModule::new()));
-        collection.add_module(Arc::new(debug::DebugModule::new()));
+        collection.add_module(Rc::new(base_functions::BaseFunctionsModule::new()));
+        collection.add_module(Rc::new(io::IoModule::new()));
+        collection.add_module(Rc::new(num::NumModule::new()));
+        collection.add_module(Rc::new(debug::DebugModule::new()));
         collection
     }
 
-    pub fn add_module(&mut self, module: Arc<dyn Module>) {        
+    pub fn add_module(&mut self, module: Rc<dyn Module>) {        
         self.modules.insert(module.get_module_name(), module);
     }
 }
@@ -52,8 +52,8 @@ impl ModuleCollection
 
 #[derive(Clone)]
 pub enum ClassProperty {
-    Function(Arc<FunctionReference>),
-    Field(Arc<BramaPrimative>)
+    Function(Rc<FunctionReference>),
+    Field(Rc<BramaPrimative>)
 }
 
 #[derive(Default)]
@@ -78,13 +78,13 @@ pub trait Class: GetType {
     fn set_class_config(&mut self, config: ClassConfig);
     fn get_class_name(&self) -> String;
     
-    fn has_element(&self, source: Option<VmObject>, field: Arc<String>) -> bool;
-    fn get_element(&self, source: Option<VmObject>, field: Arc<String>) -> Option<ClassProperty>;
+    fn has_element(&self, source: Option<VmObject>, field: Rc<String>) -> bool;
+    fn get_element(&self, source: Option<VmObject>, field: Rc<String>) -> Option<ClassProperty>;
     fn property_count(&self) -> usize;
     fn properties(&self) -> std::collections::hash_map::Iter<'_, String, ClassProperty>;
     
     fn add_method(&mut self, name: &str, function: NativeCall, flags: FunctionFlag);
-    fn add_property(&mut self, name: &str, property: Arc<BramaPrimative>);
+    fn add_property(&mut self, name: &str, property: Rc<BramaPrimative>);
     
     fn set_getter(&mut self, indexer: IndexerGetCall);
     fn get_getter(&self) -> Option<IndexerGetCall>;

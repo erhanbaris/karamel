@@ -1,5 +1,5 @@
 use std::vec::Vec;
-use std::sync::Arc;
+use std::rc::Rc;
 
 use crate::compiler::value::BramaPrimative;
 use crate::types::BramaOperatorType;
@@ -18,8 +18,8 @@ pub struct BramaIfStatementElseItem {
 #[derive(Debug)]
 #[derive(PartialEq)]
 pub struct BramaDictItem {
-    pub key: Arc<BramaPrimative>,
-    pub value: Arc<BramaAstType>
+    pub key: Rc<BramaPrimative>,
+    pub value: Rc<BramaAstType>
 }
 
 impl BramaIfStatementElseItem {
@@ -49,7 +49,7 @@ pub enum BramaAstType {
         indexer: Box<BramaAstType>,
         assign_to_temp: bool
     },
-    Primative(Arc<BramaPrimative>),
+    Primative(Rc<BramaPrimative>),
     Binary {
         left: Box<BramaAstType>, 
         operator: BramaOperatorType, 
@@ -77,7 +77,7 @@ pub enum BramaAstType {
     FunctionDefination {
         name: String,
         arguments: Vec<String>,
-        body: Arc<BramaAstType>
+        body: Rc<BramaAstType>
     },
     Symbol(String),
     FunctionMap(Vec<String>),
