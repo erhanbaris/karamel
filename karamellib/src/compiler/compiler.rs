@@ -23,7 +23,8 @@ pub struct Scope {
     pub location: *mut u8,
     pub call_return_assign_to_temp: bool,
     pub const_size: u8,
-    pub stack_ptr: *mut VmObject 
+    pub stack_ptr: *mut VmObject ,
+    pub storage_index: isize
 }
 
 impl Scope {
@@ -36,7 +37,8 @@ impl Scope {
             location: ptr::null_mut(), 
             memory: Vec::new(), 
             stack: stack,
-            stack_ptr: stack_ptr
+            stack_ptr: stack_ptr,
+            storage_index: -1
         }
     }
 }

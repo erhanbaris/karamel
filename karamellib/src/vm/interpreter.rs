@@ -145,7 +145,8 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
             location: ptr::null_mut(),
             const_size: 0,
             call_return_assign_to_temp: false,
-            stack_ptr: stack_ptr
+            stack_ptr: stack_ptr,
+            storage_index: 0
         };
 
         loop {

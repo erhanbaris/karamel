@@ -87,31 +87,31 @@ impl GetType for BramaPrimative {
 
 impl From<f64> for VmObject {
     fn from(source: f64) -> Self {
-        VmObject::convert(Rc::new(BramaPrimative::Number(source)))
+        VmObject::native_convert(BramaPrimative::Number(source))
     }
 }
 
 impl From<bool> for VmObject {
     fn from(source: bool) -> Self {
-        VmObject::convert(Rc::new(BramaPrimative::Bool(source)))
+        VmObject::native_convert(BramaPrimative::Bool(source))
     }
 }
 
 impl From<Rc<String>> for VmObject {
     fn from(source: Rc<String>) -> Self {
-        VmObject::convert(Rc::new(BramaPrimative::Text(source)))
+        VmObject::native_convert(BramaPrimative::Text(source))
     }
 }
 
 impl From<String> for VmObject {
     fn from(source: String) -> Self {
-        VmObject::convert(Rc::new(BramaPrimative::Text(Rc::new(source))))
+        VmObject::native_convert(BramaPrimative::Text(Rc::new(source)))
     }
 }
 
 impl From<Vec<VmObject>> for VmObject {
     fn from(source: Vec<VmObject>) -> Self {
-        VmObject::convert(Rc::new(BramaPrimative::List(RefCell::new(source))))
+        VmObject::native_convert(BramaPrimative::List(RefCell::new(source)))
     }
 }
 

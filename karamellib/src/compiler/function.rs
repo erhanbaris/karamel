@@ -7,7 +7,7 @@ use bitflags::bitflags;
 
 use crate::{inc_memory_index, dec_memory_index, get_memory_index};
 use crate::types::*;
-use crate::compiler::{BramaCompiler, Scope};
+use crate::compiler::{BramaCompiler, Scope, BramaPrimative};
 
 pub type NativeCallResult = Result<VmObject, String>;
 pub type NativeCall       = fn(FunctionParameter) -> NativeCallResult;
@@ -211,23 +211,26 @@ impl FunctionReference {
                 options.scopes.resize(options.scopes.len() * 2, Scope::empty());
             }
 
-            let mut stack = options.storages[reference.storage_index].get_memory();
-            let stack_ptr = stack.as_mut_ptr();
+            let mut scope = &mut options.scopes[options.scope_index];
+            let storage = &mut options.storages[reference.storage_index];
+            
+            if scope.storage_index == -1 {
+                scope.memory = storage.get_memory();
+                scope.stack.resize(storage.get_temp_size() as usize, VmObject::native_convert(BramaPrimative::Empty));
+                scope.storage_index = reference.storage_index as isize;
+            }
 
-            let mut scope                    = &mut options.scopes[options.scope_index];
-            scope.memory                     = options.storages[reference.storage_index].get_memory();
-            scope.stack                      = stack;
-            scope.stack_ptr                  = stack_ptr;
+            scope.stack_ptr = scope.stack.as_mut_ptr();
             scope.location                   = old_index;
-            scope.const_size                 = options.storages[reference.storage_index].get_constant_size();
+            scope.const_size                 = storage.get_constant_size();
             scope.call_return_assign_to_temp = call_return_assign_to_temp;
 
-            options.current_scope = &mut options.scopes[options.scope_index] as *mut Scope;
+            options.current_scope = scope;
             
 
             if argument_size > 0 {
                 for index in 0..argument_size {
-                    *(*options.current_scope).stack_ptr = arguments[argument_size as usize-index as usize - 1];// args[get_memory_index!(options)];
+                    *scope.stack_ptr = arguments[argument_size as usize-index as usize - 1];
                     inc_memory_index!(options, 1);
                 }
             }
