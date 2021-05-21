@@ -32,7 +32,7 @@ mod tests {
 
                 if let Ok(_) = opcode_compiler.compile(&syntax_result.unwrap(), &mut compiler_options) {
                     let memory = compiler_options.storages[0].get_memory();
-                    for object in &(*memory.borrow()) {
+                    for object in &*memory {
                         converted_memory.push((*object.deref()).clone());
                     }
                     assert_eq!(converted_memory, $result);
