@@ -7,7 +7,8 @@ use bitflags::bitflags;
 
 use crate::{inc_memory_index, dec_memory_index, get_memory_index};
 use crate::types::*;
-use crate::compiler::{BramaCompiler, Scope, BramaPrimative};
+use crate::compiler::value::EMPTY_OBJECT;
+use crate::compiler::{BramaCompiler, Scope};
 
 pub type NativeCallResult = Result<VmObject, String>;
 pub type NativeCall       = fn(FunctionParameter) -> NativeCallResult;
@@ -214,11 +215,17 @@ impl FunctionReference {
             let mut scope = &mut options.scopes[options.scope_index];
             let storage = &mut options.storages[reference.storage_index];
             
+            /*
+            TODO: fast but has bug
             if scope.storage_index == -1 {
                 scope.memory = storage.get_memory();
-                scope.stack.resize(storage.get_temp_size() as usize, VmObject::native_convert(BramaPrimative::Empty));
+                scope.stack.resize(storage.get_temp_size() as usize, EMPTY_OBJECT);
                 scope.storage_index = reference.storage_index as isize;
-            }
+            }*/
+
+            scope.memory = storage.get_memory();
+            scope.stack.resize(storage.get_temp_size() as usize, EMPTY_OBJECT);
+            scope.storage_index = reference.storage_index as isize;
 
             scope.stack_ptr = scope.stack.as_mut_ptr();
             scope.memory_ptr = scope.memory.as_mut_ptr();

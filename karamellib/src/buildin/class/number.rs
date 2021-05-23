@@ -33,35 +33,35 @@ fn hex(parameter: FunctionParameter) -> NativeCallResult {
 
 fn round(parameter: FunctionParameter) -> NativeCallResult {
     if let BramaPrimative::Number(number) = &*parameter.source().unwrap().deref() {
-        return Ok(VmObject::native_convert(BramaPrimative::Number(number.round())));
+        return Ok(VmObject::from(number.round()));
     }
     Ok(EMPTY_OBJECT)
 }
 
 fn ceil(parameter: FunctionParameter) -> NativeCallResult {
     if let BramaPrimative::Number(number) = &*parameter.source().unwrap().deref() {
-        return Ok(VmObject::native_convert(BramaPrimative::Number(number.ceil())));
+        return Ok(VmObject::from(number.ceil()));
     }
     Ok(EMPTY_OBJECT)
 }
 
 fn floor(parameter: FunctionParameter) -> NativeCallResult {
     if let BramaPrimative::Number(number) = &*parameter.source().unwrap().deref() {
-        return Ok(VmObject::native_convert(BramaPrimative::Number(number.floor())));
+        return Ok(VmObject::from(number.floor()));
     }
     Ok(EMPTY_OBJECT)
 }
 
 fn trunc(parameter: FunctionParameter) -> NativeCallResult {
     if let BramaPrimative::Number(number) = &*parameter.source().unwrap().deref() {
-        return Ok(VmObject::native_convert(BramaPrimative::Number(number.trunc())));
+        return Ok(VmObject::from(number.trunc()));
     }
     Ok(EMPTY_OBJECT)
 }
 
 fn fract(parameter: FunctionParameter) -> NativeCallResult {
     if let BramaPrimative::Number(number) = &*parameter.source().unwrap().deref() {
-        return Ok(VmObject::native_convert(BramaPrimative::Number(number.fract())));
+        return Ok(VmObject::from(number.fract()));
     }
     Ok(EMPTY_OBJECT)
 }

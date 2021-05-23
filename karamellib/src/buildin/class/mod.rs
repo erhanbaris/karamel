@@ -69,21 +69,21 @@ macro_rules! arc_text {
 #[macro_export]
 macro_rules! arc_number {
     ($number:expr) => {
-        VmObject::native_convert(BramaPrimative::Number($number as f64))
+        VmObject::from($number as f64)
     };
 }
 
 #[macro_export]
 macro_rules! arc_bool {
     ($bool:expr) => {
-        VmObject::native_convert(BramaPrimative::Bool($bool))
+        VmObject::from($bool)
     };
 }
 
 #[macro_export]
 macro_rules! arc_empty {
     () => {
-        VmObject::native_convert(BramaPrimative::Empty)
+        EMPTY_OBJECT
     };
 }
 

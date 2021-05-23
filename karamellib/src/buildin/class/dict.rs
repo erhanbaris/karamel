@@ -158,7 +158,7 @@ fn insert_or_update(parameter: FunctionParameter, function_name: &str) -> Native
 fn length(parameter: FunctionParameter) -> NativeCallResult {
     if let BramaPrimative::Dict(dict) = &*parameter.source().unwrap().deref() {
         let length = dict.borrow().len() as f64;
-        return Ok(VmObject::native_convert(BramaPrimative::Number(length)));
+        return Ok(VmObject::from(length));
     }
     Ok(EMPTY_OBJECT)
 }
@@ -210,7 +210,7 @@ fn contains(parameter: FunctionParameter) -> NativeCallResult {
             0 =>  n_parameter_expected!("içeriyormu", 1),
             1 => {
                 match &*parameter.iter().next().unwrap().deref() {
-                    BramaPrimative::Text(search) =>  Ok(VmObject::native_convert(BramaPrimative::Bool(dict.borrow().contains_key(&**search)))),
+                    BramaPrimative::Text(search) =>  Ok(VmObject::from(dict.borrow().contains_key(&**search))),
                     _ => expected_parameter_type!("içeriyormu", "Yazı")
                 }
             },

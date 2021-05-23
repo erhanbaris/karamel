@@ -117,7 +117,7 @@ fn setter(source: VmObject, index: f64, item: VmObject) -> NativeCallResult {
 fn length(parameter: FunctionParameter) -> NativeCallResult {
     if let BramaPrimative::List(list) = &*parameter.source().unwrap().deref() {
         let length = list.borrow().len() as f64;
-        return Ok(VmObject::native_convert(BramaPrimative::Number(length)));
+        return Ok(VmObject::from(length));
     }
     Ok(EMPTY_OBJECT)
 }
@@ -129,14 +129,14 @@ fn clear(parameter: FunctionParameter) -> NativeCallResult {
     Ok(EMPTY_OBJECT)
 }
 
-fn add(parameter: FunctionParameter) -> NativeCallResult {
+pub fn add(parameter: FunctionParameter) -> NativeCallResult {
     if let BramaPrimative::List(list) = &*parameter.source().unwrap().deref() {
         return match parameter.length() {
             0 =>  n_parameter_expected!("ekle", 1),
             1 => {
                 let length = list.borrow().len() as f64;
                 list.borrow_mut().push(*parameter.iter().next().unwrap());
-                return Ok(VmObject::native_convert(BramaPrimative::Number(length)));
+                return Ok(VmObject::from(length));
             },
             _ => n_parameter_expected!("ekle", 1, parameter.length())
         };
@@ -144,7 +144,7 @@ fn add(parameter: FunctionParameter) -> NativeCallResult {
     Ok(EMPTY_OBJECT)
 }
 
-fn insert(parameter: FunctionParameter) -> NativeCallResult {
+pub fn insert(parameter: FunctionParameter) -> NativeCallResult {
     if let BramaPrimative::List(list) = &*parameter.source().unwrap().deref() {
         match parameter.length() {
             0 => return n_parameter_expected!("arayaekle", 1),
@@ -228,7 +228,7 @@ mod tests {
     nativecall_test!{test_length_3, length,  primative_list!([arc_text!(""), arc_empty!(), arc_number!(123), arc_bool!(true)].to_vec()), BramaPrimative::Number(4.0)}
 
 
-    nativecall_test_with_params!{test_add_1, add, primative_list!([arc_text!("")].to_vec()), [VmObject::native_convert(BramaPrimative::Number(8.0))], primative_number!(1)}
+    nativecall_test_with_params!{test_add_1, add, primative_list!([arc_text!("")].to_vec()), [VmObject::from(8.0)], primative_number!(1)}
     nativecall_test_with_params!{test_add_2, add, primative_list!([].to_vec()), [VmObject::native_convert(BramaPrimative::Bool(true))], primative_number!(0)}
     #[test]
     fn test_add_3 () {

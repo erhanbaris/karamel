@@ -33,8 +33,8 @@ mod tests {
 
                 if let Ok(_) = opcode_compiler.compile(ast, &mut compiler_options) {
                     if unsafe { interpreter::run_vm(&mut compiler_options).is_ok() } {
-                        let memory = compiler_options.storages[0].get_stack().first().unwrap().deref();
-                        assert_eq!(*memory, $result);
+                        let memory = compiler_options.storages[0].get_stack().first().unwrap().deref_clean();
+                        assert_eq!(memory, $result);
                     } else {
                         assert!(false);
                     }

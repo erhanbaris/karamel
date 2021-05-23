@@ -59,8 +59,8 @@ impl NumModule  {
         match &*arg {
             BramaPrimative::Number(_) => Ok(*parameter.iter().next().unwrap()),
             BramaPrimative::Text(text) => {
-                match (*text).parse() {
-                    Ok(num) => Ok(VmObject::native_convert(BramaPrimative::Number(num))),
+                match (*text).parse::<f64>() {
+                    Ok(num) => Ok(VmObject::from(num)),
                     _ => expected_parameter_type!("oku", "Yazı")
                 }
             },

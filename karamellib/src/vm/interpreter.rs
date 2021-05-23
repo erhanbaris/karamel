@@ -135,7 +135,6 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
         dump_opcode(0, options, &mut log_update);
     }
     {
-        let empty_primative: VmObject  = VmObject::convert(Rc::new(BramaPrimative::Empty));
         let mut stack = options.storages[0].get_stack();
         let stack_ptr = stack.as_mut_ptr();
 
@@ -166,7 +165,7 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
 
                     *(*options.current_scope).stack_ptr = match (left.as_number(), right.as_number()) {
                         (Some(l_value),  Some(r_value))   => VmObject::from(l_value - r_value),
-                        _ => empty_primative
+                        _ => EMPTY_OBJECT
                     };
                     inc_memory_index!(options, 1);
                 },
@@ -174,11 +173,10 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
                 VmOpCode::Addition => {
                     let right = pop_raw!(options);
                     let left  = pop_raw!(options);
-
                     *(*options.current_scope).stack_ptr = match (&left.deref_clean(), &right.deref_clean()) {
                         (BramaPrimative::Number(l_value),  BramaPrimative::Number(r_value)) => VmObject::from(l_value + r_value),
                         (BramaPrimative::Text(l_value),    BramaPrimative::Text(r_value))   => VmObject::from(Rc::new((&**l_value).to_owned() + &**r_value)),
-                        _ => empty_primative
+                        _ => EMPTY_OBJECT
                     };
                     inc_memory_index!(options, 1);
                 },
@@ -241,7 +239,7 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
                     *(*options.current_scope).stack_ptr = match (&*left, &*right) {
                         (BramaPrimative::Number(l_value),  BramaPrimative::Number(r_value))   => VmObject::from(*l_value * *r_value),
                         (BramaPrimative::Text(l_value),    BramaPrimative::Number(r_value))   => VmObject::from((*l_value).repeat((*r_value) as usize)),
-                        _ => empty_primative
+                        _ => EMPTY_OBJECT
                     };
                     inc_memory_index!(options, 1);
                 },
@@ -256,7 +254,7 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
                     };
 
                     *(*options.current_scope).stack_ptr = if calculation.is_nan() {
-                        empty_primative
+                        EMPTY_OBJECT
                     }
                     else {
                         VmObject::from(calculation)
@@ -288,7 +286,7 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
                     
                     *(*options.current_scope).stack_ptr = match (left.as_number(), right.as_number()) {
                         (Some(l_value),  Some(r_value))   => VmObject::from(l_value > r_value),
-                        _ => empty_primative
+                        _ => EMPTY_OBJECT
                     };
                     inc_memory_index!(options, 1);
                 },
@@ -299,7 +297,7 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
                     
                     *(*options.current_scope).stack_ptr = match (left.as_number(), right.as_number()) {
                         (Some(l_value),  Some(r_value))   => VmObject::from(l_value >= r_value),
-                        _ => empty_primative
+                        _ => EMPTY_OBJECT
                     };
                     inc_memory_index!(options, 1);
                 },
@@ -310,7 +308,7 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
                     
                     *(*options.current_scope).stack_ptr = match (left.as_number(), right.as_number()) {
                         (Some(l_value),  Some(r_value))   => VmObject::from(l_value < r_value),
-                        _ => empty_primative
+                        _ => EMPTY_OBJECT
                     };
                     inc_memory_index!(options, 1);
                 },
@@ -321,7 +319,7 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
                     
                     *(*options.current_scope).stack_ptr = match (left.as_number(), right.as_number()) {
                         (Some(l_value),  Some(r_value))   => VmObject::from(l_value <= r_value),
-                        _ => empty_primative
+                        _ => EMPTY_OBJECT
                     };
                     inc_memory_index!(options, 1);
                 },
@@ -365,14 +363,14 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
                 VmOpCode::Increment => {
                     *(*options.current_scope).stack_ptr.sub(1) = match (*(*options.current_scope).stack_ptr.sub(1)).as_number() {
                         Some(value) => VmObject::from(value + 1 as f64),
-                        _ => empty_primative
+                        _ => EMPTY_OBJECT
                     };
                 },
 
                 VmOpCode::Decrement => {
                     *(*options.current_scope).stack_ptr.sub(1) = match (*(*options.current_scope).stack_ptr.sub(1)).as_number() {
                         Some(value) => VmObject::from(value - 1 as f64),
-                        _ => empty_primative
+                        _ => EMPTY_OBJECT
                     };
                 },
 
@@ -436,8 +434,7 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
                     let indexer = pop!(options);
                     let raw_object = pop_raw!(options);
                     let object  = raw_object.deref();
-                    
-                    println!("{:?}", object);
+
                     // todo: change all those codes with setter implementation
 
                     match &*object {
@@ -465,7 +462,7 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
 
                             match options.get_class(&object).get_setter() {
                                 Some(function) => function(raw_object, indexer_value, assign_item)?,
-                                _ => empty_primative
+                                _ => EMPTY_OBJECT
                             };
                         },
                         
@@ -485,14 +482,14 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
                                     ClassProperty::Function(function) => VmObject::from(Rc::new(BramaPrimative::Function(function.clone(), Some(raw_object)))),
                                     ClassProperty::Field(field) => VmObject::from(field.clone())
                                 },
-                                _ => empty_primative
+                                _ => EMPTY_OBJECT
                             }
                         },
                         BramaPrimative::Number(index) => match options.get_class(object).get_getter() {
                             Some(function) => function(raw_object, *index)?,
-                            _ => empty_primative
+                            _ => EMPTY_OBJECT
                         }
-                        _ => empty_primative
+                        _ => EMPTY_OBJECT
                     };
 
                     inc_memory_index!(options, 1);
@@ -520,11 +517,11 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
 
         
         for (index, item) in options.scopes[0].stack.iter().enumerate() {
-            options.storages[0].get_stack()[index] = *item;
+            options.storages[0].get_mut_stack()[index] = *item;
         }
 
         for (index, item) in options.scopes[0].memory.iter().enumerate() {
-            options.storages[0].get_memory()[index] = *item;
+            options.storages[0].get_mut_memory()[index] = *item;
         }
         
         #[cfg(feature = "dumpMemory")] {

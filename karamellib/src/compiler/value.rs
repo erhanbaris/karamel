@@ -86,14 +86,29 @@ impl GetType for BramaPrimative {
 }
 
 impl From<f64> for VmObject {
-    fn from(source: f64) -> Self {
-        VmObject::native_convert(BramaPrimative::Number(source))
+    fn from(number: f64) -> Self {
+        VmObject(number.to_bits())
+    }
+}
+
+impl From<i64> for VmObject {
+    fn from(number: i64) -> Self {
+        VmObject((number as f64).to_bits())
+    }
+}
+
+impl From<usize> for VmObject {
+    fn from(number: usize) -> Self {
+        VmObject((number as f64).to_bits())
     }
 }
 
 impl From<bool> for VmObject {
     fn from(source: bool) -> Self {
-        VmObject::native_convert(BramaPrimative::Bool(source))
+        match source {
+            true => TRUE_OBJECT,
+            false => FALSE_OBJECT,
+        }
     }
 }
 
@@ -276,8 +291,7 @@ impl VmObject {
             t if t == (QNAN | TRUE_FLAG)  => Rc::new(BramaPrimative::Bool(true)),
             p if (p & POINTER_FLAG) == POINTER_FLAG => {
                 let pointer = (self.0 & POINTER_MASK) as *mut BramaPrimative;
-                let data = unsafe { Rc::from_raw(pointer) };
-                std::mem::forget(&*data);
+                let data = unsafe { ManuallyDrop::new(Rc::from_raw(pointer)) };
                 Rc::clone(&data)
             },
             _ => Rc::new(BramaPrimative::Empty)
@@ -292,9 +306,8 @@ impl VmObject {
             t if t == (QNAN | TRUE_FLAG)  => BramaPrimative::Bool(true),
             p if (p & POINTER_FLAG) == POINTER_FLAG => {
                 let pointer = (self.0 & POINTER_MASK) as *mut BramaPrimative;
-                let data = unsafe { &*pointer };
-                std::mem::forget(&data);
-                match &*data {
+                let data = unsafe { ManuallyDrop::new(Rc::from_raw(pointer)) };
+                match &**data {
                     BramaPrimative::Text(text) => BramaPrimative::Text(text.clone()),
                     BramaPrimative::List(list) => BramaPrimative::List(list.clone()),
                     BramaPrimative::Dict(dict) => BramaPrimative::Dict(dict.clone()),

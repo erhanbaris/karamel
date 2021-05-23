@@ -76,14 +76,20 @@ impl StaticStorage {
         /*  Allocate variable memory and update references */
         let mut index = self.get_constant_size();
         for (_, value) in self.variables.iter_mut() {
-            self.memory.push(VmObject::native_convert(BramaPrimative::Empty));
+            self.memory.push(EMPTY_OBJECT);
             *value = index;
             index += 1;
         }
 
         for _ in 0..self.temp_size {
-            self.stack.push(VmObject::native_convert(BramaPrimative::Empty));
+            self.stack.push(EMPTY_OBJECT);
         }
+    }
+    pub fn get_mut_memory(&mut self) -> &mut Vec<VmObject> { 
+        self.memory.as_mut()
+    }
+    pub fn get_mut_stack(&mut self) -> &mut Vec<VmObject> { 
+        self.stack.as_mut()
     }
     pub fn get_memory(&mut self) -> Vec<VmObject> { 
         unsafe {

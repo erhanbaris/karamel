@@ -120,7 +120,7 @@ fn contains(parameter: FunctionParameter) -> NativeCallResult {
             0 =>  n_parameter_expected!("içeriyormu", 1),
             1 => {
                 match &*parameter.iter().next().unwrap().deref() {
-                    BramaPrimative::Text(search) =>  Ok(VmObject::native_convert(BramaPrimative::Bool(text.contains(&search[..])))),
+                    BramaPrimative::Text(search) =>  Ok(VmObject::from(text.contains(&search[..]))),
                     _ => expected_parameter_type!("içeriyormu", "Yazı")
                 }
             },
