@@ -1,3 +1,7 @@
+use mimalloc::MiMalloc;
+
+#[global_allocator]
+static GLOBAL: MiMalloc = MiMalloc;
 extern crate karamellib;
 
 use karamellib::{vm::executer::{ExecutionParameters, ExecutionSource}};
@@ -5,12 +9,12 @@ use karamellib::{vm::executer::{ExecutionParameters, ExecutionSource}};
 fn main() {
     let parameters = ExecutionParameters {
         source: ExecutionSource::Code(r#"
-soyisim = "barış"
-soyisim[0] = "B"
-soyisim[3] = "i"
-soyisim[4] = "s"
-soyisim[-1] = "!"
-hataayıklama::doğrula(soyisim, "Baris")
+fonk recur_fibo(n):
+    n <= 1 ise:
+        döndür n
+    veya:
+        döndür (recur_fibo(n-1) + recur_fibo(n-2))
+gç::satıryaz(recur_fibo(41))  
 "#.to_string()),
         return_opcode: true,
         return_output: true

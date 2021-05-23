@@ -1,4 +1,4 @@
-use std::{iter::Skip, sync::Arc, vec::Vec};
+use std::{iter::Skip, rc::Rc, vec::Vec};
 use std::cell::RefCell;
 use std::cell::Cell;
 use std::slice::Iter;
@@ -7,6 +7,7 @@ use bitflags::bitflags;
 
 use crate::{inc_memory_index, dec_memory_index, get_memory_index};
 use crate::types::*;
+use crate::compiler::value::EMPTY_OBJECT;
 use crate::compiler::{BramaCompiler, Scope};
 
 pub type NativeCallResult = Result<VmObject, String>;
@@ -111,12 +112,12 @@ impl FunctionReference {
         unsafe {
             match self.callback {
                 FunctionType::Native(func) => FunctionReference::native_function_call(&self, func, compiler, base),
-                FunctionType::Opcode => FunctionReference::opcode_function_call(&self,  compiler, base)
+                FunctionType::Opcode => FunctionReference::opcode_function_call(&self,  compiler)
             }
         }
     }
 
-    pub fn buildin_function(func: NativeCall, name: String, flags: FunctionFlag) -> Arc<FunctionReference> {
+    pub fn buildin_function(func: NativeCall, name: String, flags: FunctionFlag) -> Rc<FunctionReference> {
         let reference = FunctionReference {
             callback: FunctionType::Native(func),
             flags: flags,
@@ -129,10 +130,10 @@ impl FunctionReference {
             used_locations: RefCell::new(Vec::new()),
             defined_storage_index: 0
         };
-        Arc::new(reference)
+        Rc::new(reference)
     }
 
-    pub fn native_function(func: NativeCall, name: String, module_path: Vec<String>, framework: String) -> Arc<FunctionReference> {
+    pub fn native_function(func: NativeCall, name: String, module_path: Vec<String>, framework: String) -> Rc<FunctionReference> {
         let reference = FunctionReference {
             callback: FunctionType::Native(func),
             flags: FunctionFlag::STATIC,
@@ -145,10 +146,10 @@ impl FunctionReference {
             used_locations: RefCell::new(Vec::new()),
             defined_storage_index: 0
         };
-        Arc::new(reference)
+        Rc::new(reference)
     }
 
-    pub fn opcode_function(name: String, arguments: Vec<String>, module_path: Vec<String>, framework: String, storage_index: usize, defined_storage_index: usize) -> Arc<FunctionReference> {
+    pub fn opcode_function(name: String, arguments: Vec<String>, module_path: Vec<String>, framework: String, storage_index: usize, defined_storage_index: usize) -> Rc<FunctionReference> {
         let reference = FunctionReference {
             callback: FunctionType::Opcode,
             flags: FunctionFlag::STATIC,
@@ -161,15 +162,15 @@ impl FunctionReference {
             opcode_location: Cell::new(0),
             used_locations: RefCell::new(Vec::new())
         };
-        Arc::new(reference)
+        Rc::new(reference)
     }
 
     unsafe fn native_function_call(reference: &FunctionReference, func: NativeCall, compiler: &mut BramaCompiler, source: Option<VmObject>) -> Result<(), String> {            
-        let total_args = compiler.opcodes[compiler.opcode_index + 1];
-        let call_return_assign_to_temp = compiler.opcodes[compiler.opcode_index + 2] != 0;
+        let total_args                 = *compiler.opcodes_ptr.offset(1);
+        let call_return_assign_to_temp = *compiler.opcodes_ptr.offset(2) != 0;
         let parameter = match reference.flags {
-            FunctionFlag::IN_CLASS => FunctionParameter::new(&(*compiler.current_scope).stack, source, get_memory_index!(compiler), total_args, &compiler.stdout, &compiler.stderr),
-            _ => FunctionParameter::new(&(*compiler.current_scope).stack, source, get_memory_index!(compiler), total_args, &compiler.stdout, &compiler.stderr)
+            FunctionFlag::IN_CLASS => FunctionParameter::new(&(*compiler.current_scope).stack, source, get_memory_index!(compiler) as usize, total_args, &compiler.stdout, &compiler.stderr),
+            _ => FunctionParameter::new(&(*compiler.current_scope).stack, source, get_memory_index!(compiler) as usize, total_args, &compiler.stdout, &compiler.stderr)
         };
         
         match func(parameter) {
@@ -177,11 +178,11 @@ impl FunctionReference {
                 dec_memory_index!(compiler, total_args as usize);
 
                 if call_return_assign_to_temp {
-                    (*compiler.current_scope).stack[get_memory_index!(compiler)] = result;
+                    *(*compiler.current_scope).stack_ptr = result;
                     inc_memory_index!(compiler, 1);
                 }
 
-                compiler.opcode_index += 2;
+                compiler.opcodes_ptr = compiler.opcodes_ptr.offset(2);
                 Ok(())
             },
             Err(error) => {
@@ -191,50 +192,54 @@ impl FunctionReference {
         }
     }
 
-    fn opcode_function_call(reference: &FunctionReference, options: &mut BramaCompiler, source: Option<VmObject>) -> Result<(), String> {
-
-        let argument_size  = options.opcodes[options.opcode_index + 1];
-        let call_return_assign_to_temp = options.opcodes[options.opcode_index + 2] != 0;
-        let old_index = options.opcode_index + 2;
-        options.opcode_index = reference.opcode_location.get() as usize;
-        options.scope_index += 1;
-
-        if argument_size != options.opcodes[options.opcode_index] {
-            return Err("Function argument error".to_string());
-        }
-        let mut args: Vec<VmObject> = Vec::with_capacity(argument_size as usize);
-
-        if argument_size > 0 {
-            for _ in 0..argument_size {
-                unsafe {
-                    dec_memory_index!(options, 1);
-                    args.push((*options.current_scope).stack[get_memory_index!(options)]);
-                }
-            }
-        }
-
-        if options.scopes.len() <= options.scope_index {
-            options.scopes.resize(options.scopes.len() * 2, Scope::empty());
-        }
-
+    fn opcode_function_call(reference: &FunctionReference, options: &mut BramaCompiler) -> Result<(), String> {
         unsafe {
-            options.scopes[options.scope_index] = Scope {
-                memory: options.storages[reference.storage_index].get_memory().borrow().clone(),
-                stack: options.storages[reference.storage_index].get_stack().borrow().clone(),
-                location: old_index,
-                memory_index: get_memory_index!(options),
-                const_size: options.storages[reference.storage_index].get_constant_size(),
-                call_return_assign_to_temp
-            };
+            let argument_size              = *options.opcodes_ptr.offset(1);
+            let call_return_assign_to_temp = *options.opcodes_ptr.offset(2) != 0;
+            let old_index                  = options.opcodes_ptr.offset(2);
+            options.opcodes_ptr            = options.opcodes.as_mut_ptr().offset(reference.opcode_location.get() as isize);
+            options.scope_index           += 1;
 
-            options.current_scope = &mut options.scopes[options.scope_index] as *mut Scope;
-            (*options.current_scope).memory_index = 0;
-        }
+            if argument_size != *options.opcodes_ptr {
+                return Err("Function argument error".to_string());
+            }
 
-        if argument_size > 0 {
-            for _ in 0..argument_size {
-                unsafe {
-                    (*options.current_scope).stack[get_memory_index!(options)] = args[get_memory_index!(options)];
+            let memory_index = get_memory_index!(options) as usize;
+            let arguments = &(*options.current_scope).stack[memory_index - argument_size as usize..memory_index];
+            dec_memory_index!(options, argument_size.into());
+
+            if options.scopes.len() <= options.scope_index {
+                options.scopes.resize(options.scopes.len() * 2, Scope::empty());
+            }
+
+            let mut scope = &mut options.scopes[options.scope_index];
+            let storage = &mut options.storages[reference.storage_index];
+            
+            /*
+            TODO: fast but has bug
+            if scope.storage_index == -1 {
+                scope.memory = storage.get_memory();
+                scope.stack.resize(storage.get_temp_size() as usize, EMPTY_OBJECT);
+                scope.storage_index = reference.storage_index as isize;
+            }*/
+
+            scope.memory = storage.get_memory();
+            scope.stack.resize(storage.get_temp_size() as usize, EMPTY_OBJECT);
+            scope.storage_index = reference.storage_index as isize;
+
+            scope.stack_ptr = scope.stack.as_mut_ptr();
+            scope.memory_ptr = scope.memory.as_mut_ptr();
+
+            scope.location                   = old_index;
+            scope.const_size                 = storage.get_constant_size();
+            scope.call_return_assign_to_temp = call_return_assign_to_temp;
+
+            options.current_scope = scope;
+            
+
+            if argument_size > 0 {
+                for index in 0..argument_size {
+                    *scope.stack_ptr = arguments[argument_size as usize-index as usize - 1];
                     inc_memory_index!(options, 1);
                 }
             }

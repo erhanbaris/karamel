@@ -8,7 +8,7 @@ mod tests {
     use crate::karamellib::syntax::*;
     use crate::karamellib::compiler::value::BramaPrimative;
     use crate::karamellib::compiler::ast::BramaAstType;
-    use std::sync::Arc;
+    use std::rc::Rc;
 
     #[warn(unused_macros)]
     macro_rules! test_compare {
@@ -35,33 +35,33 @@ mod tests {
 
     test_compare!(func_call_2, "print(1)", Ok(BramaAstType::FuncCall {
         func_name_expression: Box::new(BramaAstType::Symbol("print".to_string())),
-        arguments: [Box::new(BramaAstType::Primative(Arc::new(BramaPrimative::Number(1.0))))].to_vec(),
+        arguments: [Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(1.0))))].to_vec(),
         assign_to_temp: false
     }));
 
     test_compare!(func_call_3, "print( 1 )", Ok(BramaAstType::FuncCall {
         func_name_expression: Box::new(BramaAstType::Symbol("print".to_string())),
-        arguments: [Box::new(BramaAstType::Primative(Arc::new(BramaPrimative::Number(1.0))))].to_vec(),
+        arguments: [Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(1.0))))].to_vec(),
         assign_to_temp: false
     }));
 
     test_compare!(func_call_4, "print( 1 , 2 )", Ok(BramaAstType::FuncCall {
         func_name_expression: Box::new(BramaAstType::Symbol("print".to_string())),
-        arguments: [Box::new(BramaAstType::Primative(Arc::new(BramaPrimative::Number(1.0)))), Box::new(BramaAstType::Primative(Arc::new(BramaPrimative::Number(2.0))))].to_vec(),
+        arguments: [Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(1.0)))), Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(2.0))))].to_vec(),
         assign_to_temp: false
     }));
 
     test_compare!(func_call_5, "print(1,2)", Ok(BramaAstType::FuncCall {
         func_name_expression: Box::new(BramaAstType::Symbol("print".to_string())),
-        arguments: [Box::new(BramaAstType::Primative(Arc::new(BramaPrimative::Number(1.0)))), Box::new(BramaAstType::Primative(Arc::new(BramaPrimative::Number(2.0))))].to_vec(),
+        arguments: [Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(1.0)))), Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(2.0))))].to_vec(),
         assign_to_temp: false
     }));
 
     test_compare!(func_call_6, "print(1,2,'erhan')", Ok(BramaAstType::FuncCall {
         func_name_expression: Box::new(BramaAstType::Symbol("print".to_string())),
-        arguments: [Box::new(BramaAstType::Primative(Arc::new(BramaPrimative::Number(1.0)))),
-                    Box::new(BramaAstType::Primative(Arc::new(BramaPrimative::Number(2.0)))),
-                    Box::new(BramaAstType::Primative(Arc::new(BramaPrimative::Text(Arc::new("erhan".to_string())))))].to_vec(),
+        arguments: [Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(1.0)))),
+                    Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(2.0)))),
+                    Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Text(Rc::new("erhan".to_string())))))].to_vec(),
                     assign_to_temp: false
     }));
 

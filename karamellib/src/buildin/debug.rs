@@ -3,7 +3,7 @@ use crate::compiler::function::{NativeCall, NativeCallResult};
 use crate::compiler::function::FunctionParameter;
 use crate::compiler::value::EMPTY_OBJECT;
 use std::collections::HashMap;
-use std::sync::Arc;
+use std::rc::Rc;
 
 #[derive(Clone)]
 pub struct DebugModule {
@@ -27,7 +27,7 @@ impl Module for DebugModule {
         self.methods.get(name).map(|method| *method)
     }
 
-    fn get_module(&self, _: &str) -> Option<Arc<dyn Module>> {
+    fn get_module(&self, _: &str) -> Option<Rc<dyn Module>> {
         None
     }
 
@@ -35,11 +35,11 @@ impl Module for DebugModule {
         [("doğrula", Self::assert as NativeCall)].to_vec()
     }
 
-    fn get_modules(&self) -> HashMap<String, Arc<dyn Module>> {
+    fn get_modules(&self) -> HashMap<String, Rc<dyn Module>> {
         HashMap::new()
     }
 
-    fn get_classes(&self) -> Vec<Arc<dyn Class>> {
+    fn get_classes(&self) -> Vec<Rc<dyn Class>> {
         Vec::new()
     }
 }

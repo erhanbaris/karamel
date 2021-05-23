@@ -7,7 +7,7 @@ mod tests {
     use crate::karamellib::syntax::*;
     use crate::karamellib::compiler::value::BramaPrimative;
     use crate::karamellib::compiler::ast::BramaAstType;
-    use std::sync::Arc;
+    use std::rc::Rc;
 
     #[warn(unused_macros)]
     macro_rules! test_compare {
@@ -26,22 +26,22 @@ mod tests {
         };
     }
 
-    test_compare!(block_1, "+1024", Ok(BramaAstType::Primative(Arc::new(BramaPrimative::Number(1024.0)))));
+    test_compare!(block_1, "+1024", Ok(BramaAstType::Primative(Rc::new(BramaPrimative::Number(1024.0)))));
     test_compare!(block_2, r#"erhan=1024
 baris=2048"#, Ok(BramaAstType::Block([BramaAstType::Assignment {
     variable: Box::new(BramaAstType::Symbol("erhan".to_string())),
     operator: BramaOperatorType::Assign,
-    expression: Box::new(BramaAstType::Primative(Arc::new(BramaPrimative::Number(1024.0))))
+    expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(1024.0))))
 },
 BramaAstType::Assignment {
     variable: Box::new(BramaAstType::Symbol("baris".to_string())),
     operator: BramaOperatorType::Assign,
-    expression: Box::new(BramaAstType::Primative(Arc::new(BramaPrimative::Number(2048.0))))
+    expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(2048.0))))
 }].to_vec())));
 
 test_compare!(block_3, "erhan=1024", Ok(BramaAstType::Assignment {
     variable: Box::new(BramaAstType::Symbol("erhan".to_string())),
     operator: BramaOperatorType::Assign,
-    expression: Box::new(BramaAstType::Primative(Arc::new(BramaPrimative::Number(1024.0))))
+    expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(1024.0))))
 }));
 }

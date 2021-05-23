@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::rc::Rc;
 use crate::types::*;
 use crate::error::BramaErrorType;
 
@@ -44,7 +44,7 @@ impl TokenParser for TextParser {
             return Err(BramaErrorType::MissingStringDeliminator);
         }
 
-        tokinizer.add_token(start_column - 1, BramaTokenType::Text(Arc::new(tokinizer.data[start..end].to_string())));
+        tokinizer.add_token(start_column - 1, BramaTokenType::Text(Rc::new(tokinizer.data[start..end].to_string())));
         return Ok(());
     }
 }

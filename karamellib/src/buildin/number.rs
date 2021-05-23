@@ -4,7 +4,7 @@ use super::opcode_class::BasicInnerClass;
 use crate::compiler::value::BramaPrimative;
 use crate::types::VmObject;
 
-use std::{mem, sync::Arc};
+use std::{mem, rc::Rc};
 
 use lazy_static::lazy_static;
 
@@ -23,56 +23,56 @@ lazy_static! {
     };
 }
 
-fn hex(_: &mut BramaCompiler, source: Option<Arc<BramaPrimative>>, _: usize, _: u8) -> NativeCallResult {
+fn hex(_: &mut BramaCompiler, source: Option<Rc<BramaPrimative>>, _: usize, _: u8) -> NativeCallResult {
     if let BramaPrimative::Number(number) = &*source.unwrap() {
         if number.fract() != 0.0 {
             let as_int: u64 = unsafe { mem::transmute(*number) };
-            return Ok(VmObject::native_convert(BramaPrimative::Text(Arc::new(format!("0x{:x}", as_int)))));
+            return Ok(VmObject::native_convert(BramaPrimative::Text(Rc::new(format!("0x{:x}", as_int)))));
         }
 
-        return Ok(VmObject::native_convert(BramaPrimative::Text(Arc::new(format!("0x{:x}", number.trunc() as i64)))));
+        return Ok(VmObject::native_convert(BramaPrimative::Text(Rc::new(format!("0x{:x}", number.trunc() as i64)))));
     }
     Ok(EMPTY_OBJECT)
 }
 
-fn round(_: &mut BramaCompiler, source: Option<Arc<BramaPrimative>>, _: usize, _: u8) -> NativeCallResult {
+fn round(_: &mut BramaCompiler, source: Option<Rc<BramaPrimative>>, _: usize, _: u8) -> NativeCallResult {
     if let BramaPrimative::Number(number) = &*source.unwrap() {
-        return Ok(VmObject::native_convert(BramaPrimative::Number(number.round())));
+        return Ok(VmObject::from(number.round()));
     }
     Ok(EMPTY_OBJECT)
 }
 
-fn ceil(_: &mut BramaCompiler, source: Option<Arc<BramaPrimative>>, _: usize, _: u8) -> NativeCallResult {
+fn ceil(_: &mut BramaCompiler, source: Option<Rc<BramaPrimative>>, _: usize, _: u8) -> NativeCallResult {
     if let BramaPrimative::Number(number) = &*source.unwrap() {
-        return Ok(VmObject::native_convert(BramaPrimative::Number(number.ceil())));
+        return Ok(VmObject::from(number.ceil()));
     }
     Ok(EMPTY_OBJECT)
 }
 
-fn floor(_: &mut BramaCompiler, source: Option<Arc<BramaPrimative>>, _: usize, _: u8) -> NativeCallResult {
+fn floor(_: &mut BramaCompiler, source: Option<Rc<BramaPrimative>>, _: usize, _: u8) -> NativeCallResult {
     if let BramaPrimative::Number(number) = &*source.unwrap() {
-        return Ok(VmObject::native_convert(BramaPrimative::Number(number.floor())));
+        return Ok(VmObject::from(number.floor()));
     }
     Ok(EMPTY_OBJECT)
 }
 
-fn trunc(_: &mut BramaCompiler, source: Option<Arc<BramaPrimative>>, _: usize, _: u8) -> NativeCallResult {
+fn trunc(_: &mut BramaCompiler, source: Option<Rc<BramaPrimative>>, _: usize, _: u8) -> NativeCallResult {
     if let BramaPrimative::Number(number) = &*source.unwrap() {
-        return Ok(VmObject::native_convert(BramaPrimative::Number(number.trunc())));
+        return Ok(VmObject::from(number.trunc()));
     }
     Ok(EMPTY_OBJECT)
 }
 
-fn fract(_: &mut BramaCompiler, source: Option<Arc<BramaPrimative>>, _: usize, _: u8) -> NativeCallResult {
+fn fract(_: &mut BramaCompiler, source: Option<Rc<BramaPrimative>>, _: usize, _: u8) -> NativeCallResult {
     if let BramaPrimative::Number(number) = &*source.unwrap() {
-        return Ok(VmObject::native_convert(BramaPrimative::Number(number.fract())));
+        return Ok(VmObject::from(number.fract()));
     }
     Ok(EMPTY_OBJECT)
 }
 
 #[cfg(test)]
 mod tests {
-    use std::sync::Arc;
+    use std::rc::Rc;
     use crate::compiler::BramaCompiler;
     use crate::compiler::value::BramaPrimative;
     use super::*;
@@ -82,7 +82,7 @@ mod tests {
         ($name:ident, $function_name:ident, $query:expr, $result:expr) => {
             #[test]
             fn $name () {
-                let result = $function_name(&mut BramaCompiler::new(), Some(Arc::new($query)), 0, 0);
+                let result = $function_name(&mut BramaCompiler::new(), Some(Rc::new($query)), 0, 0);
                 assert!(result.is_ok());
                 let object = result.unwrap().deref();
                 assert_eq!(*object, $result);
@@ -90,9 +90,9 @@ mod tests {
         };
     }
 
-    nativecall_test!{test_hex_1, hex, BramaPrimative::Number(-1.51), BramaPrimative::Text(Arc::new("0xbff828f5c28f5c29".to_string()))}
-    nativecall_test!{test_hex_2, hex, BramaPrimative::Number(22.0), BramaPrimative::Text(Arc::new("0x16".to_string()))}
-    nativecall_test!{test_hex_3, hex, BramaPrimative::Number(-16.0), BramaPrimative::Text(Arc::new("0xfffffffffffffff0".to_string()))}
+    nativecall_test!{test_hex_1, hex, BramaPrimative::Number(-1.51), BramaPrimative::Text(Rc::new("0xbff828f5c28f5c29".to_string()))}
+    nativecall_test!{test_hex_2, hex, BramaPrimative::Number(22.0), BramaPrimative::Text(Rc::new("0x16".to_string()))}
+    nativecall_test!{test_hex_3, hex, BramaPrimative::Number(-16.0), BramaPrimative::Text(Rc::new("0xfffffffffffffff0".to_string()))}
 
     nativecall_test!{test_yuvarla_1, round, BramaPrimative::Number(1.51), BramaPrimative::Number(2.0)}
     nativecall_test!{test_yuvarla_2, round, BramaPrimative::Number(1.5), BramaPrimative::Number(2.0)}

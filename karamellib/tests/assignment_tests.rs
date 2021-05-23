@@ -7,7 +7,7 @@ mod tests {
     use crate::karamellib::syntax::SyntaxParser;
     use crate::karamellib::compiler::value::BramaPrimative;
     use crate::karamellib::compiler::ast::BramaAstType;
-    use std::sync::Arc;
+    use std::rc::Rc;
 
     #[warn(unused_macros)]
     macro_rules! test_compare {
@@ -29,16 +29,16 @@ mod tests {
     test_compare!(assignment_1, "erhan = 2020", Ok(BramaAstType::Assignment {
         variable: Box::new(BramaAstType::Symbol("erhan".to_string())),
         operator: BramaOperatorType::Assign,
-        expression: Box::new(BramaAstType::Primative(Arc::new(BramaPrimative::Number(2020.0))))
+        expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(2020.0))))
     }));
 
     test_compare!(assignment_2, "erhan = ('erhan' * 2)", Ok(BramaAstType::Assignment {
         variable: Box::new(BramaAstType::Symbol("erhan".to_string())),
         operator: BramaOperatorType::Assign,
         expression: Box::new(BramaAstType::Binary {
-            left: Box::new(BramaAstType::Primative(Arc::new(BramaPrimative::Text(Arc::new("erhan".to_string()))))),
+            left: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Text(Rc::new("erhan".to_string()))))),
             operator: BramaOperatorType::Multiplication, 
-            right: Box::new(BramaAstType::Primative(Arc::new(BramaPrimative::Number(2.0))))
+            right: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(2.0))))
         })
     }));
 }
