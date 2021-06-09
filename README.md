@@ -14,16 +14,15 @@ Bu mimaride kullanılacak olan değişkenler bir yığın olarak üst üste isti
 
 Python, PHP, Ruby gibi oldukça popüler olan diller Stack Machine yaklaşımını kullanmaktadırlar.
 
-### Dilin şu anda ki durumu nedir?
+### Dilin şu andaki durumu nedir?
 
 Halen geliştirme aşamasında olup, yardımlara her zaman açığız. Mutlaka kodlama yapmanıza gerek yok. Fikirleriniz ilede gelip destek olabilirsiniz.
 
 ### İndirilebilir durumda mı?
 
-Ne yazık ki indirilebilir değil fakat tarayıcı üzerinden çalıştırabilirsiniz.
-Aşağıda ki linki tarayıcınızda açarsanız denemeye devam başlayabilirsiniz.
+Ne yazık ki indirilebilir değil fakat tarayıcı üzerinden çalıştırabilirsiniz. Aşağıda ki linki tarayıcınızda açarsanız denemeye devam başlayabilirsiniz.
 
-https://erhanbaris.github.io/karamel/karamelweb/src/www/
+[https://erhanbaris.github.io/karamel/karamelweb/src/www/](https://erhanbaris.github.io/karamel/karamelweb/src/www/)
 
 ### Temel Tipler
 
