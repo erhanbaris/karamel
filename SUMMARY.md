@@ -2,23 +2,35 @@
 
 * [Karamel Programlama Dili \(KPD\)](README.md)
 
-## Karamel Programlama Dili
+## Belgeler
 
-* [Kılavuzlar](karamel-programlama-dili/dokumanlar/README.md)
-  * [TASLAK](karamel-programlama-dili/dokumanlar/sayilar.md)
-  * [Fonksiyon \| İşlev](karamel-programlama-dili/dokumanlar/fonksiyon-or-islev/README.md)
-    * [Yazı İşlevleri](karamel-programlama-dili/dokumanlar/fonksiyon-or-islev/yazi-islevleri.md)
-* [Hakkında](karamel-programlama-dili/hakkinda/README.md)
-  * [Katkıda Bulunanlar](karamel-programlama-dili/hakkinda/contributors.md)
+* [Kılavuzlar](belgeler/dokumanlar/README.md)
+  * [İşlevler](belgeler/dokumanlar/islevler/README.md)
+    * [Yazı İşlevleri](belgeler/dokumanlar/islevler/yazi-islevleri/README.md)
+      * [AkBoşluk\*\*\*](belgeler/dokumanlar/islevler/yazi-islevleri/akbosluk.md)
+      * [parçagetir\(buradan, burayadek\)](belgeler/dokumanlar/islevler/yazi-islevleri/parcagetir-buradan-burayadek.md)
+      * [değiştir\(bunu, bununla\)](belgeler/dokumanlar/islevler/yazi-islevleri/degistir-bunu-bununla.md)
+      * [harfleriküçült\(\)](belgeler/dokumanlar/islevler/yazi-islevleri/harflerikucult.md)
+      * [harfleribüyült\(\)](belgeler/dokumanlar/islevler/yazi-islevleri/harfleribueyuelt.md)
+      * [uzunluk\(\)](belgeler/dokumanlar/islevler/yazi-islevleri/uzunluk.md)
+      * [içeriyormu\(aranan\)](belgeler/dokumanlar/islevler/yazi-islevleri/iceriyormu-aranan.md)
+      * [satırlar\(\)](belgeler/dokumanlar/islevler/yazi-islevleri/satirlar.md)
+      * [parçala\(bununla\)](belgeler/dokumanlar/islevler/yazi-islevleri/parcala-bununla.md)
+      * [kırp\(\)](belgeler/dokumanlar/islevler/yazi-islevleri/kirp.md)
+      * [sonukırp\(\)](belgeler/dokumanlar/islevler/yazi-islevleri/sonukirp.md)
+      * [başıkırp\(\)](belgeler/dokumanlar/islevler/yazi-islevleri/basikirp.md)
+* [Hakkında](belgeler/hakkinda/README.md)
+  * [SSS](belgeler/hakkinda/sss.md)
+  * [Katkıda Bulunanlar](belgeler/hakkinda/contributors.md)
+
+## Sözlükler <a id="sozlukler"></a>
+
+* [Genel Sözlük](sozlukler/genel-soezluek.md)
+* [Bilişim Terimleri Sözlüğü](sozlukler/bilisim-terimleri-sozlugu.md)
 
 ---
 
 * [CHANGES](changes.md)
 * [Contributor Covenant Code of Conduct](code_of_conduct.md)
 * [Contributing](contributing.md)
-
-## Sözlük
-
-* [Genel Sözlük](soezluek/genel-soezluek.md)
-* [KPD Terim Sözlüğü](soezluek/kpd-terim-soezluegue.md)
 
