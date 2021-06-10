@@ -1,0 +1,2 @@
+# Sözlük İşlevleri
+
