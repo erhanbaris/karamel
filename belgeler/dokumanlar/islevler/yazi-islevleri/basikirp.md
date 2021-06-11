@@ -6,11 +6,11 @@
 gç::satıryaz("  Başında saydam boşluk bulunan yazı".başınıkırp()) 
 ```
 
-> ## Öncesi:
+> ## Girdi:
 >
 >     Başında saydam boşluk bulunan yazı
 >
-> ## Sonrası:
+> ## Çıktı:
 >
 > Başında saydam boşluk bulunan yazı
 

@@ -41,7 +41,7 @@
       * [satırlar\(\)](belgeler/dokumanlar/islevler/yazi-islevleri/satirlar.md)
       * [parçala\(bununla\)](belgeler/dokumanlar/islevler/yazi-islevleri/parcala-bununla.md)
       * [kırp\(\)](belgeler/dokumanlar/islevler/yazi-islevleri/kirp.md)
-      * [sonukırp\(\)](belgeler/dokumanlar/islevler/yazi-islevleri/sonukirp.md)
+      * [YAZI.sonunukırp\(\)](belgeler/dokumanlar/islevler/yazi-islevleri/sonukirp.md)
       * [YAZI.başınıkırp\(\)](belgeler/dokumanlar/islevler/yazi-islevleri/basikirp.md)
 * [Hakkında](belgeler/hakkinda/README.md)
   * [SSS](belgeler/hakkinda/sss.md)
