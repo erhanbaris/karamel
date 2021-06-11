@@ -40,7 +40,7 @@
       * [içeriyormu\(aranan\)](belgeler/dokumanlar/islevler/yazi-islevleri/iceriyormu-aranan.md)
       * [satırlar\(\)](belgeler/dokumanlar/islevler/yazi-islevleri/satirlar.md)
       * [parçala\(bununla\)](belgeler/dokumanlar/islevler/yazi-islevleri/parcala-bununla.md)
-      * [kırp\(\)](belgeler/dokumanlar/islevler/yazi-islevleri/kirp.md)
+      * [YAZI.kırp\(\)](belgeler/dokumanlar/islevler/yazi-islevleri/kirp.md)
       * [YAZI.sonunukırp\(\)](belgeler/dokumanlar/islevler/yazi-islevleri/sonukirp.md)
       * [YAZI.başınıkırp\(\)](belgeler/dokumanlar/islevler/yazi-islevleri/basikirp.md)
 * [Hakkında](belgeler/hakkinda/README.md)

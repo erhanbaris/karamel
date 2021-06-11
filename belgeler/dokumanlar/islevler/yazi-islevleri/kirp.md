@@ -1,4 +1,4 @@
-# kırp\(\)
+# YAZI.kırp\(\)
 
 **Yazı** sonunda **SaydamBoşluk** var ise kırpar.
 
