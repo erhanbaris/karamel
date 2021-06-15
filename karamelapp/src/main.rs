@@ -1,21 +1,20 @@
+use mimalloc::MiMalloc;
+
+#[global_allocator]
+static GLOBAL: MiMalloc = MiMalloc;
 extern crate karamellib;
 
 use karamellib::{vm::executer::{ExecutionParameters, ExecutionSource}};
 
 fn main() {
-
     let parameters = ExecutionParameters {
         source: ExecutionSource::Code(r#"
-a = 1
-b = 2
-c = 1
-
-a == b ise:
-    gç::satıryaz('a eşittir b')
-veya a == c ise:  
-    gç::satıryaz('a eşittir c')
-veya:
-    gç::satıryaz('a hiçbirine eşit değil')
+fonk recur_fibo(n):
+    n <= 1 ise:
+        döndür n
+    veya:
+        döndür (recur_fibo(n-1) + recur_fibo(n-2))
+gç::satıryaz(recur_fibo(41))  
 "#.to_string()),
         return_opcode: true,
         return_output: true

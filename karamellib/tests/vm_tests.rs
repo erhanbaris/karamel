@@ -7,7 +7,7 @@ mod tests {
     use crate::karamellib::vm::*;
     use crate::karamellib::syntax::*;
 
-    use std::sync::Arc;
+    use std::rc::Rc;
 
     #[warn(unused_macros)]
     macro_rules! test_last_memory {
@@ -33,8 +33,8 @@ mod tests {
 
                 if let Ok(_) = opcode_compiler.compile(ast, &mut compiler_options) {
                     if unsafe { interpreter::run_vm(&mut compiler_options).is_ok() } {
-                        let memory = compiler_options.storages[0].get_stack().borrow().first().unwrap().deref();
-                        assert_eq!(*memory, $result);
+                        let memory = compiler_options.storages[0].get_stack().first().unwrap().deref_clean();
+                        assert_eq!(memory, $result);
                     } else {
                         assert!(false);
                     }
@@ -115,14 +115,14 @@ mod tests {
 
     test_last_memory!(vm_1, "10 + 10", BramaPrimative::Number(20.0));
     test_last_memory!(vm_2, "10 + 20 + 30", BramaPrimative::Number(60.0));
-    test_last_memory!(vm_3, "'erhan' + 'barış'", BramaPrimative::Text(Arc::new("erhanbarış".to_string())));
-    //test_last_memory!(vm_4, "'erhan' + 10", BramaPrimative::Text(Arc::new("erhan10".to_string())));
+    test_last_memory!(vm_3, "'erhan' + 'barış'", BramaPrimative::Text(Rc::new("erhanbarış".to_string())));
+    //test_last_memory!(vm_4, "'erhan' + 10", BramaPrimative::Text(Rc::new("erhan10".to_string())));
     test_last_memory!(vm_5, "123.456 + 123.456", BramaPrimative::Number(246.912));
     test_last_memory!(vm_6, "123 + 123.456", BramaPrimative::Number(246.45600000000002));
     test_last_memory!(vm_7, "123.456 + 123", BramaPrimative::Number(246.45600000000002));
-    //test_last_memory!(vm_8, "'erhan' + 10.1", BramaPrimative::Text(Arc::new("erhan10.1".to_string())));
-    //test_last_memory!(vm_9, "'erhan' + doğru", BramaPrimative::Text(Arc::new("erhandoğru".to_string())));
-    //test_last_memory!(vm_10, "'erhan' + false", BramaPrimative::Text(Arc::new("erhanyanlış".to_string())));
+    //test_last_memory!(vm_8, "'erhan' + 10.1", BramaPrimative::Text(Rc::new("erhan10.1".to_string())));
+    //test_last_memory!(vm_9, "'erhan' + doğru", BramaPrimative::Text(Rc::new("erhandoğru".to_string())));
+    //test_last_memory!(vm_10, "'erhan' + false", BramaPrimative::Text(Rc::new("erhanyanlış".to_string())));
     test_last_memory!(vm_11, "10 - 10", BramaPrimative::Number(0.0));
     test_last_memory!(vm_12, "110.0 - 10.0", BramaPrimative::Number(100.0));
     test_last_memory!(vm_13, "110 - 10.0", BramaPrimative::Number(100.0));
@@ -148,7 +148,7 @@ mod tests {
     test_last_memory!(vm_33, "100 <= 110.0", BramaPrimative::Bool(true));
     test_last_memory!(vm_34, "110 >= 110.0", BramaPrimative::Bool(true));
     test_last_memory!(vm_35, "110 <= 110.0", BramaPrimative::Bool(true));
-    test_last_memory!(vm_36, "'erhan' * 2", BramaPrimative::Text(Arc::new("erhanerhan".to_string())));
+    test_last_memory!(vm_36, "'erhan' * 2", BramaPrimative::Text(Rc::new("erhanerhan".to_string())));
     test_last_memory!(vm_37, "2 * 2", BramaPrimative::Number(4.0));
     test_last_memory!(vm_38, "2.0 * 20", BramaPrimative::Number(40.0));
     test_last_memory!(vm_39, "'erhan' * 2 == 'erhanbaris'", BramaPrimative::Bool(false));
@@ -168,7 +168,7 @@ mod tests {
 result = text *2"#, BramaPrimative::Number(2048.0));
     test_variable_value!(vm_58, "full_text", r#"text_1 = 'erhan'
 text_2 = 'baris'
-full_text = text_1 + ' ' + text_2"#, BramaPrimative::Text(Arc::new("erhan baris".to_string())));
+full_text = text_1 + ' ' + text_2"#, BramaPrimative::Text(Rc::new("erhan baris".to_string())));
     test_variable_value!(vm_59, "erhan", r#"erhan=100
 ++erhan
 ++erhan
@@ -229,7 +229,7 @@ veri != 'erhan' ise:
     io::printline('Oldu')
 veya veri ise:
     erhan = "olmadi"
-    io::printline('1 == 1')"#, BramaPrimative::Text(Arc::new("olmadi".to_string())));
+    io::printline('1 == 1')"#, BramaPrimative::Text(Rc::new("olmadi".to_string())));
 
     execute!(vm_80, r#"
 erhan=1

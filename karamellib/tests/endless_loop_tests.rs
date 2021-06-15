@@ -9,7 +9,7 @@ mod tests {
     use crate::karamellib::syntax::*;
     use crate::karamellib::compiler::value::BramaPrimative;
     use crate::karamellib::compiler::ast::{BramaAstType};
-    use std::sync::Arc;
+    use std::rc::Rc;
 
     #[warn(unused_macros)]
     macro_rules! test_compare {
@@ -33,18 +33,18 @@ mod tests {
 "#, Ok(BramaAstType::EndlessLoop(Box::new(BramaAstType::Assignment {
     variable: Box::new(BramaAstType::Symbol("erhan".to_string())),
     operator: BramaOperatorType::Assign,
-    expression: Box::new(BramaAstType::Primative(Arc::new(BramaPrimative::Number(123.0))))
+    expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123.0))))
 }))));
 test_compare!(endless_2, r#"sonsuz:
     erhan=123   
     print(1)"#, Ok(BramaAstType::EndlessLoop(Box::new(BramaAstType::Block([BramaAstType::Assignment {
     variable: Box::new(BramaAstType::Symbol("erhan".to_string())),
     operator: BramaOperatorType::Assign,
-    expression: Box::new(BramaAstType::Primative(Arc::new(BramaPrimative::Number(123.0))))
+    expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123.0))))
 },
 BramaAstType::FuncCall {
     func_name_expression: Box::new(BramaAstType::Symbol("print".to_string())),
-    arguments: [Box::new(BramaAstType::Primative(Arc::new(BramaPrimative::Number(1.0))))].to_vec(),
+    arguments: [Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(1.0))))].to_vec(),
     assign_to_temp: false
 }
 ].to_vec())))));
@@ -61,11 +61,11 @@ test_compare!(endless_4, r#"sonsuz:
     kır"#, Ok(BramaAstType::EndlessLoop(Box::new(BramaAstType::Block([BramaAstType::Assignment {
     variable: Box::new(BramaAstType::Symbol("erhan".to_string())),
     operator: BramaOperatorType::Assign,
-    expression: Box::new(BramaAstType::Primative(Arc::new(BramaPrimative::Number(123.0))))
+    expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123.0))))
 },
 BramaAstType::FuncCall {
     func_name_expression: Box::new(BramaAstType::Symbol("print".to_string())),
-    arguments: [Box::new(BramaAstType::Primative(Arc::new(BramaPrimative::Number(1.0))))].to_vec(),
+    arguments: [Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(1.0))))].to_vec(),
     assign_to_temp: false
 },
 BramaAstType::Break

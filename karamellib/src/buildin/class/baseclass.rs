@@ -1,7 +1,7 @@
 use crate::{buildin::{Class, ClassProperty}, compiler::function::{IndexerGetCall, IndexerSetCall, NativeCall, FunctionFlag}, types::VmObject};
 use crate::compiler::{BramaPrimative, function::{FunctionReference}};
 
-use std::{sync::Arc};
+use std::{rc::Rc};
 use crate::compiler::GetType;
 use crate::buildin::ClassConfig;
 
@@ -19,7 +19,7 @@ pub struct BasicInnerClass {
         self.config.name.clone()
     }
 
-    fn has_element(&self, _: Option<VmObject>, field: Arc<String>) -> bool {
+    fn has_element(&self, _: Option<VmObject>, field: Rc<String>) -> bool {
         self.config.properties.get(&*field).is_some()
     }
     
@@ -27,7 +27,7 @@ pub struct BasicInnerClass {
         self.config.properties.iter()
     }
 
-    fn get_element(&self, _: Option<VmObject>, field: Arc<String>) -> Option<ClassProperty> {
+    fn get_element(&self, _: Option<VmObject>, field: Rc<String>) -> Option<ClassProperty> {
         match self.config.properties.get(&*field) {
             Some(data) => Some((*data).clone()),
             None => None
@@ -42,7 +42,7 @@ pub struct BasicInnerClass {
         self.config.properties.insert(name.to_string(), ClassProperty::Function(FunctionReference::buildin_function(function, name.to_string(), flags)));
     }
 
-    fn add_property(&mut self, name: &str, property: Arc<BramaPrimative>) {
+    fn add_property(&mut self, name: &str, property: Rc<BramaPrimative>) {
         self.config.properties.insert(name.to_string(), ClassProperty::Field(property));
     }
 
@@ -93,7 +93,7 @@ impl GetType for BasicInnerClass {
 
 #[cfg(test)]
 mod test {
-    use std::sync::Arc;
+    use std::rc::Rc;
     use crate::buildin::Class;
     use crate::compiler::GetType;
     use crate::buildin::class::baseclass::BasicInnerClass;
@@ -122,8 +122,8 @@ mod test {
         let mut opcode_class: BasicInnerClass = BasicInnerClass::default();
         opcode_class.set_name("test_class");
 
-        opcode_class.add_property("field_1", Arc::new(BramaPrimative::Number(1024.0)));
-        opcode_class.add_property("field_2", Arc::new(BramaPrimative::Number(2048.0)));
+        opcode_class.add_property("field_1", Rc::new(BramaPrimative::Number(1024.0)));
+        opcode_class.add_property("field_2", Rc::new(BramaPrimative::Number(2048.0)));
 
         assert_eq!(opcode_class.get_class_name(), "test_class".to_string());
         assert_eq!(opcode_class.property_count(), 2);

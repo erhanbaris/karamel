@@ -3,7 +3,7 @@ use std::str::Chars;
 use std::iter::Peekable;
 use std::result::Result;
 use std::hash::Hash;
-use std::sync::Arc;
+use std::rc::Rc;
 use crate::{compiler::ast::BramaAstType, error::BramaError};
 use crate::error::BramaErrorType;
 
@@ -170,9 +170,9 @@ pub enum BramaOperatorType {
 pub enum BramaTokenType {
     Integer(i64),
     Double(f64),
-    Symbol(Arc<String>),
+    Symbol(Rc<String>),
     Operator(BramaOperatorType),
-    Text(Arc<String>),
+    Text(Rc<String>),
     Keyword(BramaKeywordType),
     WhiteSpace(u8),
     NewLine(u8)

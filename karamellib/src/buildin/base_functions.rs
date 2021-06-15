@@ -4,7 +4,7 @@ use crate::buildin::{Module, Class};
 use crate::compiler::GetType;
 use crate::{n_parameter_expected};
 use std::collections::HashMap;
-use std::sync::Arc;
+use std::rc::Rc;
 
 
 #[derive(Clone)]
@@ -32,7 +32,7 @@ impl Module for BaseFunctionsModule {
         }
     }
 
-    fn get_module(&self, _: &str) -> Option<Arc<dyn Module>> {
+    fn get_module(&self, _: &str) -> Option<Rc<dyn Module>> {
         None
     }
 
@@ -40,11 +40,11 @@ impl Module for BaseFunctionsModule {
         [("tür_bilgisi", Self::type_info as NativeCall)].to_vec()
     }
 
-    fn get_modules(&self) -> HashMap<String, Arc<dyn Module>> {
+    fn get_modules(&self) -> HashMap<String, Rc<dyn Module>> {
         HashMap::new()
     }
 
-    fn get_classes(&self) -> Vec<Arc<dyn Class>> {
+    fn get_classes(&self) -> Vec<Rc<dyn Class>> {
         Vec::new()
     }
 }
@@ -56,7 +56,7 @@ impl BaseFunctionsModule  {
         }
 
         match parameter.iter().next() {
-            Some(arg) => Ok(VmObject::from(Arc::new(arg.deref().get_type()))),
+            Some(arg) => Ok(VmObject::from(Rc::new(arg.deref().get_type()))),
             None => Ok(EMPTY_OBJECT)
         }
     }

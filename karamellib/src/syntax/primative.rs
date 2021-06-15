@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::rc::Rc;
 
 use crate::types::*;
 use crate::syntax::util::*;
@@ -21,14 +21,14 @@ impl PrimativeParser {
         }
 
         let result = match &token.unwrap().token_type {
-            BramaTokenType::Integer(int)      => Ok(BramaAstType::Primative(Arc::new(BramaPrimative::Number(*int as f64)))),
-            BramaTokenType::Double(double)    => Ok(BramaAstType::Primative(Arc::new(BramaPrimative::Number(*double)))),
-            BramaTokenType::Text(text)        => Ok(BramaAstType::Primative(Arc::new(BramaPrimative::Text(Arc::clone(text))))),
+            BramaTokenType::Integer(int)      => Ok(BramaAstType::Primative(Rc::new(BramaPrimative::Number(*int as f64)))),
+            BramaTokenType::Double(double)    => Ok(BramaAstType::Primative(Rc::new(BramaPrimative::Number(*double)))),
+            BramaTokenType::Text(text)        => Ok(BramaAstType::Primative(Rc::new(BramaPrimative::Text(Rc::clone(text))))),
             BramaTokenType::Keyword(keyword)  => {
                 match keyword {
-                    BramaKeywordType::True  => Ok(BramaAstType::Primative(Arc::new(BramaPrimative::Bool(true)))),
-                    BramaKeywordType::False => Ok(BramaAstType::Primative(Arc::new(BramaPrimative::Bool(false)))),
-                    BramaKeywordType::Empty => Ok(BramaAstType::Primative(Arc::new(BramaPrimative::Empty))),
+                    BramaKeywordType::True  => Ok(BramaAstType::Primative(Rc::new(BramaPrimative::Bool(true)))),
+                    BramaKeywordType::False => Ok(BramaAstType::Primative(Rc::new(BramaPrimative::Bool(false)))),
+                    BramaKeywordType::Empty => Ok(BramaAstType::Primative(Rc::new(BramaPrimative::Empty))),
                     _ => Ok(BramaAstType::None)
                 }
             },
@@ -130,7 +130,7 @@ impl PrimativeParser {
   
                 dict_items.push(Box::new(BramaDictItem {
                     key,
-                    value: Arc::new(value.unwrap())
+                    value: Rc::new(value.unwrap())
                 }));
 
                 parser.cleanup();

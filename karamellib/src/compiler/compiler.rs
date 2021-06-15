@@ -1,5 +1,5 @@
 use std::{borrow::Borrow, vec::Vec};
-use std::sync::Arc;
+use std::rc::Rc;
 use std::cell::RefCell;
 
 use std::ptr;
@@ -12,7 +12,7 @@ use crate::compiler::value::BramaPrimative;
 use crate::compiler::ast::{BramaAstType, BramaIfStatementElseItem};
 use crate::compiler::storage_builder::StorageBuilder;
 use crate::compiler::function::{FunctionReference, FunctionType};
-use crate::buildin::class::PRIMATIVE_CLASSES;
+use crate::buildin::class::*;
 
 use log;
 
@@ -20,45 +20,56 @@ use log;
 pub struct Scope {
     pub memory: Vec<VmObject>, 
     pub stack: Vec<VmObject>, 
-    pub location: usize,
-    pub memory_index: usize,
+    pub location: *mut u8,
     pub call_return_assign_to_temp: bool,
-    pub const_size: u8
+    pub const_size: u8,
+    pub stack_ptr: *mut VmObject ,
+    pub memory_ptr: *mut VmObject ,
+    pub storage_index: isize
 }
 
 impl Scope {
     pub fn empty() -> Scope {
+        let mut stack = Vec::new();
+        let mut memory = Vec::new();
+        
+        let stack_ptr = stack.as_mut_ptr();
+        let memory_ptr = memory.as_mut_ptr();
+
         Scope { 
             const_size: 0, 
             call_return_assign_to_temp: false, 
-            memory_index: 0, 
-            location: 0, 
-            memory: Vec::new(), 
-            stack: Vec::new()
+            location: ptr::null_mut(), 
+            memory: memory,
+            memory_ptr: memory_ptr,
+            stack: stack,
+            stack_ptr: stack_ptr,
+            storage_index: -1
         }
     }
 }
 
 pub struct FunctionDefine {
     arguments: Vec<String>,
-    body: Arc<BramaAstType>,
-    reference: Arc<FunctionReference>
+    body: Rc<BramaAstType>,
+    reference: Rc<FunctionReference>
 }
 
 pub struct BramaCompiler {
     pub opcodes : Vec<u8>,
     pub storages: Vec<StaticStorage>,
     pub modules: ModuleCollection,
-    pub opcode_index: usize,
     pub loop_breaks: Vec<usize>,
     pub loop_continues: Vec<usize>,
     pub scopes: Vec<Scope>,
     pub current_scope: *mut Scope,
     pub scope_index: usize,
-    pub functions : Vec<Arc<FunctionReference>>,
-    pub classes : Vec<Arc<dyn Class  + Send + Sync>>,
+    pub functions : Vec<Rc<FunctionReference>>,
+    pub classes : Vec<Rc<dyn Class >>,
     pub stdout: Option<RefCell<String>>,
-    pub stderr: Option<RefCell<String>>
+    pub stderr: Option<RefCell<String>>,
+    pub opcodes_ptr: *mut u8,
+    pub primative_classes: Vec<Rc<dyn Class>>
 }
 
 impl  BramaCompiler {
@@ -67,7 +78,6 @@ impl  BramaCompiler {
             opcodes: Vec::new(),
             storages: vec![StaticStorage::new()],
             modules: ModuleCollection::new(),
-            opcode_index: 0,
             loop_breaks: Vec::new(),
             loop_continues: Vec::new(),
             scopes: Vec::new(),
@@ -76,8 +86,21 @@ impl  BramaCompiler {
             functions: Vec::new(),
             classes: Vec::new(),
             stdout: None,
-            stderr: None
+            stderr: None,
+            opcodes_ptr: ptr::null_mut(),
+            primative_classes: Vec::new()
         };
+
+        compiler.primative_classes.push(number::get_primative_class());
+        compiler.primative_classes.push(text::get_primative_class());
+        compiler.primative_classes.push(list::get_primative_class());
+        compiler.primative_classes.push(dict::get_primative_class());
+        compiler.primative_classes.push(get_empty_class());
+        compiler.primative_classes.push(get_empty_class());
+        compiler.primative_classes.push(get_empty_class());
+        compiler.primative_classes.push(get_empty_class());
+        compiler.primative_classes.push(proxy::get_primative_class());
+        compiler.primative_classes.push(get_empty_class());
 
         for _ in 0..32{
             compiler.scopes.push(Scope::empty());
@@ -107,15 +130,15 @@ impl  BramaCompiler {
         }
     }
 
-    pub fn add_function(&mut self, information: Arc<FunctionReference>) {
+    pub fn add_function(&mut self, information: Rc<FunctionReference>) {
         self.functions.push(information);
     }
 
-    pub fn add_class(&mut self, class_info: Arc<dyn Class + Sync + Send>) {
+    pub fn add_class(&mut self, class_info: Rc<dyn Class + Sync + Send>) {
         self.classes.push(class_info.clone());
     }
 
-    pub fn find_function(&self, name: String, module_path: Vec<String>, framework: String, start_storage_index: usize) -> Option<Arc<FunctionReference>> {
+    pub fn find_function(&self, name: String, module_path: Vec<String>, framework: String, start_storage_index: usize) -> Option<Rc<FunctionReference>> {
         let mut search_storage = start_storage_index;
         loop {
 
@@ -146,8 +169,14 @@ impl  BramaCompiler {
         }
     }
 
-    pub fn find_class(&self, name: String, _module_path: Vec<String>, _framework: String, _start_storage_index: usize) -> Option<Arc<dyn Class  + Send + Sync>> {
-        let primative_search = PRIMATIVE_CLASSES.borrow().iter().find(|&item| item.get_class_name() == name);
+    pub fn get_class(&self, value: &BramaPrimative) -> Rc<dyn Class > {
+        unsafe {
+            self.primative_classes.get_unchecked(value.discriminant()).clone()
+        }
+    }
+
+    pub fn find_class(&self, name: String, _module_path: Vec<String>, _framework: String, _start_storage_index: usize) -> Option<Rc<dyn Class >> {
+        let primative_search = self.primative_classes.iter().find(|&item| item.get_class_name() == name);
         match primative_search {
             Some(class) => Some(class.clone()),
             None => None
@@ -196,6 +225,8 @@ impl Compiler for InterpreterCompiler {
 
         /* Generate main function code */
         self.generate_opcode(ast, &BramaAstType::None, options, 0)?;
+        options.opcodes.push(VmOpCode::Halt as u8);
+        options.opcodes_ptr = options.opcodes.as_mut_ptr();
 
         Ok(())
     }
@@ -275,7 +306,7 @@ impl InterpreterCompiler {
         }
     }
 
-    fn generate_primative(&self, primative: Arc<BramaPrimative>, _: &BramaAstType, options: &mut BramaCompiler, storage_index: usize) -> CompilerResult {
+    fn generate_primative(&self, primative: Rc<BramaPrimative>, _: &BramaAstType, options: &mut BramaCompiler, storage_index: usize) -> CompilerResult {
         let storage = &options.storages[storage_index];
 
         let result = storage.get_constant_location(primative);
@@ -299,7 +330,7 @@ impl InterpreterCompiler {
         let function_search = options.find_function(name, module_path, "".to_string(), storage_index);
         match function_search {
             Some(reference) => {
-                let result = storage.get_constant_location(Arc::new(BramaPrimative::Function(reference, None)));
+                let result = storage.get_constant_location(Rc::new(BramaPrimative::Function(reference, None)));
                 match result {
                     Some(index) => {
                         options.opcodes.push(VmOpCode::Load as u8);
@@ -316,7 +347,7 @@ impl InterpreterCompiler {
     fn generate_none(&self, options: &mut BramaCompiler, storage_index: usize) -> CompilerResult {
         let storage = &options.storages[storage_index];
 
-        let result = storage.get_constant_location(Arc::new(BramaPrimative::Empty));
+        let result = storage.get_constant_location(Rc::new(BramaPrimative::Empty));
         match result {
             Some(index) => {
                 options.opcodes.push(VmOpCode::Load as u8);
@@ -351,7 +382,7 @@ impl InterpreterCompiler {
 
         match function_search {
             Some(function_ref) => {
-                let search_location = options.storages[storage_index].get_constant_location(Arc::new(BramaPrimative::Function(function_ref, None)));
+                let search_location = options.storages[storage_index].get_constant_location(Rc::new(BramaPrimative::Function(function_ref, None)));
                 match search_location {
                     Some(location) => {
                         options.opcodes.push(VmOpCode::Call as u8);
@@ -397,7 +428,7 @@ impl InterpreterCompiler {
                     self.generate_opcode(source, &BramaAstType::None, options, storage_index)?;
                     //todo: Pass real object to function as a parameter.
                     
-                    let search_location = options.storages[storage_index].get_constant_location(Arc::new(BramaPrimative::Text(Arc::new(function_name.to_string()))));
+                    let search_location = options.storages[storage_index].get_constant_location(Rc::new(BramaPrimative::Text(Rc::new(function_name.to_string()))));
                     match search_location {
                         Some(location) => {
                             options.opcodes.push(VmOpCode::Load as u8);
@@ -698,6 +729,7 @@ impl InterpreterCompiler {
             BramaOperatorType::Subtraction    => VmOpCode::Subraction as u8,
             BramaOperatorType::Multiplication => VmOpCode::Multiply as u8,
             BramaOperatorType::Division       => VmOpCode::Division as u8,
+            BramaOperatorType::Modulo         => VmOpCode::Module as u8,
             _ => VmOpCode::None as u8
         };
 

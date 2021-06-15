@@ -5,7 +5,6 @@
 ## Karamel Programlama Dili
 
 * [Kılavuzlar](karamel-programlama-dili/kilavuzlar/README.md)
-  * [TASLAK](karamel-programlama-dili/kilavuzlar/taslak.md)
   * [Fonksiyon \| İşlev](karamel-programlama-dili/kilavuzlar/fonksiyon-or-islev/README.md)
     * [Yazı İşlevleri](karamel-programlama-dili/kilavuzlar/fonksiyon-or-islev/yazi-islevleri.md)
 * [Hakkında](karamel-programlama-dili/hakkinda/README.md)

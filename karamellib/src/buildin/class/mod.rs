@@ -6,34 +6,18 @@ pub mod baseclass;
 pub mod proxy;
 
 use crate::buildin::class::baseclass::BasicInnerClass;
-use std::{sync::Arc, vec::Vec};
+use std::{rc::Rc, vec::Vec};
 use lazy_static::lazy_static;
 
 use super::Class;
 
 
-pub fn get_empty_class() -> Arc<dyn Class + Send + Sync> {
+pub fn get_empty_class() -> Rc<dyn Class> {
     let mut opcode = BasicInnerClass::default();
     opcode.set_name("__NO__CLASS__");
-    Arc::new(opcode)
+    Rc::new(opcode)
 }
 
-lazy_static! {
-    pub static ref PRIMATIVE_CLASSES: Vec<Arc<dyn Class  + Send + Sync>> = {
-        let mut m = Vec::new();
-        m.push(number::get_primative_class());
-        m.push(text::get_primative_class());
-        m.push(list::get_primative_class());
-        m.push(dict::get_primative_class());
-        m.push(get_empty_class());
-        m.push(get_empty_class());
-        m.push(get_empty_class());
-        m.push(get_empty_class());
-        m.push(proxy::get_primative_class());
-        m.push(get_empty_class());
-        m
-    };
-}
 
 #[macro_export]
 macro_rules! nativecall_test {
@@ -57,7 +41,7 @@ macro_rules! nativecall_test {
 #[macro_export]
 macro_rules! primative_text {
     ($text:expr) => {
-        BramaPrimative::Text(Arc::new($text.to_string()))
+        BramaPrimative::Text(Rc::new($text.to_string()))
     };
 }
 
@@ -85,21 +69,21 @@ macro_rules! arc_text {
 #[macro_export]
 macro_rules! arc_number {
     ($number:expr) => {
-        VmObject::native_convert(BramaPrimative::Number($number as f64))
+        VmObject::from($number as f64)
     };
 }
 
 #[macro_export]
 macro_rules! arc_bool {
     ($bool:expr) => {
-        VmObject::native_convert(BramaPrimative::Bool($bool))
+        VmObject::from($bool)
     };
 }
 
 #[macro_export]
 macro_rules! arc_empty {
     () => {
-        VmObject::native_convert(BramaPrimative::Empty)
+        EMPTY_OBJECT
     };
 }
 

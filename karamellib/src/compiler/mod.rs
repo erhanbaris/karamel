@@ -62,6 +62,7 @@ pub enum VmOpCode {
     Subraction,
     Multiply,
     Division,
+    Module,
     And,
     Or,
     Equal,
@@ -93,5 +94,6 @@ pub enum VmOpCode {
     CopyToStore,
     Dublicate,
     GetItem,
-    SetItem
+    SetItem,
+    Halt
 }

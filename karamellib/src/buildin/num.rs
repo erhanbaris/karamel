@@ -5,7 +5,7 @@ use crate::compiler::value::EMPTY_OBJECT;
 use crate::buildin::{Module, Class};
 use crate::{n_parameter_expected, expected_parameter_type};
 use std::collections::HashMap;
-use std::sync::Arc;
+use std::rc::Rc;
 
 pub struct NumModule {
     methods: HashMap<String, NativeCall>
@@ -28,7 +28,7 @@ impl Module for NumModule {
         self.methods.get(name).map(|method| *method)
     }
 
-    fn get_module(&self, _: &str) -> Option<Arc<dyn Module>> {
+    fn get_module(&self, _: &str) -> Option<Rc<dyn Module>> {
         None
     }
 
@@ -36,11 +36,11 @@ impl Module for NumModule {
         [("oku", Self::parse as NativeCall)].to_vec()
     }
 
-    fn get_modules(&self) -> HashMap<String, Arc<dyn Module>> {
+    fn get_modules(&self) -> HashMap<String, Rc<dyn Module>> {
         HashMap::new()
     }
     
-    fn get_classes(&self) -> Vec<Arc<dyn Class>> {
+    fn get_classes(&self) -> Vec<Rc<dyn Class>> {
         Vec::new()
     }
 }
@@ -59,8 +59,8 @@ impl NumModule  {
         match &*arg {
             BramaPrimative::Number(_) => Ok(*parameter.iter().next().unwrap()),
             BramaPrimative::Text(text) => {
-                match (*text).parse() {
-                    Ok(num) => Ok(VmObject::native_convert(BramaPrimative::Number(num))),
+                match (*text).parse::<f64>() {
+                    Ok(num) => Ok(VmObject::from(num)),
                     _ => expected_parameter_type!("oku", "Yazı")
                 }
             },

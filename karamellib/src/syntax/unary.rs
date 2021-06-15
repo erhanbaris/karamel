@@ -10,7 +10,7 @@ use crate::syntax::expression::ExpressionParser;
 use crate::error::BramaErrorType;
 
 
-use std::sync::Arc;
+use std::rc::Rc;
 
 pub struct UnaryParser;
 
@@ -24,11 +24,11 @@ impl SyntaxParserTrait for UnaryParser {
         if parser.match_operator(&[BramaOperatorType::SquareBracketStart]).is_some() {
             parser.cleanup_whitespaces();
 
-            let indexer_ast = ExpressionParser::parse(parser);
+            let indexer_ast = ExpressionParser::parse(parser)?;
             parser.cleanup_whitespaces();
 
-            if parser.match_operator(&[BramaOperatorType::SquareBracketEnd]).is_some() && !is_ast_empty(&indexer_ast) {
-                return Ok(BramaAstType::Indexer { body: Box::new(ast), indexer: Box::new(indexer_ast.unwrap()) });   
+            if parser.match_operator(&[BramaOperatorType::SquareBracketEnd]).is_some() {
+                return Ok(BramaAstType::Indexer { body: Box::new(ast), indexer: Box::new(indexer_ast) });   
             }
         }
 
@@ -101,8 +101,8 @@ impl UnaryParser {
 
                     parser.consume_token();
                     match token.token_type {
-                        BramaTokenType::Integer(integer) => return Ok(BramaAstType::Primative(Arc::new(BramaPrimative::Number(integer as f64 * opt)))),
-                        BramaTokenType::Double(double) => return Ok(BramaAstType::Primative(Arc::new(BramaPrimative::Number(double * opt)))),
+                        BramaTokenType::Integer(integer) => return Ok(BramaAstType::Primative(Rc::new(BramaPrimative::Number(integer as f64 * opt)))),
+                        BramaTokenType::Double(double) => return Ok(BramaAstType::Primative(Rc::new(BramaPrimative::Number(double * opt)))),
                         _ => {
                             parser.set_index(index_backup);
                             return Err(BramaErrorType::UnaryWorksWithNumber);
