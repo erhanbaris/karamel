@@ -2,6 +2,12 @@
 
 ## Fonksiyonlar
 
+### yazı()
+Değeri yazı tipine dönüştürür.
+```
+gç::satıryaz(1024.yuvarla())    //  "1024"
+```
+
 ### hex()
 Sayıyı dexadecimal formatında yazar.
 ```

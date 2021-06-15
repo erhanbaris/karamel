@@ -11,6 +11,8 @@ pub fn get_primative_class() -> Rc<dyn Class> {
     opcode.set_name("sayı");
     
     opcode.add_class_method("hex", hex);
+    opcode.add_class_method("yazı", string);
+    opcode.add_class_method("yazi", string);
     opcode.add_class_method("yuvarla", round);
     opcode.add_class_method("tavan", ceil);
     opcode.add_class_method("taban", floor);
@@ -27,6 +29,13 @@ fn hex(parameter: FunctionParameter) -> NativeCallResult {
         }
 
         return Ok(VmObject::native_convert(BramaPrimative::Text(Rc::new(format!("0x{:x}", number.trunc() as i64)))));
+    }
+    Ok(EMPTY_OBJECT)
+}
+
+fn string(parameter: FunctionParameter) -> NativeCallResult {
+    if let BramaPrimative::Number(number) = &*parameter.source().unwrap().deref() {
+        return Ok(VmObject::native_convert(BramaPrimative::Text(Rc::new(format!("{}", number)))));
     }
     Ok(EMPTY_OBJECT)
 }
