@@ -44,6 +44,7 @@ pub unsafe fn dump_opcode<W: Write>(index: usize, options: &mut BramaCompiler, l
             VmOpCode::Increment |
             VmOpCode::Decrement | 
             VmOpCode::Addition | 
+            VmOpCode::Module |
             VmOpCode::And | 
             VmOpCode::Or |
             VmOpCode::Subraction | 
@@ -91,6 +92,7 @@ pub unsafe fn dump_opcode<W: Write>(index: usize, options: &mut BramaCompiler, l
             },
 
             VmOpCode::None |
+            VmOpCode::Halt |
             VmOpCode::Return => {
                 let data = format!("║ {:4} ║ {:15} ║ {:^5} ║ {:^5} ║", opcode_index, format!("{:?}", opcode), "", "").to_string();
                 build_arrow(index, opcode_index, 0, &mut buffer, &data);
@@ -258,6 +260,18 @@ pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, Strin
                     }
                     else {
                         VmObject::from(calculation)
+                    };
+
+                    inc_memory_index!(options, 1);
+                },
+
+                VmOpCode::Module => {
+                    let right = pop_raw!(options);
+                    let left  = pop_raw!(options);
+
+                    *(*options.current_scope).stack_ptr = match (left.as_number(), right.as_number()) {
+                        (Some(l_value),  Some(r_value))   => VmObject::from(l_value % r_value),
+                        _ => EMPTY_OBJECT
                     };
 
                     inc_memory_index!(options, 1);

@@ -62,6 +62,7 @@ pub enum VmOpCode {
     Subraction,
     Multiply,
     Division,
+    Module,
     And,
     Or,
     Equal,

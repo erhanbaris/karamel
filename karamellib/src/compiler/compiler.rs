@@ -728,6 +728,7 @@ impl InterpreterCompiler {
             BramaOperatorType::Subtraction    => VmOpCode::Subraction as u8,
             BramaOperatorType::Multiplication => VmOpCode::Multiply as u8,
             BramaOperatorType::Division       => VmOpCode::Division as u8,
+            BramaOperatorType::Modulo         => VmOpCode::Module as u8,
             _ => VmOpCode::None as u8
         };
 
