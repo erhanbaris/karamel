@@ -1,12 +1,20 @@
-use std::{borrow::Borrow, vec::Vec};
+use std::vec::Vec;
 use std::rc::Rc;
+use std::path::{Path, PathBuf};
+use std::fs::File;
+use std::io::prelude::*;
 use std::cell::RefCell;
+
+
 
 use std::ptr;
 
 use ast::BramaDictItem;
-use crate::{types::*};
+use crate::types::*;
+use crate::error::*;
 use crate::compiler::*;
+use crate::parser::*;
+use crate::syntax::SyntaxParser;
 use crate::buildin::*;
 use crate::compiler::value::BramaPrimative;
 use crate::compiler::ast::{BramaAstType, BramaIfStatementElseItem};
@@ -56,6 +64,7 @@ pub struct FunctionDefine {
 }
 
 pub struct BramaCompiler {
+    pub script_path: String,
     pub opcodes : Vec<u8>,
     pub storages: Vec<StaticStorage>,
     pub modules: ModuleCollection,
@@ -75,6 +84,7 @@ pub struct BramaCompiler {
 impl  BramaCompiler {
     pub fn new() -> BramaCompiler {
         let mut compiler = BramaCompiler {
+            script_path: String::from("/Users/erhanbaris/"),
             opcodes: Vec::new(),
             storages: vec![StaticStorage::new()],
             modules: ModuleCollection::new(),
@@ -302,7 +312,7 @@ impl InterpreterCompiler {
             BramaAstType::None => self.generate_none(options, storage_index),
             BramaAstType::FunctionDefination{name: _, arguments: _, body: _} => Ok(()),
             BramaAstType::FunctionMap(name) => self.generate_function_map(name, options, storage_index),
-            BramaAstType::Load(names) => Ok(())
+            BramaAstType::Load(names) => self.generate_load_module(names, options),
         }
     }
 
@@ -316,10 +326,46 @@ impl InterpreterCompiler {
                 options.opcodes.push(index as u8);
                 Ok(())
             },
-            _ => Err("Value not found in storage")
+            _ => Err("Value not found in storage".to_string())
         }
     }
 
+    fn generate_load_module(&self, params: &[String], options: &mut BramaCompiler) -> CompilerResult {
+        let mut path = PathBuf::from(&options.script_path[..]);
+        let module = &params[(params.len() - 1)];
+
+        for item in params.iter().take(params.len() - 1) {
+            path.push(item);
+        }
+
+        path.push(format!("{}.tpd", module));
+
+        if path.is_file() {
+            let content = match File::open(path.to_str().unwrap()) {
+                Ok(mut file) => {
+                    let mut contents = String::new();
+                    file.read_to_string(&mut contents).unwrap();
+                    contents
+                },
+                Err(error) => return Err(format!("Dosya okuma hatası oldu. Hata : {:?}", error))
+            };
+
+
+            let mut parser = Parser::new(&content);
+            match parser.parse() {
+                Err(error) => return Err(generate_error_message(&content, &error)),
+                _ => ()
+            };
+
+            let syntax = SyntaxParser::new(parser.tokens().to_vec());
+            let ast = match syntax.parse() {
+                Ok(ast) => ast,
+                Err(error) => return Err(generate_error_message(&content, &error))
+            };
+        }
+
+        Err("Modül yükleme, kod içerisinden yapılamaz".to_string())
+    }
 
     fn generate_function_map(&self, params: &[String], options: &mut BramaCompiler, storage_index: usize) -> CompilerResult {
         let storage = &options.storages[storage_index];
@@ -337,10 +383,10 @@ impl InterpreterCompiler {
                         options.opcodes.push(index as u8);
                         Ok(())
                     },
-                    _ => Err("Function not found in storage")
+                    _ => Err("Function not found in storage".to_string())
                 }
             },
-            None => Err("Function not found in storage")
+            None => Err("Function not found in storage".to_string())
         }
     }
 
@@ -354,7 +400,7 @@ impl InterpreterCompiler {
                 options.opcodes.push(index as u8);
                 Ok(())
             },
-            _ => Err("Value not found in storage")
+            _ => Err("Value not found in storage".to_string())
         }
     }
 
@@ -377,7 +423,7 @@ impl InterpreterCompiler {
         Ok(())
     }
 
-    fn generate_func_call_by_name(&self, name :&String, module_path: Vec<String>, framework: String, arguments: &Vec<Box<BramaAstType>>, assign_to_temp: bool, options: &mut BramaCompiler, storage_index: usize) -> Result<bool, &'static str> {
+    fn generate_func_call_by_name(&self, name :&String, module_path: Vec<String>, framework: String, arguments: &Vec<Box<BramaAstType>>, assign_to_temp: bool, options: &mut BramaCompiler, storage_index: usize) -> Result<bool, String> {
         let function_search = options.find_function(name.to_string(), module_path, framework, storage_index);
 
         match function_search {
@@ -391,7 +437,7 @@ impl InterpreterCompiler {
                         options.opcodes.push(assign_to_temp as u8);
                         return Ok(true);
                     },
-                    _ => return Err("Function not found")
+                    _ => return Err("Function not found".to_string())
                 }
             },
             _ => ()
@@ -442,7 +488,7 @@ impl InterpreterCompiler {
                             options.opcodes.push(assign_to_temp as u8);*/
                             return Ok(());
                         },
-                        _ => return Err("Function not found")
+                        _ => return Err("Function not found".to_string())
                     }
                 },
                 
@@ -454,12 +500,12 @@ impl InterpreterCompiler {
                     return self.generate_func_call(func_name_expression, arguments, true, upper_ast, options, storage_index);
                 },
                 _ => {
-                    return Err("Function not found");
+                    return Err("Function not found".to_string());
                 }
             }   
         }
         else {
-            return Err("Function not found");
+            return Err("Function not found".to_string());
         }
     }
 
@@ -476,7 +522,7 @@ impl InterpreterCompiler {
                     true => return Ok(()),
                     false => {
                         log::debug!("{:?}", function_name);
-                        return Err("Function not found");
+                        return Err("Function not found".to_string());
                     }
                 }
             },
@@ -494,7 +540,7 @@ impl InterpreterCompiler {
                 let result = self.generate_func_call_by_name(&names[names.len() - 1].to_string(), names[0..(names.len()-1)].to_vec(), "".to_string(), &arguments, assign_to_temp, options, storage_index)?;
                 match result {
                     true => return Ok(()),
-                    false =>  return Err("Function not found")
+                    false =>  return Err("Function not found".to_string())
                 }
             },
             _ => {
@@ -636,7 +682,7 @@ impl InterpreterCompiler {
                 Ok(())
             },
             /* Variable not found, lets check for function */
-            None => return Err("Value not found in storage")
+            None => return Err("Value not found in storage".to_string())
         }
     }
 
@@ -672,7 +718,7 @@ impl InterpreterCompiler {
                         let result = storage.get_constant_location(primative.clone());
                         let primative_location = match result {
                             Some(index) => index as u8,
-                            _ => return Err("Value not found in storage")
+                            _ => return Err("Value not found in storage".to_string())
                         };
 
                         options.opcodes.push(VmOpCode::FastStore as u8);
@@ -746,7 +792,7 @@ impl InterpreterCompiler {
         if let BramaAstType::Symbol(variable) = expression {
             let location = match options.storages.get_mut(storage_index).unwrap().get_variable_location(variable) {
                 Some(location) => location,
-                _ => return Err("Variable not found in storage")
+                _ => return Err("Variable not found in storage".to_string())
             };
 
             /* Load data from memory */
@@ -756,7 +802,7 @@ impl InterpreterCompiler {
             let opcode = match operator {
                 BramaOperatorType::Increment  => VmOpCode::Increment as u8,
                 BramaOperatorType::Deccrement => VmOpCode::Decrement as u8,
-                _ => return Err("Unary operator not found")
+                _ => return Err("Unary operator not found".to_string())
             };
     
             options.opcodes.push(opcode);
@@ -765,7 +811,7 @@ impl InterpreterCompiler {
             return Ok(());
         }
 
-        Err("Unary expression not valid")
+        Err("Unary expression not valid".to_string())
     }
 
     fn generate_not(&self, expression: &BramaAstType, options: &mut BramaCompiler, storage_index: usize) -> CompilerResult { 
@@ -875,7 +921,7 @@ impl InterpreterCompiler {
         if let BramaAstType::Symbol(variable) = expression {
             let location = match options.storages.get_mut(storage_index).unwrap().get_variable_location(variable) {
                 Some(location) => location,
-                _ => return Err("Variable not found in storage")
+                _ => return Err("Variable not found in storage".to_string())
             };
 
             options.opcodes.push(VmOpCode::Load as u8);
@@ -886,7 +932,7 @@ impl InterpreterCompiler {
                 BramaOperatorType::Increment  => VmOpCode::Increment as u8,
                 BramaOperatorType::Deccrement => VmOpCode::Decrement as u8,
                 BramaOperatorType::Not        => VmOpCode::Not as u8,
-                _ => return Err("Unary operator not found")
+                _ => return Err("Unary operator not found".to_string())
             };
     
             options.opcodes.push(opcode);
@@ -895,7 +941,7 @@ impl InterpreterCompiler {
             return Ok(());
         }
 
-        Err("Unary expression not valid")
+        Err("Unary expression not valid".to_string())
     }
 
     fn generate_block(&self, asts: &[BramaAstType], upper_ast: &BramaAstType, options: &mut BramaCompiler, storage_index: usize) -> CompilerResult {

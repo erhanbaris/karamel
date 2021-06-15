@@ -9,7 +9,7 @@ use crate::error::BramaErrorType;
 
 pub type ParseResult        = Result<(), BramaError>;
 pub type AstResult          = Result<BramaAstType, BramaErrorType>;
-pub type CompilerResult     = Result<(), &'static str>;
+pub type CompilerResult     = Result<(), String>;
 
 pub const TAG_NULL        : u64 = 0;
 pub const TAG_FALSE       : u64 = 1;

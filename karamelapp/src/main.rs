@@ -9,6 +9,8 @@ use karamellib::{vm::executer::{ExecutionParameters, ExecutionSource}};
 fn main() {
     let parameters = ExecutionParameters {
         source: ExecutionSource::Code(r#"
+dosya yükle
+
 fonk recur_fibo(n):
     n <= 1 ise:
         döndür n
