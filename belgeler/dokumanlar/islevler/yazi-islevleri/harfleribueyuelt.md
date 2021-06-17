@@ -1,16 +1,16 @@
-# harfleribüyült\(\)
+# YAZI.harfleribüyült\(\)
 
 Abecelerde küçük ve büyük türde yazımları olan bütün küçük harfleri büyük harflere çevirir.
 
 {% code title="sınama.krml" %}
 ```bash
-büyültülmüş_harfler = harfleribüyült("Arkasında Kalan Gölge.")
-gç::satıryaz('Küçültülmüş yazı: ', büyültülmüş_harfler)
-# 
-# Girdi (İşlem öncesi)
+büyültülmüş_harfler = "Arkasında Kalan Gölge.".harfleribüyült()
+gç::satıryaz('Büyültülmüş yazı: ', büyültülmüş_harfler)
+ 
+# GİRDİ
 # Arkasında Kalan Gölge
 # 
-# Çıktı (İşlem sonrası)
+# ÇIKTI
 # ARKASINDA KALAN GÖLGE
 ```
 {% endcode %}

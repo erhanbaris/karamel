@@ -1,4 +1,14 @@
-# parçala\(bununla\)
+# YAZI.parçala\(DEĞER\)
 
-Verilen _Yazı_'ya göre parçalara ayırır. Geriye **Dizme\_** __döndürür.
+Verilen değere göre **YAZI**yı parçalar. Geriye **DİZME** __döndürür.
+
+```text
+gç::satıryaz('Bence 10 sayısının anlamı var.'.parçala(" "))
+```
+
+> ## **ÇIKTI**
+>
+> \["Bence", "10", "sayısının", "anlamı", "var."\]
+
+
 

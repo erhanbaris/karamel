@@ -1,14 +1,21 @@
-# değiştir\(bunu, bununla\)
+# YAZI.değiştir\(ESKİ\_DEĞER, YENİ\_DEĞER\)
 
-Bir _Yazı_'nın tüm eşleşmelerini başka bir _Yazı_ ile değiştirir. Bu fonksiyon yeni bir _Yazı_ oluşturur ve asıl _Yazı_ içeriğini kopyalar sonrasında değiştirme işlemi yapar. Orjinal _Yazı_ içeriği değişmez.
+Bir **Yazı**'nın tüm eşleşmelerini başka bir **Yazı** ile değiştirir. Bu fonksiyon yeni bir _Yazı_ oluşturur ve asıl _Yazı_ içeriğini kopyalar sonrasında değiştirme işlemi yapar. Orjinal _Yazı_ içeriği değişmez.
 
 **Örnek**
 
-"**merhaba dünya**" elimizde olan bir _Yazı_'mız olsun. "**dünya**" sözcüğünü silip yerine "**karamel**" sözcüğü yazarak "**merhaba karamel**" _Yazı_'sını elde etmeye çalışalım.
+"_merhaba dünya_" elimizde olan bir **Yazı**'mız olsun. "_dünya_" sözcüğünü silip yerine "_karamel_" sözcüğü yazarak "_merhaba karamel_" **Yazı**'sını elde etmeye çalışalım.
 
 ```text
-değişkenim = "merhaba dünya"
-gç::satıryaz("Orjinal içerik : ", değişkenim) // merhaba dünya
-gç::satıryaz("Değiştirilmiş içerik : ", değişkenim.değiştir("dünya", "karamel")) // merhaba karamel
+söz = "merhaba dünya"
+gç::satıryaz(söz.değiştir("dünya", "karamel"))
 ```
+
+> ## Girdi:
+>
+> merhaba dünya  
+>
+> ## Çıktı:
+>
+> merhaba karamel
 

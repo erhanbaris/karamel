@@ -1,4 +1,18 @@
-# içeriyormu\(aranan\)
+# YAZI.içeriyormu\(ARANAN\_DEĞER\)
 
-_Yazı_ içerisinde bir kelime var mı diye kontrol eder. Geriye _Bool_ veri çevirir.
+**Yazı** içerisinde bir yazı damgası ya da sözcük gibi bir veri var mı diye sınar. Geriye _Bool_ veri çevirir.
+
+```text
+gç::satıryaz('faktöriyel 10 => '.içeriyormu("x"))
+```
+
+> ## Çıktı:
+>
+> FALSE
+
+{% hint style="warning" %}
+FALSE, TRUE sözcüklerinin Türkçe karşılıkları araştırılıyor.
+{% endhint %}
+
+
 

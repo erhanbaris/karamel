@@ -1,6 +1,6 @@
-# uzunluk\(\)
+# YAZI.uzunluk\(\)
 
-Değme türlü yazıların kaç birim uzunlukta yer tuttuğunu sağışlar ve çıktı olarak verir.
+Değme türlü yazıların kaç birim uzunlukta yer tuttuğunu sayıp döker ve sayılı sonuç olarak çıktı olarak verir.
 
 ### Örnek
 
@@ -8,8 +8,8 @@ Değme türlü yazıların kaç birim uzunlukta yer tuttuğunu sağışlar ve ç
 
 {% code title="sınama.krml" %}
 ```bash
-yazı_uzunluğu = uzunluk("Sarartamadıklarımızdan geriye kalan.")
-gç::satıryaz('Yazı uzunluğu: ', yazı_uzunluğu)
+örnek_yazı = "Çekoslavakyalılaştıramadıklarımızdan mısınız?"
+gç::satıryaz('Yazı uzunluğu: ', örnek_yazı.uzunluk())
 ```
 {% endcode %}
 
