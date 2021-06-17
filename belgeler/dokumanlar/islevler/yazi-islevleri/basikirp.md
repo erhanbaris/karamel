@@ -1,4 +1,4 @@
-# YAZI.başınıkırp\(\)
+# YAZI.başıkırp\(\)
 
 **Yazı** başında **SaydamBoşluk** var ise kırpar.
 
@@ -13,4 +13,8 @@ gç::satıryaz("  Başında saydam boşluk bulunan yazı".başınıkırp())
 > ## Çıktı:
 >
 > Başında saydam boşluk bulunan yazı
+
+{% hint style="warning" %}
+başıkırp\(\) mı olmalı?
+{% endhint %}
 

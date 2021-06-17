@@ -1,9 +1,9 @@
-# YAZI.sonunukırp\(\)
+# YAZI.sonukırp\(\)
 
 **Yazı** sonunda **SaydamBoşluk** var ise kırpar.
 
 ```text
-gç::satıryaz("Sonunda saydam boşluk bulunan yazı   ".sonunukırp()) 
+gç::satıryaz("Sonunda saydam boşluk bulunan yazı   ".sonukırp()) 
 ```
 
 > ## Girdi:
@@ -13,4 +13,10 @@ gç::satıryaz("Sonunda saydam boşluk bulunan yazı   ".sonunukırp())
 > ## Çıktı:
 >
 > Sonunda saydam boşluk bulunan yazı
+
+{% hint style="warning" %}
+sonunukırp\(\) mı olmalı?
+{% endhint %}
+
+
 
