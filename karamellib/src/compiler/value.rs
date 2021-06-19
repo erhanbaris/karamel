@@ -35,6 +35,23 @@ unsafe impl Send for VmObject {}
 unsafe impl Sync for VmObject {}
 
 impl BramaPrimative {
+
+    pub fn format(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            BramaPrimative::Empty => write!(f, "boş"),
+            BramaPrimative::Number(number) => write!(f, "{:?}", number),
+            BramaPrimative::Bool(b) => match b {
+                true => write!(f, "doğru"),
+                false => write!(f, "yanlış")
+            },
+            BramaPrimative::List(b) => write!(f, "{:?}", b.borrow()),
+            BramaPrimative::Dict(b) => write!(f, "{:?}", b.borrow()),
+            BramaPrimative::Text(b) => write!(f, "{:?}", b),
+            BramaPrimative::Function(func, _) => write!(f, "<Fonksiyon='{}'>", func.name),
+            BramaPrimative::Class(class) => write!(f, "<Sınıf='{}'>", class.get_type())
+        }
+    }
+
     pub fn is_true(&self) -> bool {
         match self {
             BramaPrimative::Text(value)       => !value.is_empty(),
@@ -144,31 +161,13 @@ impl From<HashMap<String, VmObject>> for VmObject {
 
 impl fmt::Debug for BramaPrimative {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            BramaPrimative::Empty => write!(f, "boş"),
-            BramaPrimative::Number(number) => write!(f, "{:?}", number),
-            BramaPrimative::Bool(b) => write!(f, "{:?}", b),
-            BramaPrimative::List(b) => write!(f, "{:?}", b.borrow()),
-            BramaPrimative::Dict(b) => write!(f, "{:?}", b),
-            BramaPrimative::Text(b) => write!(f, "{:?}", b),
-            BramaPrimative::Function(func, _) => write!(f, "<Fonksiyon='{}'>", func.name),
-            BramaPrimative::Class(class) => write!(f, "<Sınıf='{}'>", class.get_type())
-        }
+        self.format(f)
     }
 }
 
 impl fmt::Display for BramaPrimative {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            BramaPrimative::Empty => write!(f, "boş"),
-            BramaPrimative::Number(number) => write!(f, "{}", number),
-            BramaPrimative::Bool(b) => write!(f, "{}", b),
-            BramaPrimative::List(b) => write!(f, "{:?}", b.borrow()),
-            BramaPrimative::Dict(b) => write!(f, "{:?}", b),
-            BramaPrimative::Text(b) => write!(f, "{}", b),
-            BramaPrimative::Function(func, _) => write!(f, "<Fonksiyon='{}'>", func.name),
-            BramaPrimative::Class(class) => write!(f, "<Sınıf='{}'>", class.get_type())
-        }
+        self.format(f)
     }
 }
 
