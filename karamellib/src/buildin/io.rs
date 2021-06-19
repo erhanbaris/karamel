@@ -20,8 +20,12 @@ impl Module for IoModule {
             methods: HashMap::new()
         };
         module.methods.insert("satıroku".to_string(), Self::readline as NativeCall);
+        module.methods.insert("satiroku".to_string(), Self::readline as NativeCall);
         module.methods.insert("yaz".to_string(), Self::print as NativeCall);
         module.methods.insert("satıryaz".to_string(), Self::printline as NativeCall);
+        module.methods.insert("satiryaz".to_string(), Self::printline as NativeCall);
+        module.methods.insert("biçimlendir".to_string(), Self::format as NativeCall);
+        module.methods.insert("bicimlendir".to_string(), Self::format as NativeCall);
         module
     }
 
@@ -39,8 +43,12 @@ impl Module for IoModule {
 
     fn get_methods(&self) -> Vec<(&'static str, NativeCall)> {
         [("satıroku", Self::readline as NativeCall),
+         ("satiroku", Self::readline as NativeCall),
          ("yaz", Self::print as NativeCall),
-         ("satıryaz", Self::printline as NativeCall)].to_vec()
+         ("satıryaz", Self::printline as NativeCall),
+         ("satiryaz", Self::printline as NativeCall),
+         ("biçimlendir", Self::format as NativeCall),
+         ("bicimlendir", Self::format as NativeCall)].to_vec()
     }
 
     fn get_modules(&self) -> HashMap<String, Rc<dyn Module>> {
@@ -84,5 +92,13 @@ impl IoModule  {
 
         parameter.write_to_stdout(&buffer);
         Ok(EMPTY_OBJECT)
+    }
+    
+    pub fn format(parameter: FunctionParameter) -> NativeCallResult {
+        if parameter.length() != 1 {
+            return Ok(EMPTY_OBJECT);
+        }
+
+        Ok(VmObject::from(Rc::new(format!("{}", parameter.iter().next().unwrap().deref()))))
     }
 }
