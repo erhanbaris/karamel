@@ -6,13 +6,21 @@ description: Sık Sorulan Sorular
 
 ## Takımda yer alabilir miyim?
 
-Konumunuz, bilginiz, orununuz ne olursa olsun **Türkçe Yazılım Konatı**'na katılarak Karamel Programlama Dili'nin takımında yer alabilirsiniz. **Türkçe Yazılım Konatı** ile iletişime geçiniz. 
+Konumunuz, bilginiz, orununuz ne olursa olsun **Türkçe Yazılım Konatı**'na katılarak **Karamel Programlama Dili**'nin takımında yer alabilirsiniz. 
 
-**Github**'da **Türkçe Yazılım Konatı**: ****[**https://github.com/turkce-yazilim-konati**](https://github.com/turkce-yazilim-konati)\*\*\*\*
+{% hint style="info" %}
+**İletişim örkü:** [https://github.com/turkce-yazilim-konati](https://github.com/turkce-yazilim-konati)
+{% endhint %}
 
 ## Türkçe yazı damgaları çalışıyor mu?
 
-Çç, Şş gibi İngiliz abecesinde bulunmayan yazı damgalarını kullandığınızda sorun yaşamazsınız. **Kullanmadığınızda sorun yaşarsınız.**
+{% hint style="success" %}
+Öö, Üü, İi, Iı, Ğğ, Çç, Şş gibi yazı damgalarını kullanılmaktadır. 
+{% endhint %}
+
+{% hint style="danger" %}
+Bu yazı damgalarını kullanmazsanız sorun yaşayabilirsiniz.
+{% endhint %}
 
 
 

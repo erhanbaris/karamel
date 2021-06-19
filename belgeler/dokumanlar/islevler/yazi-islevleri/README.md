@@ -1,6 +1,6 @@
 # Yazı İşlevleri
 
-## Başlı İşlevler
+## Belli Başlı İşlevler
 
 parçagetir\(buradan, burayadek\)  
 değiştir\(bunu, bununla\)  
