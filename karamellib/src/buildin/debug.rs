@@ -1,5 +1,5 @@
 use crate::buildin::{Module, Class};
-use crate::compiler::function::{NativeCall, NativeCallResult};
+use crate::compiler::function::{FunctionReference, NativeCall, NativeCallResult};
 use crate::compiler::function::FunctionParameter;
 use crate::compiler::value::EMPTY_OBJECT;
 use std::collections::HashMap;
@@ -7,7 +7,7 @@ use std::rc::Rc;
 
 #[derive(Clone)]
 pub struct DebugModule {
-    methods: HashMap<String, NativeCall>
+    methods: HashMap<String, Rc<FunctionReference>>
 }
 
 impl Module for DebugModule {
@@ -15,16 +15,16 @@ impl Module for DebugModule {
         "hataayıklama".to_string()
     }
 
-    fn get_method(&self, name: &str) -> Option<NativeCall> {
-        self.methods.get(name).map(|method| *method)
+    fn get_method(&self, name: &str) -> Option<Rc<FunctionReference>> {
+        self.methods.get(name).map(|method| method.clone())
     }
 
     fn get_module(&self, _: &str) -> Option<Rc<dyn Module>> {
         None
     }
 
-    fn get_methods(&self) -> Vec<(&'static str, NativeCall)> {
-        [("doğrula", Self::assert as NativeCall)].to_vec()
+    fn get_methods(&self) -> Vec<(&String, Rc<FunctionReference>)> {
+        self.methods.iter().map(|(key, value)| (key, value.clone())).collect::<Vec<(&String, Rc<FunctionReference>)>>()
     }
 
     fn get_modules(&self) -> HashMap<String, Rc<dyn Module>> {
@@ -41,7 +41,8 @@ impl DebugModule  {
         let mut module = DebugModule {
             methods: HashMap::new()
         };
-        module.methods.insert("doğrula".to_string(), Self::assert as NativeCall);
+
+        module.methods.insert("doğrula".to_string(), FunctionReference::native_function(Self::assert as NativeCall, "doğrula".to_string(), [module.get_module_name()].to_vec()));
         module
     }
 

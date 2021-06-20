@@ -32,7 +32,7 @@ mod tests {
 fonk test():
     erhan=123"#, Ok(BramaAstType::FunctionDefination {
         name: "test".to_string(),
-        arguments: [].to_vec(),
+        arguments: Vec::new(),
         body: Rc::new(BramaAstType::Block([BramaAstType::Assignment {
             variable: Box::new(BramaAstType::Symbol("erhan".to_string())),
             operator: BramaOperatorType::Assign,
@@ -68,7 +68,7 @@ fonk test(a, b    ,   c):
 fonk test:
     erhan=123"#, Ok(BramaAstType::FunctionDefination {
             name: "test".to_string(),
-            arguments: [].to_vec(),
+            arguments: Vec::new(),
             body: Rc::new(BramaAstType::Block([BramaAstType::Assignment {
                 variable: Box::new(BramaAstType::Symbol("erhan".to_string())),
                 operator: BramaOperatorType::Assign,
@@ -83,7 +83,7 @@ fonk test   :
     
         erhan=123"#, Ok(BramaAstType::FunctionDefination {
                 name: "test".to_string(),
-                arguments: [].to_vec(),
+                arguments: Vec::new(),
                 body: Rc::new(BramaAstType::Block([BramaAstType::Assignment {
                     variable: Box::new(BramaAstType::Symbol("erhan".to_string())),
                     operator: BramaOperatorType::Assign,
@@ -156,7 +156,7 @@ fonk test():
     erhan=123
     döndür erhan"#, Ok(BramaAstType::FunctionDefination {
     name: "test".to_string(),
-    arguments: [].to_vec(),
+    arguments: Vec::new(),
     body: Rc::new(BramaAstType::Block([BramaAstType::Assignment {
         variable: Box::new(BramaAstType::Symbol("erhan".to_string())),
         operator: BramaOperatorType::Assign,
@@ -169,7 +169,7 @@ fonk test():
     erhan=123
     döndür"#, Ok(BramaAstType::FunctionDefination {
     name: "test".to_string(),
-    arguments: [].to_vec(),
+    arguments: Vec::new(),
     body: Rc::new(BramaAstType::Block([BramaAstType::Assignment {
         variable: Box::new(BramaAstType::Symbol("erhan".to_string())),
         operator: BramaOperatorType::Assign,

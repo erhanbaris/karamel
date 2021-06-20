@@ -1,4 +1,4 @@
-use crate::compiler::{function::{FunctionParameter, NativeCall, NativeCallResult}};
+use crate::compiler::{function::{FunctionParameter, FunctionReference, NativeCall, NativeCallResult}};
 use crate::types::VmObject;
 use crate::compiler::value::BramaPrimative;
 use crate::compiler::value::EMPTY_OBJECT;
@@ -8,7 +8,7 @@ use std::collections::HashMap;
 use std::rc::Rc;
 
 pub struct NumModule {
-    methods: HashMap<String, NativeCall>
+    methods: HashMap<String, Rc<FunctionReference>>
 }
 
 impl Module for NumModule {
@@ -16,16 +16,19 @@ impl Module for NumModule {
         "sayı".to_string()
     }
 
-    fn get_method(&self, name: &str) -> Option<NativeCall> {
-        self.methods.get(name).map(|method| *method)
+    fn get_method(&self, name: &str) -> Option<Rc<FunctionReference>> {
+        match self.methods.get(name) {
+            Some(method) => Some(method.clone()),
+            None => None
+        }
     }
 
     fn get_module(&self, _: &str) -> Option<Rc<dyn Module>> {
         None
     }
 
-    fn get_methods(&self) -> Vec<(&'static str, NativeCall)> {
-        [("oku", Self::parse as NativeCall)].to_vec()
+    fn get_methods(&self) -> Vec<(&String, Rc<FunctionReference>)> {
+        self.methods.iter().map(|(key, value)| (key, value.clone())).collect::<Vec<(&String, Rc<FunctionReference>)>>()
     }
 
     fn get_modules(&self) -> HashMap<String, Rc<dyn Module>> {
@@ -42,7 +45,7 @@ impl NumModule {
         let mut module = NumModule {
             methods: HashMap::new()
         };
-        module.methods.insert("oku".to_string(), Self::parse as NativeCall);
+        module.methods.insert("oku".to_string(), FunctionReference::native_function(Self::parse as NativeCall, "tür_bilgisi".to_string(), [module.get_module_name()].to_vec()));
         module
     }
 

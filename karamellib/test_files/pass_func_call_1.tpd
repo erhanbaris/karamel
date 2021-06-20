@@ -9,4 +9,4 @@ fonk test:
     döndür test_erhan
 
 hataayıklama::doğrula(test()(), 'erhan')
-hataayıklama::doğrula(tür_bilgisi(test()), 'fonksiyon')
+hataayıklama::doğrula(baz::tür_bilgisi(test()), 'fonksiyon')

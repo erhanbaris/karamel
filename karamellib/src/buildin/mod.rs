@@ -17,10 +17,10 @@ use crate::compiler::{BramaPrimative, function::{FunctionReference, NativeCall}}
 pub trait Module {
     fn get_module_name(&self) -> String;
     
-    fn get_method(&self, name: &str) -> Option<NativeCall>;
+    fn get_method(&self, name: &str) -> Option<Rc<FunctionReference>>;
     fn get_module(&self, name: &str) -> Option<Rc<dyn Module>>;
 
-    fn get_methods(&self) -> Vec<(&'static str, NativeCall)>;
+    fn get_methods(&self) -> Vec<(&String, Rc<FunctionReference>)>;
     fn get_modules(&self) -> HashMap<String, Rc<dyn Module>>;
 
     fn get_classes(&self) -> Vec<Rc<dyn Class>>;

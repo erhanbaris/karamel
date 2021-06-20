@@ -49,7 +49,7 @@ fn get_element(&self, source: Option<VmObject>, field: Rc<String>) -> Option<Cla
         0
     }
 
-    fn add_method(&mut self, _: &str, _: NativeCall, flags: FunctionFlag) {}
+    fn add_method(&mut self, _: &str, _: NativeCall, _: FunctionFlag) {}
 
     fn add_property(&mut self, _: &str, _: Rc<BramaPrimative>) {}
 

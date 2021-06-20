@@ -12,17 +12,17 @@ use crate::types::CompilerResult;
 
 use super::BramaCompiler;
 use super::ast::BramaAstType;
-use super::function::{FunctionReference, NativeCall};
+use super::function::FunctionReference;
 
 pub struct OpcodeModule {
     pub name: String,
     pub module_path: String,
     pub main_ast: BramaAstType,
-    pub functions: Vec<Rc<FunctionReference>>
+    pub functions: HashMap<String, Rc<FunctionReference>>
 }
 
 impl OpcodeModule {
-    pub fn new(name: String, module_path: String, main_ast: BramaAstType, functions: Vec<Rc<FunctionReference>>) -> OpcodeModule {
+    pub fn new(name: String, module_path: String, main_ast: BramaAstType, functions: HashMap<String, Rc<FunctionReference>>) -> OpcodeModule {
         OpcodeModule {
             name, 
             module_path, 
@@ -37,16 +37,16 @@ impl Module for OpcodeModule {
         self.name.to_string()
     }
 
-    fn get_method(&self, name: &str) -> Option<NativeCall> {
-        None
+    fn get_method(&self, name: &str) -> Option<Rc<FunctionReference>> {
+        self.functions.get(name).map(|method| method.clone())
     }
 
     fn get_module(&self, _: &str) -> Option<Rc<dyn Module>> {
         None
     }
 
-    fn get_methods(&self) -> Vec<(&'static str, NativeCall)> {
-        [].to_vec()
+    fn get_methods(&self) -> Vec<(&String, Rc<FunctionReference>)> {
+        self.functions.iter().map(|(key, value)| (key, value.clone())).collect::<Vec<(&String, Rc<FunctionReference>)>>()
     }
 
     fn get_modules(&self) -> HashMap<String, Rc<dyn Module>> {
@@ -87,7 +87,7 @@ pub fn load_module(params: &[String], options: &mut BramaCompiler) -> Result<Opc
         let syntax = SyntaxParser::new(parser.tokens().to_vec());
         return match syntax.parse() {
             Ok(ast) => {
-                let mut functions : Vec<Rc<FunctionReference>> = Vec::new();
+                let mut functions : HashMap<String, Rc<FunctionReference>> = HashMap::new();
                 find_function_definition_type(&ast, &mut functions, options, 0)?;
                 let module = OpcodeModule::new(module, path.to_str().unwrap().to_string(), ast, functions);
                 Ok(module)
@@ -125,15 +125,15 @@ fn find_load_type(ast: &BramaAstType, options: &mut BramaCompiler, modules: &mut
     Ok(())
 }
 
-fn find_function_definition_type(ast: &BramaAstType, functions: &mut Vec<Rc<FunctionReference>>, options: &mut BramaCompiler, depth_level: usize) -> CompilerResult {
+fn find_function_definition_type(ast: &BramaAstType, functions: &mut HashMap<String, Rc<FunctionReference>>, options: &mut BramaCompiler, depth_level: usize) -> CompilerResult {
     if depth_level > 1 {
         return Ok(());
     }
 
     match ast {
-        BramaAstType::FunctionDefination { name, arguments, body  } => {
-            let function_reference = FunctionReference::opcode_function(name.to_string(), arguments.to_vec(), Vec::new(), String::new(), 0, 0);
-            functions.push(function_reference);
+        BramaAstType::FunctionDefination { name, arguments, body: _  } => {
+            let function_reference = FunctionReference::opcode_function(name.to_string(), arguments.to_vec(), Vec::new(),  0, 0);
+            functions.insert(name.to_string(), function_reference);
         },
         BramaAstType::Block(blocks) => {
             for block in blocks {

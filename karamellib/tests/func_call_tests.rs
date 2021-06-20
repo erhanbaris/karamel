@@ -29,7 +29,7 @@ mod tests {
 
     test_compare!(func_call_1, "print()", Ok(BramaAstType::FuncCall {
         func_name_expression: Box::new(BramaAstType::Symbol("print".to_string())),
-        arguments: [].to_vec(),
+        arguments: Vec::new(),
         assign_to_temp: false
     }));
 
@@ -80,33 +80,33 @@ mod tests {
         operator: karamellib::types::BramaOperatorType::Assign,
         expression: Box::new(BramaAstType::FuncCall {
             func_name_expression: Box::new(BramaAstType::Symbol("print".to_string())),
-            arguments: [].to_vec(),
+            arguments: Vec::new(),
             assign_to_temp: true
         })
     }));
     test_compare!(func_call_10, "data1() + data2()", Ok(BramaAstType::Binary {
         left: Box::new(BramaAstType::FuncCall {
             func_name_expression: Box::new(BramaAstType::Symbol("data1".to_string())),
-            arguments: [].to_vec(),
+            arguments: Vec::new(),
             assign_to_temp: true
         }),
         operator: karamellib::types::BramaOperatorType::Addition,
         right: Box::new(BramaAstType::FuncCall {
             func_name_expression: Box::new(BramaAstType::Symbol("data2".to_string())),
-            arguments: [].to_vec(),
+            arguments: Vec::new(),
             assign_to_temp: true
         })
     }));
     test_compare!(func_call_11, "data1() > data2()", Ok(BramaAstType::Control {
         left: Box::new(BramaAstType::FuncCall {
             func_name_expression: Box::new(BramaAstType::Symbol("data1".to_string())),
-            arguments: [].to_vec(),
+            arguments: Vec::new(),
             assign_to_temp: true
         }),
         operator: karamellib::types::BramaOperatorType::GreaterThan,
         right: Box::new(BramaAstType::FuncCall {
             func_name_expression: Box::new(BramaAstType::Symbol("data2".to_string())),
-            arguments: [].to_vec(),
+            arguments: Vec::new(),
             assign_to_temp: true
         })
     }));

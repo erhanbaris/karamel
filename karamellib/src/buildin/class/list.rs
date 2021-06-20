@@ -224,19 +224,19 @@ mod tests {
 
 
     nativecall_test!{test_length_1, length,  primative_list!([arc_text!("")].to_vec()), BramaPrimative::Number(1.0)}
-    nativecall_test!{test_length_2, length,  primative_list!([].to_vec()), BramaPrimative::Number(0.0)}
+    nativecall_test!{test_length_2, length,  primative_list!(Vec::new()), BramaPrimative::Number(0.0)}
     nativecall_test!{test_length_3, length,  primative_list!([arc_text!(""), arc_empty!(), arc_number!(123), arc_bool!(true)].to_vec()), BramaPrimative::Number(4.0)}
 
 
     nativecall_test_with_params!{test_add_1, add, primative_list!([arc_text!("")].to_vec()), [VmObject::from(8.0)], primative_number!(1)}
-    nativecall_test_with_params!{test_add_2, add, primative_list!([].to_vec()), [VmObject::native_convert(BramaPrimative::Bool(true))], primative_number!(0)}
+    nativecall_test_with_params!{test_add_2, add, primative_list!(Vec::new()), [VmObject::native_convert(BramaPrimative::Bool(true))], primative_number!(0)}
     #[test]
     fn test_add_3 () {
         use std::cell::RefCell;
         let stack: Vec<VmObject> = [arc_text!("merhaba")].to_vec();
         let stdout = Some(RefCell::new(String::new()));
         let stderr = Some(RefCell::new(String::new()));
-        let list = BramaPrimative::List(RefCell::new([].to_vec()));
+        let list = BramaPrimative::List(RefCell::new(Vec::new()));
         let obj = VmObject::native_convert(list);
         
         let parameter = FunctionParameter::new(&stack, Some(obj), stack.len() as usize, stack.len() as u8, &stdout, &stderr);
@@ -254,7 +254,7 @@ mod tests {
         use std::cell::RefCell;
         let stdout = Some(RefCell::new(String::new()));
         let stderr = Some(RefCell::new(String::new()));
-        let list = Rc::new(BramaPrimative::List(RefCell::new([].to_vec())));
+        let list = Rc::new(BramaPrimative::List(RefCell::new(Vec::new())));
         let obj = VmObject::native_convert_by_ref(list.clone());
         
         let result = add(FunctionParameter::new(&[arc_text!("dünya")].to_vec(), Some(obj), 1 as usize, 1 as u8, &stdout, &stderr));

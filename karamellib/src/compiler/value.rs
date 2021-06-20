@@ -210,7 +210,6 @@ impl PartialEq for BramaPrimative {
             },
             (BramaPrimative::Function(l_value, _), BramaPrimative::Function(r_value, _)) => {
                 if l_value.name != r_value.name ||
-                   l_value.framework != r_value.framework ||
                    l_value.module_path != r_value.module_path {
                     return false;
                 }

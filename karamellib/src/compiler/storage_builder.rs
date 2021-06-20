@@ -246,7 +246,7 @@ impl StorageBuilder {
                 /* Create new storage for new function */
                 let mut function_compiler_option = CompilerOption { max_stack: 0 };
                 let new_storage_index = options.storages.len();
-                let function = FunctionReference::opcode_function(name.to_string(), arguments.to_vec(), Vec::new(), "".to_string(), new_storage_index, storage_index);
+                let function = FunctionReference::opcode_function(name.to_string(), arguments.to_vec(), Vec::new(), new_storage_index, storage_index);
                 
                 //options.storages[storage_index].add_constant(function);
                 options.add_function(function.clone());

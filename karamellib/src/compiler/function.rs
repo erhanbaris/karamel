@@ -84,7 +84,6 @@ bitflags! {
 pub struct FunctionReference {
     pub callback: FunctionType,
     pub flags: FunctionFlag,
-    pub framework: String,
     pub module_path: Vec<String>,
     pub name: String,
     pub arguments: Vec<String>,
@@ -121,7 +120,6 @@ impl FunctionReference {
         let reference = FunctionReference {
             callback: FunctionType::Native(func),
             flags: flags,
-            framework: "".to_string(),
             module_path: Vec::new(),
             name,
             arguments: Vec::new(),
@@ -133,11 +131,10 @@ impl FunctionReference {
         Rc::new(reference)
     }
 
-    pub fn native_function(func: NativeCall, name: String, module_path: Vec<String>, framework: String) -> Rc<FunctionReference> {
+    pub fn native_function(func: NativeCall, name: String, module_path: Vec<String>) -> Rc<FunctionReference> {
         let reference = FunctionReference {
             callback: FunctionType::Native(func),
             flags: FunctionFlag::STATIC,
-            framework,
             module_path,
             name,
             arguments: Vec::new(),
@@ -149,11 +146,10 @@ impl FunctionReference {
         Rc::new(reference)
     }
 
-    pub fn opcode_function(name: String, arguments: Vec<String>, module_path: Vec<String>, framework: String, storage_index: usize, defined_storage_index: usize) -> Rc<FunctionReference> {
+    pub fn opcode_function(name: String, arguments: Vec<String>, module_path: Vec<String>, storage_index: usize, defined_storage_index: usize) -> Rc<FunctionReference> {
         let reference = FunctionReference {
             callback: FunctionType::Opcode,
             flags: FunctionFlag::STATIC,
-            framework,
             module_path,
             name,
             arguments,

@@ -176,8 +176,7 @@ impl StaticStorage {
         for (index, item) in self.memory.iter().enumerate() {
             if let BramaPrimative::Function(reference, _) = &*item.deref() {
                 if reference.name        == name && 
-                   reference.module_path == module_path && 
-                   reference.framework   == framework {
+                   reference.module_path == module_path {
                     return Some(index as u8);
                 }
             }

@@ -139,12 +139,10 @@ impl  BramaCompiler {
                 return match function_reference.callback {
                     FunctionType::Native(_) =>
                     function_reference.module_path   == module_path && 
-                        function_reference.name          == name && 
-                        function_reference.framework     == framework,
+                        function_reference.name          == name,
                     FunctionType::Opcode => 
                     function_reference.name          == name && 
                         function_reference.module_path   == module_path && 
-                        function_reference.framework     == framework &&
                         function_reference.defined_storage_index == search_storage
                 };
             });
@@ -184,8 +182,8 @@ impl InterpreterCompiler {
     pub fn compile(&self, main_ast: &BramaAstType, options: &mut BramaCompiler) -> CompilerResult {
         let storage_builder: StorageBuilder = StorageBuilder::new();
         /* Save all function information */
-        self.prepare_buildin_modules(options)?;
         self.prepare_external_modules(main_ast, options)?;
+        self.prepare_buildin_modules(options)?;
         storage_builder.prepare_variable_store(main_ast, options);
 
         /* Jump over all function definations to main function */
@@ -230,14 +228,8 @@ impl InterpreterCompiler {
         let mut functions = Vec::new();
 
         for module in options.modules.modules.values() {
-            let mut module_path = Vec::new();
-            if !module.get_module_name().is_empty() {
-                module_path = [module.get_module_name()].to_vec();
-            }
-
-            for (function_name, function_pointer) in module.get_methods() {
-                let reference = FunctionReference::native_function(function_pointer, function_name.to_string(), module_path.to_vec(), "".to_string());
-                functions.push(reference);
+            for (_, function_pointer) in module.get_methods() {
+                functions.push(function_pointer.clone());
             }
         }
 
@@ -718,7 +710,7 @@ impl InterpreterCompiler {
                 let storage = &options.storages[storage_index];
                 
                 if let BramaAstType::Primative(primative) = expression_ast {
-                    if mem::discriminant(&**primative) != mem::discriminant(&BramaPrimative::List(RefCell::new([].to_vec()))) && 
+                    if mem::discriminant(&**primative) != mem::discriminant(&BramaPrimative::List(RefCell::new(Vec::new()))) && 
                     *operator == BramaOperatorType::Assign {
                         let result = storage.get_constant_location(primative.clone());
                         let primative_location = match result {
