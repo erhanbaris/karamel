@@ -36,6 +36,8 @@ pub fn get_primative_class() -> Rc<dyn Class> {
     opcode.add_class_method("basikirp", start_trim);
     opcode.add_class_method("parçagetir", substring);
     opcode.add_class_method("parcagetir", substring);
+    opcode.add_class_method("sayı", number);
+    opcode.add_class_method("sayi", number);
     opcode.set_getter(getter);
     opcode.set_setter(setter);
     Rc::new(opcode)
@@ -110,6 +112,16 @@ fn setter(source: VmObject, index: f64, item: VmObject) -> NativeCallResult {
 fn length(parameter: FunctionParameter) -> NativeCallResult {
     if let BramaPrimative::Text(text) = &*parameter.source().unwrap().deref() {
         return Ok(VmObject::native_convert(BramaPrimative::Number(text.chars().count() as f64)));
+    }
+    Ok(EMPTY_OBJECT)
+}
+
+fn number(parameter: FunctionParameter) -> NativeCallResult {
+    if let BramaPrimative::Text(text) = &*parameter.source().unwrap().deref() {
+        return match text.parse::<f64>() {
+            Ok(num) => Ok(VmObject::native_convert(BramaPrimative::Number(num))),
+            _ => Ok(EMPTY_OBJECT),
+        };
     }
     Ok(EMPTY_OBJECT)
 }
