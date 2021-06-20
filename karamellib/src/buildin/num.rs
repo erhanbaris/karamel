@@ -12,14 +12,6 @@ pub struct NumModule {
 }
 
 impl Module for NumModule {
-    fn new() -> NumModule where Self: Sized {
-        let mut module = NumModule {
-            methods: HashMap::new()
-        };
-        module.methods.insert("oku".to_string(), Self::parse as NativeCall);
-        module
-    }
-
     fn get_module_name(&self) -> String {
         "sayı".to_string()
     }
@@ -45,7 +37,15 @@ impl Module for NumModule {
     }
 }
 
-impl NumModule  {
+impl NumModule {
+    pub fn new() -> NumModule where Self: Sized {
+        let mut module = NumModule {
+            methods: HashMap::new()
+        };
+        module.methods.insert("oku".to_string(), Self::parse as NativeCall);
+        module
+    }
+
     pub fn parse(parameter: FunctionParameter) -> NativeCallResult {
         if parameter.length() > 1 {
             return n_parameter_expected!("oku", 1);

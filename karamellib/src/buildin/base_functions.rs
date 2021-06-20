@@ -13,14 +13,6 @@ pub struct BaseFunctionsModule {
 }
 
 impl Module for BaseFunctionsModule {
-    fn new() -> BaseFunctionsModule where Self: Sized {
-        let mut module = BaseFunctionsModule {
-            methods: HashMap::new()
-        };
-        module.methods.insert("tür_bilgisi".to_string(), Self::type_info as NativeCall);
-        module
-    }
-
     fn get_module_name(&self) -> String {
         "".to_string()
     }
@@ -50,6 +42,14 @@ impl Module for BaseFunctionsModule {
 }
 
 impl BaseFunctionsModule  {
+    pub fn new() -> BaseFunctionsModule where Self: Sized {
+        let mut module = BaseFunctionsModule {
+            methods: HashMap::new()
+        };
+        module.methods.insert("tür_bilgisi".to_string(), Self::type_info as NativeCall);
+        module
+    }
+
     pub fn type_info(parameter: FunctionParameter) -> NativeCallResult {        
         if parameter.length() > 1 {
             return n_parameter_expected!("tür_bilgisi", 1);

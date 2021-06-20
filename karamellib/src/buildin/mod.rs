@@ -15,7 +15,6 @@ use std::rc::Rc;
 use crate::compiler::{BramaPrimative, function::{FunctionReference, NativeCall}};
 
 pub trait Module {
-    fn new() -> Self where Self: Sized;
     fn get_module_name(&self) -> String;
     
     fn get_method(&self, name: &str) -> Option<NativeCall>;

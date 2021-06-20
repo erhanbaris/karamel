@@ -11,14 +11,6 @@ pub struct DebugModule {
 }
 
 impl Module for DebugModule {
-    fn new() -> DebugModule where Self: Sized {
-        let mut module = DebugModule {
-            methods: HashMap::new()
-        };
-        module.methods.insert("doğrula".to_string(), Self::assert as NativeCall);
-        module
-    }
-
     fn get_module_name(&self) -> String {
         "hataayıklama".to_string()
     }
@@ -45,6 +37,14 @@ impl Module for DebugModule {
 }
 
 impl DebugModule  {
+    pub fn new() -> DebugModule where Self: Sized {
+        let mut module = DebugModule {
+            methods: HashMap::new()
+        };
+        module.methods.insert("doğrula".to_string(), Self::assert as NativeCall);
+        module
+    }
+
     pub fn assert(parameter: FunctionParameter) -> NativeCallResult {
         match parameter.length() {
             1 => {

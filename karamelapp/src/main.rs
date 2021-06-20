@@ -11,6 +11,8 @@ fn main() {
         source: ExecutionSource::Code(r#"
 dosya yükle
 
+gç::satıryaz(dosya::topla(1,2))
+
 fonk recur_fibo(n):
     n <= 1 ise:
         döndür n

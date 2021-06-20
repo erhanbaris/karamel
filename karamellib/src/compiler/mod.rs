@@ -5,6 +5,7 @@ pub mod function;
 
 pub mod value;
 pub mod ast;
+pub mod module;
 
 pub use self::compiler::*;
 pub use self::static_storage::*;

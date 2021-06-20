@@ -15,16 +15,6 @@ pub struct IoModule {
 }
 
 impl Module for IoModule {
-    fn new() -> IoModule where Self: Sized {
-        let mut module = IoModule {
-            methods: HashMap::new()
-        };
-        module.methods.insert("satıroku".to_string(), Self::readline as NativeCall);
-        module.methods.insert("yaz".to_string(), Self::print as NativeCall);
-        module.methods.insert("satıryaz".to_string(), Self::printline as NativeCall);
-        module
-    }
-
     fn get_module_name(&self) -> String {
         "gç".to_string()
     }
@@ -53,6 +43,16 @@ impl Module for IoModule {
 }
 
 impl IoModule  {
+    pub fn new() -> IoModule where Self: Sized {
+        let mut module = IoModule {
+            methods: HashMap::new()
+        };
+        module.methods.insert("satıroku".to_string(), Self::readline as NativeCall);
+        module.methods.insert("yaz".to_string(), Self::print as NativeCall);
+        module.methods.insert("satıryaz".to_string(), Self::printline as NativeCall);
+        module
+    }
+
     pub fn readline(_: FunctionParameter) -> NativeCallResult {        
         let mut line = String::new();
         match io::stdin().read_line(&mut line) {

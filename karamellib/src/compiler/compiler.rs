@@ -1,6 +1,6 @@
 use std::vec::Vec;
 use std::rc::Rc;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::fs::File;
 use std::io::prelude::*;
 use std::cell::RefCell;
@@ -23,6 +23,8 @@ use crate::compiler::function::{FunctionReference, FunctionType};
 use crate::buildin::class::*;
 
 use log;
+
+use super::module::get_modules;
 
 #[derive(Clone)]
 pub struct Scope {
@@ -120,26 +122,6 @@ impl  BramaCompiler {
         compiler
     }
 
-    pub fn prepare_modules(&mut self) {
-        let mut functions = Vec::new();
-
-        for module in self.modules.modules.values() {
-            let mut module_path = Vec::new();
-            if !module.get_module_name().is_empty() {
-                module_path = [module.get_module_name()].to_vec();
-            }
-
-            for (function_name, function_pointer) in module.get_methods() {
-                let reference = FunctionReference::native_function(function_pointer, function_name.to_string(), module_path.to_vec(), "".to_string());
-                functions.push(reference);
-            }
-        }
-
-        for reference in functions {
-            self.add_function(reference);
-        }
-    }
-
     pub fn add_function(&mut self, information: Rc<FunctionReference>) {
         self.functions.push(information);
     }
@@ -197,20 +179,14 @@ impl  BramaCompiler {
         self.opcodes = Vec::new();
     }
 }
-
-pub trait Compiler
-{
-    fn compile(&self, ast: &BramaAstType, options: &mut BramaCompiler) -> CompilerResult;
-}
-
-
 pub struct InterpreterCompiler;
-impl Compiler for InterpreterCompiler {   
-    fn compile(&self, ast: &BramaAstType, options: &mut BramaCompiler) -> CompilerResult {
+impl InterpreterCompiler {   
+    pub fn compile(&self, main_ast: &BramaAstType, options: &mut BramaCompiler) -> CompilerResult {
         let storage_builder: StorageBuilder = StorageBuilder::new();
         /* Save all function information */
-        options.prepare_modules();
-        storage_builder.prepare_variable_store(ast, options);
+        self.prepare_buildin_modules(options)?;
+        self.prepare_external_modules(main_ast, options)?;
+        storage_builder.prepare_variable_store(main_ast, options);
 
         /* Jump over all function definations to main function */
         options.opcodes.push(VmOpCode::Jump as u8);
@@ -219,7 +195,7 @@ impl Compiler for InterpreterCompiler {
 
         /* First part of the codes are functions */
         let mut functions = Vec::new();
-        self.find_function_definations(ast, &mut functions, options, 0);
+        self.find_function_definations(main_ast, &mut functions, options, 0);
         self.generate_functions(&mut functions, options)?;
 
         /* If there are no function defination, remove previous opcodes */
@@ -234,15 +210,43 @@ impl Compiler for InterpreterCompiler {
         }
 
         /* Generate main function code */
-        self.generate_opcode(ast, &BramaAstType::None, options, 0)?;
+        self.generate_opcode(main_ast, &BramaAstType::None, options, 0)?;
         options.opcodes.push(VmOpCode::Halt as u8);
         options.opcodes_ptr = options.opcodes.as_mut_ptr();
 
         Ok(())
     }
-}
 
-impl InterpreterCompiler {
+    pub fn prepare_external_modules(&self, main_ast: &BramaAstType, options: &mut BramaCompiler) -> CompilerResult {
+        let modules = get_modules(main_ast, options)?;
+
+        for module in modules.iter() {
+            options.modules.add_module(module.clone());
+        }
+        Ok(())
+    }
+
+    pub fn prepare_buildin_modules(&self, options: &mut BramaCompiler) -> CompilerResult {
+        let mut functions = Vec::new();
+
+        for module in options.modules.modules.values() {
+            let mut module_path = Vec::new();
+            if !module.get_module_name().is_empty() {
+                module_path = [module.get_module_name()].to_vec();
+            }
+
+            for (function_name, function_pointer) in module.get_methods() {
+                let reference = FunctionReference::native_function(function_pointer, function_name.to_string(), module_path.to_vec(), "".to_string());
+                functions.push(reference);
+            }
+        }
+
+        for reference in functions {
+            options.add_function(reference);
+        }
+        Ok(())
+    }
+
     fn find_function_definations(&self, ast: &BramaAstType, functions: &mut Vec<FunctionDefine>, options: &mut BramaCompiler, storage_index: usize) {
         match ast {
             BramaAstType::FunctionDefination { name, arguments, body  } => {
@@ -362,9 +366,10 @@ impl InterpreterCompiler {
                 Ok(ast) => ast,
                 Err(error) => return Err(generate_error_message(&content, &error))
             };
-        }
 
-        Err("Modül yükleme, kod içerisinden yapılamaz".to_string())
+            println!("{:?}", ast);
+        }
+        return Ok(());
     }
 
     fn generate_function_map(&self, params: &[String], options: &mut BramaCompiler, storage_index: usize) -> CompilerResult {
