@@ -90,10 +90,13 @@ pub fn load_module(params: &[String], options: &mut BramaCompiler) -> Result<Opc
         return match syntax.parse() {
             Ok(ast) => {
                 let mut functions : HashMap<String, Rc<FunctionReference>> = HashMap::new();
-                let mut modules : HashMap<String, Rc<dyn Module>> = HashMap::new();
                 find_function_definition_type(&ast, &mut functions, options, 0)?;
-                find_module_load_type(&ast, &mut modules, options, 0)?;
-                let module = OpcodeModule::new(module, path.to_str().unwrap().to_string(), ast, functions, modules);
+                let wrapped_module_ast = BramaAstType::FunctionDefination {
+                    name: format!("$${}", path.to_str().unwrap()),
+                    arguments: Vec::new(),
+                    body: Rc::new(ast)
+                };
+                let module = OpcodeModule::new(module, path.to_str().unwrap().to_string(), wrapped_module_ast, functions, modules);
                 Ok(module)
             },
             Err(error) => return Err(generate_error_message(&content, &error))
@@ -125,27 +128,6 @@ fn find_load_type(ast: &BramaAstType, options: &mut BramaCompiler, modules: &mut
         },
         _ => ()
     }
-
-    Ok(())
-}
-
-fn find_module_load_type(ast: &BramaAstType, modules: &mut HashMap<String, Rc<dyn Module>>, options: &mut BramaCompiler, depth_level: usize) -> CompilerResult {
-    if depth_level > 1 {
-        return Ok(());
-    }
-/*
-    match ast {
-        BramaAstType::Load(module_name) => {
-            let function_reference = FunctionReference::opcode_function(name.to_string(), arguments.to_vec(), Vec::new(),  0, 0);
-            modules.insert(name.to_string(), function_reference);
-        },
-        BramaAstType::Block(blocks) => {
-            for block in blocks {
-                find_module_load_type(block, modules, options, depth_level + 1)?;
-            }
-        },
-        _ => ()
-    }*/
 
     Ok(())
 }
@@ -186,20 +168,16 @@ mod tests {
     use std::io::prelude::*;
     use std::path::Path;
 
+    use crate::compiler::BramaCompiler;
+    use crate::compiler::module::load_module;
+
     fn setup() {
-
-        let current_exe= std::env::current_exe().unwrap();
-
-        println!("{:?}", current_exe);
-        println!("{:?}", current_exe.parent());
         println!("setup");
     }
 
     fn teardown(to_be_removed: Vec<String>) {
-        let parent_path = std::env::current_exe().unwrap().parent().unwrap();
         for file in to_be_removed.iter() {
-            let path = parent_path.clone().join(file);
-            std::fs::remove_file(path);
+            std::fs::remove_file(file).unwrap();
         }
         println!("teardown");
     }
@@ -225,16 +203,24 @@ mod tests {
         file_name
     }
 
-    fn generate_file_name(file_name: &'static str) -> String {
-        let parent = match std::env::current_exe() {
+    fn get_parent() -> String {
+        match std::env::current_exe() {
             Ok(path) => match path.parent() {
-                Some(parent_path) => parent_path,
-                _ => Path::new(".")
+                Some(parent_path) => parent_path.to_str().unwrap().to_string(),
+                _ => String::from(".")
             },
-            _ => Path::new(".")
-        };
-        
-        parent.clone().join(file_name).to_str().unwrap().to_string()
+            _ => String::from(".")
+        }
+    }
+
+    fn generate_file_name(file_name: &'static str) -> String {
+        match std::env::current_exe() {
+            Ok(path) => match path.parent() {
+                Some(parent_path) => parent_path.clone().join(file_name).to_str().unwrap().to_string(),
+                _ => Path::new(".").join(file_name).to_str().unwrap().to_string()
+            },
+            _ => Path::new(".").join(file_name).to_str().unwrap().to_string()
+        }
     }
 
     #[test]
@@ -242,10 +228,39 @@ mod tests {
 
         let module_1 = r#"
 fonk topla(bir, iki): dondur bir + iki"#;
-        write_to_file(module_1, "topla");
+        let topla_path = write_to_file(module_1, "topla.tpd");
 
-        run_test(|| {    
-            assert!(false);
-        }, [String::from("foo.tpd")].to_vec());
+        run_test(|| {
+            let mut options = BramaCompiler::new();
+            options.script_path = get_parent();
+            match load_module(&[String::from("topla")].to_vec(), &mut options) {
+                Ok(_) => (),
+                Err(error) => assert!(false, "{}", error)
+            };
+        }, [topla_path].to_vec());
+    }
+
+    #[test]
+    fn test_2() {
+        let module_1 = r#"
+fonk topla(bir, iki): dondur bir + iki"#;
+        let module_2 = r#"
+module_1 yükle
+fonk topla2(bir, iki): dondur module_1::topla(bir + iki)"#;
+        let module_1_path = write_to_file(module_1, "module_1.tpd");
+        let module_2_path = write_to_file(module_2, "module_2.tpd");
+
+        run_test(|| {
+            let mut options = BramaCompiler::new();
+            options.script_path = get_parent();
+            match load_module(&[String::from("module_1")].to_vec(), &mut options) {
+                Ok(_) => (),
+                Err(error) => assert!(false, "{}", error)
+            };
+            match load_module(&[String::from("module_2")].to_vec(), &mut options) {
+                Ok(_) => (),
+                Err(error) => assert!(false, "{}", error)
+            };
+        }, [module_1_path, module_2_path].to_vec());
     }
 }
