@@ -11,14 +11,7 @@ fn main() {
         source: ExecutionSource::Code(r#"
 dosya yükle
 
-gç::satıryaz(dosya::topla(1,2))
-
-fonk recur_fibo(n):
-    n <= 1 ise:
-        döndür n
-    veya:
-        döndür (recur_fibo(n-1) + recur_fibo(n-2))
-gç::satıryaz(recur_fibo(41))  
+gç::satıryaz(topla())
 "#.to_string()),
         return_opcode: true,
         return_output: true

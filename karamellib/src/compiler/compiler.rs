@@ -198,10 +198,12 @@ impl InterpreterCompiler {
         /* First part of the codes are functions */
         let mut functions = Vec::new();
         for module in modules.iter() {
-            self.find_function_definations(&module.main_ast, &mut functions, options, 0);
+            options.storages.push(StaticStorage::new());
+            self.find_function_definations(&module.main_ast, &mut functions, options, options.storages.len() - 1);
         }
 
         self.find_function_definations(main_ast, &mut functions, options, 0);
+
         self.generate_functions(&mut functions, options)?;
 
         /* If there are no function defination, remove previous opcodes */
