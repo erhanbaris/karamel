@@ -46,7 +46,7 @@ impl BramaPrimative {
             },
             BramaPrimative::List(b) => write!(f, "{:?}", b.borrow()),
             BramaPrimative::Dict(b) => write!(f, "{:?}", b.borrow()),
-            BramaPrimative::Text(b) => write!(f, "{:?}", b),
+            BramaPrimative::Text(b) => write!(f, "\"{}\"", b),
             BramaPrimative::Function(func, _) => write!(f, "<Fonksiyon='{}'>", func.name),
             BramaPrimative::Class(class) => write!(f, "<Sınıf='{}'>", class.get_type())
         }

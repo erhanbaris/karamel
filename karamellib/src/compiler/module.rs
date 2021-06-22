@@ -90,13 +90,9 @@ pub fn load_module(params: &[String], options: &mut BramaCompiler) -> Result<Opc
         return match syntax.parse() {
             Ok(ast) => {
                 let mut functions : HashMap<String, Rc<FunctionReference>> = HashMap::new();
+                let modules : HashMap<String, Rc<dyn Module>> = HashMap::new();
                 find_function_definition_type(&ast, &mut functions, options, 0)?;
-                let wrapped_module_ast = BramaAstType::FunctionDefination {
-                    name: format!("$${}", path.to_str().unwrap()),
-                    arguments: Vec::new(),
-                    body: Rc::new(ast)
-                };
-                let module = OpcodeModule::new(module, path.to_str().unwrap().to_string(), wrapped_module_ast, functions, modules);
+                let module = OpcodeModule::new(module, path.to_str().unwrap().to_string(), ast, functions, modules);
                 Ok(module)
             },
             Err(error) => return Err(generate_error_message(&content, &error))

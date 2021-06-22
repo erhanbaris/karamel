@@ -24,7 +24,7 @@ use crate::buildin::class::*;
 
 use log;
 
-use super::module::get_modules;
+use super::module::{OpcodeModule, get_modules};
 
 #[derive(Clone)]
 pub struct Scope {
@@ -182,9 +182,13 @@ impl InterpreterCompiler {
     pub fn compile(&self, main_ast: &BramaAstType, options: &mut BramaCompiler) -> CompilerResult {
         let storage_builder: StorageBuilder = StorageBuilder::new();
         /* Save all function information */
-        self.prepare_external_modules(main_ast, options)?;
+        let modules = self.prepare_external_modules(main_ast, options)?;
         self.prepare_buildin_modules(options)?;
         storage_builder.prepare_variable_store(main_ast, options);
+
+        for module in modules.iter() {
+            storage_builder.prepare_variable_store(&module.main_ast, options);
+        }
 
         /* Jump over all function definations to main function */
         options.opcodes.push(VmOpCode::Jump as u8);
@@ -193,6 +197,10 @@ impl InterpreterCompiler {
 
         /* First part of the codes are functions */
         let mut functions = Vec::new();
+        for module in modules.iter() {
+            self.find_function_definations(&module.main_ast, &mut functions, options, 0);
+        }
+
         self.find_function_definations(main_ast, &mut functions, options, 0);
         self.generate_functions(&mut functions, options)?;
 
@@ -215,13 +223,13 @@ impl InterpreterCompiler {
         Ok(())
     }
 
-    pub fn prepare_external_modules(&self, main_ast: &BramaAstType, options: &mut BramaCompiler) -> CompilerResult {
+    pub fn prepare_external_modules(&self, main_ast: &BramaAstType, options: &mut BramaCompiler) -> Result<Vec<Rc<OpcodeModule>>, String> {
         let modules = get_modules(main_ast, options)?;
 
         for module in modules.iter() {
             options.modules.add_module(module.clone());
         }
-        Ok(())
+        Ok(modules)
     }
 
     pub fn prepare_buildin_modules(&self, options: &mut BramaCompiler) -> CompilerResult {
@@ -245,6 +253,8 @@ impl InterpreterCompiler {
                 let search = options.find_function(name.to_string(), Vec::new(), "".to_string(), storage_index);
                 match search {
                     Some(reference) => {
+                        println!("Function: {}", name);
+
                         functions.push(FunctionDefine {
                             arguments: arguments.to_vec(),
                             body: body.clone(),
