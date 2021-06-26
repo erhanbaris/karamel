@@ -25,6 +25,7 @@ use crate::buildin::class::*;
 use log;
 
 use super::module::{OpcodeModule, get_modules};
+use super::storage_builder::CompilerOption;
 
 #[derive(Clone)]
 pub struct Scope {
@@ -69,6 +70,7 @@ pub struct BramaCompiler {
     pub script_path: String,
     pub opcodes : Vec<u8>,
     pub storages: Vec<StaticStorage>,
+    pub main_module: *mut OpcodeModule,
     pub modules: ModuleCollection,
     pub loop_breaks: Vec<usize>,
     pub loop_continues: Vec<usize>,
@@ -100,7 +102,8 @@ impl  BramaCompiler {
             stdout: None,
             stderr: None,
             opcodes_ptr: ptr::null_mut(),
-            primative_classes: Vec::new()
+            primative_classes: Vec::new(),
+            main_module: ptr::null_mut()
         };
 
         compiler.primative_classes.push(number::get_primative_class());
@@ -130,7 +133,7 @@ impl  BramaCompiler {
         self.classes.push(class_info.clone());
     }
 
-    pub fn find_function(&self, name: String, module_path: Vec<String>, framework: String, start_storage_index: usize) -> Option<Rc<FunctionReference>> {
+    pub fn find_function(&self, name: String, module_path: Vec<String>, start_storage_index: usize) -> Option<Rc<FunctionReference>> {
         let mut search_storage = start_storage_index;
         loop {
 
@@ -165,7 +168,7 @@ impl  BramaCompiler {
         }
     }
 
-    pub fn find_class(&self, name: String, _module_path: Vec<String>, _framework: String, _start_storage_index: usize) -> Option<Rc<dyn Class >> {
+    pub fn find_class(&self, name: String, _module_path: Vec<String>, _start_storage_index: usize) -> Option<Rc<dyn Class >> {
         let primative_search = self.primative_classes.iter().find(|&item| item.get_class_name() == name);
         match primative_search {
             Some(class) => Some(class.clone()),
@@ -181,41 +184,30 @@ pub struct InterpreterCompiler;
 impl InterpreterCompiler {   
     pub fn compile(&self, main_ast: &BramaAstType, options: &mut BramaCompiler) -> CompilerResult {
         let storage_builder: StorageBuilder = StorageBuilder::new();
+        let mut compiler_options = CompilerOption { max_stack: 0 };
+
+        self.add_initial_jump(options);
+        
         /* Save all function information */
-        let modules = self.prepare_external_modules(main_ast, options)?;
-        self.prepare_buildin_modules(options)?;
-        storage_builder.prepare_variable_store(main_ast, options);
-
-        for module in modules.iter() {
-            storage_builder.prepare_variable_store(&module.main_ast, options);
-        }
-
-        /* Jump over all function definations to main function */
-        options.opcodes.push(VmOpCode::Jump as u8);
-        options.opcodes.push(0_u8);
-        options.opcodes.push(0_u8);
+        let modules = self.detect_modules(main_ast, options)?;
+        self.prepare_modules(options)?;
+        self.prepare_main_module(main_ast, options);
+        storage_builder.prepare(main_ast, options.storages.len() - 1, options, &mut compiler_options);
 
         /* First part of the codes are functions */
         let mut functions = Vec::new();
         for module in modules.iter() {
-            options.storages.push(StaticStorage::new());
-            self.find_function_definations(&module.main_ast, &mut functions, options, options.storages.len() - 1);
+            self.find_function_definations(&module.main_ast, &mut functions, options, 0);
         }
 
         self.find_function_definations(main_ast, &mut functions, options, 0);
 
         self.generate_functions(&mut functions, options)?;
 
-        /* If there are no function defination, remove previous opcodes */
-        if options.opcodes.len() == 3 {
-            options.opcodes.clear();
-        }
-        else {
-            /* Prepare jump code for main function */
-            let current_location = options.opcodes.len();
-            options.opcodes[1] = current_location as u8;
-            options.opcodes[2] = (current_location >> 8) as u8;
-        }
+        /* Prepare jump code for main function */
+        let current_location = options.opcodes.len();
+        options.opcodes[1] = current_location as u8;
+        options.opcodes[2] = (current_location >> 8) as u8;
 
         /* Generate main function code */
         self.generate_opcode(main_ast, &BramaAstType::None, options, 0)?;
@@ -225,7 +217,14 @@ impl InterpreterCompiler {
         Ok(())
     }
 
-    pub fn prepare_external_modules(&self, main_ast: &BramaAstType, options: &mut BramaCompiler) -> Result<Vec<Rc<OpcodeModule>>, String> {
+    pub fn add_initial_jump(&self, options: &mut BramaCompiler) {
+        /* Jump over all function definations to main function */
+        options.opcodes.push(VmOpCode::Jump as u8);
+        options.opcodes.push(0_u8);
+        options.opcodes.push(0_u8);
+    }
+
+    pub fn detect_modules(&self, main_ast: &BramaAstType, options: &mut BramaCompiler) -> Result<Vec<Rc<OpcodeModule>>, String> {
         let modules = get_modules(main_ast, options)?;
 
         for module in modules.iter() {
@@ -234,10 +233,14 @@ impl InterpreterCompiler {
         Ok(modules)
     }
 
-    pub fn prepare_buildin_modules(&self, options: &mut BramaCompiler) -> CompilerResult {
+    pub fn prepare_main_module(&self, main_ast: &BramaAstType, options: &mut BramaCompiler) {
+         
+    }
+
+    pub fn prepare_modules(&self, options: &mut BramaCompiler) -> CompilerResult {
         let mut functions = Vec::new();
 
-        for module in options.modules.modules.values() {
+        for (_, module) in options.modules.iter() {
             for (_, function_pointer) in module.get_methods() {
                 functions.push(function_pointer.clone());
             }
@@ -252,7 +255,7 @@ impl InterpreterCompiler {
     fn find_function_definations(&self, ast: &BramaAstType, functions: &mut Vec<FunctionDefine>, options: &mut BramaCompiler, storage_index: usize) {
         match ast {
             BramaAstType::FunctionDefination { name, arguments, body  } => {
-                let search = options.find_function(name.to_string(), Vec::new(), "".to_string(), storage_index);
+                let search = options.find_function(name.to_string(), Vec::new(), storage_index);
                 match search {
                     Some(reference) => {
                         println!("Function: {}", name);
@@ -382,7 +385,7 @@ impl InterpreterCompiler {
         let name = params[params.len() - 1].to_string();
         let module_path = params[0..(params.len() - 1)].to_vec();
 
-        let function_search = options.find_function(name, module_path, "".to_string(), storage_index);
+        let function_search = options.find_function(name, module_path, storage_index);
         match function_search {
             Some(reference) => {
                 let result = storage.get_constant_location(Rc::new(BramaPrimative::Function(reference, None)));
@@ -432,8 +435,8 @@ impl InterpreterCompiler {
         Ok(())
     }
 
-    fn generate_func_call_by_name(&self, name :&String, module_path: Vec<String>, framework: String, arguments: &Vec<Box<BramaAstType>>, assign_to_temp: bool, options: &mut BramaCompiler, storage_index: usize) -> Result<bool, String> {
-        let function_search = options.find_function(name.to_string(), module_path, framework, storage_index);
+    fn generate_func_call_by_name(&self, name :&String, module_path: Vec<String>, arguments: &Vec<Box<BramaAstType>>, assign_to_temp: bool, options: &mut BramaCompiler, storage_index: usize) -> Result<bool, String> {
+        let function_search = options.find_function(name.to_string(), module_path, storage_index);
 
         match function_search {
             Some(function_ref) => {
@@ -526,7 +529,7 @@ impl InterpreterCompiler {
 
         match &func_name_expression {
             BramaAstType::Symbol(function_name) => {
-                let result = self.generate_func_call_by_name(&function_name, Vec::new(), "".to_string(), &arguments, assign_to_temp, options, storage_index)?;
+                let result = self.generate_func_call_by_name(&function_name, Vec::new(), &arguments, assign_to_temp, options, storage_index)?;
                 match result {
                     true => return Ok(()),
                     false => {
@@ -546,7 +549,7 @@ impl InterpreterCompiler {
             },
 
             BramaAstType::FunctionMap(names) => {
-                let result = self.generate_func_call_by_name(&names[names.len() - 1].to_string(), names[0..(names.len()-1)].to_vec(), "".to_string(), &arguments, assign_to_temp, options, storage_index)?;
+                let result = self.generate_func_call_by_name(&names[names.len() - 1].to_string(), names[0..(names.len()-1)].to_vec(), &arguments, assign_to_temp, options, storage_index)?;
                 match result {
                     true => return Ok(()),
                     false =>  return Err("Function not found".to_string())
@@ -663,7 +666,7 @@ impl InterpreterCompiler {
 
     fn generate_symbol(&self, variable: &String, _: &BramaAstType, options: &mut BramaCompiler, storage_index: usize) -> CompilerResult {
         let storage = &options.storages[storage_index];                
-        let result = storage.get_function_constant(variable.to_string(), Vec::new(), "".to_string());
+        let result = storage.get_function_constant(variable.to_string(), Vec::new());
         match result {
             Some(index) => {
                 options.opcodes.push(VmOpCode::Load as u8);
@@ -673,7 +676,7 @@ impl InterpreterCompiler {
             _ => ()
         };
 
-        let result = storage.get_class_constant(variable.to_string(), Vec::new(), "".to_string());
+        let result = storage.get_class_constant(variable.to_string(), Vec::new());
         match result {
             Some(index) => {
                 options.opcodes.push(VmOpCode::Load as u8);
@@ -683,7 +686,7 @@ impl InterpreterCompiler {
             _ => ()
         };
 
-        match options.storages.get_mut(storage_index).unwrap().get_variable_location(variable) {
+        match storage.get_variable_location(variable) {
             /* Variable found */
             Some(location) => {
                 options.opcodes.push(VmOpCode::Load as u8);

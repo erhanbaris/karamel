@@ -10,7 +10,7 @@ use crate::parser::Parser;
 use crate::syntax::SyntaxParser;
 use crate::types::CompilerResult;
 
-use super::BramaCompiler;
+use super::{BramaCompiler, BramaPrimative, StaticStorage};
 use super::ast::BramaAstType;
 use super::function::FunctionReference;
 
@@ -109,13 +109,8 @@ fn find_load_type(ast: &BramaAstType, options: &mut BramaCompiler, modules: &mut
 
     match ast {
         BramaAstType::Load(module_name) => {
-            match load_module(module_name, options) {
-                Ok(module) => {
-                    modules.push(Rc::new(module));
-                    find_load_type(ast, options, modules, depth_level + 1)?;
-                },
-                Err(error) => return Err(error)
-            };
+            modules.push(Rc::new(load_module(module_name, options)?));
+            find_load_type(ast, options, modules, depth_level + 1)?;
         },
         BramaAstType::Block(blocks) => {
             for block in blocks {
@@ -134,9 +129,20 @@ fn find_function_definition_type(ast: &BramaAstType, functions: &mut HashMap<Str
     }
 
     match ast {
-        BramaAstType::FunctionDefination { name, arguments, body: _  } => {
-            let function_reference = FunctionReference::opcode_function(name.to_string(), arguments.to_vec(), Vec::new(),  0, 0);
-            functions.insert(name.to_string(), function_reference);
+        BramaAstType::FunctionDefination { name, arguments, body  } => {
+            /* Create new storage for new function */
+            let new_storage_index = options.storages.len();
+            let function = FunctionReference::opcode_function(name.to_string(), arguments.to_vec(), body.clone(), Vec::new(), new_storage_index, 0);
+            functions.insert(name.to_string(), function.clone());
+            
+            //options.storages[storage_index].add_constant(functi
+            options.storages.push(StaticStorage::new());
+            options.storages[new_storage_index].set_parent_location(0);
+            options.storages[0].add_static_data(name, Rc::new(BramaPrimative::Function(function.clone(), None)));
+
+            for argument in arguments {
+                options.storages[new_storage_index].add_variable(argument);
+            }
         },
         BramaAstType::Block(blocks) => {
             for block in blocks {

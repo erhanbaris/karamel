@@ -68,6 +68,9 @@ impl StaticStorage {
                         + self.get_variable_size() 
                         + self.get_temp_size();
         
+        self.memory.clear();
+        self.stack.clear();
+
         self.memory.reserve(memory_size.into());
 
         /* Move all constants informations to memory location */
@@ -171,7 +174,7 @@ impl StaticStorage {
         };
     }
 
-    pub fn get_function_constant(&self, name: String, module_path: Vec<String>, framework: String) -> Option<u8> {
+    pub fn get_function_constant(&self, name: String, module_path: Vec<String>) -> Option<u8> {
         
         for (index, item) in self.memory.iter().enumerate() {
             if let BramaPrimative::Function(reference, _) = &*item.deref() {
@@ -185,7 +188,7 @@ impl StaticStorage {
         None
     }
 
-    pub fn get_class_constant(&self, name: String, _module_path: Vec<String>, _framework: String) -> Option<u8> {
+    pub fn get_class_constant(&self, name: String, _module_path: Vec<String>) -> Option<u8> {
         
         for (index, item) in self.memory.iter().enumerate() {
             if let BramaPrimative::Class(reference) = &*item.deref() {

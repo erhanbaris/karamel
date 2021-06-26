@@ -3,6 +3,8 @@ pub mod io;
 pub mod num;
 pub mod base_functions;
 
+use std::collections::hash_map::Iter;
+
 #[macro_use]
 pub mod class;
 
@@ -25,9 +27,26 @@ pub trait Module {
 
     fn get_classes(&self) -> Vec<Rc<dyn Class>>;
 }
+pub struct DummyModule;
+
+impl Module for DummyModule {
+    fn get_module_name(&self) -> String { unreachable!() }
+    
+    fn get_method(&self, _: &str) -> Option<Rc<FunctionReference>> { unreachable!() }
+    fn get_module(&self, _: &str) -> Option<Rc<dyn Module>> { unreachable!() }
+
+    fn get_methods(&self) -> Vec<(&String, Rc<FunctionReference>)> { unreachable!() }
+    fn get_modules(&self) -> HashMap<String, Rc<dyn Module>> { unreachable!() }
+
+    fn get_classes(&self) -> Vec<Rc<dyn Class>> { unreachable!() }
+}
+
+pub struct ModuleCollectionIterator<'a> {
+    iter: Iter<'a, String, Rc<dyn Module>>
+}
 
 pub struct ModuleCollection {
-    pub modules: HashMap<String, Rc<dyn Module>>
+    modules: HashMap<String, Rc<dyn Module>>
 }
 
 impl ModuleCollection
@@ -46,8 +65,21 @@ impl ModuleCollection
     pub fn add_module(&mut self, module: Rc<dyn Module>) {        
         self.modules.insert(module.get_module_name(), module);
     }
+
+    pub fn iter(&self) -> ModuleCollectionIterator {
+        ModuleCollectionIterator  { 
+            iter: self.modules.iter().clone()
+        }
+    }
 }
 
+impl<'a> Iterator for ModuleCollectionIterator<'a> {
+    type Item = (&'a String, &'a Rc<dyn Module>);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.iter.next()
+    }
+}
 
 #[derive(Clone)]
 pub enum ClassProperty {

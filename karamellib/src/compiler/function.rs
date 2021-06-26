@@ -10,6 +10,8 @@ use crate::types::*;
 use crate::compiler::value::EMPTY_OBJECT;
 use crate::compiler::{BramaCompiler, Scope};
 
+use super::ast::BramaAstType;
+
 pub type NativeCallResult = Result<VmObject, String>;
 pub type NativeCall       = fn(FunctionParameter) -> NativeCallResult;
 pub type IndexerGetCall   = fn (VmObject, f64) -> NativeCallResult ;
@@ -90,7 +92,8 @@ pub struct FunctionReference {
     pub defined_storage_index: usize,
     pub storage_index: usize,
     pub opcode_location: Cell<usize>,
-    pub used_locations: RefCell<Vec<u16>>
+    pub used_locations: RefCell<Vec<u16>>,
+    pub opcode_body: Option<Rc<BramaAstType>>
 }
 
 unsafe impl Send for FunctionReference {}
@@ -126,7 +129,8 @@ impl FunctionReference {
             storage_index: 0,
             opcode_location: Cell::new(0),
             used_locations: RefCell::new(Vec::new()),
-            defined_storage_index: 0
+            defined_storage_index: 0,
+            opcode_body: None
         };
         Rc::new(reference)
     }
@@ -141,12 +145,13 @@ impl FunctionReference {
             storage_index: 0,
             opcode_location: Cell::new(0),
             used_locations: RefCell::new(Vec::new()),
-            defined_storage_index: 0
+            defined_storage_index: 0,
+            opcode_body: None
         };
         Rc::new(reference)
     }
 
-    pub fn opcode_function(name: String, arguments: Vec<String>, module_path: Vec<String>, storage_index: usize, defined_storage_index: usize) -> Rc<FunctionReference> {
+    pub fn opcode_function(name: String, arguments: Vec<String>, body: Rc<BramaAstType>, module_path: Vec<String>, storage_index: usize, defined_storage_index: usize) -> Rc<FunctionReference> {
         let reference = FunctionReference {
             callback: FunctionType::Opcode,
             flags: FunctionFlag::STATIC,
@@ -156,7 +161,8 @@ impl FunctionReference {
             storage_index,
             defined_storage_index,
             opcode_location: Cell::new(0),
-            used_locations: RefCell::new(Vec::new())
+            used_locations: RefCell::new(Vec::new()),
+            opcode_body: Some(body.clone())
         };
         Rc::new(reference)
     }

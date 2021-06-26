@@ -25,6 +25,12 @@ impl StorageBuilder {
         options.storages[0].build();
     }
 
+    pub fn prepare(&self, ast: &BramaAstType, storage_index: usize, options: &mut BramaCompiler, compiler_options: &mut CompilerOption) {
+        self.get_temp_count_from_ast(ast, &BramaAstType::None, options, storage_index, compiler_options);
+        options.storages[storage_index].set_temp_size(compiler_options.max_stack);
+        options.storages[storage_index].build();
+    }
+
     fn get_temp_count_from_ast(&self, ast: &BramaAstType, _: &BramaAstType, options: &mut BramaCompiler, storage_index: usize, compiler_option: &mut CompilerOption) -> u8 {
         let temp_count = match ast {
             BramaAstType::Binary {
@@ -58,7 +64,7 @@ impl StorageBuilder {
             },
             
             BramaAstType::Symbol(string) => {
-                let function_search = options.find_function(string.to_string(), Vec::new(), "".to_string(), storage_index);
+                let function_search = options.find_function(string.to_string(), Vec::new(), storage_index);
                 match function_search {
                     Some(reference) => {
                         options.storages.get_mut(storage_index).unwrap().add_constant(Rc::new(BramaPrimative::Function(reference, None)));
@@ -66,7 +72,7 @@ impl StorageBuilder {
                     None => ()
                 };
 
-                let class_search = options.find_class(string.to_string(), Vec::new(), "".to_string(), storage_index);
+                let class_search = options.find_class(string.to_string(), Vec::new(), storage_index);
                 match class_search {
                     Some(reference) => {
                         options.storages.get_mut(storage_index).unwrap().add_constant(Rc::new(BramaPrimative::Class(reference)));
@@ -83,7 +89,7 @@ impl StorageBuilder {
                 let name = params[params.len() - 1].to_string();
                 let module_path = params[0..(params.len() - 1)].to_vec();
 
-                let function_search = options.find_function(name, module_path, "".to_string(), storage_index);
+                let function_search = options.find_function(name, module_path, storage_index);
                 if let Some(reference) = function_search {
                     options.storages.get_mut(storage_index).unwrap().add_constant(Rc::new(BramaPrimative::Function(reference, None)));
                 };
@@ -157,7 +163,7 @@ impl StorageBuilder {
 
                 match &**func_name_expression {
                     BramaAstType::Symbol(function_name) => {
-                        let function_search = options.find_function(function_name.to_string(), Vec::new(), "".to_string(), storage_index);
+                        let function_search = options.find_function(function_name.to_string(), Vec::new(), storage_index);
                         if let Some(reference) = function_search {
                             options.storages.get_mut(storage_index).unwrap().add_constant(Rc::new(BramaPrimative::Function(reference, None)));
                         }
@@ -166,7 +172,7 @@ impl StorageBuilder {
                         }
                     },
                     BramaAstType::FunctionMap(names) => {
-                        let function_search = options.find_function(names[names.len() - 1].to_string(), names[0..(names.len()-1)].to_vec(), "".to_string(), storage_index);
+                        let function_search = options.find_function(names[names.len() - 1].to_string(), names[0..(names.len()-1)].to_vec(), storage_index);
                         if let Some(reference) = function_search {
                             options.storages.get_mut(storage_index).unwrap().add_constant(Rc::new(BramaPrimative::Function(reference, None)));
                         };
@@ -246,7 +252,7 @@ impl StorageBuilder {
                 /* Create new storage for new function */
                 let mut function_compiler_option = CompilerOption { max_stack: 0 };
                 let new_storage_index = options.storages.len();
-                let function = FunctionReference::opcode_function(name.to_string(), arguments.to_vec(), Vec::new(), new_storage_index, storage_index);
+                let function = FunctionReference::opcode_function(name.to_string(), arguments.to_vec(), body.clone(), Vec::new(), new_storage_index, storage_index);
                 
                 //options.storages[storage_index].add_constant(function);
                 options.add_function(function.clone());
