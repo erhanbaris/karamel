@@ -1,5 +1,6 @@
 use std::cell::RefCell;
 
+use crate::compiler::context::KaramelCompilerContext;
 use crate::{types::Token, vm::interpreter::run_vm};
 use crate::parser::*;
 use crate::compiler::*;
@@ -72,7 +73,7 @@ pub fn code_executer(parameters: ExecutionParameters) -> ExecutionStatus {
     };
 
     let opcode_compiler = InterpreterCompiler {};
-    let mut compiler_options: BramaCompiler = BramaCompiler::new();
+    let mut compiler_options: KaramelCompilerContext = KaramelCompilerContext::new();
 
     if parameters.return_output {
         compiler_options.stdout = Some(RefCell::new(String::new()));

@@ -1,3 +1,5 @@
+use std::borrow::Borrow;
+use std::collections::HashMap;
 use std::{iter::Skip, rc::Rc, vec::Vec};
 use std::cell::RefCell;
 use std::cell::Cell;
@@ -5,12 +7,15 @@ use std::slice::Iter;
 use std::iter::Take;
 use bitflags::bitflags;
 
+use crate::compiler::scope::Scope;
 use crate::{inc_memory_index, dec_memory_index, get_memory_index};
 use crate::types::*;
 use crate::compiler::value::EMPTY_OBJECT;
-use crate::compiler::{BramaCompiler, Scope};
+use crate::compiler::context::KaramelCompilerContext;
 
+use super::{BramaPrimative, StaticStorage};
 use super::ast::BramaAstType;
+use super::storage_builder::{StorageBuilder, StorageBuilderOption};
 
 pub type NativeCallResult = Result<VmObject, String>;
 pub type NativeCall       = fn(FunctionParameter) -> NativeCallResult;
@@ -110,7 +115,7 @@ impl Default for FunctionType {
 }
 
 impl FunctionReference {
-    pub fn execute(&self, compiler: &mut BramaCompiler, base: Option<VmObject>) -> Result<(), String>{
+    pub fn execute(&self, compiler: &mut KaramelCompilerContext, base: Option<VmObject>) -> Result<(), String>{
         unsafe {
             match self.callback {
                 FunctionType::Native(func) => FunctionReference::native_function_call(&self, func, compiler, base),
@@ -167,7 +172,7 @@ impl FunctionReference {
         Rc::new(reference)
     }
 
-    unsafe fn native_function_call(reference: &FunctionReference, func: NativeCall, compiler: &mut BramaCompiler, source: Option<VmObject>) -> Result<(), String> {            
+    unsafe fn native_function_call(reference: &FunctionReference, func: NativeCall, compiler: &mut KaramelCompilerContext, source: Option<VmObject>) -> Result<(), String> {            
         let total_args                 = *compiler.opcodes_ptr.offset(1);
         let call_return_assign_to_temp = *compiler.opcodes_ptr.offset(2) != 0;
         let parameter = match reference.flags {
@@ -194,7 +199,7 @@ impl FunctionReference {
         }
     }
 
-    fn opcode_function_call(reference: &FunctionReference, options: &mut BramaCompiler) -> Result<(), String> {
+    fn opcode_function_call(reference: &FunctionReference, options: &mut KaramelCompilerContext) -> Result<(), String> {
         unsafe {
             let argument_size              = *options.opcodes_ptr.offset(1);
             let call_return_assign_to_temp = *options.opcodes_ptr.offset(2) != 0;
@@ -248,4 +253,46 @@ impl FunctionReference {
         }
         Ok(())
     }
+}
+
+pub fn find_function_definition_type<T: Borrow<BramaAstType>>(module: &String, ast: T, functions: &mut HashMap<String, Rc<FunctionReference>>, options: &mut KaramelCompilerContext, depth_level: usize) -> CompilerResult {
+    /*if depth_level > 1 {
+        return Ok(());
+    }*/
+
+    match ast.borrow() {
+        BramaAstType::FunctionDefination { name, arguments, body  } => {
+            /* Create new storage for new function */
+            let current_storage_index = options.storages.len() - 1;
+            let new_storage_index = options.storages.len();
+            options.storages.push(StaticStorage::new());
+            options.storages[new_storage_index].set_parent_location(current_storage_index);
+
+            let function = FunctionReference::opcode_function(name.to_string(), arguments.to_vec(), body.clone(), Vec::new(), new_storage_index, current_storage_index);
+            functions.insert(name.to_string(), function.clone());
+            
+            let storage_builder = StorageBuilder::new();
+            let mut builder_option = StorageBuilderOption { max_stack: 0 };
+            storage_builder.prepare(ast.borrow(), new_storage_index, options, &mut builder_option);
+
+            //options.storages[current_storage_index].add_static_data(name, Rc::new(BramaPrimative::Function(function.clone(), None)));
+            options.storages[current_storage_index].add_constant(Rc::new(BramaPrimative::Function(function.clone(), None)));
+
+            for argument in arguments {
+                options.storages[new_storage_index].add_variable(argument);
+            }
+
+            find_function_definition_type(module, &**body, functions, options, depth_level + 1)?;
+
+            options.storages[new_storage_index].dump();
+        },
+        BramaAstType::Block(blocks) => {
+            for block in blocks {
+                find_function_definition_type(module, block, functions, options, depth_level + 1)?;
+            }
+        },
+        _ => ()
+    }
+
+    Ok(())
 }

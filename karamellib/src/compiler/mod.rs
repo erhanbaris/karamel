@@ -6,10 +6,13 @@ pub mod function;
 pub mod value;
 pub mod ast;
 pub mod module;
+pub mod scope;
+pub mod context;
 
 pub use self::compiler::*;
 pub use self::static_storage::*;
 pub use self::value::*;
+pub use self::context::KaramelCompilerContext;
 
 use std::vec::Vec;
 use std::mem;

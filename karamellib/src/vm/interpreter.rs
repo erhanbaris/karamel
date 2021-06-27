@@ -1,3 +1,5 @@
+use crate::compiler::context::KaramelCompilerContext;
+use crate::compiler::scope::Scope;
 use crate::{pop, inc_memory_index, dec_memory_index, get_memory_index};
 use crate::types::{VmObject};
 use crate::compiler::*;
@@ -12,7 +14,7 @@ use std::io::{self, Write};
 use crate::buildin::ClassProperty;
 
 #[cfg(all(feature = "dumpOpcodes"))]
-pub unsafe fn dump_opcode<W: Write>(index: usize, options: &mut BramaCompiler, log_update: &mut LogUpdate<W>) {
+pub unsafe fn dump_opcode<W: Write>(index: usize, options: &mut KaramelCompilerContext, log_update: &mut LogUpdate<W>) {
     #[cfg(feature = "liveOpcodeView")] {
         use std::{thread, time};
     }
@@ -125,7 +127,7 @@ pub unsafe fn dump_opcode<W: Write>(index: usize, options: &mut BramaCompiler, l
     }
 }
 
-pub unsafe fn run_vm(options: &mut BramaCompiler) -> Result<Vec<VmObject>, String>
+pub unsafe fn run_vm(options: &mut KaramelCompilerContext) -> Result<Vec<VmObject>, String>
 {
     let mut log_update = LogUpdate::new(stdout()).unwrap();
     

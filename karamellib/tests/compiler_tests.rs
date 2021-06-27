@@ -5,6 +5,7 @@ mod tests {
     use crate::karamellib::parser::*;
     use crate::karamellib::syntax::*;
     use crate::karamellib::compiler::*;
+    use crate::karamellib::compiler::context::*;
 
     use std::rc::Rc;
 
@@ -28,7 +29,7 @@ mod tests {
                 };
 
                 let opcode_compiler  = InterpreterCompiler {};
-                let mut compiler_options: BramaCompiler = BramaCompiler::new();
+                let mut compiler_options: KaramelCompilerContext = KaramelCompilerContext::new();
 
                 if let Ok(_) = opcode_compiler.compile(&syntax_result.unwrap(), &mut compiler_options) {
                     let memory = compiler_options.storages[0].get_memory();

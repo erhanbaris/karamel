@@ -97,7 +97,7 @@ impl GetType for BramaPrimative {
             BramaPrimative::Dict(_)     => "sözlük".to_string(),
             BramaPrimative::Empty       => "boş".to_string(),
             BramaPrimative::Function(_, _) => "fonksiyon".to_string(),
-            BramaPrimative::Class(_)    => "Sınıf".to_string()
+            BramaPrimative::Class(_)    => "sınıf".to_string()
         }
     }
 }

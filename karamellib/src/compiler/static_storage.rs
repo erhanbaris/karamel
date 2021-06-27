@@ -1,6 +1,5 @@
 use crate::types::*;
 use crate::compiler::*;
-use std::cell::RefCell;
 use std::rc::Rc;
 
 #[cfg(not(feature = "unittest"))]

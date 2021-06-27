@@ -52,14 +52,9 @@ pub struct ModuleCollection {
 impl ModuleCollection
 {
     pub fn new() -> ModuleCollection {
-        let mut collection = ModuleCollection {
+        ModuleCollection {
             modules: HashMap::new()
-        };
-        collection.add_module(Rc::new(base_functions::BaseFunctionsModule::new()));
-        collection.add_module(Rc::new(io::IoModule::new()));
-        collection.add_module(Rc::new(num::NumModule::new()));
-        collection.add_module(Rc::new(debug::DebugModule::new()));
-        collection
+        }
     }
 
     pub fn add_module(&mut self, module: Rc<dyn Module>) {        

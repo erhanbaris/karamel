@@ -5,12 +5,15 @@ use std::io::prelude::*;
 use std::rc::Rc;
 
 use crate::buildin::{Class, Module};
+use crate::compiler::function::find_function_definition_type;
 use crate::error::generate_error_message;
 use crate::parser::Parser;
 use crate::syntax::SyntaxParser;
 use crate::types::CompilerResult;
 
-use super::{BramaCompiler, BramaPrimative, StaticStorage};
+use super::context::KaramelCompilerContext;
+use super::storage_builder::{StorageBuilder, StorageBuilderOption};
+use super::{BramaPrimative, StaticStorage};
 use super::ast::BramaAstType;
 use super::function::FunctionReference;
 
@@ -60,7 +63,7 @@ impl Module for OpcodeModule {
     }
 }
 
-pub fn load_module(params: &[String], options: &mut BramaCompiler) -> Result<OpcodeModule, String> {
+pub fn load_module(params: &[String], options: &mut KaramelCompilerContext) -> Result<OpcodeModule, String> {
     let mut path = PathBuf::from(&options.script_path[..]);
     let module = params[(params.len() - 1)].to_string();
 
@@ -91,7 +94,7 @@ pub fn load_module(params: &[String], options: &mut BramaCompiler) -> Result<Opc
             Ok(ast) => {
                 let mut functions : HashMap<String, Rc<FunctionReference>> = HashMap::new();
                 let modules : HashMap<String, Rc<dyn Module>> = HashMap::new();
-                find_function_definition_type(&ast, &mut functions, options, 0)?;
+                find_function_definition_type(&module, &ast, &mut functions, options, 0)?;
                 let module = OpcodeModule::new(module, path.to_str().unwrap().to_string(), ast, functions, modules);
                 Ok(module)
             },
@@ -102,7 +105,7 @@ pub fn load_module(params: &[String], options: &mut BramaCompiler) -> Result<Opc
     Err(format!("'{}' modül bulunamadı", module))
 }
 
-fn find_load_type(ast: &BramaAstType, options: &mut BramaCompiler, modules: &mut Vec<Rc<OpcodeModule>>, depth_level: usize) -> CompilerResult {
+fn find_load_type(ast: &BramaAstType, options: &mut KaramelCompilerContext, modules: &mut Vec<Rc<OpcodeModule>>, depth_level: usize) -> CompilerResult {
     if depth_level > 1 {
         return Ok(())
     }
@@ -123,39 +126,7 @@ fn find_load_type(ast: &BramaAstType, options: &mut BramaCompiler, modules: &mut
     Ok(())
 }
 
-fn find_function_definition_type(ast: &BramaAstType, functions: &mut HashMap<String, Rc<FunctionReference>>, options: &mut BramaCompiler, depth_level: usize) -> CompilerResult {
-    if depth_level > 1 {
-        return Ok(());
-    }
-
-    match ast {
-        BramaAstType::FunctionDefination { name, arguments, body  } => {
-            /* Create new storage for new function */
-            let new_storage_index = options.storages.len();
-            let function = FunctionReference::opcode_function(name.to_string(), arguments.to_vec(), body.clone(), Vec::new(), new_storage_index, 0);
-            functions.insert(name.to_string(), function.clone());
-            
-            //options.storages[storage_index].add_constant(functi
-            options.storages.push(StaticStorage::new());
-            options.storages[new_storage_index].set_parent_location(0);
-            options.storages[0].add_static_data(name, Rc::new(BramaPrimative::Function(function.clone(), None)));
-
-            for argument in arguments {
-                options.storages[new_storage_index].add_variable(argument);
-            }
-        },
-        BramaAstType::Block(blocks) => {
-            for block in blocks {
-                find_function_definition_type(block, functions, options, depth_level + 1)?;
-            }
-        },
-        _ => ()
-    }
-
-    Ok(())
-}
-
-pub fn get_modules(main_ast: &BramaAstType, options: &mut BramaCompiler) -> Result<Vec<Rc<OpcodeModule>>, String> {
+pub fn get_modules(main_ast: &BramaAstType, options: &mut KaramelCompilerContext) -> Result<Vec<Rc<OpcodeModule>>, String> {
     let mut modules: Vec<Rc<OpcodeModule>> = Vec::new();
     match find_load_type(main_ast, options, &mut modules, 0) {
         Ok(()) => Ok(modules),
@@ -170,7 +141,7 @@ mod tests {
     use std::io::prelude::*;
     use std::path::Path;
 
-    use crate::compiler::BramaCompiler;
+    use crate::compiler::context::KaramelCompilerContext;
     use crate::compiler::module::load_module;
 
     fn setup() {
@@ -233,7 +204,7 @@ fonk topla(bir, iki): dondur bir + iki"#;
         let topla_path = write_to_file(module_1, "topla.tpd");
 
         run_test(|| {
-            let mut options = BramaCompiler::new();
+            let mut options = KaramelCompilerContext::new();
             options.script_path = get_parent();
             match load_module(&[String::from("topla")].to_vec(), &mut options) {
                 Ok(_) => (),
@@ -253,7 +224,7 @@ fonk topla2(bir, iki): dondur module_1::topla(bir + iki)"#;
         let module_2_path = write_to_file(module_2, "module_2.tpd");
 
         run_test(|| {
-            let mut options = BramaCompiler::new();
+            let mut options = KaramelCompilerContext::new();
             options.script_path = get_parent();
             match load_module(&[String::from("module_1")].to_vec(), &mut options) {
                 Ok(_) => (),

@@ -3,12 +3,10 @@ use std::cmp::max;
 
 use crate::{compiler::ast::BramaAstType};
 use crate::compiler::value::BramaPrimative;
-use crate::compiler::function::FunctionReference;
-use crate::compiler::BramaCompiler;
-use crate::compiler::static_storage::StaticStorage;
+use crate::compiler::context::KaramelCompilerContext;
 use crate::types::BramaOperatorType;
 pub struct StorageBuilder;
-pub struct CompilerOption {
+pub struct StorageBuilderOption {
     pub max_stack: u8
 }
 
@@ -18,20 +16,13 @@ impl StorageBuilder {
         }
     }
 
-    pub fn prepare_variable_store(&self, ast: &BramaAstType, options: &mut BramaCompiler) {
-        let mut compiler_option = CompilerOption { max_stack: 0 };
-        self.get_temp_count_from_ast(ast, &BramaAstType::None, options, 0, &mut compiler_option);
-        options.storages[0].set_temp_size(compiler_option.max_stack);
-        options.storages[0].build();
-    }
-
-    pub fn prepare(&self, ast: &BramaAstType, storage_index: usize, options: &mut BramaCompiler, compiler_options: &mut CompilerOption) {
+    pub fn prepare(&self, ast: &BramaAstType, storage_index: usize, options: &mut KaramelCompilerContext, compiler_options: &mut StorageBuilderOption) {
         self.get_temp_count_from_ast(ast, &BramaAstType::None, options, storage_index, compiler_options);
         options.storages[storage_index].set_temp_size(compiler_options.max_stack);
         options.storages[storage_index].build();
     }
 
-    fn get_temp_count_from_ast(&self, ast: &BramaAstType, _: &BramaAstType, options: &mut BramaCompiler, storage_index: usize, compiler_option: &mut CompilerOption) -> u8 {
+    fn get_temp_count_from_ast(&self, ast: &BramaAstType, _: &BramaAstType, options: &mut KaramelCompilerContext, storage_index: usize, compiler_option: &mut StorageBuilderOption) -> u8 {
         let temp_count = match ast {
             BramaAstType::Binary {
                 left,
@@ -64,7 +55,7 @@ impl StorageBuilder {
             },
             
             BramaAstType::Symbol(string) => {
-                let function_search = options.find_function(string.to_string(), Vec::new(), storage_index);
+                let function_search = options.get_function(string.to_string(), Vec::new(), storage_index);
                 match function_search {
                     Some(reference) => {
                         options.storages.get_mut(storage_index).unwrap().add_constant(Rc::new(BramaPrimative::Function(reference, None)));
@@ -89,7 +80,7 @@ impl StorageBuilder {
                 let name = params[params.len() - 1].to_string();
                 let module_path = params[0..(params.len() - 1)].to_vec();
 
-                let function_search = options.find_function(name, module_path, storage_index);
+                let function_search = options.get_function(name, module_path, storage_index);
                 if let Some(reference) = function_search {
                     options.storages.get_mut(storage_index).unwrap().add_constant(Rc::new(BramaPrimative::Function(reference, None)));
                 };
@@ -163,7 +154,7 @@ impl StorageBuilder {
 
                 match &**func_name_expression {
                     BramaAstType::Symbol(function_name) => {
-                        let function_search = options.find_function(function_name.to_string(), Vec::new(), storage_index);
+                        let function_search = options.get_function(function_name.to_string(), Vec::new(), storage_index);
                         if let Some(reference) = function_search {
                             options.storages.get_mut(storage_index).unwrap().add_constant(Rc::new(BramaPrimative::Function(reference, None)));
                         }
@@ -172,7 +163,7 @@ impl StorageBuilder {
                         }
                     },
                     BramaAstType::FunctionMap(names) => {
-                        let function_search = options.find_function(names[names.len() - 1].to_string(), names[0..(names.len()-1)].to_vec(), storage_index);
+                        let function_search = options.get_function(names[names.len() - 1].to_string(), names[0..(names.len()-1)].to_vec(), storage_index);
                         if let Some(reference) = function_search {
                             options.storages.get_mut(storage_index).unwrap().add_constant(Rc::new(BramaPrimative::Function(reference, None)));
                         };
@@ -248,27 +239,9 @@ impl StorageBuilder {
                 indexer_size + body_size
             },
 
-            BramaAstType::FunctionDefination { name, arguments, body } => {
-                /* Create new storage for new function */
-                let mut function_compiler_option = CompilerOption { max_stack: 0 };
-                let new_storage_index = options.storages.len();
-                let function = FunctionReference::opcode_function(name.to_string(), arguments.to_vec(), body.clone(), Vec::new(), new_storage_index, storage_index);
-                
-                //options.storages[storage_index].add_constant(function);
-                options.add_function(function.clone());
-                options.storages.push(StaticStorage::new());
-                options.storages[new_storage_index].set_parent_location(storage_index);
-                options.storages[storage_index].add_constant(Rc::new(BramaPrimative::Function(function.clone(), None)));
-
-                for argument in arguments {
-                    options.storages[new_storage_index].add_variable(argument);
-                }
-                
-                self.get_temp_count_from_ast(body, ast, options, new_storage_index, &mut function_compiler_option);
-                
-                function_compiler_option.max_stack = max(arguments.len() as u8, function_compiler_option.max_stack);
-                options.storages[new_storage_index].set_temp_size(function_compiler_option.max_stack as u8);
-                options.storages[new_storage_index].build();
+            BramaAstType::FunctionDefination { name: _, arguments, body } => {
+                self.get_temp_count_from_ast(body, ast, options, storage_index, compiler_option);
+                compiler_option.max_stack = max(arguments.len() as u8, compiler_option.max_stack);
                 0
             },
 
