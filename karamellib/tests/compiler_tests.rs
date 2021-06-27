@@ -31,7 +31,7 @@ mod tests {
                 let opcode_compiler  = InterpreterCompiler {};
                 let mut compiler_options: KaramelCompilerContext = KaramelCompilerContext::new();
 
-                if let Ok(_) = opcode_compiler.compile(&syntax_result.unwrap(), &mut compiler_options) {
+                if let Ok(_) = opcode_compiler.compile(syntax_result.unwrap().clone(), &mut compiler_options) {
                     let memory = compiler_options.storages[0].get_memory();
                     for object in &*memory {
                         converted_memory.push((*object.deref()).clone());

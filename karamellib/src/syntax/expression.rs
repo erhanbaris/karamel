@@ -21,7 +21,7 @@ impl SyntaxParserTrait for ExpressionParser {
 
             /* parse for 'object()()' */
             if FuncCallParser::parsable(parser) {
-                update_functions_for_temp_return(&mut ast);
+                update_functions_for_temp_return(&ast);
 
                 let inner_parser_flags  = parser.flags.get();
                 parser.flags.set(inner_parser_flags | SyntaxFlag::IN_DICT_INDEXER);

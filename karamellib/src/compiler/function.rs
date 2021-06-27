@@ -13,6 +13,7 @@ use crate::types::*;
 use crate::compiler::value::EMPTY_OBJECT;
 use crate::compiler::context::KaramelCompilerContext;
 
+use super::module::OpcodeModule;
 use super::{BramaPrimative, StaticStorage};
 use super::ast::BramaAstType;
 use super::storage_builder::{StorageBuilder, StorageBuilderOption};
@@ -255,25 +256,23 @@ impl FunctionReference {
     }
 }
 
-pub fn find_function_definition_type<T: Borrow<BramaAstType>>(module: &String, ast: T, functions: &mut HashMap<String, Rc<FunctionReference>>, options: &mut KaramelCompilerContext, depth_level: usize) -> CompilerResult {
-    /*if depth_level > 1 {
-        return Ok(());
-    }*/
-
+pub fn find_function_definition_type(module: &mut OpcodeModule, ast: Rc<BramaAstType>, options: &mut KaramelCompilerContext, depth_level: usize) -> CompilerResult {
     match ast.borrow() {
         BramaAstType::FunctionDefination { name, arguments, body  } => {
             /* Create new storage for new function */
             let current_storage_index = options.storages.len() - 1;
             let new_storage_index = options.storages.len();
-            options.storages.push(StaticStorage::new());
+            options.storages.push(StaticStorage::new(new_storage_index));
             options.storages[new_storage_index].set_parent_location(current_storage_index);
 
             let function = FunctionReference::opcode_function(name.to_string(), arguments.to_vec(), body.clone(), Vec::new(), new_storage_index, current_storage_index);
-            functions.insert(name.to_string(), function.clone());
+            module.functions.insert(name.to_string(), function.clone());
             
+            find_function_definition_type(module, body.clone(), options, depth_level + 1)?;
+
             let storage_builder = StorageBuilder::new();
             let mut builder_option = StorageBuilderOption { max_stack: 0 };
-            storage_builder.prepare(ast.borrow(), new_storage_index, options, &mut builder_option);
+            storage_builder.prepare(module, ast.borrow(), new_storage_index, options, &mut builder_option);
 
             //options.storages[current_storage_index].add_static_data(name, Rc::new(BramaPrimative::Function(function.clone(), None)));
             options.storages[current_storage_index].add_constant(Rc::new(BramaPrimative::Function(function.clone(), None)));
@@ -282,13 +281,12 @@ pub fn find_function_definition_type<T: Borrow<BramaAstType>>(module: &String, a
                 options.storages[new_storage_index].add_variable(argument);
             }
 
-            find_function_definition_type(module, &**body, functions, options, depth_level + 1)?;
 
             options.storages[new_storage_index].dump();
         },
         BramaAstType::Block(blocks) => {
             for block in blocks {
-                find_function_definition_type(module, block, functions, options, depth_level + 1)?;
+                find_function_definition_type(module, block.clone(), options, depth_level + 1)?;
             }
         },
         _ => ()

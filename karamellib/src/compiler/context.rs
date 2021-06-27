@@ -30,7 +30,7 @@ impl  KaramelCompilerContext {
         let mut compiler = KaramelCompilerContext {
             script_path: String::from("/Users/erhanbaris/"),
             opcodes: Vec::new(),
-            storages: vec![StaticStorage::new()],
+            storages: vec![StaticStorage::new(0)],
             modules: ModuleCollection::new(),
             loop_breaks: Vec::new(),
             loop_continues: Vec::new(),

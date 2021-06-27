@@ -23,7 +23,7 @@ mod tests {
                 };
 
                 let syntax = SyntaxParser::new(parser.tokens().to_vec());
-                assert_eq!(syntax.parse(), $result);
+                assert_eq!(&*syntax.parse(), $result);
             }
         };
     }

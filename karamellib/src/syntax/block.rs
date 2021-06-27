@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use crate::types::*;
 use crate::syntax::{SyntaxParser, SyntaxParserTrait};
 use crate::syntax::expression::ExpressionParser;
@@ -27,7 +29,7 @@ impl SyntaxParserTrait for MultiLineBlockParser {
 
 impl BlockParser {
     fn parse(parser: &SyntaxParser, multiline: bool) -> AstResult {
-        let mut block_asts: Vec<BramaAstType> = Vec::new();
+        let mut block_asts: Vec<Rc<BramaAstType>> = Vec::new();
         let current_indentation = parser.get_indentation();
 
         loop {
@@ -37,7 +39,7 @@ impl BlockParser {
             match ast {
                 BramaAstType::None =>  break,
                 BramaAstType::NewLine =>  (),
-                _ => block_asts.push(ast)
+                _ => block_asts.push(Rc::new(ast))
             };
 
             if !multiline { break; }
@@ -50,7 +52,7 @@ impl BlockParser {
 
         return match block_asts.len() {
             0 => Ok(BramaAstType::None),
-            1 => Ok(block_asts[0].clone()),
+            1 => Ok((&*block_asts[0]).clone()),
             _ => Ok(BramaAstType::Block(block_asts.to_vec()))
         }
     }

@@ -34,10 +34,10 @@ pub fn err_or_message(ast: &AstResult, error: BramaErrorType) -> AstResult {
     }
 }
 
-pub fn update_functions_for_temp_return(ast: &mut BramaAstType) {
+pub fn update_functions_for_temp_return(ast: &BramaAstType) {
     match ast {
         BramaAstType::FuncCall { func_name_expression: _, arguments: _, assign_to_temp } => {
-            *assign_to_temp = true;
+            assign_to_temp.set(true);
         },
         BramaAstType::AccessorFuncCall {
             source,
@@ -46,11 +46,11 @@ pub fn update_functions_for_temp_return(ast: &mut BramaAstType) {
         } => {
             update_functions_for_temp_return(source);
             update_functions_for_temp_return(indexer);
-            *assign_to_temp = true;
+            assign_to_temp.set(true);
         },
         BramaAstType::Block(blocks) => {
             for mut block in blocks {
-                update_functions_for_temp_return(&mut block);
+                update_functions_for_temp_return(&block);
             }
         },
         _ => ()

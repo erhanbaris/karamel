@@ -5,6 +5,8 @@ use crate::{compiler::ast::BramaAstType};
 use crate::compiler::value::BramaPrimative;
 use crate::compiler::context::KaramelCompilerContext;
 use crate::types::BramaOperatorType;
+
+use super::module::OpcodeModule;
 pub struct StorageBuilder;
 pub struct StorageBuilderOption {
     pub max_stack: u8
@@ -16,19 +18,19 @@ impl StorageBuilder {
         }
     }
 
-    pub fn prepare(&self, ast: &BramaAstType, storage_index: usize, options: &mut KaramelCompilerContext, compiler_options: &mut StorageBuilderOption) {
-        self.get_temp_count_from_ast(ast, &BramaAstType::None, options, storage_index, compiler_options);
+    pub fn prepare(&self, module: &OpcodeModule, ast: &BramaAstType, storage_index: usize, options: &mut KaramelCompilerContext, compiler_options: &mut StorageBuilderOption) {
+        self.get_temp_count_from_ast(module,ast, &BramaAstType::None, options, storage_index, compiler_options);
         options.storages[storage_index].set_temp_size(compiler_options.max_stack);
         options.storages[storage_index].build();
     }
 
-    fn get_temp_count_from_ast(&self, ast: &BramaAstType, _: &BramaAstType, options: &mut KaramelCompilerContext, storage_index: usize, compiler_option: &mut StorageBuilderOption) -> u8 {
+    fn get_temp_count_from_ast(&self, module: &OpcodeModule, ast: &BramaAstType, _: &BramaAstType, options: &mut KaramelCompilerContext, storage_index: usize, compiler_option: &mut StorageBuilderOption) -> u8 {
         let temp_count = match ast {
             BramaAstType::Binary {
                 left,
                 operator: _,
                 right} => {
-                    let total =  self.get_temp_count_from_ast(left, ast, options, storage_index, compiler_option) + self.get_temp_count_from_ast(right, ast, options, storage_index, compiler_option);
+                    let total =  self.get_temp_count_from_ast(module,left, ast, options, storage_index, compiler_option) + self.get_temp_count_from_ast(module,right, ast, options, storage_index, compiler_option);
                     compiler_option.max_stack = max(total, compiler_option.max_stack);
                     total
                 },
@@ -37,24 +39,32 @@ impl StorageBuilder {
                 left,
                 operator: _,
                 right} => {
-                    let total =  self.get_temp_count_from_ast(left, ast, options, storage_index, compiler_option) + self.get_temp_count_from_ast(right, ast, options, storage_index, compiler_option);
+                    let total =  self.get_temp_count_from_ast(module,left, ast, options, storage_index, compiler_option) + self.get_temp_count_from_ast(module,right, ast, options, storage_index, compiler_option);
                     compiler_option.max_stack = max(total, compiler_option.max_stack);
                     total
                 },
             
             BramaAstType::PrefixUnary(_, inner_ast) => {
-                let total = self.get_temp_count_from_ast(inner_ast, ast, options, storage_index, compiler_option);
+                let total = self.get_temp_count_from_ast(module,inner_ast, ast, options, storage_index, compiler_option);
                 compiler_option.max_stack = max(total, compiler_option.max_stack);
                 total
             },
 
             BramaAstType::SuffixUnary(_, inner_ast) => {
-                let total = self.get_temp_count_from_ast(inner_ast, ast, options, storage_index, compiler_option) + 1;
+                let total = self.get_temp_count_from_ast(module,inner_ast, ast, options, storage_index, compiler_option) + 1;
                 compiler_option.max_stack = max(total, compiler_option.max_stack);
                 total
             },
             
             BramaAstType::Symbol(string) => {
+                use crate::buildin::Module;
+                match module.get_method(&string[..]) {
+                    Some(reference) => {
+                        options.storages.get_mut(storage_index).unwrap().add_constant(Rc::new(BramaPrimative::Function(reference, None)));
+                    },
+                    None => ()
+                };
+
                 let function_search = options.get_function(string.to_string(), Vec::new(), storage_index);
                 match function_search {
                     Some(reference) => {
@@ -92,8 +102,8 @@ impl StorageBuilder {
                 variable,
                 operator,
                 expression} =>  {
-                let var_stack_size = self.get_temp_count_from_ast(variable, ast, options, storage_index, compiler_option);                
-                let stack_size = self.get_temp_count_from_ast(expression, ast, options, storage_index, compiler_option);
+                let var_stack_size = self.get_temp_count_from_ast(module,variable, ast, options, storage_index, compiler_option);                
+                let stack_size = self.get_temp_count_from_ast(module,expression, ast, options, storage_index, compiler_option);
                 compiler_option.max_stack = max(stack_size + var_stack_size, compiler_option.max_stack);
                 
                 let size = match *operator {
@@ -107,7 +117,7 @@ impl StorageBuilder {
             BramaAstType::Block(asts) => {
                 let mut list_temp_count = 0;
                 for array_item in asts {
-                    list_temp_count += self.get_temp_count_from_ast(array_item, ast, options, storage_index, compiler_option);
+                    list_temp_count += self.get_temp_count_from_ast(module,array_item, ast, options, storage_index, compiler_option);
                 }
 
                 compiler_option.max_stack = max(list_temp_count, compiler_option.max_stack);
@@ -119,8 +129,8 @@ impl StorageBuilder {
                 indexer,
                 assign_to_temp: _
             } => {
-                let source_tmp  = self.get_temp_count_from_ast(source, ast, options, storage_index, compiler_option);
-                let indexer_tmp = self.get_temp_count_from_ast(indexer, ast, options, storage_index, compiler_option);
+                let source_tmp  = self.get_temp_count_from_ast(module,source, ast, options, storage_index, compiler_option);
+                let indexer_tmp = self.get_temp_count_from_ast(module,indexer, ast, options, storage_index, compiler_option);
 
                 compiler_option.max_stack = max(source_tmp + indexer_tmp, compiler_option.max_stack);
                 source_tmp + indexer_tmp
@@ -147,7 +157,7 @@ impl StorageBuilder {
 
                 /* Build arguments */
                 for arg in arguments {
-                    max_temp += self.get_temp_count_from_ast(arg, ast, options, storage_index, compiler_option);
+                    max_temp += self.get_temp_count_from_ast(module,arg, ast, options, storage_index, compiler_option);
                 }
 
                 //compiler_option.max_stack = max(max_temp, compiler_option.max_stack);
@@ -170,14 +180,14 @@ impl StorageBuilder {
                     },
                     _ => {
                         log::debug!("{:?}", func_name_expression);
-                        let name_expression_count = self.get_temp_count_from_ast(func_name_expression, ast, options, storage_index, compiler_option);
+                        let name_expression_count = self.get_temp_count_from_ast(module,func_name_expression, ast, options, storage_index, compiler_option);
                         compiler_option.max_stack = max(name_expression_count, compiler_option.max_stack);
                         compiler_option.max_stack += max_temp;
                     }
                 };
 
                 /* Variables */
-                let size = if *assign_to_temp {
+                let size = if assign_to_temp.get() {
                     max_temp + 2
                 }
                 else {
@@ -188,19 +198,19 @@ impl StorageBuilder {
             },
 
             BramaAstType::Return(expression) => {
-                self.get_temp_count_from_ast(expression, ast, options, storage_index, compiler_option);
+                self.get_temp_count_from_ast(module,expression, ast, options, storage_index, compiler_option);
                 compiler_option.max_stack = max(1, compiler_option.max_stack);
                 1
             },
 
             BramaAstType::EndlessLoop(expression) => {
-                self.get_temp_count_from_ast(expression, ast, options, storage_index, compiler_option);
+                self.get_temp_count_from_ast(module,expression, ast, options, storage_index, compiler_option);
                 0
             },
 
             BramaAstType::WhileLoop { control, body } => {
-                self.get_temp_count_from_ast(control, ast, options, storage_index, compiler_option);
-                self.get_temp_count_from_ast(body, ast, options, storage_index, compiler_option);
+                self.get_temp_count_from_ast(module,control, ast, options, storage_index, compiler_option);
+                self.get_temp_count_from_ast(module,body, ast, options, storage_index, compiler_option);
                 compiler_option.max_stack = max(1, compiler_option.max_stack);
                 1
             },
@@ -214,7 +224,7 @@ impl StorageBuilder {
             BramaAstType::List(list) => {
                 let mut total_size = 1;
                 for array_item in list {
-                    total_size += self.get_temp_count_from_ast(&*array_item, ast, options, storage_index, compiler_option);
+                    total_size += self.get_temp_count_from_ast(module,&*array_item, ast, options, storage_index, compiler_option);
                 }
                 compiler_option.max_stack = max(total_size, compiler_option.max_stack);
                 return total_size
@@ -224,7 +234,7 @@ impl StorageBuilder {
                 let mut total_size = 1;
                 for dict_item in dict {
                     options.storages.get_mut(storage_index).unwrap().add_constant(dict_item.key.clone());
-                    total_size += self.get_temp_count_from_ast(&dict_item.value, ast, options, storage_index, compiler_option);
+                    total_size += self.get_temp_count_from_ast(module,&dict_item.value, ast, options, storage_index, compiler_option);
                     total_size += 1;
                 }
                 compiler_option.max_stack = max(total_size, compiler_option.max_stack);
@@ -232,31 +242,31 @@ impl StorageBuilder {
             },
 
             BramaAstType::Indexer { body, indexer } => {
-                let body_size = self.get_temp_count_from_ast(body, ast, options, storage_index, compiler_option);
-                let indexer_size = self.get_temp_count_from_ast(indexer, ast, options, storage_index, compiler_option);
+                let body_size = self.get_temp_count_from_ast(module,body, ast, options, storage_index, compiler_option);
+                let indexer_size = self.get_temp_count_from_ast(module,indexer, ast, options, storage_index, compiler_option);
 
                 compiler_option.max_stack = max(indexer_size + body_size, compiler_option.max_stack);
                 indexer_size + body_size
             },
 
             BramaAstType::FunctionDefination { name: _, arguments, body } => {
-                self.get_temp_count_from_ast(body, ast, options, storage_index, compiler_option);
+                self.get_temp_count_from_ast(module,body, ast, options, storage_index, compiler_option);
                 compiler_option.max_stack = max(arguments.len() as u8, compiler_option.max_stack);
                 0
             },
 
             BramaAstType::IfStatement {
                 condition, body, else_body, else_if} => {
-                    let mut total = self.get_temp_count_from_ast(condition, ast, options, storage_index, compiler_option);
-                    total = max(total, self.get_temp_count_from_ast(body, ast, options, storage_index, compiler_option));
+                    let mut total = self.get_temp_count_from_ast(module,condition, ast, options, storage_index, compiler_option);
+                    total = max(total, self.get_temp_count_from_ast(module,body, ast, options, storage_index, compiler_option));
 
                     if let Some(else_) = else_body {
-                        total = max(total, self.get_temp_count_from_ast(else_, ast, options, storage_index, compiler_option));
+                        total = max(total, self.get_temp_count_from_ast(module,else_, ast, options, storage_index, compiler_option));
                     }
 
                     for else_if_item in else_if {
-                        total = max(total, self.get_temp_count_from_ast(&else_if_item.condition, ast, options, storage_index, compiler_option));
-                        total = max(total, self.get_temp_count_from_ast(&else_if_item.body, ast, options, storage_index, compiler_option));
+                        total = max(total, self.get_temp_count_from_ast(module,&else_if_item.condition, ast, options, storage_index, compiler_option));
+                        total = max(total, self.get_temp_count_from_ast(module,&else_if_item.body, ast, options, storage_index, compiler_option));
                     }
                     
                     compiler_option.max_stack = max(total, compiler_option.max_stack);

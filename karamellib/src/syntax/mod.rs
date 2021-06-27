@@ -16,6 +16,7 @@ pub mod loop_item;
 pub mod expression;
 pub mod load_module;
 
+use std::rc::Rc;
 use std::vec::Vec;
 use std::cell::Cell;
 
@@ -67,7 +68,7 @@ impl SyntaxParser {
         }
     }
 
-    pub fn parse(&self) -> Result<BramaAstType, BramaError> {
+    pub fn parse(&self) -> Result<Rc<BramaAstType>, BramaError> {
         return match MultiLineBlockParser::parse(&self) {
             Ok(ast) => {
                 self.cleanup();
@@ -80,7 +81,7 @@ impl SyntaxParser {
                         column: token.start
                     });
                 }
-                Ok(ast)
+                Ok(Rc::new(ast))
             },
             Err(error) => {
                 if let Ok(token) = self.valid_token() {

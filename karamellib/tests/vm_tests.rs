@@ -29,9 +29,9 @@ mod tests {
 
                 let opcode_compiler  = InterpreterCompiler {};
                 let mut compiler_options: KaramelCompilerContext = KaramelCompilerContext::new();
-                let ast = &syntax_result.unwrap();
+                let ast = syntax_result.unwrap();
 
-                if let Ok(_) = opcode_compiler.compile(ast, &mut compiler_options) {
+                if let Ok(_) = opcode_compiler.compile(ast.clone(), &mut compiler_options) {
                     if unsafe { interpreter::run_vm(&mut compiler_options).is_ok() } {
                         let memory = compiler_options.storages[0].get_stack().first().unwrap().deref_clean();
                         assert_eq!(memory, $result);
@@ -63,9 +63,9 @@ mod tests {
 
                 let opcode_compiler  = InterpreterCompiler {};
                 let mut compiler_options: KaramelCompilerContext = KaramelCompilerContext::new();
-                let ast = &syntax_result.unwrap();
+                let ast = syntax_result.unwrap();
 
-                if let Ok(_) = opcode_compiler.compile(ast, &mut compiler_options) {
+                if let Ok(_) = opcode_compiler.compile(ast.clone(), &mut compiler_options) {
                     if unsafe { interpreter::run_vm(&mut compiler_options).is_ok() } {
                         match compiler_options.storages[0].get_variable_value(&$variable.to_string()) {
                             Some(ast) => assert_eq!(*ast, $result),
@@ -99,9 +99,9 @@ mod tests {
 
                 let opcode_compiler  = InterpreterCompiler {};
                 let mut compiler_options: KaramelCompilerContext = KaramelCompilerContext::new();
-                let ast = &syntax_result.unwrap();
+                let ast = syntax_result.unwrap();
 
-                if let Ok(_) = opcode_compiler.compile(ast, &mut compiler_options) {
+                if let Ok(_) = opcode_compiler.compile(ast.clone(), &mut compiler_options) {
                     if unsafe { interpreter::run_vm(&mut compiler_options).is_ok() } {
                         assert!(true);
                         return;

@@ -1,3 +1,4 @@
+use std::cell::Cell;
 use std::vec::Vec;
 use std::rc::Rc;
 
@@ -38,16 +39,16 @@ impl BramaIfStatementElseItem {
 pub enum BramaAstType {
     None,
     NewLine,
-    Block(Vec<BramaAstType>),
+    Block(Vec<Rc<BramaAstType>>),
     FuncCall {
         func_name_expression: Box<BramaAstType>,
         arguments: Vec<Box<BramaAstType>>,
-        assign_to_temp: bool
+        assign_to_temp: Cell<bool>
     },
     AccessorFuncCall {
         source: Box<BramaAstType>,
         indexer: Box<BramaAstType>,
-        assign_to_temp: bool
+        assign_to_temp: Cell<bool>
     },
     Primative(Rc<BramaPrimative>),
     Binary {

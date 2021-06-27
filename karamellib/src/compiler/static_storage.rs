@@ -44,9 +44,9 @@ pub struct StaticStorage {
 -------------------------
 */
 impl StaticStorage {
-    pub fn new() -> StaticStorage {
+    pub fn new(index: usize) -> StaticStorage {
         StaticStorage {
-            index: 0,
+            index: index,
             constants: Vec::new(),
             constant_size: 0,
             temp_size: 0,
@@ -205,8 +205,9 @@ impl StaticStorage {
 
     #[cfg(not(feature = "unittest"))]
     pub fn dump(&self) {
+        debug_println!("------------------------------------------");
         debug_println!("╔════════════════════════════════════════╗");
-        debug_println!("║               MEMORY DUMP              ║");
+        debug_println!("║               MEMORY DUMP {:10}   ║", format!("#{}", self.index));
         debug_println!("╠═══╦═════╦══════════════════════════════╣");
 
         let consts    = self.constant_size;

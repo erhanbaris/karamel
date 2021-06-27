@@ -20,7 +20,7 @@ mod tests {
                 match parse_result {
                     Ok(_) => {
                         let syntax = SyntaxParser::new(parser.tokens().to_vec());
-                        assert_eq!(syntax.parse(), $result);
+                        assert_eq!(&*syntax.parse(), $result);
                     },
                     Err(error) => {
                         let _err: Result<BramaAstType, BramaError> = Err(error);

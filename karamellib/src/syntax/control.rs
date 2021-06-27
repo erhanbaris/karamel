@@ -50,7 +50,7 @@ pub fn parse_control<T: SyntaxParserTrait>(parser: &SyntaxParser, operators: &[B
         parser.cleanup_whitespaces();
         if let Some(operator) = parser.match_operator(operators) {
             if !functions_updated_for_temp {
-                update_functions_for_temp_return(&mut left_expr);
+                update_functions_for_temp_return(&left_expr);
                 functions_updated_for_temp = true;
             }
 

@@ -1,3 +1,5 @@
+use std::cell::Cell;
+
 use crate::types::*;
 use crate::syntax::util::update_functions_for_temp_return;
 use crate::syntax::{SyntaxParser, SyntaxParserTrait, SyntaxFlag, ExtensionSyntaxParser};
@@ -98,10 +100,10 @@ impl ExtensionSyntaxParser for FuncCallParser {
             return Ok(BramaAstType::FuncCall {
                 func_name_expression: Box::new(ast.clone()),
                 arguments,
-                assign_to_temp: parser.flags.get().contains(SyntaxFlag::IN_EXPRESSION)
+                assign_to_temp: Cell::new(parser.flags.get().contains(SyntaxFlag::IN_EXPRESSION)
                                 || parser.flags.get().contains(SyntaxFlag::IN_ASSIGNMENT)
                                 || parser.flags.get().contains(SyntaxFlag::IN_FUNCTION_ARG)
-                                || parser.flags.get().contains(SyntaxFlag::IN_RETURN)
+                                || parser.flags.get().contains(SyntaxFlag::IN_RETURN))
             });
         }
         /* parse for 'object.method()' */
@@ -122,7 +124,7 @@ impl ExtensionSyntaxParser for FuncCallParser {
                             Ok(BramaAstType::AccessorFuncCall {
                                 source: Box::new(ast.clone()),
                                 indexer: Box::new(sub_ast),
-                                assign_to_temp: true
+                                assign_to_temp: Cell::new(true)
                             })
                         },
                         _ => {

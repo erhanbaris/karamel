@@ -1,4 +1,5 @@
 use std::cell::RefCell;
+use std::rc::Rc;
 
 use crate::compiler::context::KaramelCompilerContext;
 use crate::{types::Token, vm::interpreter::run_vm};
@@ -80,7 +81,7 @@ pub fn code_executer(parameters: ExecutionParameters) -> ExecutionStatus {
         compiler_options.stderr = Some(RefCell::new(String::new()));
     }
 
-    let execution_status = match opcode_compiler.compile(&ast, &mut compiler_options) {
+    let execution_status = match opcode_compiler.compile(ast.clone(), &mut compiler_options) {
         Ok(_) => unsafe { run_vm(&mut compiler_options) },
         Err(message) => {
             log::error!("Program hata ile sonlandırıldı: {}", message);

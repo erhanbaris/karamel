@@ -75,7 +75,7 @@ impl SyntaxParserTrait for FunctionDefinationParser {
             let has_return = match &body {
                 BramaAstType::Return(_) => true,
                 BramaAstType::Block(blocks) =>
-                    match blocks[blocks.len() - 1] {
+                    match &*blocks[blocks.len() - 1] {
                         BramaAstType::Return(_) => true,
                         _ => false
                     },
@@ -86,11 +86,11 @@ impl SyntaxParserTrait for FunctionDefinationParser {
             if !has_return {
                 body = match body {
                     BramaAstType::Block(mut blocks) => {
-                        blocks.push(BramaAstType::Return(Box::new(BramaAstType::None)));
+                        blocks.push(Rc::new(BramaAstType::Return(Box::new(BramaAstType::None))));
                         BramaAstType::Block(blocks)
                     },
                     _ => {
-                        BramaAstType::Block([body, BramaAstType::Return(Box::new(BramaAstType::None))].to_vec())
+                        BramaAstType::Block([Rc::new(body), Rc::new(BramaAstType::Return(Box::new(BramaAstType::None)))].to_vec())
                     }
                 }
             }
