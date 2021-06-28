@@ -256,19 +256,22 @@ impl FunctionReference {
     }
 }
 
-pub fn find_function_definition_type(module: &mut OpcodeModule, ast: Rc<BramaAstType>, options: &mut KaramelCompilerContext, depth_level: usize) -> CompilerResult {
+pub fn find_function_definition_type(module: &mut OpcodeModule, ast: Rc<BramaAstType>, options: &mut KaramelCompilerContext, current_storage_index: usize) -> CompilerResult {
     match ast.borrow() {
         BramaAstType::FunctionDefination { name, arguments, body  } => {
             /* Create new storage for new function */
-            let current_storage_index = options.storages.len() - 1;
             let new_storage_index = options.storages.len();
             options.storages.push(StaticStorage::new(new_storage_index));
             options.storages[new_storage_index].set_parent_location(current_storage_index);
 
             let function = FunctionReference::opcode_function(name.to_string(), arguments.to_vec(), body.clone(), Vec::new(), new_storage_index, current_storage_index);
-            module.functions.insert(name.to_string(), function.clone());
+            let old_function = module.functions.insert(name.to_string(), function.clone());
+
+            if let Some(_) = old_function {
+                return Err(format!("'{}' fonksiyonu önceden tanımlanmış", name));
+            }
             
-            find_function_definition_type(module, body.clone(), options, depth_level + 1)?;
+            find_function_definition_type(module, body.clone(), options, new_storage_index)?;
 
             let storage_builder = StorageBuilder::new();
             let mut builder_option = StorageBuilderOption { max_stack: 0 };
@@ -286,7 +289,7 @@ pub fn find_function_definition_type(module: &mut OpcodeModule, ast: Rc<BramaAst
         },
         BramaAstType::Block(blocks) => {
             for block in blocks {
-                find_function_definition_type(module, block.clone(), options, depth_level + 1)?;
+                find_function_definition_type(module, block.clone(), options, current_storage_index)?;
             }
         },
         _ => ()

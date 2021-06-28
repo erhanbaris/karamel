@@ -6,6 +6,7 @@ use std::rc::Rc;
 
 use crate::buildin::Class;
 use crate::buildin::Module;
+use crate::compiler::StaticStorage;
 use crate::compiler::function::find_function_definition_type;
 use crate::error::generate_error_message;
 use crate::parser::Parser;
@@ -91,8 +92,12 @@ pub fn load_module(params: &[String], options: &mut KaramelCompilerContext) -> R
         let syntax = SyntaxParser::new(parser.tokens().to_vec());
         return match syntax.parse() {
             Ok(ast) => {
+                let module_storage = options.storages.len();
+                options.storages.push(StaticStorage::new(module_storage));
+                options.storages[module_storage].set_parent_location(0);
+
                 let mut module = OpcodeModule::new(module, path.to_str().unwrap().to_string(), ast.clone());
-                find_function_definition_type(&mut module, ast.clone(), options, 0)?;
+                find_function_definition_type(&mut module, ast.clone(), options, module_storage)?;
                 Ok(module)
             },
             Err(error) => return Err(generate_error_message(&content, &error))

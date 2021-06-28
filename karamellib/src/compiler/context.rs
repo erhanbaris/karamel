@@ -91,22 +91,23 @@ impl  KaramelCompilerContext {
         loop {
 
             /* Search function with storage */
-            let function_location = self.functions.iter().position(|function_reference| {
-                return match function_reference.callback {
-                    FunctionType::Native(_) =>
-                    function_reference.module_path == module_path && 
-                        function_reference.name == name,
-                    FunctionType::Opcode => 
-                    function_reference.name == name && 
+            for (_, module) in self.modules.iter() {
+                for (_, function_reference) in module.get_methods().iter() {
+                    let result = match function_reference.callback {
+                        FunctionType::Native(_) =>
                         function_reference.module_path == module_path && 
-                        function_reference.defined_storage_index == search_storage
-                };
-            });
+                            function_reference.name == name,
+                        FunctionType::Opcode => 
+                        function_reference.name == name && 
+                            function_reference.module_path == module_path && 
+                            function_reference.defined_storage_index == search_storage
+                    };
 
-            match function_location {
-                Some(location) => return Some(self.functions[location].clone()),
-                _ => ()
-            };
+                    if result {
+                        return Some(function_reference.clone())
+                    }
+                }
+            }
             
             search_storage = match self.storages[search_storage].get_parent_location() {
                 Some(location) => location as usize,

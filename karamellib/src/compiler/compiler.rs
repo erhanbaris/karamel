@@ -39,18 +39,18 @@ impl InterpreterCompiler {
         
         /* Save all function information */
         let modules = self.detect_modules(main_ast.clone(), options)?;
-        let module = self.prepare_main_module(main_ast.clone(), options)?;
+        let main_module = self.prepare_main_module(main_ast.clone(), options)?;
         //self.prepare_modules(options)?;
 
-        storage_builder.prepare(&*module, &*main_ast, 0, options, &mut compiler_options);
+        storage_builder.prepare(&*main_module, &*main_ast, 0, options, &mut compiler_options);
 
         /* First part of the codes are functions */
         let mut functions = Vec::new();
         for module in modules.iter() {
-            self.get_function_definations(module.main_ast.clone(), &mut functions, options, 0)?;
+            self.get_function_definations(module.clone(), module.main_ast.clone(), &mut functions, options, 0)?;
         }
 
-        self.get_function_definations(main_ast.clone(), &mut functions, options, 0)?;
+        self.get_function_definations(main_module.clone(), main_ast.clone(), &mut functions, options, 0)?;
 
         self.generate_functions(&mut functions, options)?;
 
@@ -84,10 +84,12 @@ impl InterpreterCompiler {
     }
 
     pub fn prepare_main_module(&self, main_ast: Rc<BramaAstType>, options: &mut KaramelCompilerContext) -> Result<Rc<OpcodeModule>, String> {
-        let mut module = OpcodeModule::new("!baz".to_string(), String::new(), main_ast.clone());
-        find_function_definition_type(&mut module, main_ast.clone(), options, 0)?;
+        let module = OpcodeModule::new("!baz".to_string(), String::new(), main_ast.clone());
         let module = Rc::new(module);
+        options.main_module = module.as_ref() as *const OpcodeModule as *mut OpcodeModule;
         options.add_module(module.clone());
+
+        unsafe { find_function_definition_type(options.main_module.as_mut().unwrap(), main_ast.clone(), options, 0)?; }
         Ok(module.clone())
     }
 
@@ -106,7 +108,7 @@ impl InterpreterCompiler {
         Ok(())
     }
 
-    fn get_function_definations(&self, ast: Rc<BramaAstType>, functions: &mut Vec<FunctionDefine>, options: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult{
+    fn get_function_definations(&self, module: Rc<OpcodeModule>, ast: Rc<BramaAstType>, functions: &mut Vec<FunctionDefine>, options: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult{
         match &*ast {
             BramaAstType::FunctionDefination { name, arguments, body  } => {
                 let search = options.get_function(name.to_string(), Vec::new(), storage_index);
@@ -120,7 +122,7 @@ impl InterpreterCompiler {
                             reference: reference.clone()
                         });
 
-                        self.get_function_definations(body.clone(), functions, options, reference.storage_index)?;
+                        self.get_function_definations(module.clone(), body.clone(), functions, options, reference.storage_index)?;
                     },
 
                     None => return Err(format!("'{}' fonksiyonu bulunamadı", name))
@@ -128,7 +130,7 @@ impl InterpreterCompiler {
             },
             BramaAstType::Block(blocks) => {
                 for block in blocks {
-                    self.get_function_definations(block.clone(), functions, options, storage_index)?;
+                    self.get_function_definations(module.clone(), block.clone(), functions, options, storage_index)?;
                 }
             },
             _ => ()
