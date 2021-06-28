@@ -23,74 +23,74 @@ mod tests {
                 };
 
                 let syntax = SyntaxParser::new(parser.tokens().to_vec());
-                assert_eq!(&*syntax.parse(), $result);
+                assert_eq!(syntax.parse(), $result);
             }
         };
     }
 
     test_compare!(func_def_1, r#"
 fonk test():
-    erhan=123"#, Ok(BramaAstType::FunctionDefination {
+    erhan=123"#, Ok(Rc::new(BramaAstType::FunctionDefination {
         name: "test".to_string(),
         arguments: Vec::new(),
-        body: Rc::new(BramaAstType::Block([BramaAstType::Assignment {
+        body: Rc::new(BramaAstType::Block([Rc::new(BramaAstType::Assignment {
             variable: Box::new(BramaAstType::Symbol("erhan".to_string())),
             operator: BramaOperatorType::Assign,
             expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123.0))))
-        },
-        BramaAstType::Return(Box::new(BramaAstType::None))].to_vec()))
-    }));
+        }),
+        Rc::new(BramaAstType::Return(Box::new(BramaAstType::None)))].to_vec()))
+    })));
     test_compare!(func_def_2, r#"
 fonk test(a):
-    erhan=123"#, Ok(BramaAstType::FunctionDefination {
+    erhan=123"#, Ok(Rc::new(BramaAstType::FunctionDefination {
         name: "test".to_string(),
         arguments: ["a".to_string()].to_vec(),
-        body: Rc::new(BramaAstType::Block([BramaAstType::Assignment {
+        body: Rc::new(BramaAstType::Block([Rc::new(BramaAstType::Assignment {
             variable: Box::new(BramaAstType::Symbol("erhan".to_string())),
             operator: BramaOperatorType::Assign,
             expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123.0))))
-        },
-        BramaAstType::Return(Box::new(BramaAstType::None))].to_vec()))
-    }));
+        }),
+        Rc::new(BramaAstType::Return(Box::new(BramaAstType::None)))].to_vec()))
+    })));
     test_compare!(func_def_3, r#"
 fonk test(a, b    ,   c):
-    erhan=123"#, Ok(BramaAstType::FunctionDefination {
+    erhan=123"#, Ok(Rc::new(BramaAstType::FunctionDefination {
         name: "test".to_string(),
         arguments: ["a".to_string(), "b".to_string(), "c".to_string()].to_vec(),
-        body: Rc::new(BramaAstType::Block([BramaAstType::Assignment {
+        body: Rc::new(BramaAstType::Block([Rc::new(BramaAstType::Assignment {
             variable: Box::new(BramaAstType::Symbol("erhan".to_string())),
             operator: BramaOperatorType::Assign,
             expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123.0))))
-        },
-        BramaAstType::Return(Box::new(BramaAstType::None))].to_vec()))
-    }));
+        }),
+        Rc::new(BramaAstType::Return(Box::new(BramaAstType::None)))].to_vec()))
+    })));
     test_compare!(func_def_4, r#"
 fonk test:
-    erhan=123"#, Ok(BramaAstType::FunctionDefination {
+    erhan=123"#, Ok(Rc::new(BramaAstType::FunctionDefination {
             name: "test".to_string(),
             arguments: Vec::new(),
-            body: Rc::new(BramaAstType::Block([BramaAstType::Assignment {
+            body: Rc::new(BramaAstType::Block([Rc::new(BramaAstType::Assignment {
                 variable: Box::new(BramaAstType::Symbol("erhan".to_string())),
                 operator: BramaOperatorType::Assign,
                 expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123.0))))
-            },
-            BramaAstType::Return(Box::new(BramaAstType::None))].to_vec()))
-        }));
+            }),
+            Rc::new(BramaAstType::Return(Box::new(BramaAstType::None)))].to_vec()))
+        })));
         test_compare!(func_def_6, r#"
 fonk test   :
     
     
     
-        erhan=123"#, Ok(BramaAstType::FunctionDefination {
+        erhan=123"#, Ok(Rc::new(BramaAstType::FunctionDefination {
                 name: "test".to_string(),
                 arguments: Vec::new(),
-                body: Rc::new(BramaAstType::Block([BramaAstType::Assignment {
+                body: Rc::new(BramaAstType::Block([Rc::new(BramaAstType::Assignment {
                     variable: Box::new(BramaAstType::Symbol("erhan".to_string())),
                     operator: BramaOperatorType::Assign,
                     expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123.0))))
-                },
-                BramaAstType::Return(Box::new(BramaAstType::None))].to_vec()))
-            }));
+                }),
+                Rc::new(BramaAstType::Return(Box::new(BramaAstType::None)))].to_vec()))
+            })));
             test_compare!(func_def_7, r#"
 fonk test
     erhan=123"#, Err(BramaError {
@@ -154,27 +154,27 @@ döndür test
 test_compare!(func_def_15, r#"
 fonk test():
     erhan=123
-    döndür erhan"#, Ok(BramaAstType::FunctionDefination {
+    döndür erhan"#, Ok(Rc::new(BramaAstType::FunctionDefination {
     name: "test".to_string(),
     arguments: Vec::new(),
-    body: Rc::new(BramaAstType::Block([BramaAstType::Assignment {
+    body: Rc::new(BramaAstType::Block([Rc::new(BramaAstType::Assignment {
         variable: Box::new(BramaAstType::Symbol("erhan".to_string())),
         operator: BramaOperatorType::Assign,
         expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123.0))))
-    },
-    BramaAstType::Return(Box::new(BramaAstType::Symbol("erhan".to_string())))].to_vec()))
-}));
+    }),
+    Rc::new(BramaAstType::Return(Box::new(BramaAstType::Symbol("erhan".to_string()))))].to_vec()))
+})));
 test_compare!(func_def_16, r#"
 fonk test():
     erhan=123
-    döndür"#, Ok(BramaAstType::FunctionDefination {
+    döndür"#, Ok(Rc::new(BramaAstType::FunctionDefination {
     name: "test".to_string(),
     arguments: Vec::new(),
-    body: Rc::new(BramaAstType::Block([BramaAstType::Assignment {
+    body: Rc::new(BramaAstType::Block([Rc::new(BramaAstType::Assignment {
         variable: Box::new(BramaAstType::Symbol("erhan".to_string())),
         operator: BramaOperatorType::Assign,
         expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123.0))))
-    },
-    BramaAstType::Return(Box::new(BramaAstType::None))].to_vec()))
-}));
+    }),
+    Rc::new(BramaAstType::Return(Box::new(BramaAstType::None)))].to_vec()))
+})));
 }

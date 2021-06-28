@@ -21,18 +21,18 @@ mod tests {
                 };
 
                 let syntax = SyntaxParser::new(parser.tokens().to_vec());
-                assert_eq!(&*syntax.parse(), $result);
+                assert_eq!(syntax.parse(), $result);
             }
         };
     }
 
-    test_compare!(assignment_1, "erhan = 2020", Ok(BramaAstType::Assignment {
+    test_compare!(assignment_1, "erhan = 2020", Ok(Rc::new(BramaAstType::Assignment {
         variable: Box::new(BramaAstType::Symbol("erhan".to_string())),
         operator: BramaOperatorType::Assign,
         expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(2020.0))))
-    }));
+    })));
 
-    test_compare!(assignment_2, "erhan = ('erhan' * 2)", Ok(BramaAstType::Assignment {
+    test_compare!(assignment_2, "erhan = ('erhan' * 2)", Ok(Rc::new(BramaAstType::Assignment {
         variable: Box::new(BramaAstType::Symbol("erhan".to_string())),
         operator: BramaOperatorType::Assign,
         expression: Box::new(BramaAstType::Binary {
@@ -40,5 +40,5 @@ mod tests {
             operator: BramaOperatorType::Multiplication, 
             right: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(2.0))))
         })
-    }));
+    })));
 }

@@ -9,6 +9,7 @@ mod tests {
     use crate::karamellib::syntax::*;
     use crate::karamellib::compiler::value::BramaPrimative;
     use crate::karamellib::compiler::ast::{BramaAstType};
+    use std::cell::Cell;
     use std::rc::Rc;
 
     #[warn(unused_macros)]
@@ -23,31 +24,31 @@ mod tests {
                 };
 
                 let syntax = SyntaxParser::new(parser.tokens().to_vec());
-                assert_eq!(&*syntax.parse(), $result);
+                assert_eq!(syntax.parse(), $result);
             }
         };
     }
 
     test_compare!(endless_1, r#"sonsuz:
     erhan=123
-"#, Ok(BramaAstType::EndlessLoop(Box::new(BramaAstType::Assignment {
+"#, Ok(Rc::new(BramaAstType::EndlessLoop(Box::new(BramaAstType::Assignment {
     variable: Box::new(BramaAstType::Symbol("erhan".to_string())),
     operator: BramaOperatorType::Assign,
     expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123.0))))
-}))));
+})))));
 test_compare!(endless_2, r#"sonsuz:
     erhan=123   
-    print(1)"#, Ok(BramaAstType::EndlessLoop(Box::new(BramaAstType::Block([BramaAstType::Assignment {
+    print(1)"#, Ok(Rc::new(BramaAstType::EndlessLoop(Box::new(BramaAstType::Block([Rc::new(BramaAstType::Assignment {
     variable: Box::new(BramaAstType::Symbol("erhan".to_string())),
     operator: BramaOperatorType::Assign,
     expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123.0))))
-},
-BramaAstType::FuncCall {
+}),
+Rc::new(BramaAstType::FuncCall {
     func_name_expression: Box::new(BramaAstType::Symbol("print".to_string())),
     arguments: [Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(1.0))))].to_vec(),
-    assign_to_temp: false
-}
-].to_vec())))));
+    assign_to_temp: Cell::new(false)
+})
+].to_vec()))))));
 test_compare!(endless_3, r#"sonsuz
     erhan=123   
     print(1)"#, Err(BramaError {
@@ -58,18 +59,18 @@ test_compare!(endless_3, r#"sonsuz
 test_compare!(endless_4, r#"sonsuz:
     erhan=123   
     print(1)
-    kır"#, Ok(BramaAstType::EndlessLoop(Box::new(BramaAstType::Block([BramaAstType::Assignment {
+    kır"#, Ok(Rc::new(BramaAstType::EndlessLoop(Box::new(BramaAstType::Block([Rc::new(BramaAstType::Assignment {
     variable: Box::new(BramaAstType::Symbol("erhan".to_string())),
     operator: BramaOperatorType::Assign,
     expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(123.0))))
-},
-BramaAstType::FuncCall {
+}),
+Rc::new(BramaAstType::FuncCall {
     func_name_expression: Box::new(BramaAstType::Symbol("print".to_string())),
     arguments: [Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(1.0))))].to_vec(),
-    assign_to_temp: false
-},
-BramaAstType::Break
-].to_vec())))));
+    assign_to_temp: Cell::new(false)
+}),
+Rc::new(BramaAstType::Break)
+].to_vec()))))));
 test_compare!(endless_5, r#"kır"#, Err(BramaError {
     error_type: BramaErrorType::BreakAndContinueBelongToLoops,
     column: 3,

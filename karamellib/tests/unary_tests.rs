@@ -23,19 +23,19 @@ mod tests {
                 };
 
                 let syntax = SyntaxParser::new(parser.tokens().to_vec());
-                assert_eq!(&*syntax.parse(), $result);
+                assert_eq!(syntax.parse(), $result);
             }
         };
     }
 
-    test_compare!(unary_1, "+1024", Ok(BramaAstType::Primative(Rc::new(BramaPrimative::Number(1024.0)))));
-    test_compare!(unary_2, "-1024", Ok(BramaAstType::Primative(Rc::new(BramaPrimative::Number(-1024.0)))));
-    test_compare!(unary_3, "+1024.0", Ok(BramaAstType::Primative(Rc::new(BramaPrimative::Number(1024.0)))));
-    test_compare!(unary_4, "-1024.0", Ok(BramaAstType::Primative(Rc::new(BramaPrimative::Number(-1024.0)))));
-    test_compare!(unary_5, "değil doğru", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Not, Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Bool(true)))))));
-    test_compare!(unary_6, "değil yanlış", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Not, Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Bool(false)))))));
-    test_compare!(unary_7, "değil doğru", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Not, Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Bool(true)))))));
-    test_compare!(unary_8, "değil yanlış", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Not, Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Bool(false)))))));
+    test_compare!(unary_1, "+1024", Ok(Rc::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(1024.0))))));
+    test_compare!(unary_2, "-1024", Ok(Rc::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(-1024.0))))));
+    test_compare!(unary_3, "+1024.0", Ok(Rc::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(1024.0))))));
+    test_compare!(unary_4, "-1024.0", Ok(Rc::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(-1024.0))))));
+    test_compare!(unary_5, "değil doğru", Ok(Rc::new(BramaAstType::PrefixUnary(BramaOperatorType::Not, Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Bool(true))))))));
+    test_compare!(unary_6, "değil yanlış", Ok(Rc::new(BramaAstType::PrefixUnary(BramaOperatorType::Not, Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Bool(false))))))));
+    test_compare!(unary_7, "değil doğru", Ok(Rc::new(BramaAstType::PrefixUnary(BramaOperatorType::Not, Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Bool(true))))))));
+    test_compare!(unary_8, "değil yanlış", Ok(Rc::new(BramaAstType::PrefixUnary(BramaOperatorType::Not, Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Bool(false))))))));
     
     test_compare!(unary_9, "+[]", Err(BramaError {
         error_type: BramaErrorType::UnaryWorksWithNumber,
@@ -58,17 +58,17 @@ mod tests {
         line: 0
     }));
 
-    test_compare!(unary_13, "++data", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Increment, Box::new(BramaAstType::Symbol("data".to_string())))));
-    test_compare!(unary_14, "--data", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Deccrement, Box::new(BramaAstType::Symbol("data".to_string())))));
-    test_compare!(unary_15, "--data", Ok(BramaAstType::PrefixUnary(BramaOperatorType::Deccrement, Box::new(BramaAstType::Symbol("data".to_string())))));
-    test_compare!(unary_16, "data--", Ok(BramaAstType::SuffixUnary(BramaOperatorType::Deccrement, Box::new(BramaAstType::Symbol("data".to_string())))));
-    test_compare!(unary_17, "data++", Ok(BramaAstType::SuffixUnary(BramaOperatorType::Increment, Box::new(BramaAstType::Symbol("data".to_string())))));
+    test_compare!(unary_13, "++data", Ok(Rc::new(BramaAstType::PrefixUnary(BramaOperatorType::Increment, Box::new(BramaAstType::Symbol("data".to_string()))))));
+    test_compare!(unary_14, "--data", Ok(Rc::new(BramaAstType::PrefixUnary(BramaOperatorType::Deccrement, Box::new(BramaAstType::Symbol("data".to_string()))))));
+    test_compare!(unary_15, "--data", Ok(Rc::new(BramaAstType::PrefixUnary(BramaOperatorType::Deccrement, Box::new(BramaAstType::Symbol("data".to_string()))))));
+    test_compare!(unary_16, "data--", Ok(Rc::new(BramaAstType::SuffixUnary(BramaOperatorType::Deccrement, Box::new(BramaAstType::Symbol("data".to_string()))))));
+    test_compare!(unary_17, "data++", Ok(Rc::new(BramaAstType::SuffixUnary(BramaOperatorType::Increment, Box::new(BramaAstType::Symbol("data".to_string()))))));
 
-    test_compare!(unary_18, "+ 1024", Ok(BramaAstType::Primative(Rc::new(BramaPrimative::Number(1024.0)))));
-    test_compare!(unary_19, "++data - 1", Ok(BramaAstType::Binary {
+    test_compare!(unary_18, "+ 1024", Ok(Rc::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(1024.0))))));
+    test_compare!(unary_19, "++data - 1", Ok(Rc::new(BramaAstType::Binary {
         left: Box::new(BramaAstType::PrefixUnary(BramaOperatorType::Increment, Box::new(BramaAstType::Symbol("data".to_string())))),
         operator: BramaOperatorType::Subtraction,
         right: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(1.0))))
-    }));
-    //test_compare!(unary_19, "doğru değil", Ok(BramaAstType::SuffixUnary(BramaOperatorType::Not, Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Bool(true))))));
+    })));
+    //test_compare!(unary_19, "doğru değil", Ok(Rc::new(BramaAstType::SuffixUnary(BramaOperatorType::Not, Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Bool(true)))))));
 }

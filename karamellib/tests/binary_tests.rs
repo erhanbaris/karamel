@@ -23,24 +23,24 @@ mod tests {
                 };
 
                 let syntax = SyntaxParser::new(parser.tokens().to_vec());
-                assert_eq!(&*syntax.parse(), $result);
+                assert_eq!(syntax.parse(), $result);
             }
         };
     }
 
-    test_compare!(add_subtract_1, "10 + 10", Ok(BramaAstType::Binary {
+    test_compare!(add_subtract_1, "10 + 10", Ok(Rc::new(BramaAstType::Binary {
         left: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(10.0)))), 
         operator: BramaOperatorType::Addition, 
         right: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(10.0))))
-    }));
+    })));
 
-    test_compare!(add_subtract_2, "10 - 10", Ok(BramaAstType::Binary {
+    test_compare!(add_subtract_2, "10 - 10", Ok(Rc::new(BramaAstType::Binary {
         left: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(10.0)))), 
         operator: BramaOperatorType::Subtraction, 
         right: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(10.0))))
-    }));
+    })));
 
-    test_compare!(add_subtract_3, "5 * 2 mod 2 - 10", Ok(BramaAstType::Binary {
+    test_compare!(add_subtract_3, "5 * 2 mod 2 - 10", Ok(Rc::new(BramaAstType::Binary {
         left: Box::new(BramaAstType::Binary {
             left: Box::new(BramaAstType::Binary {
                 left: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(5.0)))),
@@ -52,9 +52,9 @@ mod tests {
         }), 
         operator: BramaOperatorType::Subtraction, 
         right: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(10.0))))
-    }));
+    })));
 
-    test_compare!(add_subtract_4, "22 + 5 * 2 mod 2", Ok(BramaAstType::Binary {
+    test_compare!(add_subtract_4, "22 + 5 * 2 mod 2", Ok(Rc::new(BramaAstType::Binary {
         left: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(22.0)))), 
         operator: BramaOperatorType::Addition, 
         right: Box::new(BramaAstType::Binary {
@@ -66,9 +66,9 @@ mod tests {
             operator: BramaOperatorType::Modulo, 
             right: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(2.0))))
         })
-    }));
+    })));
 
-    test_compare!(add_subtract_5, "11 + 12 + 13", Ok(BramaAstType::Binary {
+    test_compare!(add_subtract_5, "11 + 12 + 13", Ok(Rc::new(BramaAstType::Binary {
         left: Box::new(BramaAstType::Binary {
             left: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(11.0)))), 
             operator: BramaOperatorType::Addition, 
@@ -76,49 +76,49 @@ mod tests {
         }), 
         operator: BramaOperatorType::Addition, 
         right: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(13.0))))
-    }));
+    })));
 
-    test_compare!(multiply_divide_1, "10*10", Ok(BramaAstType::Binary {
+    test_compare!(multiply_divide_1, "10*10", Ok(Rc::new(BramaAstType::Binary {
         left: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(10.0)))), 
         operator: BramaOperatorType::Multiplication, 
         right: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(10.0))))
-    }));
+    })));
 
-    test_compare!(multiply_divide_2, "10*-10", Ok(BramaAstType::Binary {
+    test_compare!(multiply_divide_2, "10*-10", Ok(Rc::new(BramaAstType::Binary {
         left: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(10.0)))), 
         operator: BramaOperatorType::Multiplication, 
         right: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(-10.0))))
-    }));
+    })));
 
-    test_compare!(multiply_divide_3, "-10*-10", Ok(BramaAstType::Binary {
+    test_compare!(multiply_divide_3, "-10*-10", Ok(Rc::new(BramaAstType::Binary {
         left: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(-10.0)))), 
         operator: BramaOperatorType::Multiplication, 
         right: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(-10.0))))
-    }));
+    })));
 
-    test_compare!(multiply_divide_4, "-10/-10", Ok(BramaAstType::Binary {
+    test_compare!(multiply_divide_4, "-10/-10", Ok(Rc::new(BramaAstType::Binary {
         left: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(-10.0)))), 
         operator: BramaOperatorType::Division, 
         right: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(-10.0))))
-    }));
+    })));
 
-    test_compare!(multiply_divide_5, "10/10", Ok(BramaAstType::Binary {
+    test_compare!(multiply_divide_5, "10/10", Ok(Rc::new(BramaAstType::Binary {
         left: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(10.0)))), 
         operator: BramaOperatorType::Division, 
         right: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(10.0))))
-    }));
+    })));
 
-    test_compare!(multiply_divide_6, "doğru * doğru", Ok(BramaAstType::Binary {
+    test_compare!(multiply_divide_6, "doğru * doğru", Ok(Rc::new(BramaAstType::Binary {
         left: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Bool(true)))),
         operator: BramaOperatorType::Multiplication, 
         right: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Bool(true)))), 
-    }));
+    })));
 
-    test_compare!(multiply_divide_7, "doğru / doğru", Ok(BramaAstType::Binary {
+    test_compare!(multiply_divide_7, "doğru / doğru", Ok(Rc::new(BramaAstType::Binary {
         left: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Bool(true)))),
         operator: BramaOperatorType::Division, 
         right: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Bool(true)))), 
-    }));
+    })));
 
     test_compare!(multiply_divide_8, "1/", Err(BramaError {
         error_type: BramaErrorType::RightSideOfExpressionNotFound,
@@ -131,19 +131,19 @@ mod tests {
         line: 0
     }));
 
-    test_compare!(modulo_1, "10 mod 10", Ok(BramaAstType::Binary {
+    test_compare!(modulo_1, "10 mod 10", Ok(Rc::new(BramaAstType::Binary {
         left: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(10.0)))), 
         operator: BramaOperatorType::Modulo, 
         right: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(10.0))))
-    }));
+    })));
 
-    test_compare!(modulo_2, "10 mod 10", Ok(BramaAstType::Binary {
+    test_compare!(modulo_2, "10 mod 10", Ok(Rc::new(BramaAstType::Binary {
         left: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(10.0)))), 
         operator: BramaOperatorType::Modulo, 
         right: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(10.0))))
-    }));
+    })));
 
-    test_compare!(modulo_3, "10 mod 5*2", Ok(BramaAstType::Binary {
+    test_compare!(modulo_3, "10 mod 5*2", Ok(Rc::new(BramaAstType::Binary {
         left: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(10.0)))),
         operator: BramaOperatorType::Modulo, 
         right: Box::new(BramaAstType::Binary {
@@ -151,9 +151,9 @@ mod tests {
             operator: BramaOperatorType::Multiplication, 
             right: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(2.0))))
         })
-    }));
+    })));
 
-    test_compare!(modulo_4, "5*2 mod 2", Ok(BramaAstType::Binary {
+    test_compare!(modulo_4, "5*2 mod 2", Ok(Rc::new(BramaAstType::Binary {
         left: Box::new(BramaAstType::Binary {
             left: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(5.0)))),
             operator: BramaOperatorType::Multiplication, 
@@ -161,5 +161,5 @@ mod tests {
         }),
         operator: BramaOperatorType::Modulo, 
         right: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(2.0))))
-    }));
+    })));
 }
