@@ -34,6 +34,16 @@ pub struct ExecutionStatus {
     pub opcodes: Option<Vec<Token>>
 }
 
+fn get_execution_path() -> String {
+    match std::env::current_exe() {
+        Ok(path) => match path.parent() {
+            Some(parent_path) => parent_path.to_str().unwrap().to_string(),
+            _ => String::from(".")
+        },
+        _ => String::from(".")
+    }
+}
+
 pub fn code_executer(parameters: ExecutionParameters) -> ExecutionStatus {
     let mut status = ExecutionStatus::default();
     match log::set_logger(&CONSOLE_LOGGER) {
@@ -75,6 +85,8 @@ pub fn code_executer(parameters: ExecutionParameters) -> ExecutionStatus {
 
     let opcode_compiler = InterpreterCompiler {};
     let mut compiler_options: KaramelCompilerContext = KaramelCompilerContext::new();
+    compiler_options.script_path = get_execution_path();
+    log::debug!("Execution path: {}", compiler_options.script_path);
 
     if parameters.return_output {
         compiler_options.stdout = Some(RefCell::new(String::new()));

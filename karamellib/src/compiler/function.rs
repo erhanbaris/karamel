@@ -81,9 +81,10 @@ impl<'a> Iterator for FunctionParameterIterator<'a> {
 bitflags! {
     #[derive(Default)]
     pub struct FunctionFlag: u32 {
-        const NONE     = 0b00000000;
-        const STATIC   = 0b00000001;
-        const IN_CLASS = 0b00000010;
+        const NONE         = 0b00000000;
+        const STATIC       = 0b00000001;
+        const IN_CLASS     = 0b00000010;
+        const MODULE_LEVEL = 0b00000100;
     }
 }
 
@@ -157,8 +158,8 @@ impl FunctionReference {
         Rc::new(reference)
     }
 
-    pub fn opcode_function(name: String, arguments: Vec<String>, body: Rc<BramaAstType>, module_path: Vec<String>, storage_index: usize, defined_storage_index: usize) -> Rc<FunctionReference> {
-        let reference = FunctionReference {
+    pub fn opcode_function(name: String, arguments: Vec<String>, body: Rc<BramaAstType>, module_path: Vec<String>, storage_index: usize, defined_storage_index: usize, module_level: bool) -> Rc<FunctionReference> {
+        let mut reference = FunctionReference {
             callback: FunctionType::Opcode,
             flags: FunctionFlag::STATIC,
             module_path,
@@ -170,6 +171,11 @@ impl FunctionReference {
             used_locations: RefCell::new(Vec::new()),
             opcode_body: Some(body.clone())
         };
+
+        if module_level {
+            reference.flags = reference.flags | FunctionFlag::MODULE_LEVEL;
+        }
+
         Rc::new(reference)
     }
 
@@ -256,7 +262,7 @@ impl FunctionReference {
     }
 }
 
-pub fn find_function_definition_type(module: &mut OpcodeModule, ast: Rc<BramaAstType>, options: &mut KaramelCompilerContext, current_storage_index: usize) -> CompilerResult {
+pub fn find_function_definition_type(module: &mut OpcodeModule, ast: Rc<BramaAstType>, options: &mut KaramelCompilerContext, current_storage_index: usize, module_level: bool) -> CompilerResult {
     match ast.borrow() {
         BramaAstType::FunctionDefination { name, arguments, body  } => {
             /* Create new storage for new function */
@@ -264,14 +270,14 @@ pub fn find_function_definition_type(module: &mut OpcodeModule, ast: Rc<BramaAst
             options.storages.push(StaticStorage::new(new_storage_index));
             options.storages[new_storage_index].set_parent_location(current_storage_index);
 
-            let function = FunctionReference::opcode_function(name.to_string(), arguments.to_vec(), body.clone(), Vec::new(), new_storage_index, current_storage_index);
+            let function = FunctionReference::opcode_function(name.to_string(), arguments.to_vec(), body.clone(), [module.name.clone()].to_vec(), new_storage_index, current_storage_index, module_level);
             let old_function = module.functions.insert(name.to_string(), function.clone());
 
             if let Some(_) = old_function {
                 return Err(format!("'{}' fonksiyonu önceden tanımlanmış", name));
             }
             
-            find_function_definition_type(module, body.clone(), options, new_storage_index)?;
+            find_function_definition_type(module, body.clone(), options, new_storage_index, false)?;
 
             let storage_builder = StorageBuilder::new();
             let mut builder_option = StorageBuilderOption { max_stack: 0 };
@@ -289,7 +295,7 @@ pub fn find_function_definition_type(module: &mut OpcodeModule, ast: Rc<BramaAst
         },
         BramaAstType::Block(blocks) => {
             for block in blocks {
-                find_function_definition_type(module, block.clone(), options, current_storage_index)?;
+                find_function_definition_type(module, block.clone(), options, current_storage_index, module_level)?;
             }
         },
         _ => ()

@@ -3,7 +3,8 @@ use crate::buildin::num::{NumModule};
 
 use crate::{buildin::{Class, Module, ModuleCollection, base_functions, class::{dict, get_empty_class, list, number, proxy, text}, debug, io}, compiler::scope::Scope};
 
-use super::{BramaPrimative, StaticStorage, function::{FunctionReference, FunctionType}, module::OpcodeModule};
+use super::function;
+use super::{BramaPrimative, StaticStorage, function::{FunctionReference, FunctionType, FunctionFlag}, module::OpcodeModule};
 
 
 pub struct KaramelCompilerContext {
@@ -28,7 +29,7 @@ pub struct KaramelCompilerContext {
 impl  KaramelCompilerContext {
     pub fn new() -> KaramelCompilerContext {
         let mut compiler = KaramelCompilerContext {
-            script_path: String::from("/Users/erhanbaris/"),
+            script_path: String::new(),
             opcodes: Vec::new(),
             storages: vec![StaticStorage::new(0)],
             modules: ModuleCollection::new(),
@@ -89,7 +90,6 @@ impl  KaramelCompilerContext {
     pub fn get_function(&self, name: String, module_path: Vec<String>, start_storage_index: usize) -> Option<Rc<FunctionReference>> {
         let mut search_storage = start_storage_index;
         loop {
-
             /* Search function with storage */
             for (_, module) in self.modules.iter() {
                 for (_, function_reference) in module.get_methods().iter() {
@@ -100,7 +100,7 @@ impl  KaramelCompilerContext {
                         FunctionType::Opcode => 
                         function_reference.name == name && 
                             function_reference.module_path == module_path && 
-                            function_reference.defined_storage_index == search_storage
+                            (function_reference.defined_storage_index == search_storage || function_reference.flags.contains(FunctionFlag::MODULE_LEVEL))
                     };
 
                     if result {

@@ -47,7 +47,7 @@ impl InterpreterCompiler {
         /* First part of the codes are functions */
         let mut functions = Vec::new();
         for module in modules.iter() {
-            self.get_function_definations(module.clone(), module.main_ast.clone(), &mut functions, options, 0)?;
+            self.get_function_definations(module.clone(), module.main_ast.clone(), &mut functions, options, module.storage_index)?;
         }
 
         self.get_function_definations(main_module.clone(), main_ast.clone(), &mut functions, options, 0)?;
@@ -89,7 +89,7 @@ impl InterpreterCompiler {
         options.main_module = module.as_ref() as *const OpcodeModule as *mut OpcodeModule;
         options.add_module(module.clone());
 
-        unsafe { find_function_definition_type(options.main_module.as_mut().unwrap(), main_ast.clone(), options, 0)?; }
+        unsafe { find_function_definition_type(options.main_module.as_mut().unwrap(), main_ast.clone(), options, 0, true)?; }
         Ok(module.clone())
     }
 
@@ -111,7 +111,7 @@ impl InterpreterCompiler {
     fn get_function_definations(&self, module: Rc<OpcodeModule>, ast: Rc<BramaAstType>, functions: &mut Vec<FunctionDefine>, options: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult{
         match &*ast {
             BramaAstType::FunctionDefination { name, arguments, body  } => {
-                let search = options.get_function(name.to_string(), Vec::new(), storage_index);
+                let search = options.get_function(name.to_string(), [module.name.clone()].to_vec(), storage_index);
                 match search {
                     Some(reference) => {
                         println!("Function: {}", name);

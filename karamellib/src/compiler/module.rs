@@ -19,6 +19,7 @@ use super::function::FunctionReference;
 
 pub struct OpcodeModule {
     pub name: String,
+    pub storage_index: usize,
     pub module_path: String,
     pub main_ast: Rc<BramaAstType>,
     pub functions: HashMap<String, Rc<FunctionReference>>,
@@ -32,7 +33,8 @@ impl OpcodeModule {
             module_path, 
             main_ast,
             functions: HashMap::new(),
-            modules: HashMap::new()
+            modules: HashMap::new(),
+            storage_index: 0
         }
     }
 }
@@ -97,7 +99,8 @@ pub fn load_module(params: &[String], options: &mut KaramelCompilerContext) -> R
                 options.storages[module_storage].set_parent_location(0);
 
                 let mut module = OpcodeModule::new(module, path.to_str().unwrap().to_string(), ast.clone());
-                find_function_definition_type(&mut module, ast.clone(), options, module_storage)?;
+                module.storage_index = module_storage;
+                find_function_definition_type(&mut module, ast.clone(), options, module_storage, true)?;
                 Ok(module)
             },
             Err(error) => return Err(generate_error_message(&content, &error))

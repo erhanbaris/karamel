@@ -23,6 +23,14 @@
                         "cwd": "${workspaceFolder}"
                 },
                 {
+                        "type": "cppvsdbg",
+                        "request": "launch",
+                        "name": "Debug executable 'karamelapp' at Windows",
+                        "program": "${workspaceRoot}/target/debug/karamelapp.exe",
+                        "args": [],
+                        "cwd": "${workspaceFolder}"
+                },
+                {
                         "type": "lldb",
                         "request": "launch",
                         "name": "Debug unit tests in executable 'karamelapp'",
