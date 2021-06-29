@@ -25,6 +25,8 @@ impl StorageBuilder {
     }
 
     fn get_temp_count_from_ast(&self, module: &OpcodeModule, ast: &BramaAstType, _: &BramaAstType, options: &mut KaramelCompilerContext, storage_index: usize, compiler_option: &mut StorageBuilderOption) -> u8 {
+        use crate::buildin::Module;
+        
         let temp_count = match ast {
             BramaAstType::Binary {
                 left,
@@ -57,7 +59,6 @@ impl StorageBuilder {
             },
             
             BramaAstType::Symbol(string) => {
-                use crate::buildin::Module;
                 match module.get_method(&string[..]) {
                     Some(reference) => {
                         options.storages.get_mut(storage_index).unwrap().add_constant(Rc::new(BramaPrimative::Function(reference, None)));
@@ -65,7 +66,7 @@ impl StorageBuilder {
                     None => ()
                 };
 
-                let function_search = options.get_function(string.to_string(), Vec::new(), storage_index);
+                let function_search = options.get_function(string.to_string(), [module.name.clone()].to_vec(), storage_index);
                 match function_search {
                     Some(reference) => {
                         options.storages.get_mut(storage_index).unwrap().add_constant(Rc::new(BramaPrimative::Function(reference, None)));
@@ -73,7 +74,7 @@ impl StorageBuilder {
                     None => ()
                 };
 
-                let class_search = options.find_class(string.to_string(), Vec::new(), storage_index);
+                let class_search = options.find_class(string.to_string(), [module.name.clone()].to_vec(), storage_index);
                 match class_search {
                     Some(reference) => {
                         options.storages.get_mut(storage_index).unwrap().add_constant(Rc::new(BramaPrimative::Class(reference)));
@@ -164,7 +165,7 @@ impl StorageBuilder {
 
                 match &**func_name_expression {
                     BramaAstType::Symbol(function_name) => {
-                        let function_search = options.get_function(function_name.to_string(), Vec::new(), storage_index);
+                        let function_search = options.get_function(function_name.to_string(), [module.name.clone()].to_vec(), storage_index);
                         if let Some(reference) = function_search {
                             options.storages.get_mut(storage_index).unwrap().add_constant(Rc::new(BramaPrimative::Function(reference, None)));
                         }

@@ -52,7 +52,7 @@ impl InterpreterCompiler {
 
         self.get_function_definations(main_module.clone(), main_ast.clone(), &mut functions, options, 0)?;
 
-        self.generate_functions(&mut functions, options)?;
+        self.generate_functions(main_module.clone(), &mut functions, options)?;
 
         /* Prepare jump code for main function */
         let current_location = options.opcodes.len();
@@ -60,7 +60,7 @@ impl InterpreterCompiler {
         options.opcodes[2] = (current_location >> 8) as u8;
 
         /* Generate main function code */
-        self.generate_opcode(&*main_ast, &BramaAstType::None, options, 0)?;
+        self.generate_opcode(main_module.clone(), &*main_ast, &BramaAstType::None, options, 0)?;
         options.opcodes.push(VmOpCode::Halt as u8);
         options.opcodes_ptr = options.opcodes.as_mut_ptr();
 
@@ -139,7 +139,7 @@ impl InterpreterCompiler {
         Ok(())
     }
 
-    fn generate_functions(&self, functions: &mut Vec<FunctionDefine>, options: &mut KaramelCompilerContext) -> CompilerResult {
+    fn generate_functions(&self, module: Rc<OpcodeModule>, functions: &mut Vec<FunctionDefine>, options: &mut KaramelCompilerContext) -> CompilerResult {
         for function in functions {
             options.opcodes.push(VmOpCode::Func as u8);
             (*function.reference).opcode_location.set(options.opcodes.len());
@@ -150,34 +150,34 @@ impl InterpreterCompiler {
                 options.opcodes.push(function.arguments.len() as u8);
             }
 
-            self.generate_opcode(&function.body, &function.body, options, function.reference.storage_index as usize)?;
+            self.generate_opcode(module.clone(), &function.body, &function.body, options, function.reference.storage_index as usize)?;
         }
 
         Ok(())
     }
 
-    fn generate_opcode(&self, ast: &BramaAstType, upper_ast: &BramaAstType, options: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult {
+    fn generate_opcode(&self, module: Rc<OpcodeModule>, ast: &BramaAstType, upper_ast: &BramaAstType, options: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult {
         match ast {
-            BramaAstType::Assignment { variable, operator, expression } => self.generate_assignment(variable, operator, expression, options, storage_index),
-            BramaAstType::Symbol(variable) => self.generate_symbol(variable, upper_ast, options, storage_index),
-            BramaAstType::Control { left, operator, right } => self.generate_control(left, operator, right, upper_ast, options, storage_index),
-            BramaAstType::Binary { left, operator, right } => self.generate_binary(left, operator, right, upper_ast, options, storage_index),
-            BramaAstType::Block(asts) => self.generate_block(asts, upper_ast, options, storage_index),
+            BramaAstType::Assignment { variable, operator, expression } => self.generate_assignment(module.clone(), variable, operator, expression, options, storage_index),
+            BramaAstType::Symbol(variable) => self.generate_symbol(module.clone(), variable, upper_ast, options, storage_index),
+            BramaAstType::Control { left, operator, right } => self.generate_control(module.clone(), left, operator, right, upper_ast, options, storage_index),
+            BramaAstType::Binary { left, operator, right } => self.generate_binary(module.clone(), left, operator, right, upper_ast, options, storage_index),
+            BramaAstType::Block(asts) => self.generate_block(module.clone(), asts, upper_ast, options, storage_index),
             BramaAstType::Primative(primative) => self.generate_primative(primative.clone(), upper_ast, options, storage_index),
-            BramaAstType::List(list) => self.generate_list(list, upper_ast, options, storage_index),
-            BramaAstType::Dict(dict) => self.generate_dict(dict, upper_ast, options, storage_index),
-            BramaAstType::FuncCall { func_name_expression, arguments, assign_to_temp } => self.generate_func_call(func_name_expression, arguments, assign_to_temp.get(), upper_ast, options, storage_index),
-            BramaAstType::AccessorFuncCall { source, indexer, assign_to_temp } => self.generate_accessor_func_call(source, indexer, assign_to_temp.get(), upper_ast, options, storage_index),
-            BramaAstType::PrefixUnary (operator, expression) => self.generate_prefix_unary(operator, expression, upper_ast, options, storage_index),
+            BramaAstType::List(list) => self.generate_list(module.clone(), list, upper_ast, options, storage_index),
+            BramaAstType::Dict(dict) => self.generate_dict(module.clone(), dict, upper_ast, options, storage_index),
+            BramaAstType::FuncCall { func_name_expression, arguments, assign_to_temp } => self.generate_func_call(module.clone(), func_name_expression, arguments, assign_to_temp.get(), upper_ast, options, storage_index),
+            BramaAstType::AccessorFuncCall { source, indexer, assign_to_temp } => self.generate_accessor_func_call(module.clone(), source, indexer, assign_to_temp.get(), upper_ast, options, storage_index),
+            BramaAstType::PrefixUnary (operator, expression) => self.generate_prefix_unary(module.clone(), operator, expression, upper_ast, options, storage_index),
             BramaAstType::SuffixUnary (operator, expression) => self.generate_suffix_unary(operator, expression, upper_ast, options, storage_index),
             BramaAstType::NewLine => Ok(()),
-            BramaAstType::WhileLoop { control, body } => self.generate_whileloop(control, body, upper_ast, options, storage_index),
-            BramaAstType::EndlessLoop(expression) => self.generate_endlessloop(expression, upper_ast, options, storage_index),
+            BramaAstType::WhileLoop { control, body } => self.generate_whileloop(module.clone(), control, body, upper_ast, options, storage_index),
+            BramaAstType::EndlessLoop(expression) => self.generate_endlessloop(module.clone(), expression, upper_ast, options, storage_index),
             BramaAstType::Break => self.generate_break(upper_ast, options, storage_index),
             BramaAstType::Continue => self.generate_continue(upper_ast, options, storage_index),
-            BramaAstType::Return(expression) => self.generate_return(expression, upper_ast, options, storage_index),
-            BramaAstType::IfStatement {condition, body, else_body, else_if} => self.generate_if_condition(condition, body, else_body, else_if, upper_ast, options, storage_index),
-            BramaAstType::Indexer {body, indexer} => self.generate_indexer(body, indexer, upper_ast, options, storage_index),
+            BramaAstType::Return(expression) => self.generate_return(module.clone(), expression, upper_ast, options, storage_index),
+            BramaAstType::IfStatement {condition, body, else_body, else_if} => self.generate_if_condition(module.clone(),condition, body, else_body, else_if, upper_ast, options, storage_index),
+            BramaAstType::Indexer {body, indexer} => self.generate_indexer(module.clone(), body, indexer, upper_ast, options, storage_index),
             BramaAstType::None => self.generate_none(options, storage_index),
             BramaAstType::FunctionDefination{name: _, arguments: _, body: _} => Ok(()),
             BramaAstType::FunctionMap(name) => self.generate_function_map(name, options, storage_index),
@@ -274,19 +274,19 @@ impl InterpreterCompiler {
         }
     }
 
-    fn generate_list(&self, list: &Vec<Box<BramaAstType>>, upper_ast: &BramaAstType, options: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult {
+    fn generate_list(&self, module: Rc<OpcodeModule>, list: &Vec<Box<BramaAstType>>, upper_ast: &BramaAstType, options: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult {
         for item in list.iter().rev() {
-            self.generate_opcode(item, upper_ast, options, storage_index)?;
+            self.generate_opcode(module.clone(), item, upper_ast, options, storage_index)?;
         }
         options.opcodes.push(VmOpCode::InitList as u8);
         options.opcodes.push(list.len() as u8);
         Ok(())
     }
 
-    fn generate_dict(&self, dict: &Vec<Box<BramaDictItem>>, upper_ast: &BramaAstType, options: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult {
+    fn generate_dict(&self, module: Rc<OpcodeModule>, dict: &Vec<Box<BramaDictItem>>, upper_ast: &BramaAstType, options: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult {
         for item in dict.iter().rev() {
             self.generate_primative(item.key.clone(), upper_ast, options, storage_index)?;
-            self.generate_opcode(&item.value, upper_ast, options, storage_index)?;
+            self.generate_opcode(module.clone(), &item.value, upper_ast, options, storage_index)?;
         }
         options.opcodes.push(VmOpCode::InitDict as u8);
         options.opcodes.push(dict.len() as u8);
@@ -331,17 +331,17 @@ impl InterpreterCompiler {
         Ok(false)
     }
 
-    fn generate_accessor_func_call(&self, source: &BramaAstType, indexer: &BramaAstType, _assign_to_temp: bool,  upper_ast: &BramaAstType, options: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult {
+    fn generate_accessor_func_call(&self, module: Rc<OpcodeModule>, source: &BramaAstType, indexer: &BramaAstType, _assign_to_temp: bool,  upper_ast: &BramaAstType, options: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult {
 
         if let BramaAstType::FuncCall { func_name_expression, arguments, assign_to_temp: _ } = indexer {
             match &**func_name_expression {
                 BramaAstType::Symbol(function_name) => {
                             /* Build arguments */
                     for argument in arguments {
-                        self.generate_opcode(argument, upper_ast, options, storage_index)?;
+                        self.generate_opcode(module.clone(), argument, upper_ast, options, storage_index)?;
                     }
                     
-                    self.generate_opcode(source, &BramaAstType::None, options, storage_index)?;
+                    self.generate_opcode(module.clone(), source, &BramaAstType::None, options, storage_index)?;
                     //todo: Pass real object to function as a parameter.
                     
                     let search_location = options.storages[storage_index].get_constant_location(Rc::new(BramaPrimative::Text(Rc::new(function_name.to_string()))));
@@ -367,7 +367,7 @@ impl InterpreterCompiler {
                     arguments,
                     assign_to_temp: _
                 }=> {
-                    return self.generate_func_call(func_name_expression, arguments, true, upper_ast, options, storage_index);
+                    return self.generate_func_call(module.clone(), func_name_expression, arguments, true, upper_ast, options, storage_index);
                 },
                 _ => {
                     return Err("Function not found".to_string());
@@ -379,15 +379,15 @@ impl InterpreterCompiler {
         }
     }
 
-    fn generate_func_call(&self, func_name_expression: &BramaAstType, arguments: &Vec<Box<BramaAstType>>, assign_to_temp: bool,  upper_ast: &BramaAstType, options: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult {
+    fn generate_func_call(&self, module: Rc<OpcodeModule>, func_name_expression: &BramaAstType, arguments: &Vec<Box<BramaAstType>>, assign_to_temp: bool,  upper_ast: &BramaAstType, options: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult {
         /* Build arguments */
         for argument in arguments {
-            self.generate_opcode(argument, upper_ast, options, storage_index)?;
+            self.generate_opcode(module.clone(), argument, upper_ast, options, storage_index)?;
         }
 
         match &func_name_expression {
             BramaAstType::Symbol(function_name) => {
-                let result = self.generate_func_call_by_name(&function_name, Vec::new(), &arguments, assign_to_temp, options, storage_index)?;
+                let result = self.generate_func_call_by_name(&function_name, [module.name.clone()].to_vec(), &arguments, assign_to_temp, options, storage_index)?;
                 match result {
                     true => return Ok(()),
                     false => {
@@ -398,7 +398,7 @@ impl InterpreterCompiler {
             },
 
             BramaAstType::FuncCall {func_name_expression, arguments: inner_arguments, assign_to_temp: _} => {
-                self.generate_func_call(func_name_expression, inner_arguments, true, upper_ast, options, storage_index)?;
+                self.generate_func_call(module.clone(), func_name_expression, inner_arguments, true, upper_ast, options, storage_index)?;
                 options.opcodes.push(VmOpCode::CallStack as u8);
                 options.opcodes.push(arguments.len() as u8);
                 options.opcodes.push(true as u8);
@@ -414,7 +414,7 @@ impl InterpreterCompiler {
                 }
             },
             _ => {
-                self.generate_opcode(func_name_expression, upper_ast, options, storage_index)?;
+                self.generate_opcode(module.clone(), func_name_expression, upper_ast, options, storage_index)?;
                 options.opcodes.push(VmOpCode::CallStack as u8);
                 options.opcodes.push(arguments.len() as u8);
                 options.opcodes.push(true as u8);
@@ -439,26 +439,26 @@ impl InterpreterCompiler {
         Ok(())
     }
 
-    fn generate_return(&self, expression: &BramaAstType, upper_ast: &BramaAstType, options: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult {
-        self.generate_opcode(expression, upper_ast, options, storage_index)?;
+    fn generate_return(&self, module: Rc<OpcodeModule>, expression: &BramaAstType, upper_ast: &BramaAstType, options: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult {
+        self.generate_opcode(module.clone(), expression, upper_ast, options, storage_index)?;
         options.opcodes.push(VmOpCode::Return as u8);
         Ok(())
     }
 
-    fn generate_whileloop(&self, control: &BramaAstType, body: &BramaAstType, upper_ast: &BramaAstType, options: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult {
+    fn generate_whileloop(&self, module: Rc<OpcodeModule>, control: &BramaAstType, body: &BramaAstType, upper_ast: &BramaAstType, options: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult {
         /* Backup loop informations */
         let loop_breaks = options.loop_breaks.to_vec();
         let loop_continues = options.loop_continues.to_vec();
         
         let start_location = options.opcodes.len(); 
-        self.generate_opcode(control, upper_ast, options, storage_index)?;
+        self.generate_opcode(module.clone(), control, upper_ast, options, storage_index)?;
         options.opcodes.push(VmOpCode::Compare as u8);
         let compare_location = options.opcodes.len();
 
         options.opcodes.push(0_u8);
         options.opcodes.push(0_u8);
 
-        self.generate_opcode(body, upper_ast, options, storage_index)?;
+        self.generate_opcode(module.clone(), body, upper_ast, options, storage_index)?;
 
         options.opcodes.push(VmOpCode::Jump as u8);
         options.opcodes.push(start_location as u8);
@@ -486,13 +486,13 @@ impl InterpreterCompiler {
         Ok(())
     }
 
-    fn generate_endlessloop(&self, expression: &BramaAstType, upper_ast: &BramaAstType, options: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult {
+    fn generate_endlessloop(&self, module: Rc<OpcodeModule>, expression: &BramaAstType, upper_ast: &BramaAstType, options: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult {
         /* Backup loop informations */
         let loop_breaks = options.loop_breaks.to_vec();
         let loop_continues = options.loop_continues.to_vec();
         
         let start_location = options.opcodes.len(); 
-        self.generate_opcode(expression, upper_ast, options, storage_index)?;
+        self.generate_opcode(module.clone(), expression, upper_ast, options, storage_index)?;
 
         /* 
         1. ... Endless loop start location
@@ -522,9 +522,9 @@ impl InterpreterCompiler {
         Ok(())
     }
 
-    fn generate_symbol(&self, variable: &String, _: &BramaAstType, options: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult {
+    fn generate_symbol(&self, module: Rc<OpcodeModule>, variable: &String, _: &BramaAstType, options: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult {
         let storage = &options.storages[storage_index];                
-        let result = storage.get_function_constant(variable.to_string(), Vec::new());
+        let result = storage.get_function_constant(variable.to_string(), [module.name.clone()].to_vec());
         match result {
             Some(index) => {
                 options.opcodes.push(VmOpCode::Load as u8);
@@ -534,7 +534,7 @@ impl InterpreterCompiler {
             _ => ()
         };
 
-        let result = storage.get_class_constant(variable.to_string(), Vec::new());
+        let result = storage.get_class_constant(variable.to_string(), [module.name.clone()].to_vec());
         match result {
             Some(index) => {
                 options.opcodes.push(VmOpCode::Load as u8);
@@ -556,9 +556,9 @@ impl InterpreterCompiler {
         }
     }
 
-    fn generate_control(&self, left_ast: &BramaAstType, operator: &BramaOperatorType, right_ast: &BramaAstType, _: &BramaAstType, options: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult {
-        self.generate_opcode(left_ast, &BramaAstType::None, options, storage_index)?;
-        self.generate_opcode(right_ast, &BramaAstType::None, options, storage_index)?;
+    fn generate_control(&self, module: Rc<OpcodeModule>, left_ast: &BramaAstType, operator: &BramaOperatorType, right_ast: &BramaAstType, _: &BramaAstType, options: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult {
+        self.generate_opcode(module.clone(), left_ast, &BramaAstType::None, options, storage_index)?;
+        self.generate_opcode(module.clone(), right_ast, &BramaAstType::None, options, storage_index)?;
 
         let opcode = match operator {
             BramaOperatorType::Or               => VmOpCode::Or as u8,
@@ -576,7 +576,7 @@ impl InterpreterCompiler {
         Ok(())
     }
 
-    fn generate_assignment(&self, variable: &BramaAstType, operator: &BramaOperatorType, expression_ast: &BramaAstType, options: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult {
+    fn generate_assignment(&self, module: Rc<OpcodeModule>, variable: &BramaAstType, operator: &BramaOperatorType, expression_ast: &BramaAstType, options: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult {
         match variable {
             BramaAstType::Symbol(symbol) => {
                 let location = options.storages.get_mut(storage_index).unwrap().add_variable(&*symbol);
@@ -604,7 +604,7 @@ impl InterpreterCompiler {
                     options.opcodes.push(VmOpCode::Load as u8);
                     options.opcodes.push(location);
 
-                    self.generate_opcode(expression_ast, &BramaAstType::None, options, storage_index)?;
+                    self.generate_opcode(module.clone(), expression_ast, &BramaAstType::None, options, storage_index)?;
 
                     let opcode = match operator {
                         BramaOperatorType::AssignAddition       => VmOpCode::Addition as u8,
@@ -616,7 +616,7 @@ impl InterpreterCompiler {
 
                     options.opcodes.push(opcode);
                 } else {
-                    self.generate_opcode(expression_ast, &BramaAstType::None, options, storage_index)?;
+                    self.generate_opcode(module.clone(), expression_ast, &BramaAstType::None, options, storage_index)?;
                 }
                 
                 options.opcodes.push(VmOpCode::Store as u8);
@@ -625,10 +625,10 @@ impl InterpreterCompiler {
             },
 
             BramaAstType::Indexer {body, indexer} => {
-                self.generate_opcode(body, &BramaAstType::None, options, storage_index)?;
-                self.generate_opcode(indexer, &BramaAstType::None, options, storage_index)?;
+                self.generate_opcode(module.clone(), body, &BramaAstType::None, options, storage_index)?;
+                self.generate_opcode(module.clone(), indexer, &BramaAstType::None, options, storage_index)?;
 
-                self.generate_opcode(expression_ast, &BramaAstType::None, options, storage_index)?;
+                self.generate_opcode(module.clone(), expression_ast, &BramaAstType::None, options, storage_index)?;
                 
                 options.opcodes.push(VmOpCode::SetItem as u8);
                 Ok(())
@@ -637,9 +637,9 @@ impl InterpreterCompiler {
         }
     }
 
-    fn generate_binary(&self, left_ast: &BramaAstType, operator: &BramaOperatorType, right_ast: &BramaAstType, _: &BramaAstType, options: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult { 
-        self.generate_opcode(left_ast, &BramaAstType::None, options, storage_index)?;
-        self.generate_opcode(right_ast, &BramaAstType::None, options, storage_index)?;
+    fn generate_binary(&self, module: Rc<OpcodeModule>, left_ast: &BramaAstType, operator: &BramaOperatorType, right_ast: &BramaAstType, _: &BramaAstType, options: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult { 
+        self.generate_opcode(module.clone(), left_ast, &BramaAstType::None, options, storage_index)?;
+        self.generate_opcode(module.clone(), right_ast, &BramaAstType::None, options, storage_index)?;
         let opcode = match operator {
             BramaOperatorType::Addition       => VmOpCode::Addition as u8,
             BramaOperatorType::Subtraction    => VmOpCode::Subraction as u8,
@@ -653,10 +653,10 @@ impl InterpreterCompiler {
         Ok(())
     }
 
-    fn generate_prefix_unary(&self, operator: &BramaOperatorType, expression: &BramaAstType, _: &BramaAstType, options: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult { 
+    fn generate_prefix_unary(&self, module: Rc<OpcodeModule>, operator: &BramaOperatorType, expression: &BramaAstType, _: &BramaAstType, options: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult { 
         
         if *operator == BramaOperatorType::Not { 
-            return self.generate_not(expression, options, storage_index);
+            return self.generate_not(module.clone(), expression, options, storage_index);
         }
 
         if let BramaAstType::Symbol(variable) = expression {
@@ -684,8 +684,8 @@ impl InterpreterCompiler {
         Err("Unary expression not valid".to_string())
     }
 
-    fn generate_not(&self, expression: &BramaAstType, options: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult { 
-        self.generate_opcode(expression, &BramaAstType::None, options, storage_index)?;
+    fn generate_not(&self, module: Rc<OpcodeModule>, expression: &BramaAstType, options: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult { 
+        self.generate_opcode(module.clone(), expression, &BramaAstType::None, options, storage_index)?;
         options.opcodes.push(VmOpCode::Not as u8);
         Ok(())
     }
@@ -719,7 +719,7 @@ impl InterpreterCompiler {
         options.opcodes[jump_location + 1] = (current_location >> 8) as u8;
     }
 
-    fn generate_if_condition(&self, condition: &BramaAstType, body: &BramaAstType, else_body: &Option<Box<BramaAstType>>, else_if: &Vec<Box<BramaIfStatementElseItem>>, upper_ast: &BramaAstType, options: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult {
+    fn generate_if_condition(&self, module: Rc<OpcodeModule>, condition: &BramaAstType, body: &BramaAstType, else_body: &Option<Box<BramaAstType>>, else_if: &Vec<Box<BramaIfStatementElseItem>>, upper_ast: &BramaAstType, options: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult {
         /*
         ╔════════════════════╗
         ║   IF CONDITION     ║
@@ -739,9 +739,9 @@ impl InterpreterCompiler {
         */
         let mut exit_locations: Vec<usize> = Vec::new();
         
-        self.generate_opcode(condition, upper_ast, options, storage_index)?;
+        self.generate_opcode(module.clone(), condition, upper_ast, options, storage_index)?;
         let mut if_failed_location = self.create_compare(options);
-        self.generate_opcode(body, upper_ast, options, storage_index)?;
+        self.generate_opcode(module.clone(), body, upper_ast, options, storage_index)?;
 
         if !else_if.is_empty() || else_body.is_some() {
             /* After executing body, need to exit from 'if condition'.
@@ -754,11 +754,11 @@ impl InterpreterCompiler {
             self.build_compare_location(options, if_failed_location);
 
             /* Build condition */
-            self.generate_opcode(&else_if_item.condition, upper_ast, options, storage_index)?;
+            self.generate_opcode(module.clone(), &else_if_item.condition, upper_ast, options, storage_index)?;
 
             if_failed_location = self.create_compare(options);
 
-            self.generate_opcode(&else_if_item.body, upper_ast, options, storage_index)?;
+            self.generate_opcode(module.clone(), &else_if_item.body, upper_ast, options, storage_index)?;
 
             /* Jump to out of if condition */
             self.create_exit_jump(options, &mut exit_locations);
@@ -766,7 +766,7 @@ impl InterpreterCompiler {
 
         if let Some(_else_body) = else_body {
             self.build_compare_location(options, if_failed_location);
-            self.generate_opcode(_else_body, upper_ast, options, storage_index)?;
+            self.generate_opcode(module.clone(), _else_body, upper_ast, options, storage_index)?;
         }
         else {
             self.build_compare_location(options, if_failed_location);
@@ -779,9 +779,9 @@ impl InterpreterCompiler {
         Ok(())
     }
 
-    fn generate_indexer(&self, body: &BramaAstType, indexer: &BramaAstType, upper_ast: &BramaAstType, options: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult {
-        self.generate_opcode(body, upper_ast, options, storage_index)?;
-        self.generate_opcode(indexer, upper_ast, options, storage_index)?;
+    fn generate_indexer(&self, module: Rc<OpcodeModule>, body: &BramaAstType, indexer: &BramaAstType, upper_ast: &BramaAstType, options: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult {
+        self.generate_opcode(module.clone(), body, upper_ast, options, storage_index)?;
+        self.generate_opcode(module.clone(), indexer, upper_ast, options, storage_index)?;
         options.opcodes.push(VmOpCode::GetItem as u8);
 
         Ok(())
@@ -814,9 +814,9 @@ impl InterpreterCompiler {
         Err("Unary expression not valid".to_string())
     }
 
-    fn generate_block(&self, asts: &[Rc<BramaAstType>], upper_ast: &BramaAstType, options: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult {
+    fn generate_block(&self, module: Rc<OpcodeModule>, asts: &[Rc<BramaAstType>], upper_ast: &BramaAstType, options: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult {
         for ast in asts {
-            self.generate_opcode(&ast, upper_ast, options, storage_index)?;
+            self.generate_opcode(module.clone(), &ast, upper_ast, options, storage_index)?;
         }
         Ok(())
     }
