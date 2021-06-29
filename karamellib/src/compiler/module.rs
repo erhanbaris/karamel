@@ -111,14 +111,14 @@ pub fn load_module(params: &[String], options: &mut KaramelCompilerContext) -> R
 }
 
 fn find_load_type(ast: Rc<BramaAstType>, options: &mut KaramelCompilerContext, modules: &mut Vec<Rc<OpcodeModule>>, depth_level: usize) -> CompilerResult {
-    if depth_level > 1 {
-        return Ok(())
-    }
-
     match &*ast {
         BramaAstType::Load(module_name) => {
-            modules.push(Rc::new(load_module(module_name, options)?));
-            find_load_type(ast, options, modules, depth_level + 1)?;
+            if !options.has_module(&module_name[module_name.len()-1]) {
+                let module = Rc::new(load_module(module_name, options)?);
+                options.add_module(module.clone());
+                modules.push(Rc::new(load_module(module_name, options)?));
+                find_load_type(ast, options, modules, depth_level + 1)?;
+            }
         },
         BramaAstType::Block(blocks) => {
             for block in blocks {

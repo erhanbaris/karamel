@@ -71,6 +71,10 @@ impl  KaramelCompilerContext {
         compiler
     }
 
+    pub fn has_module(&self, module_name: &String) -> bool {
+        self.modules.has_module(module_name)
+    }
+
     pub fn add_module(&mut self, module: Rc<dyn Module>) {
         self.modules.add_module(module.clone());
 

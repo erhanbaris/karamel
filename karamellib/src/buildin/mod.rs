@@ -66,6 +66,10 @@ impl ModuleCollection
             iter: self.modules.iter().clone()
         }
     }
+
+    pub fn has_module(&self, module_name: &String) -> bool {
+        self.modules.contains_key(module_name)
+    }
 }
 
 impl<'a> Iterator for ModuleCollectionIterator<'a> {
