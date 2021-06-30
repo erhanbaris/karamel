@@ -94,7 +94,9 @@ impl StorageBuilder {
                 let function_search = options.get_function(name, &module_path, storage_index);
                 if let Some(reference) = function_search {
                     options.storages.get_mut(storage_index).unwrap().add_constant(Rc::new(BramaPrimative::Function(reference, None)));
-                };
+                } else {
+                    std::panic!("Fonksiyon bulunamadı")
+                }
                 compiler_option.max_stack = max(1, compiler_option.max_stack);
                 1
             },
@@ -175,8 +177,9 @@ impl StorageBuilder {
                     },
                     BramaAstType::FunctionMap(names) => {
                         let function_search = options.get_function(names[names.len() - 1].to_string(), &names[0..(names.len()-1)].to_vec(), storage_index);
-                        if let Some(reference) = function_search {
-                            options.storages.get_mut(storage_index).unwrap().add_constant(Rc::new(BramaPrimative::Function(reference, None)));
+                        match function_search {
+                            Some(reference) => options.storages.get_mut(storage_index).unwrap().add_constant(Rc::new(BramaPrimative::Function(reference, None))),
+                            None => std::panic!("Fonksiyon bulunamadı")
                         };
                     },
                     _ => {
@@ -263,6 +266,9 @@ impl StorageBuilder {
 
                     if let Some(else_) = else_body {
                         total = max(total, self.get_temp_count_from_ast(module.clone(),else_, ast, options, storage_index, compiler_option));
+                    }
+                    else {
+                        std::panic!("Fonksiyon bulunamadı")
                     }
 
                     for else_if_item in else_if {

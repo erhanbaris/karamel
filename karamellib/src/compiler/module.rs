@@ -90,7 +90,7 @@ fn get_module_path(options: &KaramelCompilerContext, module_path: &PathBuf) -> V
     path
 }
 
-pub fn load_module(params: &[String], options: &mut KaramelCompilerContext) -> Result<Rc<OpcodeModule>, String> {
+pub fn load_module(params: &[String], options: &mut KaramelCompilerContext, upper_storage_index: usize) -> Result<Rc<OpcodeModule>, String> {
     let mut path = PathBuf::from(&options.script_path[..]);
     let module = params[(params.len() - 1)].to_string();
 
@@ -120,7 +120,7 @@ pub fn load_module(params: &[String], options: &mut KaramelCompilerContext) -> R
         Ok(ast) => {
             let module_storage = options.storages.len();
             options.storages.push(StaticStorage::new(module_storage));
-            options.storages[module_storage].set_parent_location(0);
+            options.storages[module_storage].set_parent_location(upper_storage_index);
 
             let mut module = OpcodeModule::new(module, path.to_str().unwrap().to_string(), ast.clone());
             module.path = get_module_path(options, &path);
@@ -134,19 +134,19 @@ pub fn load_module(params: &[String], options: &mut KaramelCompilerContext) -> R
     };
 }
 
-fn find_load_type(ast: Rc<BramaAstType>, options: &mut KaramelCompilerContext, modules: &mut Vec<Rc<OpcodeModule>>, depth_level: usize) -> CompilerResult {
+fn find_load_type(ast: Rc<BramaAstType>, options: &mut KaramelCompilerContext, modules: &mut Vec<Rc<OpcodeModule>>, upper_storage_index: usize) -> CompilerResult {
     match &*ast {
         BramaAstType::Load(module_name) => {
             if !options.has_module(&module_name) {
-                let module = load_module(module_name, options)?;
+                let module = load_module(module_name, options, upper_storage_index)?;
                 options.add_module(module.clone());
                 modules.push(module.clone());
-                find_load_type(module.main_ast.clone(), options, modules, depth_level + 1)?;
+                find_load_type(module.main_ast.clone(), options, modules, module.storage_index)?;
             }
         },
         BramaAstType::Block(blocks) => {
             for block in blocks {
-                find_load_type(block.clone(), options, modules, depth_level + 1)?;
+                find_load_type(block.clone(), options, modules, upper_storage_index)?;
             }
         },
         _ => ()
