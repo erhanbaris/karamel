@@ -9,12 +9,17 @@ use std::rc::Rc;
 
 #[derive(Clone)]
 pub struct BaseFunctionsModule {
-    methods: HashMap<String, Rc<FunctionReference>>
+    methods: HashMap<String, Rc<FunctionReference>>,
+    path: Vec<String>
 }
 
 impl Module for BaseFunctionsModule {
     fn get_module_name(&self) -> String {
         "baz".to_string()
+    }
+
+    fn get_path(&self) -> &Vec<String> {
+        &self.path
     }
 
     fn get_method(&self, name: &str) -> Option<Rc<FunctionReference>> {
@@ -44,7 +49,8 @@ impl Module for BaseFunctionsModule {
 impl BaseFunctionsModule  {
     pub fn new() -> BaseFunctionsModule where Self: Sized {
         let mut module = BaseFunctionsModule {
-            methods: HashMap::new()
+            methods: HashMap::new(),
+            path: vec!["baz".to_string()]
         };
         module.methods.insert("tür_bilgisi".to_string(), FunctionReference::native_function(Self::type_info as NativeCall, "tür_bilgisi".to_string(), [module.get_module_name()].to_vec()));
         module

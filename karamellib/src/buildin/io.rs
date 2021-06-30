@@ -11,12 +11,17 @@ use log;
 
 #[derive(Clone)]
 pub struct IoModule {
-    methods: HashMap<String, Rc<FunctionReference>>
+    methods: HashMap<String, Rc<FunctionReference>>,
+    path: Vec<String>
 }
 
 impl Module for IoModule {
     fn get_module_name(&self) -> String {
         "gç".to_string()
+    }
+
+    fn get_path(&self) -> &Vec<String> {
+        &self.path
     }
 
     fn get_method(&self, name: &str) -> Option<Rc<FunctionReference>> {
@@ -43,7 +48,8 @@ impl Module for IoModule {
 impl IoModule  {
     pub fn new() -> IoModule where Self: Sized {
         let mut module = IoModule {
-            methods: HashMap::new()
+            methods: HashMap::new(),
+            path: vec!["gç".to_string()]
         };
 
         module.methods.insert("satıroku".to_string(), FunctionReference::native_function(Self::readline as NativeCall, "satıroku".to_string(), [module.get_module_name()].to_vec()));

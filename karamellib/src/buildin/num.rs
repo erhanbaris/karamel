@@ -8,12 +8,17 @@ use std::collections::HashMap;
 use std::rc::Rc;
 
 pub struct NumModule {
-    methods: HashMap<String, Rc<FunctionReference>>
+    methods: HashMap<String, Rc<FunctionReference>>,
+    path: Vec<String>
 }
 
 impl Module for NumModule {
     fn get_module_name(&self) -> String {
         "sayı".to_string()
+    }
+
+    fn get_path(&self) -> &Vec<String> {
+        &self.path
     }
 
     fn get_method(&self, name: &str) -> Option<Rc<FunctionReference>> {
@@ -43,7 +48,8 @@ impl Module for NumModule {
 impl NumModule {
     pub fn new() -> NumModule where Self: Sized {
         let mut module = NumModule {
-            methods: HashMap::new()
+            methods: HashMap::new(),
+            path: vec!["sayı".to_string()]
         };
         module.methods.insert("oku".to_string(), FunctionReference::native_function(Self::parse as NativeCall, "tür_bilgisi".to_string(), [module.get_module_name()].to_vec()));
         module

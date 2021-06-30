@@ -20,21 +20,23 @@ use super::function::FunctionReference;
 pub struct OpcodeModule {
     pub name: String,
     pub storage_index: usize,
-    pub module_path: String,
+    pub file_path: String,
     pub main_ast: Rc<BramaAstType>,
     pub functions: HashMap<String, Rc<FunctionReference>>,
-    pub modules: HashMap<String, Rc<dyn Module>>
+    pub modules: HashMap<String, Rc<dyn Module>>,
+    pub path: Vec<String>
 }
 
 impl OpcodeModule {
-    pub fn new(name: String, module_path: String, main_ast: Rc<BramaAstType>) -> OpcodeModule {
+    pub fn new(name: String, file_path: String, main_ast: Rc<BramaAstType>) -> OpcodeModule {
         OpcodeModule {
             name, 
-            module_path, 
+            file_path, 
             main_ast,
             functions: HashMap::new(),
             modules: HashMap::new(),
-            storage_index: 0
+            storage_index: 0,
+            path: Vec::new()
         }
     }
 }
@@ -42,6 +44,10 @@ impl OpcodeModule {
 impl Module for OpcodeModule {
     fn get_module_name(&self) -> String {
         self.name.to_string()
+    }
+
+    fn get_path(&self) -> &Vec<String> {
+        &self.path
     }
 
     fn get_method(&self, name: &str) -> Option<Rc<FunctionReference>> {
@@ -65,6 +71,22 @@ impl Module for OpcodeModule {
     }
 }
 
+fn get_module_path(options: &KaramelCompilerContext, module_path: &PathBuf) -> Vec<String> {
+    let mut path = Vec::new();
+    let script_path = PathBuf::from(&options.script_path[..]);
+    let mut script_path_iter = script_path.iter();
+    let mut module_path_iter = module_path.iter();
+
+    while let Some(_) = script_path_iter.next() {
+        module_path_iter.next();
+    }
+    
+    while let Some(path_part) = module_path_iter.next() {
+        path.push(path_part.to_str().unwrap().to_string());
+    }
+    path
+}
+
 pub fn load_module(params: &[String], options: &mut KaramelCompilerContext) -> Result<OpcodeModule, String> {
     let mut path = PathBuf::from(&options.script_path[..]);
     let module = params[(params.len() - 1)].to_string();
@@ -73,51 +95,48 @@ pub fn load_module(params: &[String], options: &mut KaramelCompilerContext) -> R
         path.push(item);
     }
 
-    path.push(format!("{}.tpd", module));
+    path.push(module.clone());
 
-    if path.is_file() {
-        let content = match File::open(path.to_str().unwrap()) {
-            Ok(mut file) => {
-                let mut contents = String::new();
-                file.read_to_string(&mut contents).unwrap();
-                contents
-            },
-            Err(error) => return Err(format!("Dosya okuma hatası oldu. Hata : {:?}", error))
-        };
+    let content = match File::open(format!("{}.tpd", path.to_str().unwrap())) {
+        Ok(mut file) => {
+            let mut contents = String::new();
+            file.read_to_string(&mut contents).unwrap();
+            contents
+        },
+        Err(error) => return Err(format!("Dosya okuma hatası oldu. Hata : {:?}", error))
+    };
 
-        let mut parser = Parser::new(&content);
-        match parser.parse() {
-            Err(error) => return Err(generate_error_message(&content, &error)),
-            _ => ()
-        };
+    let mut parser = Parser::new(&content);
+    match parser.parse() {
+        Err(error) => return Err(generate_error_message(&content, &error)),
+        _ => ()
+    };
 
-        let syntax = SyntaxParser::new(parser.tokens().to_vec());
-        return match syntax.parse() {
-            Ok(ast) => {
-                let module_storage = options.storages.len();
-                options.storages.push(StaticStorage::new(module_storage));
-                options.storages[module_storage].set_parent_location(0);
+    let syntax = SyntaxParser::new(parser.tokens().to_vec());
+    return match syntax.parse() {
+        Ok(ast) => {
+            let module_storage = options.storages.len();
+            options.storages.push(StaticStorage::new(module_storage));
+            options.storages[module_storage].set_parent_location(0);
 
-                let mut module = OpcodeModule::new(module, path.to_str().unwrap().to_string(), ast.clone());
-                module.storage_index = module_storage;
-                find_function_definition_type(&mut module, ast.clone(), options, module_storage, true)?;
-                Ok(module)
-            },
-            Err(error) => return Err(generate_error_message(&content, &error))
-        };
-    }
-
-    Err(format!("'{}' modül bulunamadı", module))
+            let mut module = OpcodeModule::new(module, path.to_str().unwrap().to_string(), ast.clone());
+            module.path = get_module_path(options, &path);
+            module.storage_index = module_storage;
+            find_function_definition_type(&mut module, ast.clone(), options, module_storage, true)?;
+            Ok(module)
+        },
+        Err(error) => return Err(generate_error_message(&content, &error))
+    };
 }
 
 fn find_load_type(ast: Rc<BramaAstType>, options: &mut KaramelCompilerContext, modules: &mut Vec<Rc<OpcodeModule>>, depth_level: usize) -> CompilerResult {
     match &*ast {
         BramaAstType::Load(module_name) => {
-            if !options.has_module(&module_name[module_name.len()-1]) {
+            if !options.has_module(&module_name) {
                 let module = Rc::new(load_module(module_name, options)?);
                 options.add_module(module.clone());
-                modules.push(Rc::new(load_module(module_name, options)?));
-                find_load_type(ast, options, modules, depth_level + 1)?;
+                modules.push(module.clone());
+                find_load_type(module.main_ast.clone(), options, modules, depth_level + 1)?;
             }
         },
         BramaAstType::Block(blocks) => {

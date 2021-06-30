@@ -75,12 +75,7 @@ impl InterpreterCompiler {
     }
 
     pub fn detect_modules(&self, main_ast: Rc<BramaAstType>, options: &mut KaramelCompilerContext) -> Result<Vec<Rc<OpcodeModule>>, String> {
-        let modules = get_modules(main_ast.clone(), options)?;
-
-        for module in modules.iter() {
-            options.add_module(module.clone());
-        }
-        Ok(modules)
+        Ok(get_modules(main_ast.clone(), options)?)
     }
 
     pub fn prepare_main_module(&self, main_ast: Rc<BramaAstType>, options: &mut KaramelCompilerContext) -> Result<Rc<OpcodeModule>, String> {

@@ -7,12 +7,17 @@ use std::rc::Rc;
 
 #[derive(Clone)]
 pub struct DebugModule {
-    methods: HashMap<String, Rc<FunctionReference>>
+    methods: HashMap<String, Rc<FunctionReference>>,
+    path: Vec<String>
 }
 
 impl Module for DebugModule {
     fn get_module_name(&self) -> String {
         "hataayıklama".to_string()
+    }
+
+    fn get_path(&self) -> &Vec<String> {
+        &self.path
     }
 
     fn get_method(&self, name: &str) -> Option<Rc<FunctionReference>> {
@@ -39,7 +44,8 @@ impl Module for DebugModule {
 impl DebugModule  {
     pub fn new() -> DebugModule where Self: Sized {
         let mut module = DebugModule {
-            methods: HashMap::new()
+            methods: HashMap::new(),
+            path: vec!["hataayıklama".to_string()]
         };
 
         module.methods.insert("doğrula".to_string(), FunctionReference::native_function(Self::assert as NativeCall, "doğrula".to_string(), [module.get_module_name()].to_vec()));

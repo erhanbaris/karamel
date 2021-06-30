@@ -18,6 +18,7 @@ use crate::compiler::{BramaPrimative, function::{FunctionReference, NativeCall}}
 
 pub trait Module {
     fn get_module_name(&self) -> String;
+    fn get_path(&self) -> &Vec<String>;
     
     fn get_method(&self, name: &str) -> Option<Rc<FunctionReference>>;
     fn get_module(&self, name: &str) -> Option<Rc<dyn Module>>;
@@ -26,19 +27,6 @@ pub trait Module {
     fn get_modules(&self) -> HashMap<String, Rc<dyn Module>>;
 
     fn get_classes(&self) -> Vec<Rc<dyn Class>>;
-}
-pub struct DummyModule;
-
-impl Module for DummyModule {
-    fn get_module_name(&self) -> String { unreachable!() }
-    
-    fn get_method(&self, _: &str) -> Option<Rc<FunctionReference>> { unreachable!() }
-    fn get_module(&self, _: &str) -> Option<Rc<dyn Module>> { unreachable!() }
-
-    fn get_methods(&self) -> Vec<(&String, Rc<FunctionReference>)> { unreachable!() }
-    fn get_modules(&self) -> HashMap<String, Rc<dyn Module>> { unreachable!() }
-
-    fn get_classes(&self) -> Vec<Rc<dyn Class>> { unreachable!() }
 }
 
 pub struct ModuleCollectionIterator<'a> {
@@ -67,8 +55,8 @@ impl ModuleCollection
         }
     }
 
-    pub fn has_module(&self, module_name: &String) -> bool {
-        self.modules.contains_key(module_name)
+    pub fn has_module(&self, module_path: &Vec<String>) -> bool {
+        self.modules.iter().find_map(|(key, module)| if module.get_path() == module_path { Some(key) } else { None }).is_some()
     }
 }
 
