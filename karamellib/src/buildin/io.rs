@@ -46,20 +46,21 @@ impl Module for IoModule {
 }
 
 impl IoModule  {
-    pub fn new() -> IoModule where Self: Sized {
+    pub fn new() -> Rc<IoModule> {
         let mut module = IoModule {
             methods: HashMap::new(),
             path: vec!["gç".to_string()]
         };
 
-        module.methods.insert("satıroku".to_string(), FunctionReference::native_function(Self::readline as NativeCall, "satıroku".to_string(), [module.get_module_name()].to_vec()));
-        module.methods.insert("satiroku".to_string(), FunctionReference::native_function(Self::readline as NativeCall, "satiroku".to_string(), [module.get_module_name()].to_vec()));
-        module.methods.insert("yaz".to_string(), FunctionReference::native_function(Self::print as NativeCall, "yaz".to_string(), [module.get_module_name()].to_vec()));
-        module.methods.insert("satıryaz".to_string(), FunctionReference::native_function(Self::printline as NativeCall, "satıryaz".to_string(), [module.get_module_name()].to_vec()));
-        module.methods.insert("satiryaz".to_string(), FunctionReference::native_function(Self::printline as NativeCall, "satiryaz".to_string(), [module.get_module_name()].to_vec()));
-        module.methods.insert("biçimlendir".to_string(), FunctionReference::native_function(Self::format as NativeCall, "biçimlendir".to_string(), [module.get_module_name()].to_vec()));
-        module.methods.insert("bicimlendir".to_string(), FunctionReference::native_function(Self::format as NativeCall, "bicimlendir".to_string(), [module.get_module_name()].to_vec()));
-        module
+        let rc_module = Rc::new(module);
+        module.methods.insert("satıroku".to_string(), FunctionReference::native_function(Self::readline as NativeCall, "satıroku".to_string(), rc_module.clone()));
+        module.methods.insert("satiroku".to_string(), FunctionReference::native_function(Self::readline as NativeCall, "satiroku".to_string(), rc_module.clone()));
+        module.methods.insert("yaz".to_string(), FunctionReference::native_function(Self::print as NativeCall, "yaz".to_string(), rc_module.clone()));
+        module.methods.insert("satıryaz".to_string(), FunctionReference::native_function(Self::printline as NativeCall, "satıryaz".to_string(), rc_module.clone()));
+        module.methods.insert("satiryaz".to_string(), FunctionReference::native_function(Self::printline as NativeCall, "satiryaz".to_string(), rc_module.clone()));
+        module.methods.insert("biçimlendir".to_string(), FunctionReference::native_function(Self::format as NativeCall, "biçimlendir".to_string(), rc_module.clone()));
+        module.methods.insert("bicimlendir".to_string(), FunctionReference::native_function(Self::format as NativeCall, "bicimlendir".to_string(), rc_module.clone()));
+        rc_module.clone()
     }
 
     pub fn readline(_: FunctionParameter) -> NativeCallResult {        

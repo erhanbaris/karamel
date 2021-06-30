@@ -1,3 +1,4 @@
+use crate::buildin::Module;
 use crate::types::*;
 use crate::compiler::*;
 use std::rc::Rc;
@@ -173,12 +174,12 @@ impl StaticStorage {
         };
     }
 
-    pub fn get_function_constant(&self, name: String, module_path: Vec<String>) -> Option<u8> {
+    pub fn get_function_constant(&self, name: String, module: Rc<dyn Module>) -> Option<u8> {
         
         for (index, item) in self.memory.iter().enumerate() {
             if let BramaPrimative::Function(reference, _) = &*item.deref() {
                 if reference.name        == name && 
-                   reference.module_path == module_path {
+                   reference.module.get_path() == module.get_path() {
                     return Some(index as u8);
                 }
             }
@@ -187,7 +188,7 @@ impl StaticStorage {
         None
     }
 
-    pub fn get_class_constant(&self, name: String, _module_path: Vec<String>) -> Option<u8> {
+    pub fn get_class_constant(&self, name: String, _module_path: Rc<dyn Module>) -> Option<u8> {
         
         for (index, item) in self.memory.iter().enumerate() {
             if let BramaPrimative::Class(reference) = &*item.deref() {

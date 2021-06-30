@@ -46,13 +46,15 @@ impl Module for NumModule {
 }
 
 impl NumModule {
-    pub fn new() -> NumModule where Self: Sized {
+    pub fn new() -> Rc<NumModule> {
         let mut module = NumModule {
             methods: HashMap::new(),
             path: vec!["sayı".to_string()]
         };
-        module.methods.insert("oku".to_string(), FunctionReference::native_function(Self::parse as NativeCall, "tür_bilgisi".to_string(), [module.get_module_name()].to_vec()));
-        module
+
+        let rc_module = Rc::new(module);
+        module.methods.insert("oku".to_string(), FunctionReference::native_function(Self::parse as NativeCall, "tür_bilgisi".to_string(), rc_module.clone()));
+        rc_module.clone()
     }
 
     pub fn parse(parameter: FunctionParameter) -> NativeCallResult {

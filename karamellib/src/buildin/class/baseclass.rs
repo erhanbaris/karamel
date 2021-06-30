@@ -39,7 +39,7 @@ pub struct BasicInnerClass {
     }
 
     fn add_method(&mut self, name: &str, function: NativeCall, flags: FunctionFlag) {
-        self.config.properties.insert(name.to_string(), ClassProperty::Function(FunctionReference::buildin_function(function, name.to_string(), flags)));
+        //self.config.properties.insert(name.to_string(), ClassProperty::Function(FunctionReference::buildin_function(function, name.to_string(), flags)));
     }
 
     fn add_property(&mut self, name: &str, property: Rc<BramaPrimative>) {

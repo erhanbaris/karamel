@@ -6,6 +6,7 @@ use std::io::prelude::*;
 use std::cell::RefCell;
 
 use ast::BramaDictItem;
+use crate::buildin::Module;
 use crate::types::*;
 use crate::error::*;
 use crate::compiler::*;
@@ -42,7 +43,7 @@ impl InterpreterCompiler {
         let main_module = self.prepare_main_module(main_ast.clone(), options)?;
         //self.prepare_modules(options)?;
 
-        storage_builder.prepare(&*main_module, &*main_ast, 0, options, &mut compiler_options);
+        storage_builder.prepare(main_module.clone(), &*main_ast, 0, options, &mut compiler_options);
 
         /* First part of the codes are functions */
         let mut functions = Vec::new();
@@ -84,7 +85,7 @@ impl InterpreterCompiler {
         options.main_module = module.as_ref() as *const OpcodeModule as *mut OpcodeModule;
         options.add_module(module.clone());
 
-        unsafe { find_function_definition_type(options.main_module.as_mut().unwrap(), main_ast.clone(), options, 0, true)?; }
+        find_function_definition_type(module.clone(), main_ast.clone(), options, 0, true)?;
         Ok(module.clone())
     }
 
@@ -106,7 +107,7 @@ impl InterpreterCompiler {
     fn get_function_definations(&self, module: Rc<OpcodeModule>, ast: Rc<BramaAstType>, functions: &mut Vec<FunctionDefine>, options: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult{
         match &*ast {
             BramaAstType::FunctionDefination { name, arguments, body  } => {
-                let search = options.get_function(name.to_string(), [module.name.clone()].to_vec(), storage_index);
+                let search = options.get_function(name.to_string(), module.get_path(), storage_index);
                 match search {
                     Some(reference) => {
                         println!("Function: {}", name);
@@ -238,7 +239,7 @@ impl InterpreterCompiler {
         let name = params[params.len() - 1].to_string();
         let module_path = params[0..(params.len() - 1)].to_vec();
 
-        let function_search = options.get_function(name, module_path, storage_index);
+        let function_search = options.get_function(name, &module_path, storage_index);
         match function_search {
             Some(reference) => {
                 let result = storage.get_constant_location(Rc::new(BramaPrimative::Function(reference, None)));
@@ -288,7 +289,7 @@ impl InterpreterCompiler {
         Ok(())
     }
 
-    fn generate_func_call_by_name(&self, name :&String, module_path: Vec<String>, arguments: &Vec<Box<BramaAstType>>, assign_to_temp: bool, options: &mut KaramelCompilerContext, storage_index: usize) -> Result<bool, String> {
+    fn generate_func_call_by_name(&self, name :&String, module_path: &Vec<String>, arguments: &Vec<Box<BramaAstType>>, assign_to_temp: bool, options: &mut KaramelCompilerContext, storage_index: usize) -> Result<bool, String> {
         let function_search = options.get_function(name.to_string(), module_path, storage_index);
 
         match function_search {
@@ -382,7 +383,7 @@ impl InterpreterCompiler {
 
         match &func_name_expression {
             BramaAstType::Symbol(function_name) => {
-                let result = self.generate_func_call_by_name(&function_name, [module.name.clone()].to_vec(), &arguments, assign_to_temp, options, storage_index)?;
+                let result = self.generate_func_call_by_name(&function_name, module.get_path(), &arguments, assign_to_temp, options, storage_index)?;
                 match result {
                     true => return Ok(()),
                     false => {
@@ -402,7 +403,7 @@ impl InterpreterCompiler {
             },
 
             BramaAstType::FunctionMap(names) => {
-                let result = self.generate_func_call_by_name(&names[names.len() - 1].to_string(), names[0..(names.len()-1)].to_vec(), &arguments, assign_to_temp, options, storage_index)?;
+                let result = self.generate_func_call_by_name(&names[names.len() - 1].to_string(), &names[0..(names.len()-1)].to_vec(), &arguments, assign_to_temp, options, storage_index)?;
                 match result {
                     true => return Ok(()),
                     false =>  return Err("Function not found".to_string())
@@ -519,7 +520,7 @@ impl InterpreterCompiler {
 
     fn generate_symbol(&self, module: Rc<OpcodeModule>, variable: &String, _: &BramaAstType, options: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult {
         let storage = &options.storages[storage_index];                
-        let result = storage.get_function_constant(variable.to_string(), [module.name.clone()].to_vec());
+        let result = storage.get_function_constant(variable.to_string(), module.clone());
         match result {
             Some(index) => {
                 options.opcodes.push(VmOpCode::Load as u8);
@@ -529,7 +530,7 @@ impl InterpreterCompiler {
             _ => ()
         };
 
-        let result = storage.get_class_constant(variable.to_string(), [module.name.clone()].to_vec());
+        let result = storage.get_class_constant(variable.to_string(), module.clone());
         match result {
             Some(index) => {
                 options.opcodes.push(VmOpCode::Load as u8);

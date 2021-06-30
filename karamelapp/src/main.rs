@@ -26,7 +26,7 @@ fonk func:
         döndür inner_2
     döndür inner_1
 gç::satıryaz(func()()())
-gç::satıryaz(topla())
+gç::satıryaz(dosya::topla())
 "#.to_string()),
         return_opcode: true,
         return_output: true

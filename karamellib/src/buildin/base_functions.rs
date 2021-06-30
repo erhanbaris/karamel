@@ -47,13 +47,15 @@ impl Module for BaseFunctionsModule {
 }
 
 impl BaseFunctionsModule  {
-    pub fn new() -> BaseFunctionsModule where Self: Sized {
+    pub fn new() -> Rc<BaseFunctionsModule> {
         let mut module = BaseFunctionsModule {
             methods: HashMap::new(),
             path: vec!["baz".to_string()]
         };
-        module.methods.insert("tür_bilgisi".to_string(), FunctionReference::native_function(Self::type_info as NativeCall, "tür_bilgisi".to_string(), [module.get_module_name()].to_vec()));
-        module
+
+        let rc_module = Rc::new(module);
+        module.methods.insert("tür_bilgisi".to_string(), FunctionReference::native_function(Self::type_info as NativeCall, "tür_bilgisi".to_string(), rc_module.clone()));
+        rc_module
     }
 
     pub fn type_info(parameter: FunctionParameter) -> NativeCallResult {        

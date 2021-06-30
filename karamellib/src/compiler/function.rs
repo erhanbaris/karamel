@@ -1,5 +1,4 @@
 use std::borrow::Borrow;
-use std::collections::HashMap;
 use std::{iter::Skip, rc::Rc, vec::Vec};
 use std::cell::RefCell;
 use std::cell::Cell;
@@ -7,6 +6,7 @@ use std::slice::Iter;
 use std::iter::Take;
 use bitflags::bitflags;
 
+use crate::buildin::Module;
 use crate::compiler::scope::Scope;
 use crate::{inc_memory_index, dec_memory_index, get_memory_index};
 use crate::types::*;
@@ -89,18 +89,17 @@ bitflags! {
 }
 
 #[derive(Clone)]
-#[derive(Default)]
 pub struct FunctionReference {
     pub callback: FunctionType,
     pub flags: FunctionFlag,
-    pub module_path: Vec<String>,
     pub name: String,
     pub arguments: Vec<String>,
     pub defined_storage_index: usize,
     pub storage_index: usize,
     pub opcode_location: Cell<usize>,
     pub used_locations: RefCell<Vec<u16>>,
-    pub opcode_body: Option<Rc<BramaAstType>>
+    pub opcode_body: Option<Rc<BramaAstType>>,
+    pub module: Rc<dyn Module>
 }
 
 unsafe impl Send for FunctionReference {}
@@ -126,43 +125,43 @@ impl FunctionReference {
         }
     }
 
-    pub fn buildin_function(func: NativeCall, name: String, flags: FunctionFlag) -> Rc<FunctionReference> {
+    pub fn buildin_function(func: NativeCall, name: String, flags: FunctionFlag, module: Rc<dyn Module>) -> Rc<FunctionReference> {
         let reference = FunctionReference {
             callback: FunctionType::Native(func),
             flags: flags,
-            module_path: Vec::new(),
             name,
             arguments: Vec::new(),
             storage_index: 0,
             opcode_location: Cell::new(0),
             used_locations: RefCell::new(Vec::new()),
             defined_storage_index: 0,
-            opcode_body: None
+            opcode_body: None,
+            module
         };
         Rc::new(reference)
     }
 
-    pub fn native_function(func: NativeCall, name: String, module_path: Vec<String>) -> Rc<FunctionReference> {
+    pub fn native_function(func: NativeCall, name: String, module: Rc<dyn Module>) -> Rc<FunctionReference> {
         let reference = FunctionReference {
             callback: FunctionType::Native(func),
             flags: FunctionFlag::STATIC,
-            module_path,
             name,
             arguments: Vec::new(),
             storage_index: 0,
             opcode_location: Cell::new(0),
             used_locations: RefCell::new(Vec::new()),
             defined_storage_index: 0,
-            opcode_body: None
+            opcode_body: None,
+            module
         };
         Rc::new(reference)
     }
 
-    pub fn opcode_function(name: String, arguments: Vec<String>, body: Rc<BramaAstType>, module_path: Vec<String>, storage_index: usize, defined_storage_index: usize, module_level: bool) -> Rc<FunctionReference> {
+    pub fn opcode_function(name: String, arguments: Vec<String>, body: Rc<BramaAstType>, module: Rc<dyn Module>, storage_index: usize, defined_storage_index: usize, module_level: bool) -> Rc<FunctionReference> {
         let mut reference = FunctionReference {
             callback: FunctionType::Opcode,
             flags: FunctionFlag::STATIC,
-            module_path,
+            module,
             name,
             arguments,
             storage_index,
@@ -262,7 +261,7 @@ impl FunctionReference {
     }
 }
 
-pub fn find_function_definition_type(module: &mut OpcodeModule, ast: Rc<BramaAstType>, options: &mut KaramelCompilerContext, current_storage_index: usize, module_level: bool) -> CompilerResult {
+pub fn find_function_definition_type(module: Rc<OpcodeModule>, ast: Rc<BramaAstType>, options: &mut KaramelCompilerContext, current_storage_index: usize, module_level: bool) -> CompilerResult {
     match ast.borrow() {
         BramaAstType::FunctionDefination { name, arguments, body  } => {
             /* Create new storage for new function */
@@ -270,18 +269,18 @@ pub fn find_function_definition_type(module: &mut OpcodeModule, ast: Rc<BramaAst
             options.storages.push(StaticStorage::new(new_storage_index));
             options.storages[new_storage_index].set_parent_location(current_storage_index);
 
-            let function = FunctionReference::opcode_function(name.to_string(), arguments.to_vec(), body.clone(), [module.name.clone()].to_vec(), new_storage_index, current_storage_index, module_level);
-            let old_function = module.functions.insert(name.to_string(), function.clone());
+            let function = FunctionReference::opcode_function(name.to_string(), arguments.to_vec(), body.clone(), module.clone(), new_storage_index, current_storage_index, module_level);
+            let old_function = module.functions.borrow_mut().insert(name.to_string(), function.clone());
 
             if let Some(_) = old_function {
                 return Err(format!("'{}' fonksiyonu önceden tanımlanmış", name));
             }
             
-            find_function_definition_type(module, body.clone(), options, new_storage_index, false)?;
+            find_function_definition_type(module.clone(), body.clone(), options, new_storage_index, false)?;
 
             let storage_builder = StorageBuilder::new();
             let mut builder_option = StorageBuilderOption { max_stack: 0 };
-            storage_builder.prepare(module, ast.borrow(), new_storage_index, options, &mut builder_option);
+            storage_builder.prepare(module.clone(), ast.borrow(), new_storage_index, options, &mut builder_option);
 
             //options.storages[current_storage_index].add_static_data(name, Rc::new(BramaPrimative::Function(function.clone(), None)));
             options.storages[current_storage_index].add_constant(Rc::new(BramaPrimative::Function(function.clone(), None)));
@@ -295,7 +294,7 @@ pub fn find_function_definition_type(module: &mut OpcodeModule, ast: Rc<BramaAst
         },
         BramaAstType::Block(blocks) => {
             for block in blocks {
-                find_function_definition_type(module, block.clone(), options, current_storage_index, module_level)?;
+                find_function_definition_type(module.clone(), block.clone(), options, current_storage_index, module_level)?;
             }
         },
         _ => ()

@@ -2,12 +2,13 @@ use crate::buildin::{Module, Class};
 use crate::compiler::function::{FunctionReference, NativeCall, NativeCallResult};
 use crate::compiler::function::FunctionParameter;
 use crate::compiler::value::EMPTY_OBJECT;
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 
 #[derive(Clone)]
 pub struct DebugModule {
-    methods: HashMap<String, Rc<FunctionReference>>,
+    methods: RefCell<HashMap<String, Rc<FunctionReference>>>,
     path: Vec<String>
 }
 
@@ -21,7 +22,7 @@ impl Module for DebugModule {
     }
 
     fn get_method(&self, name: &str) -> Option<Rc<FunctionReference>> {
-        self.methods.get(name).map(|method| method.clone())
+        self.methods.borrow().get(name).map(|method| method.clone())
     }
 
     fn get_module(&self, _: &str) -> Option<Rc<dyn Module>> {
@@ -29,7 +30,10 @@ impl Module for DebugModule {
     }
 
     fn get_methods(&self) -> Vec<(&String, Rc<FunctionReference>)> {
-        self.methods.iter().map(|(key, value)| (key, value.clone())).collect::<Vec<(&String, Rc<FunctionReference>)>>()
+        match self.methods.try_borrow() {
+            Ok(methods) => methods.iter().map(|(key, value)| (key, value.clone())).collect::<Vec<(&String, Rc<FunctionReference>)>>(),
+            Err(_) => Vec::new()
+        }
     }
 
     fn get_modules(&self) -> HashMap<String, Rc<dyn Module>> {
@@ -42,14 +46,15 @@ impl Module for DebugModule {
 }
 
 impl DebugModule  {
-    pub fn new() -> DebugModule where Self: Sized {
-        let mut module = DebugModule {
-            methods: HashMap::new(),
+    pub fn new() -> Rc<DebugModule> {
+        let module = DebugModule {
+            methods: RefCell::new(HashMap::new()),
             path: vec!["hataayıklama".to_string()]
         };
 
-        module.methods.insert("doğrula".to_string(), FunctionReference::native_function(Self::assert as NativeCall, "doğrula".to_string(), [module.get_module_name()].to_vec()));
-        module
+        let rc_module = Rc::new(module);
+        rc_module.methods.borrow_mut().insert("doğrula".to_string(), FunctionReference::native_function(Self::assert as NativeCall, "doğrula".to_string(), rc_module.clone()));
+        rc_module.clone()
     }
 
     pub fn assert(parameter: FunctionParameter) -> NativeCallResult {

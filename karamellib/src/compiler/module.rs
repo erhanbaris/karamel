@@ -1,3 +1,4 @@
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fs::File;
 use std::path::PathBuf;
@@ -22,8 +23,8 @@ pub struct OpcodeModule {
     pub storage_index: usize,
     pub file_path: String,
     pub main_ast: Rc<BramaAstType>,
-    pub functions: HashMap<String, Rc<FunctionReference>>,
-    pub modules: HashMap<String, Rc<dyn Module>>,
+    pub functions: RefCell<HashMap<String, Rc<FunctionReference>>>,
+    pub modules: RefCell<HashMap<String, Rc<dyn Module>>>,
     pub path: Vec<String>
 }
 
@@ -33,8 +34,8 @@ impl OpcodeModule {
             name, 
             file_path, 
             main_ast,
-            functions: HashMap::new(),
-            modules: HashMap::new(),
+            functions: RefCell::new(HashMap::new()),
+            modules: RefCell::new(HashMap::new()),
             storage_index: 0,
             path: Vec::new()
         }
@@ -51,7 +52,7 @@ impl Module for OpcodeModule {
     }
 
     fn get_method(&self, name: &str) -> Option<Rc<FunctionReference>> {
-        self.functions.get(name).map(|method| method.clone())
+        self.functions.borrow().get(name).map(|method| method.clone())
     }
 
     fn get_module(&self, _: &str) -> Option<Rc<dyn Module>> {
@@ -59,7 +60,7 @@ impl Module for OpcodeModule {
     }
 
     fn get_methods(&self) -> Vec<(&String, Rc<FunctionReference>)> {
-        self.functions.iter().map(|(key, value)| (key, value.clone())).collect::<Vec<(&String, Rc<FunctionReference>)>>()
+        self.functions.borrow().iter().map(|(key, value)| (key, value.clone())).collect::<Vec<(&String, Rc<FunctionReference>)>>()
     }
 
     fn get_modules(&self) -> HashMap<String, Rc<dyn Module>> {
@@ -87,7 +88,7 @@ fn get_module_path(options: &KaramelCompilerContext, module_path: &PathBuf) -> V
     path
 }
 
-pub fn load_module(params: &[String], options: &mut KaramelCompilerContext) -> Result<OpcodeModule, String> {
+pub fn load_module(params: &[String], options: &mut KaramelCompilerContext) -> Result<Rc<OpcodeModule>, String> {
     let mut path = PathBuf::from(&options.script_path[..]);
     let module = params[(params.len() - 1)].to_string();
 
@@ -122,8 +123,10 @@ pub fn load_module(params: &[String], options: &mut KaramelCompilerContext) -> R
             let mut module = OpcodeModule::new(module, path.to_str().unwrap().to_string(), ast.clone());
             module.path = get_module_path(options, &path);
             module.storage_index = module_storage;
-            find_function_definition_type(&mut module, ast.clone(), options, module_storage, true)?;
-            Ok(module)
+
+            let module = Rc::new(module);
+            find_function_definition_type(module.clone(), ast.clone(), options, module_storage, true)?;
+            Ok(module.clone())
         },
         Err(error) => return Err(generate_error_message(&content, &error))
     };
@@ -133,7 +136,7 @@ fn find_load_type(ast: Rc<BramaAstType>, options: &mut KaramelCompilerContext, m
     match &*ast {
         BramaAstType::Load(module_name) => {
             if !options.has_module(&module_name) {
-                let module = Rc::new(load_module(module_name, options)?);
+                let module = load_module(module_name, options)?;
                 options.add_module(module.clone());
                 modules.push(module.clone());
                 find_load_type(module.main_ast.clone(), options, modules, depth_level + 1)?;

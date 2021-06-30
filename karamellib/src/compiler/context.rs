@@ -58,10 +58,10 @@ impl  KaramelCompilerContext {
         compiler.primative_classes.push(proxy::get_primative_class());
         compiler.primative_classes.push(get_empty_class());
 
-        compiler.add_module(Rc::new(base_functions::BaseFunctionsModule::new()));
-        compiler.add_module(Rc::new(io::IoModule::new()));
-        compiler.add_module(Rc::new(NumModule::new()));
-        compiler.add_module(Rc::new(debug::DebugModule::new()));
+        compiler.add_module(base_functions::BaseFunctionsModule::new());
+        compiler.add_module(io::IoModule::new());
+        compiler.add_module(NumModule::new());
+        compiler.add_module(debug::DebugModule::new());
 
         for _ in 0..32{
             compiler.scopes.push(Scope::empty());
@@ -91,7 +91,7 @@ impl  KaramelCompilerContext {
         self.classes.push(class_info.clone());
     }
 
-    pub fn get_function(&self, name: String, module_path: Vec<String>, start_storage_index: usize) -> Option<Rc<FunctionReference>> {
+    pub fn get_function(&self, name: String, module_path: &Vec<String>, start_storage_index: usize) -> Option<Rc<FunctionReference>> {
         let mut search_storage = start_storage_index;
         loop {
             /* Search function with storage */
@@ -99,11 +99,11 @@ impl  KaramelCompilerContext {
                 for (_, function_reference) in module.get_methods().iter() {
                     let result = match function_reference.callback {
                         FunctionType::Native(_) =>
-                        function_reference.module_path == module_path && 
+                        function_reference.module.get_path() == module_path && 
                             function_reference.name == name,
                         FunctionType::Opcode => 
                         function_reference.name == name && 
-                            function_reference.module_path == module_path && 
+                            function_reference.module.get_path() == module_path && 
                             (function_reference.defined_storage_index == search_storage || function_reference.flags.contains(FunctionFlag::MODULE_LEVEL))
                     };
 
@@ -126,7 +126,7 @@ impl  KaramelCompilerContext {
         }
     }
 
-    pub fn find_class(&self, name: String, _module_path: Vec<String>, _start_storage_index: usize) -> Option<Rc<dyn Class >> {
+    pub fn find_class(&self, name: String, _module_path: &Vec<String>, _start_storage_index: usize) -> Option<Rc<dyn Class >> {
         let primative_search = self.primative_classes.iter().find(|&item| item.get_class_name() == name);
         match primative_search {
             Some(class) => Some(class.clone()),
