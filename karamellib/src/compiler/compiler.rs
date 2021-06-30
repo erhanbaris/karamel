@@ -93,7 +93,7 @@ impl InterpreterCompiler {
         let mut functions = Vec::new();
 
         for (_, module) in options.modules.iter() {
-            for (_, function_pointer) in module.get_methods() {
+            for function_pointer in module.get_methods() {
                 functions.push(function_pointer.clone());
             }
         }

@@ -29,11 +29,10 @@ impl Module for DebugModule {
         None
     }
 
-    fn get_methods(&self) -> Vec<(&String, Rc<FunctionReference>)> {
-        match self.methods.try_borrow() {
-            Ok(methods) => methods.iter().map(|(key, value)| (key, value.clone())).collect::<Vec<(&String, Rc<FunctionReference>)>>(),
-            Err(_) => Vec::new()
-        }
+    fn get_methods(&self) -> Vec<Rc<FunctionReference>> {
+        let mut response = Vec::new();
+        self.methods.borrow().iter().for_each(|(_, reference)| response.push(reference.clone()));
+        response
     }
 
     fn get_modules(&self) -> HashMap<String, Rc<dyn Module>> {

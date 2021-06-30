@@ -59,8 +59,10 @@ impl Module for OpcodeModule {
         None
     }
 
-    fn get_methods(&self) -> Vec<(&String, Rc<FunctionReference>)> {
-        self.functions.borrow().iter().map(|(key, value)| (key, value.clone())).collect::<Vec<(&String, Rc<FunctionReference>)>>()
+    fn get_methods(&self) -> Vec<Rc<FunctionReference>> {
+        let mut response = Vec::new();
+        self.functions.borrow().iter().for_each(|(_, reference)| response.push(reference.clone()));
+        response
     }
 
     fn get_modules(&self) -> HashMap<String, Rc<dyn Module>> {

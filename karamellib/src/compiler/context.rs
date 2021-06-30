@@ -78,7 +78,7 @@ impl  KaramelCompilerContext {
     pub fn add_module(&mut self, module: Rc<dyn Module>) {
         self.modules.add_module(module.clone());
 
-        for (_, reference) in module.clone().get_methods().iter() {
+        for reference in module.clone().get_methods().iter() {
             self.add_function(reference.clone());
         }
     }
@@ -96,7 +96,7 @@ impl  KaramelCompilerContext {
         loop {
             /* Search function with storage */
             for (_, module) in self.modules.iter() {
-                for (_, function_reference) in module.get_methods().iter() {
+                for function_reference in module.get_methods().iter() {
                     let result = match function_reference.callback {
                         FunctionType::Native(_) =>
                         function_reference.module.get_path() == module_path && 

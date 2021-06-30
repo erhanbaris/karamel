@@ -4,11 +4,11 @@ use crate::compiler::value::BramaPrimative;
 use crate::compiler::value::EMPTY_OBJECT;
 use crate::buildin::{Module, Class};
 use crate::{n_parameter_expected, expected_parameter_type};
-use std::collections::HashMap;
+use std::{cell::RefCell, collections::HashMap};
 use std::rc::Rc;
 
 pub struct NumModule {
-    methods: HashMap<String, Rc<FunctionReference>>,
+    methods: RefCell<HashMap<String, Rc<FunctionReference>>>,
     path: Vec<String>
 }
 
@@ -22,7 +22,7 @@ impl Module for NumModule {
     }
 
     fn get_method(&self, name: &str) -> Option<Rc<FunctionReference>> {
-        match self.methods.get(name) {
+        match self.methods.borrow().get(name) {
             Some(method) => Some(method.clone()),
             None => None
         }
@@ -32,8 +32,10 @@ impl Module for NumModule {
         None
     }
 
-    fn get_methods(&self) -> Vec<(&String, Rc<FunctionReference>)> {
-        self.methods.iter().map(|(key, value)| (key, value.clone())).collect::<Vec<(&String, Rc<FunctionReference>)>>()
+    fn get_methods(&self) -> Vec<Rc<FunctionReference>> {
+        let mut response = Vec::new();
+        self.methods.borrow().iter().for_each(|(_, reference)| response.push(reference.clone()));
+        response
     }
 
     fn get_modules(&self) -> HashMap<String, Rc<dyn Module>> {
@@ -47,13 +49,13 @@ impl Module for NumModule {
 
 impl NumModule {
     pub fn new() -> Rc<NumModule> {
-        let mut module = NumModule {
-            methods: HashMap::new(),
+        let module = NumModule {
+            methods: RefCell::new(HashMap::new()),
             path: vec!["sayı".to_string()]
         };
 
         let rc_module = Rc::new(module);
-        module.methods.insert("oku".to_string(), FunctionReference::native_function(Self::parse as NativeCall, "tür_bilgisi".to_string(), rc_module.clone()));
+        rc_module.methods.borrow_mut().insert("oku".to_string(), FunctionReference::native_function(Self::parse as NativeCall, "tür_bilgisi".to_string(), rc_module.clone()));
         rc_module.clone()
     }
 
