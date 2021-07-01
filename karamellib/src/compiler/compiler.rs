@@ -43,7 +43,7 @@ impl InterpreterCompiler {
         let main_module = self.prepare_main_module(main_ast.clone(), options)?;
         //self.prepare_modules(options)?;
 
-        storage_builder.prepare(main_module.clone(), &*main_ast, 0, options, &mut compiler_options);
+        storage_builder.prepare(main_module.clone(), &*main_ast, 0, options, &mut compiler_options)?;
 
         /* First part of the codes are functions */
         let mut functions = Vec::new();

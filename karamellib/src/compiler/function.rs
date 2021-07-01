@@ -280,7 +280,7 @@ pub fn find_function_definition_type(module: Rc<OpcodeModule>, ast: Rc<BramaAstT
 
             let storage_builder = StorageBuilder::new();
             let mut builder_option = StorageBuilderOption { max_stack: 0 };
-            storage_builder.prepare(module.clone(), ast.borrow(), new_storage_index, options, &mut builder_option);
+            storage_builder.prepare(module.clone(), ast.borrow(), new_storage_index, options, &mut builder_option)?;
 
             //options.storages[current_storage_index].add_static_data(name, Rc::new(BramaPrimative::Function(function.clone(), None)));
             options.storages[current_storage_index].add_constant(Rc::new(BramaPrimative::Function(function.clone(), None)));

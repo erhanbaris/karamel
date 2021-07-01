@@ -90,7 +90,7 @@ fn get_module_path(options: &KaramelCompilerContext, module_path: &PathBuf) -> V
     path
 }
 
-pub fn load_module(params: &[String], options: &mut KaramelCompilerContext, upper_storage_index: usize) -> Result<Rc<OpcodeModule>, String> {
+pub fn load_module(params: &[String], modules: &mut Vec<Rc<OpcodeModule>>, options: &mut KaramelCompilerContext, upper_storage_index: usize) -> Result<Rc<OpcodeModule>, String> {
     let mut path = PathBuf::from(&options.script_path[..]);
     let module = params[(params.len() - 1)].to_string();
 
@@ -127,6 +127,7 @@ pub fn load_module(params: &[String], options: &mut KaramelCompilerContext, uppe
             module.storage_index = module_storage;
 
             let module = Rc::new(module);
+            find_load_type(module.main_ast.clone(), options, modules, module.storage_index)?;
             find_function_definition_type(module.clone(), ast.clone(), options, module_storage, true)?;
             Ok(module.clone())
         },
@@ -138,10 +139,9 @@ fn find_load_type(ast: Rc<BramaAstType>, options: &mut KaramelCompilerContext, m
     match &*ast {
         BramaAstType::Load(module_name) => {
             if !options.has_module(&module_name) {
-                let module = load_module(module_name, options, upper_storage_index)?;
+                let module = load_module(module_name, modules, options, upper_storage_index)?;
                 options.add_module(module.clone());
                 modules.push(module.clone());
-                find_load_type(module.main_ast.clone(), options, modules, module.storage_index)?;
             }
         },
         BramaAstType::Block(blocks) => {
