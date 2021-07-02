@@ -6,7 +6,7 @@ use std::slice::Iter;
 use std::iter::Take;
 use bitflags::bitflags;
 
-use crate::buildin::Module;
+use crate::buildin::{DummyModule, Module};
 use crate::compiler::scope::Scope;
 use crate::{inc_memory_index, dec_memory_index, get_memory_index};
 use crate::types::*;
@@ -125,7 +125,7 @@ impl FunctionReference {
         }
     }
 
-    pub fn buildin_function(func: NativeCall, name: String, flags: FunctionFlag, module: Rc<dyn Module>) -> Rc<FunctionReference> {
+    pub fn buildin_function(func: NativeCall, name: String, flags: FunctionFlag) -> Rc<FunctionReference> {
         let reference = FunctionReference {
             callback: FunctionType::Native(func),
             flags: flags,
@@ -136,7 +136,7 @@ impl FunctionReference {
             used_locations: RefCell::new(Vec::new()),
             defined_storage_index: 0,
             opcode_body: None,
-            module
+            module: Rc::new(DummyModule::new())
         };
         Rc::new(reference)
     }

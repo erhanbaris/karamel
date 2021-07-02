@@ -110,3 +110,30 @@ pub trait Class: GetType {
     fn set_setter(&mut self, indexer: IndexerSetCall);
     fn get_setter(&self) -> Option<IndexerSetCall>;
 }
+
+pub struct DummyModule {
+    name: String,
+    path: Vec<String>
+}
+
+impl DummyModule {
+    pub fn new() -> Self {
+        DummyModule {
+            name: "!dummy".to_string(),
+            path: vec!["!dummy".to_string()]
+        }
+    }
+}
+
+impl Module for DummyModule {
+    fn get_module_name(&self) -> String { self.name.to_string() }
+    fn get_path(&self) -> &Vec<String> { &self.path }
+    
+    fn get_method(&self, _: &str) -> Option<Rc<FunctionReference>> { None }
+    fn get_module(&self, _: &str) -> Option<Rc<dyn Module>> { None }
+
+    fn get_methods(&self) -> Vec<Rc<FunctionReference>> { Vec::new() }
+    fn get_modules(&self) -> HashMap<String, Rc<dyn Module>> { HashMap::new() }
+
+    fn get_classes(&self) -> Vec<Rc<dyn Class>> { Vec::new() }
+}

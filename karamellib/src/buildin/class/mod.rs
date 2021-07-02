@@ -6,8 +6,7 @@ pub mod baseclass;
 pub mod proxy;
 
 use crate::buildin::class::baseclass::BasicInnerClass;
-use std::{rc::Rc, vec::Vec};
-use lazy_static::lazy_static;
+use std::rc::Rc;
 
 use super::Class;
 

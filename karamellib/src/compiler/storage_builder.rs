@@ -265,10 +265,9 @@ impl StorageBuilder {
                     let mut total = self.get_temp_count_from_ast(module.clone(),condition, ast, options, storage_index, compiler_option)?;
                     total = max(total, self.get_temp_count_from_ast(module.clone(),body, ast, options, storage_index, compiler_option)?);
 
-                    total = match else_body {
-                        Some(else_) => max(total, self.get_temp_count_from_ast(module.clone(),else_, ast, options, storage_index, compiler_option)?),
-                        None => return Err("Fonksiyon bulunamadı".to_string())
-                    };
+                    if let Some(else_) = else_body {
+                        total = max(total, self.get_temp_count_from_ast(module.clone(),else_, ast, options, storage_index, compiler_option)?);
+                    }
 
                     for else_if_item in else_if {
                         total = max(total, self.get_temp_count_from_ast(module.clone(),&else_if_item.condition, ast, options, storage_index, compiler_option)?);
