@@ -2,6 +2,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use crate::compiler::context::KaramelCompilerContext;
+use crate::file::compute_path_and_read_file;
 use crate::{types::Token, vm::interpreter::run_vm};
 use crate::parser::*;
 use crate::compiler::*;
@@ -57,11 +58,21 @@ pub fn code_executer(parameters: ExecutionParameters) -> ExecutionStatus {
         _ => ()
     };
 
+    let mut context: KaramelCompilerContext = KaramelCompilerContext::new();
+    context.script_path = get_execution_path();
+    log::debug!("Execution path: {}", context.script_path);
+
     let data = match parameters.source {
         ExecutionSource::Code(code) => code,
-        ExecutionSource::File(_) => {
-            log::error!("Kaynak dosyasından çalıştırma desteklenmektedir.");
-            return status
+        ExecutionSource::File(filename) => {
+            match compute_path_and_read_file(filename, &context) {
+                Ok(content) => content,
+                Err(error) => {
+                    log::error!("Program hata ile sonlandırıldı: {}", error);
+                    status.executed = false;
+                    return status
+                }
+            }
         }
     };
 
@@ -84,17 +95,13 @@ pub fn code_executer(parameters: ExecutionParameters) -> ExecutionStatus {
     };
 
     let opcode_compiler = InterpreterCompiler {};
-    let mut compiler_options: KaramelCompilerContext = KaramelCompilerContext::new();
-    compiler_options.script_path = get_execution_path();
-    log::debug!("Execution path: {}", compiler_options.script_path);
-
     if parameters.return_output {
-        compiler_options.stdout = Some(RefCell::new(String::new()));
-        compiler_options.stderr = Some(RefCell::new(String::new()));
+        context.stdout = Some(RefCell::new(String::new()));
+        context.stderr = Some(RefCell::new(String::new()));
     }
 
-    let execution_status = match opcode_compiler.compile(ast.clone(), &mut compiler_options) {
-        Ok(_) => unsafe { run_vm(&mut compiler_options) },
+    let execution_status = match opcode_compiler.compile(ast.clone(), &mut context) {
+        Ok(_) => unsafe { run_vm(&mut context) },
         Err(message) => {
             log::error!("Program hata ile sonlandırıldı: {}", message);
             return status;
@@ -118,8 +125,8 @@ pub fn code_executer(parameters: ExecutionParameters) -> ExecutionStatus {
         status.opcodes = Some(parser.tokens());
     }
 
-    status.stdout = compiler_options.stdout;
-    status.stderr = compiler_options.stderr;
+    status.stdout = context.stdout;
+    status.stderr = context.stderr;
 
     status
 }

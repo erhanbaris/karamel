@@ -9,6 +9,7 @@ use crate::buildin::Class;
 use crate::buildin::Module;
 use crate::compiler::StaticStorage;
 use crate::compiler::function::find_function_definition_type;
+use crate::constants::KARAMEL_FILE_EXTENSION;
 use crate::error::generate_error_message;
 use crate::parser::Parser;
 use crate::syntax::SyntaxParser;
@@ -100,7 +101,7 @@ pub fn load_module(params: &[String], modules: &mut Vec<Rc<OpcodeModule>>, optio
 
     path.push(module.clone());
 
-    let content = match File::open(format!("{}.tpd", path.to_str().unwrap())) {
+    let content = match File::open(format!("{}{}", path.to_str().unwrap(), KARAMEL_FILE_EXTENSION)) {
         Ok(mut file) => {
             let mut contents = String::new();
             file.read_to_string(&mut contents).unwrap();
@@ -165,6 +166,7 @@ pub fn get_modules(main_ast: Rc<BramaAstType>, options: &mut KaramelCompilerCont
 
 #[cfg(test)]
 mod tests {
+    use std::borrow::Borrow;
     use std::panic;
     use std::fs::File;
     use std::io::prelude::*;
@@ -174,6 +176,7 @@ mod tests {
     use crate::compiler::InterpreterCompiler;
     use crate::compiler::context::KaramelCompilerContext;
     use crate::compiler::module::load_module;
+    use crate::constants::KARAMEL_FILE_EXTENSION;
     use crate::parser::Parser;
     use crate::syntax::SyntaxParser;
     use crate::vm::interpreter;
@@ -184,7 +187,10 @@ mod tests {
 
     fn teardown(to_be_removed: Vec<String>) {
         for file in to_be_removed.iter() {
-            std::fs::remove_file(file).unwrap();
+            match std::fs::remove_file(file) {
+                Ok(_) => (),
+                Err(error) => println!("'{}' silinemedi. Hata mesajı: {}", file, error)
+            }
         }
         println!("teardown");
     }
@@ -203,7 +209,7 @@ mod tests {
         assert!(result.is_ok())
     }
 
-    fn write_to_file(content: &'static str, file_name: &'static str) -> String {
+    fn write_to_file<T: Borrow<str>>(content: &'static str, file_name: T) -> String {
         let file_name = generate_file_name(file_name);
         let mut file = File::create(&file_name).unwrap();
         file.write_all(content.as_bytes()).unwrap();
@@ -220,13 +226,13 @@ mod tests {
         }
     }
 
-    fn generate_file_name(file_name: &'static str) -> String {
+    fn generate_file_name<T: Borrow<str>>(file_name: T) -> String {
         match std::env::current_exe() {
             Ok(path) => match path.parent() {
-                Some(parent_path) => parent_path.clone().join(file_name).to_str().unwrap().to_string(),
-                _ => Path::new(".").join(file_name).to_str().unwrap().to_string()
+                Some(parent_path) => parent_path.clone().join(file_name.borrow()).to_str().unwrap().to_string(),
+                _ => Path::new(".").join(file_name.borrow()).to_str().unwrap().to_string()
             },
-            _ => Path::new(".").join(file_name).to_str().unwrap().to_string()
+            _ => Path::new(".").join(file_name.borrow()).to_str().unwrap().to_string()
         }
     }
 
@@ -234,7 +240,7 @@ mod tests {
     fn test_1() {
         let module_1 = r#"
 fonk topla(bir, iki): dondur bir + iki"#;
-        let topla_path = write_to_file(module_1, "topla.tpd");
+        let topla_path = write_to_file(module_1, format!("topla{}", KARAMEL_FILE_EXTENSION));
 
         run_test(|| {
             let mut modules = Vec::new();
@@ -254,8 +260,8 @@ fonk topla(bir, iki): dondur bir + iki"#;
         let module_2 = r#"
 module_1 yükle
 fonk topla2(bir, iki): dondur module_1::topla(bir + iki)"#;
-        let module_1_path = write_to_file(module_1, "module_1.tpd");
-        let module_2_path = write_to_file(module_2, "module_2.tpd");
+        let module_1_path = write_to_file(module_1, format!("module_1{}", KARAMEL_FILE_EXTENSION));
+        let module_2_path = write_to_file(module_2, format!("module_2{}", KARAMEL_FILE_EXTENSION));
 
         run_test(|| {
             let mut modules = Vec::new();
@@ -280,9 +286,9 @@ fonk topla2(bir, iki): dondur module_1::topla(bir + iki)"#;
 fonk topla(bir, iki): dondur bir + iki"#;
         let module_2 = r#"
 module_1 yükle
-fonk topla2(bir, iki): dondur module_1::topla(bir + iki)"#;
-        let module_1_path = write_to_file(module_1, "module_1.tpd");
-        let module_2_path = write_to_file(module_2, "module_2.tpd");
+fonk topla2(bir, iki): dondur module_1::topla(bir, iki)"#;
+        let module_1_path = write_to_file(module_1, format!("module_1{}", KARAMEL_FILE_EXTENSION));
+        let module_2_path = write_to_file(module_2, format!("module_2{}", KARAMEL_FILE_EXTENSION));
 
         run_test(|| {
             let mut parser = Parser::new(r#"
@@ -302,6 +308,7 @@ module_2::topla2(1024, 2)"#);
 
                 let opcode_compiler  = InterpreterCompiler {};
                 let mut compiler_options: KaramelCompilerContext = KaramelCompilerContext::new();
+                compiler_options.script_path = get_parent();
                 let ast = syntax_result.unwrap();
 
                 match opcode_compiler.compile(ast.clone(), &mut compiler_options) {
@@ -309,7 +316,7 @@ module_2::topla2(1024, 2)"#);
                         match unsafe { interpreter::run_vm(&mut compiler_options) } {
                             Ok(_) => {
                                 let memory = compiler_options.storages[0].get_stack().first().unwrap().deref_clean();
-                                assert_eq!(memory, BramaPrimative::Number(10216.0));
+                                assert_eq!(memory, BramaPrimative::Number(1026.0));
                             },
                             Err(error) => {
                                 println!("Calistirma islemi basarisiz: {}", error);

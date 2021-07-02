@@ -9,3 +9,4 @@ edition = "2018"
 [dependencies]
 mimalloc = { version = "*", default-features = false }
 karamellib = { path = "../karamellib" }
+clap = "~2.27.0"

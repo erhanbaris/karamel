@@ -7,6 +7,7 @@ use std::cell::RefCell;
 
 use ast::BramaDictItem;
 use crate::buildin::Module;
+use crate::constants::KARAMEL_FILE_EXTENSION;
 use crate::types::*;
 use crate::error::*;
 use crate::compiler::*;
@@ -203,7 +204,7 @@ impl InterpreterCompiler {
             path.push(item);
         }
 
-        path.push(format!("{}.tpd", module));
+        path.push(format!("{}{}", module, KARAMEL_FILE_EXTENSION));
 
         if path.is_file() {
             let content = match File::open(path.to_str().unwrap()) {
