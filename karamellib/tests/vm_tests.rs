@@ -38,6 +38,8 @@ mod tests {
                     } else {
                         assert!(false);
                     }
+                } else {
+                    assert!(false);
                 }
             }
         };
