@@ -114,7 +114,10 @@ impl  KaramelCompilerContext {
             }
             
             search_storage = match self.storages[search_storage].get_parent_location() {
-                Some(location) => location as usize,
+                Some(parent_storage_index) => match parent_storage_index == search_storage {
+                    true => return None,
+                    false => parent_storage_index.into()
+                },
                 None => return None
             };
         }

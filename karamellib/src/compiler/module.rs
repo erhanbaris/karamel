@@ -227,15 +227,15 @@ mod tests {
 
     #[test]
     fn test_1() {
-
         let module_1 = r#"
 fonk topla(bir, iki): dondur bir + iki"#;
         let topla_path = write_to_file(module_1, "topla.tpd");
 
         run_test(|| {
+            let mut modules = Vec::new();
             let mut options = KaramelCompilerContext::new();
             options.script_path = get_parent();
-            match load_module(&[String::from("topla")].to_vec(), &mut options) {
+            match load_module(&[String::from("topla")].to_vec(), &mut modules, &mut options, 0) {
                 Ok(_) => (),
                 Err(error) => assert!(false, "{}", error)
             };
@@ -253,13 +253,14 @@ fonk topla2(bir, iki): dondur module_1::topla(bir + iki)"#;
         let module_2_path = write_to_file(module_2, "module_2.tpd");
 
         run_test(|| {
+            let mut modules = Vec::new();
             let mut options = KaramelCompilerContext::new();
             options.script_path = get_parent();
-            match load_module(&[String::from("module_1")].to_vec(), &mut options) {
+            match load_module(&[String::from("module_1")].to_vec(), &mut modules, &mut options, 1) {
                 Ok(_) => (),
                 Err(error) => assert!(false, "{}", error)
             };
-            match load_module(&[String::from("module_2")].to_vec(), &mut options) {
+            match load_module(&[String::from("module_2")].to_vec(), &mut modules, &mut options, 0) {
                 Ok(_) => (),
                 Err(error) => assert!(false, "{}", error)
             };
