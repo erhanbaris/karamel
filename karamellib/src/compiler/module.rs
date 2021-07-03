@@ -8,9 +8,8 @@ use crate::buildin::Class;
 use crate::buildin::Module;
 use crate::compiler::StaticStorage;
 use crate::compiler::function::find_function_definition_type;
-use crate::constants::KARAMEL_FILE_EXTENSION;
 use crate::error::generate_error_message;
-use crate::file::read_file;
+use crate::file::read_module_or_script;
 use crate::parser::Parser;
 use crate::syntax::SyntaxParser;
 use crate::types::CompilerResult;
@@ -101,7 +100,7 @@ pub fn load_module(params: &[String], modules: &mut Vec<Rc<OpcodeModule>>, optio
 
     path.push(module.clone());
 
-    let content = match read_file(format!("{}{}", path.to_str().unwrap(), KARAMEL_FILE_EXTENSION)) {
+    let content = match read_module_or_script(path.to_str().unwrap(), options) {
         Ok(content) => content,
         Err(error) =>return Err(error)
     };

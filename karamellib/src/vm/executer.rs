@@ -3,7 +3,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use crate::compiler::context::{ExecutionPathInfo, KaramelCompilerContext};
-use crate::file::compute_path_and_read_file;
+use crate::file::read_module_or_script;
 use crate::{types::Token, vm::interpreter::run_vm};
 use crate::parser::*;
 use crate::compiler::*;
@@ -72,7 +72,7 @@ pub fn code_executer(parameters: ExecutionParameters) -> ExecutionStatus {
     let data = match parameters.source {
         ExecutionSource::Code(code) => code,
         ExecutionSource::File(filename) => {
-            match compute_path_and_read_file(filename, &context) {
+            match read_module_or_script(filename, &context) {
                 Ok(content) => content,
                 Err(error) => {
                     log::error!("Program hata ile sonlandırıldı: {}", error);

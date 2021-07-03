@@ -5,8 +5,7 @@ use std::cell::RefCell;
 
 use ast::BramaDictItem;
 use crate::buildin::Module;
-use crate::constants::KARAMEL_FILE_EXTENSION;
-use crate::file::read_file;
+use crate::file::read_module_or_script;
 use crate::types::*;
 use crate::error::*;
 use crate::compiler::*;
@@ -201,8 +200,8 @@ impl InterpreterCompiler {
             path.push(item);
         }
 
-        path.push(format!("{}{}", module, KARAMEL_FILE_EXTENSION));
-        match read_file(path.to_str().unwrap()) {
+        path.push(module);
+        match read_module_or_script(path.to_str().unwrap(), context) {
             Ok(content) => {
                 let mut parser = Parser::new(&content);
                 match parser.parse() {
