@@ -4,4 +4,4 @@ fonk func:
             döndür 'oldu'
         döndür inner_2
     döndür inner_1
-gç::satıryaz(func()()())
+hataayıklama::doğrula(func()()(), "oldu")

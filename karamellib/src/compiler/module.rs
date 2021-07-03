@@ -1,7 +1,6 @@
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::path::PathBuf;
-use std::io::prelude::*;
 use std::rc::Rc;
 
 use crate::buildin::Class;
@@ -167,15 +166,10 @@ mod tests {
     use std::io::prelude::*;
     use std::path::Path;
 
-    use crate::compiler::BramaPrimative;
-    use crate::compiler::InterpreterCompiler;
     use crate::compiler::context::KaramelCompilerContext;
     use crate::compiler::module::load_module;
     use crate::constants::KARAMEL_FILE_EXTENSION;
-    use crate::parser::Parser;
-    use crate::syntax::SyntaxParser;
     use crate::vm::executer::ExecutionSource;
-    use crate::vm::interpreter;
     use crate::vm::executer::get_execution_path;
 
     fn setup() {
@@ -211,16 +205,6 @@ mod tests {
         let mut file = File::create(&file_name).unwrap();
         file.write_all(content.as_bytes()).unwrap();
         file_name
-    }
-
-    fn get_parent() -> String {
-        match std::env::current_exe() {
-            Ok(path) => match path.parent() {
-                Some(parent_path) => parent_path.to_str().unwrap().to_string(),
-                _ => String::from(".")
-            },
-            _ => String::from(".")
-        }
     }
 
     fn generate_file_name<T: Borrow<str>>(file_name: T) -> String {

@@ -28,14 +28,13 @@ mod tests {
         }
     }
 
-    fn executer(executer_type: ExecuterType) {
+    fn executer(executer_type: ExecuterType) -> Result<(), String> {
         use std::env;
         use std::fs;
         use std::path::Path;
         use colored::*;
-        use log;
 
-        let mut test_status = true;
+        let mut failed_cases = Vec::new();
         let current_dir = env::current_dir().unwrap();
         let test_files = fs::read_dir(Path::new(&current_dir).join(executer_type.get_folder_name())).unwrap();
 
@@ -62,14 +61,12 @@ mod tests {
                             match result.compiled && result.executed {
                                 true => {
                                     if !is_pass {
-                                        log::error!("# {} failed ({})", path_str, "Not failed".red());
-                                        test_status = false;
+                                        failed_cases.push(format!("# {} failed ({})", path_str, "Not failed".red()));
                                     }
                                 },
                                 false => {
                                     if is_pass {
-                                        log::error!("# {} failed", path_str);
-                                        test_status = false;
+                                        failed_cases.push(format!("# {} failed", path_str));
                                     }
                                 }
                             }
@@ -81,17 +78,22 @@ mod tests {
             };
         }
 
-        assert_eq!(true, test_status);
+
+        if !failed_cases.is_empty() {
+            return Err(failed_cases.join("\r\n"));
+        }
+        
+        return Ok(())
     }
 
     #[test]
-    fn test_file_executer() {
-        executer(ExecuterType::File);
+    fn test_file_executer() -> Result<(), String> {
+        executer(ExecuterType::File)
     }
 
 
     #[test]
-    fn test_module_executer() {
-        executer(ExecuterType::Module);
+    fn test_module_executer() -> Result<(), String> {
+        executer(ExecuterType::Module)
     }
 }
