@@ -49,7 +49,7 @@ pub fn update_functions_for_temp_return(ast: &BramaAstType) {
             assign_to_temp.set(true);
         },
         BramaAstType::Block(blocks) => {
-            for mut block in blocks {
+            for block in blocks {
                 update_functions_for_temp_return(&block);
             }
         },

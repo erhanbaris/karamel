@@ -3,12 +3,16 @@ use crate::buildin::num::{NumModule};
 
 use crate::{buildin::{Class, Module, ModuleCollection, base_functions, class::{dict, get_empty_class, list, number, proxy, text}, debug, io}, compiler::scope::Scope};
 
-use super::function;
 use super::{BramaPrimative, StaticStorage, function::{FunctionReference, FunctionType, FunctionFlag}, module::OpcodeModule};
 
+#[derive(Default)]
+pub struct ExecutionPathInfo {
+    pub path: String,
+    pub script: Option<String>
+}
 
 pub struct KaramelCompilerContext {
-    pub script_path: String,
+    pub execution_path: ExecutionPathInfo,
     pub opcodes : Vec<u8>,
     pub storages: Vec<StaticStorage>,
     pub main_module: *mut OpcodeModule,
@@ -29,7 +33,7 @@ pub struct KaramelCompilerContext {
 impl  KaramelCompilerContext {
     pub fn new() -> KaramelCompilerContext {
         let mut compiler = KaramelCompilerContext {
-            script_path: String::new(),
+            execution_path: ExecutionPathInfo::default(),
             opcodes: Vec::new(),
             storages: vec![StaticStorage::new(0)],
             modules: ModuleCollection::new(),

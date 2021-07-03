@@ -1,6 +1,5 @@
 use std::cell::RefCell;
 use std::collections::HashMap;
-use std::fs::File;
 use std::path::PathBuf;
 use std::io::prelude::*;
 use std::rc::Rc;
@@ -11,6 +10,7 @@ use crate::compiler::StaticStorage;
 use crate::compiler::function::find_function_definition_type;
 use crate::constants::KARAMEL_FILE_EXTENSION;
 use crate::error::generate_error_message;
+use crate::file::read_file;
 use crate::parser::Parser;
 use crate::syntax::SyntaxParser;
 use crate::types::CompilerResult;
@@ -77,7 +77,7 @@ impl Module for OpcodeModule {
 
 fn get_module_path(options: &KaramelCompilerContext, module_path: &PathBuf) -> Vec<String> {
     let mut path = Vec::new();
-    let script_path = PathBuf::from(&options.script_path[..]);
+    let script_path = PathBuf::from(&options.execution_path.path[..]);
     let mut script_path_iter = script_path.iter();
     let mut module_path_iter = module_path.iter();
 
@@ -92,7 +92,7 @@ fn get_module_path(options: &KaramelCompilerContext, module_path: &PathBuf) -> V
 }
 
 pub fn load_module(params: &[String], modules: &mut Vec<Rc<OpcodeModule>>, options: &mut KaramelCompilerContext, upper_storage_index: usize) -> Result<Rc<OpcodeModule>, String> {
-    let mut path = PathBuf::from(&options.script_path[..]);
+    let mut path = PathBuf::from(&options.execution_path.path[..]);
     let module = params[(params.len() - 1)].to_string();
 
     for item in params.iter().take(params.len() - 1) {
@@ -101,13 +101,9 @@ pub fn load_module(params: &[String], modules: &mut Vec<Rc<OpcodeModule>>, optio
 
     path.push(module.clone());
 
-    let content = match File::open(format!("{}{}", path.to_str().unwrap(), KARAMEL_FILE_EXTENSION)) {
-        Ok(mut file) => {
-            let mut contents = String::new();
-            file.read_to_string(&mut contents).unwrap();
-            contents
-        },
-        Err(error) => return Err(format!("Dosya okuma hatası oldu. Hata : {:?}", error))
+    let content = match read_file(format!("{}{}", path.to_str().unwrap(), KARAMEL_FILE_EXTENSION)) {
+        Ok(content) => content,
+        Err(error) =>return Err(error)
     };
 
     let mut parser = Parser::new(&content);
@@ -180,6 +176,7 @@ mod tests {
     use crate::parser::Parser;
     use crate::syntax::SyntaxParser;
     use crate::vm::interpreter;
+    use crate::vm::executer::get_execution_path;
 
     fn setup() {
         println!("setup");
@@ -245,7 +242,7 @@ fonk topla(bir, iki): dondur bir + iki"#;
         run_test(|| {
             let mut modules = Vec::new();
             let mut options = KaramelCompilerContext::new();
-            options.script_path = get_parent();
+            options.execution_path = get_execution_path();
             match load_module(&[String::from("topla")].to_vec(), &mut modules, &mut options, 0) {
                 Ok(_) => (),
                 Err(error) => assert!(false, "{}", error)
@@ -266,7 +263,7 @@ fonk topla2(bir, iki): dondur module_1::topla(bir + iki)"#;
         run_test(|| {
             let mut modules = Vec::new();
             let mut options = KaramelCompilerContext::new();
-            options.script_path = get_parent();
+            options.execution_path = get_execution_path();
             match load_module(&[String::from("module_1")].to_vec(), &mut modules, &mut options, 1) {
                 Ok(_) => (),
                 Err(error) => assert!(false, "{}", error)
@@ -308,7 +305,7 @@ module_2::topla2(1024, 2)"#);
 
                 let opcode_compiler  = InterpreterCompiler {};
                 let mut compiler_options: KaramelCompilerContext = KaramelCompilerContext::new();
-                compiler_options.script_path = get_parent();
+                compiler_options.execution_path = get_execution_path();
                 let ast = syntax_result.unwrap();
 
                 match opcode_compiler.compile(ast.clone(), &mut compiler_options) {

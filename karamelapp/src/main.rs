@@ -6,16 +6,13 @@ extern crate karamellib;
 use clap::{Arg, App};
 
 
-use karamellib::{constants::{KARAMEL_CONTACT_EMAIL, KARAMEL_VERSION}, vm::executer::{ExecutionParameters, ExecutionSource}};
+use karamellib::{constants::{KARAMEL_CONTACT_EMAIL, KARAMEL_HELP_ABOUT, KARAMEL_TITLE, KARAMEL_VERSION}, vm::executer::{ExecutionParameters, ExecutionSource}};
 
 fn main() {
-    let matches = App::new("Karamel Programlama Dili")
+    let matches = App::new(KARAMEL_TITLE)
                           .version(KARAMEL_VERSION)
                           .author(KARAMEL_CONTACT_EMAIL)
-                          .about(r#"Karamel Programlama Dili Derleyicisi."
-
-                          https://github.com/erhanbaris/karamel"#)
-                          
+                          .about(KARAMEL_HELP_ABOUT)
                           .arg(Arg::with_name("file")
                                .short("d")
                                .long("dosya")

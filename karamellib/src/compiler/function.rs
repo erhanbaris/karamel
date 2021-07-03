@@ -288,9 +288,6 @@ pub fn find_function_definition_type(module: Rc<OpcodeModule>, ast: Rc<BramaAstT
             for argument in arguments {
                 options.storages[new_storage_index].add_variable(argument);
             }
-
-
-            options.storages[new_storage_index].dump();
         },
         BramaAstType::Block(blocks) => {
             for block in blocks {

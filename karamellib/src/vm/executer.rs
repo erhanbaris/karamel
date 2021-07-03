@@ -1,7 +1,7 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use crate::compiler::context::KaramelCompilerContext;
+use crate::compiler::context::{ExecutionPathInfo, KaramelCompilerContext};
 use crate::file::compute_path_and_read_file;
 use crate::{types::Token, vm::interpreter::run_vm};
 use crate::parser::*;
@@ -35,13 +35,16 @@ pub struct ExecutionStatus {
     pub opcodes: Option<Vec<Token>>
 }
 
-fn get_execution_path() -> String {
-    match std::env::current_exe() {
-        Ok(path) => match path.parent() {
-            Some(parent_path) => parent_path.to_str().unwrap().to_string(),
+pub fn get_execution_path() -> ExecutionPathInfo {
+    ExecutionPathInfo {
+        path: match std::env::current_exe() {
+            Ok(path) => match path.parent() {
+                Some(parent_path) => parent_path.to_str().unwrap().to_string(),
+                _ => String::from(".")
+            },
             _ => String::from(".")
         },
-        _ => String::from(".")
+        script: None
     }
 }
 
@@ -59,8 +62,8 @@ pub fn code_executer(parameters: ExecutionParameters) -> ExecutionStatus {
     };
 
     let mut context: KaramelCompilerContext = KaramelCompilerContext::new();
-    context.script_path = get_execution_path();
-    log::debug!("Execution path: {}", context.script_path);
+    context.execution_path = get_execution_path();
+    log::debug!("Execution path: {}", context.execution_path.path);
 
     let data = match parameters.source {
         ExecutionSource::Code(code) => code,

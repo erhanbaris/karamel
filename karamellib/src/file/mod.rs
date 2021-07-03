@@ -4,6 +4,7 @@ use std::path::Path;
 use std::fs::canonicalize;
 
 use crate::compiler::KaramelCompilerContext;
+use crate::constants::STARTUP_MODULE_NAME;
 
 pub fn read_file<T: Borrow<str>>(file_name: T) -> Result<String, String> {
     match File::open(file_name.borrow()) {
@@ -23,11 +24,19 @@ pub fn compute_path_and_read_file<T: Borrow<str>>(file_name: T, context: &Karame
         return read_file(file_name);
     }
 
-    let script_path = Path::new(&context.script_path);
-    let source_file_path = Path::new(file_name.borrow());
+    let script_path = Path::new(&context.execution_path.path);
+    let calculated_path = script_path.join(Path::new(file_name.borrow()));
     
-    match canonicalize(script_path.join(source_file_path)) {
-        Ok(path) => read_file(path.to_str().unwrap()),
+    match canonicalize(&calculated_path) {
+        Ok(path) => match path.exists() && path.is_file() {
+            true => return read_file(path.to_str().unwrap()),
+            false => (),
+        },
+        Err(_) => ()
+    };
+
+    match canonicalize(calculated_path.join(STARTUP_MODULE_NAME)) {
+        Ok(path) => return read_file(path.to_str().unwrap()),
         Err(error) => Err(error.to_string())
     }
 }
