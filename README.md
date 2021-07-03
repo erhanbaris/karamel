@@ -1,14 +1,14 @@
 # Karamel Programlama Dili \(KPD\)
 
-Türkçe Programlama Dili \(kısaca TPD\) sıfırdan kendi sanal makinesi üzerinde çalışan, birden fazla platformda çalışan, dinamik olarak değişkenlerin tanımlandığı, Türkçe konuşanlara yönelik geliştirilmekte olan bir programlama dilidir. Python dilinde bulunan özelliklerden ilham alınarak geliştirilmeye başlanan dil, şu anda windows ve macosx üzerinde sorunsuz olarak çalışmaktadır. Asıl amacı yeni başlayanlara kullanımı ve öğrenmesi kolay bir geliştirme ortamı sağlamaktadır. Dilin tamamı Rust Programlama Dili kullanılarak geliştirilmektedir. Kendi sanal makinesi üzerinde çalışan dil ve WebAssembly yardımı ile web üzerinde de kullanılabilir.
+Karamel Programlama Dili \(kısaca KPD\) sıfırdan kendi sanal makinesi üzerinde çalışan, birden fazla platformda çalışan, dinamik olarak değişkenlerin tanımlandığı, Türkçe konuşanlara yönelik geliştirilmekte olan bir programlama dilidir. Python dilinde bulunan özelliklerden ilham alınarak geliştirilmeye başlanan dil, şu anda windows ve macosx üzerinde sorunsuz olarak çalışmaktadır. Asıl amacı yeni başlayanlara kullanımı ve öğrenmesi kolay bir geliştirme ortamı sağlamaktadır. Dilin tamamı Rust Programlama Dili kullanılarak geliştirilmektedir. Kendi sanal makinesi üzerinde çalışan dil ve WebAssembly yardımı ile web üzerinde de kullanılabilir.
 
 ### Peki hangi ne tip sanal makine kullanıyor?
 
-TPD, stack machine isimli sanal makine mimarisini kullanıyoruz. Bunu kullanmamızın nedeni yeni özelliklerin daha hızlı bir şekilde entegre edebilmemizden dolayı. Diğer Register Machine yaklaşımına kıyasla daha yavaş olsada ilk amacımız performanstan ziyade özellik ekleyip, stabil hale getirmek.
+KPD, stack machine isimli sanal makine mimarisini kullanıyoruz. Bunu kullanmamızın nedeni yeni özelliklerin daha hızlı bir şekilde entegre edebilmemizden dolayı. Diğer Register Machine yaklaşımına kıyasla daha yavaş olsada ilk amacımız performanstan ziyade özellik ekleyip, stabil hale getirmek.
 
 ### Peki Stack Machine tam olarak nasıl çalışıyor?
 
-Bu mimaride kullanılacak olan değişkenler bir yığın olarak üst üste istiflenir ve sonrasında LIFO \(Last In First Out\) yaklaşımına göre değişkenler istiflerden geri alınıp işleme tabii tutulur. Bu yapının avantajı kodlar en basit haline dönüştürülerek daha performanslı olarak çalışması sağlanmaktadır. Yazılımcının yazdığı yüksek seviyeli olan kodlar işlenerek ara kodlara dönüştürülmektedir. Dönüştürülen ara kodlar TPD sanal makinesinde çalıştırılmaktadır. Aslında Üst düzey yazmış olduğunuz kodlar ve sanal makinenin işledi kodlar olarak iki farklı programlama dili içermektedir.
+Bu mimaride kullanılacak olan değişkenler bir yığın olarak üst üste istiflenir ve sonrasında LIFO \(Last In First Out\) yaklaşımına göre değişkenler istiflerden geri alınıp işleme tabii tutulur. Bu yapının avantajı kodlar en basit haline dönüştürülerek daha performanslı olarak çalışması sağlanmaktadır. Yazılımcının yazdığı yüksek seviyeli olan kodlar işlenerek ara kodlara dönüştürülmektedir. Dönüştürülen ara kodlar KPD sanal makinesinde çalıştırılmaktadır. Aslında Üst düzey yazmış olduğunuz kodlar ve sanal makinenin işledi kodlar olarak iki farklı programlama dili içermektedir.
 
 ### Peki bunu başka hangi diller kullanıyor?
 

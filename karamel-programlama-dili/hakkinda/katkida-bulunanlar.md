@@ -1,2 +1,0 @@
-# Katkıda Bulunanlar
-

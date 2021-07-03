@@ -1,2 +1,0 @@
-# Fonksiyon \| İşlev
-
