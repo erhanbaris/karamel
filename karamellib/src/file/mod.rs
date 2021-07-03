@@ -13,7 +13,7 @@ pub fn read_file<T: Borrow<str>>(file_name: T) -> Result<String, String> {
             file.read_to_string(&mut contents).unwrap();
             Ok(contents)
         },
-        Err(error) => return Err(format!("Dosya okuma hatası oldu. Hata : {:?}", error))
+        Err(error) => return Err(format!("Dosya okuma hatası oldu.\r\nDosya: {}\r\nHata : {:?}", file_name.borrow(), error))
     }
 }
 

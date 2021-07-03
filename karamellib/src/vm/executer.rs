@@ -1,3 +1,4 @@
+use std::borrow::Borrow;
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -35,14 +36,17 @@ pub struct ExecutionStatus {
     pub opcodes: Option<Vec<Token>>
 }
 
-pub fn get_execution_path() -> ExecutionPathInfo {
+pub fn get_execution_path<T: Borrow<ExecutionSource>>(source: T) -> ExecutionPathInfo {
     ExecutionPathInfo {
-        path: match std::env::current_exe() {
-            Ok(path) => match path.parent() {
-                Some(parent_path) => parent_path.to_str().unwrap().to_string(),
+        path: match source.borrow() {
+            ExecutionSource::Code(_) => match std::env::current_exe() {
+                Ok(path) => match path.parent() {
+                    Some(parent_path) => parent_path.to_str().unwrap().to_string(),
+                    _ => String::from(".")
+                },
                 _ => String::from(".")
             },
-            _ => String::from(".")
+            ExecutionSource::File(file_name) => file_name.to_string()
         },
         script: None
     }
@@ -62,7 +66,7 @@ pub fn code_executer(parameters: ExecutionParameters) -> ExecutionStatus {
     };
 
     let mut context: KaramelCompilerContext = KaramelCompilerContext::new();
-    context.execution_path = get_execution_path();
+    context.execution_path = get_execution_path(&parameters.source);
     log::debug!("Execution path: {}", context.execution_path.path);
 
     let data = match parameters.source {

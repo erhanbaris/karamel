@@ -175,6 +175,7 @@ mod tests {
     use crate::constants::KARAMEL_FILE_EXTENSION;
     use crate::parser::Parser;
     use crate::syntax::SyntaxParser;
+    use crate::vm::executer::ExecutionSource;
     use crate::vm::interpreter;
     use crate::vm::executer::get_execution_path;
 
@@ -242,7 +243,7 @@ fonk topla(bir, iki): dondur bir + iki"#;
         run_test(|| {
             let mut modules = Vec::new();
             let mut options = KaramelCompilerContext::new();
-            options.execution_path = get_execution_path();
+            options.execution_path = get_execution_path(ExecutionSource::Code("".to_string()));
             match load_module(&[String::from("topla")].to_vec(), &mut modules, &mut options, 0) {
                 Ok(_) => (),
                 Err(error) => assert!(false, "{}", error)
@@ -263,7 +264,7 @@ fonk topla2(bir, iki): dondur module_1::topla(bir + iki)"#;
         run_test(|| {
             let mut modules = Vec::new();
             let mut options = KaramelCompilerContext::new();
-            options.execution_path = get_execution_path();
+            options.execution_path = get_execution_path(ExecutionSource::Code("".to_string()));
             match load_module(&[String::from("module_1")].to_vec(), &mut modules, &mut options, 1) {
                 Ok(_) => (),
                 Err(error) => assert!(false, "{}", error)
@@ -272,60 +273,6 @@ fonk topla2(bir, iki): dondur module_1::topla(bir + iki)"#;
                 Ok(_) => (),
                 Err(error) => assert!(false, "{}", error)
             };
-        }, [module_1_path, module_2_path].to_vec());
-    }
-
-    
-
-    #[test]
-    fn test_3() {
-        let module_1 = r#"
-fonk topla(bir, iki): dondur bir + iki"#;
-        let module_2 = r#"
-module_1 yükle
-fonk topla2(bir, iki): dondur module_1::topla(bir, iki)"#;
-        let module_1_path = write_to_file(module_1, format!("module_1{}", KARAMEL_FILE_EXTENSION));
-        let module_2_path = write_to_file(module_2, format!("module_2{}", KARAMEL_FILE_EXTENSION));
-
-        run_test(|| {
-            let mut parser = Parser::new(r#"
-module_2 yükle
-module_2::topla2(1024, 2)"#);
-                match parser.parse() {
-                    Err(_) => assert!(false),
-                    _ => ()
-                };
-
-                let syntax = SyntaxParser::new(parser.tokens().to_vec());
-                let syntax_result = syntax.parse();
-                match syntax_result {
-                    Err(_) => assert!(false),
-                    _ => ()
-                };
-
-                let opcode_compiler  = InterpreterCompiler {};
-                let mut compiler_options: KaramelCompilerContext = KaramelCompilerContext::new();
-                compiler_options.execution_path = get_execution_path();
-                let ast = syntax_result.unwrap();
-
-                match opcode_compiler.compile(ast.clone(), &mut compiler_options) {
-                    Ok(_) => {
-                        match unsafe { interpreter::run_vm(&mut compiler_options) } {
-                            Ok(_) => {
-                                let memory = compiler_options.storages[0].get_stack().first().unwrap().deref_clean();
-                                assert_eq!(memory, BramaPrimative::Number(1026.0));
-                            },
-                            Err(error) => {
-                                println!("Calistirma islemi basarisiz: {}", error);
-                                assert!(false);
-                            }
-                        };
-                    },
-                    Err(error) => {
-                        println!("Derleme islemi basarisiz: {}", error);
-                        assert!(false);
-                    }
-                }
         }, [module_1_path, module_2_path].to_vec());
     }
 }

@@ -60,7 +60,7 @@ impl DebugModule  {
         match parameter.length() {
             1 => {
                 match parameter.iter().next().unwrap().deref().is_true() {
-                    false => Err("Assert failed".to_string()),
+                    false => Err("Doğrulama başarısız".to_string()),
                     true  => Ok(EMPTY_OBJECT)
                 }
             },
@@ -69,11 +69,11 @@ impl DebugModule  {
                 let left = iter.next().unwrap().deref();
                 let right = iter.next().unwrap().deref();
                 match left == right {
-                    false => Err(format!("Assert failed (left: {:?}, right: {:?})", left, right)),
+                    false => Err(format!("Doğrulama başarısız (Sol: {:?}, sağ: {:?})", left, right)),
                     true  => Ok(EMPTY_OBJECT)
                 }
             },
-            _ => Err("Assert failed".to_string())
+            _ => Err("Doğrulama başarısız".to_string())
         }
     }
 }

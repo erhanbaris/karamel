@@ -1,0 +1,1 @@
+hataayıklama::doğrula(doğru, doğru)
