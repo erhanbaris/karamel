@@ -6,10 +6,16 @@ pub mod baseclass;
 pub mod proxy;
 
 use crate::buildin::class::baseclass::BasicInnerClass;
-use std::rc::Rc;
+use std::{collections::HashSet, rc::Rc};
+use lazy_static::*;
 
 use super::Class;
 
+use std::sync::Mutex;
+
+lazy_static! {
+    pub static ref PRIMATIVE_CLASS_NAMES: Mutex<HashSet<String>> = Mutex::new(HashSet::new());
+}
 
 pub fn get_empty_class() -> Rc<dyn Class> {
     let mut opcode = BasicInnerClass::default();

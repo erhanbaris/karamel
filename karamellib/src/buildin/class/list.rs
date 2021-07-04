@@ -6,6 +6,7 @@ use crate::buildin::class::baseclass::BasicInnerClass;
 use crate::compiler::value::BramaPrimative;
 use crate::types::VmObject;
 use crate::{n_parameter_expected, expected_parameter_type, arc_bool, arc_empty};
+use crate::buildin::class::PRIMATIVE_CLASS_NAMES;
 
 pub fn get_primative_class() -> Rc<dyn Class> {
     let mut opcode = BasicInnerClass::default();
@@ -22,6 +23,8 @@ pub fn get_primative_class() -> Rc<dyn Class> {
     opcode.add_class_method("sil", remove);
     opcode.set_getter(getter);
     opcode.set_setter(setter);
+
+    PRIMATIVE_CLASS_NAMES.lock().unwrap().insert(opcode.get_class_name());
     Rc::new(opcode)
 }
 

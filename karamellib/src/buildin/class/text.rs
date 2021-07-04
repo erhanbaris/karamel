@@ -5,6 +5,7 @@ use crate::compiler::value::BramaPrimative;
 use crate::types::VmObject;
 use crate::{n_parameter_expected, expected_parameter_type, arc_text};
 use crate::primative_text;
+use crate::buildin::class::PRIMATIVE_CLASS_NAMES;
 
 use unicode_width::UnicodeWidthStr;
 use std::{cell::RefCell, rc::Rc};
@@ -40,6 +41,8 @@ pub fn get_primative_class() -> Rc<dyn Class> {
     opcode.add_class_method("sayi", number);
     opcode.set_getter(getter);
     opcode.set_setter(setter);
+
+    PRIMATIVE_CLASS_NAMES.lock().unwrap().insert(opcode.get_class_name());
     Rc::new(opcode)
 }
 

@@ -20,7 +20,7 @@ impl SyntaxParserTrait for FunctionDefinationParser {
 
             let mut arguments = Vec::new();
             let name_expression = PrimativeParser::parse_symbol(parser)?;
-            let name = match name_expression {
+            let function_name = match name_expression {
                 BramaAstType::Symbol(text) => text,
                 _ => {
                     return Err(BramaErrorType::FunctionNameNotDefined);
@@ -99,9 +99,9 @@ impl SyntaxParserTrait for FunctionDefinationParser {
             parser.flags.set(parser_flags);
 
             let function_defination_ast = BramaAstType::FunctionDefination {
-                name: name.to_string(),
+                name: function_name,
                 body: Rc::new(body),
-                arguments: arguments.to_vec()
+                arguments: arguments
             };
 
             parser.set_indentation(indentation);

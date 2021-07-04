@@ -8,6 +8,8 @@ use crate::compiler::value::BramaPrimative;
 use crate::types::VmObject;
 use crate::{n_parameter_expected, expected_parameter_type, arc_bool, primative_list};
 
+use crate::buildin::class::PRIMATIVE_CLASS_NAMES;
+
 #[derive(Default)]
 pub struct DictClass {
     base: BasicInnerClass
@@ -32,6 +34,9 @@ impl DictClass {
         dict.add_class_method("temizle", clear);
         dict.add_class_method("sil", remove);
         dict.add_class_method("anahtarlar", keys);
+
+        PRIMATIVE_CLASS_NAMES.lock().unwrap().insert(dict.get_type());
+
         dict
     }
 }

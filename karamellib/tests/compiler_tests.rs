@@ -5,8 +5,6 @@ mod tests {
     use crate::karamellib::parser::*;
     use crate::karamellib::syntax::*;
     use crate::karamellib::compiler::*;
-    use crate::karamellib::compiler::context::*;
-
     use std::rc::Rc;
 
     #[warn(unused_macros)]

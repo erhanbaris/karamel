@@ -3,6 +3,7 @@ use crate::compiler::value::EMPTY_OBJECT;
 use crate::buildin::class::BasicInnerClass;
 use crate::compiler::value::BramaPrimative;
 use crate::types::VmObject;
+use crate::buildin::class::PRIMATIVE_CLASS_NAMES;
 
 use std::{mem, rc::Rc};
 
@@ -18,6 +19,8 @@ pub fn get_primative_class() -> Rc<dyn Class> {
     opcode.add_class_method("taban", floor);
     opcode.add_class_method("tamsayı", trunc);
     opcode.add_class_method("kesir", fract);
+
+    PRIMATIVE_CLASS_NAMES.lock().unwrap().insert(opcode.get_class_name());
     Rc::new(opcode)
 }
 

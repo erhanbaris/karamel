@@ -1,3 +1,4 @@
+use std::borrow::Borrow;
 use std::vec::Vec;
 use std::rc::Rc;
 use std::path::PathBuf;
@@ -15,6 +16,7 @@ use crate::compiler::value::BramaPrimative;
 use crate::compiler::ast::{BramaAstType, BramaIfStatementElseItem};
 use crate::compiler::storage_builder::StorageBuilder;
 use crate::compiler::function::{FunctionReference};
+use crate::buildin::class::PRIMATIVE_CLASS_NAMES;
 
 use log;
 
@@ -22,12 +24,6 @@ use super::context::KaramelCompilerContext;
 use super::function::find_function_definition_type;
 use super::module::{OpcodeModule, get_modules};
 use super::storage_builder::StorageBuilderOption;
-
-pub struct FunctionDefine {
-    arguments: Vec<String>,
-    body: Rc<BramaAstType>,
-    reference: Rc<FunctionReference>
-}
 
 pub struct InterpreterCompiler;
 impl InterpreterCompiler {   
@@ -87,6 +83,18 @@ impl InterpreterCompiler {
         find_function_definition_type(module.clone(), main_ast.clone(), context, 0, true)?;
         Ok(module.clone())
     }
+    
+    pub fn check_prohibited_names<T: Borrow<String>>(&self, variable: T) -> Result<(), String> {
+        if KEYWORDS.iter().any(|(key, _)| variable.borrow() == *key) {
+            return Err(format!("'{}' anahtar kelimesi kullanılamaz", variable.borrow()));
+        }
+
+        if PRIMATIVE_CLASS_NAMES.lock().unwrap().contains(variable.borrow()) {
+            return Err(format!("'{}' temel sınıf kelimesi kullanılamaz", variable.borrow()));
+        }
+        
+        Ok(())   
+    }
 
     pub fn prepare_modules(&self, context: &mut KaramelCompilerContext) -> CompilerResult {
         let mut functions = Vec::new();
@@ -103,18 +111,13 @@ impl InterpreterCompiler {
         Ok(())
     }
 
-    fn get_function_definations(&self, module: Rc<OpcodeModule>, ast: Rc<BramaAstType>, functions: &mut Vec<FunctionDefine>, context: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult{
+    fn get_function_definations(&self, module: Rc<OpcodeModule>, ast: Rc<BramaAstType>, functions: &mut Vec<Rc<FunctionReference>>, context: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult{
         match &*ast {
-            BramaAstType::FunctionDefination { name, arguments, body  } => {
+            BramaAstType::FunctionDefination { name, arguments: _, body  } => {
                 let search = context.get_function(name.to_string(), module.get_path(), storage_index);
                 match search {
                     Some(reference) => {
-                        functions.push(FunctionDefine {
-                            arguments: arguments.to_vec(),
-                            body: body.clone(),
-                            reference: reference.clone()
-                        });
-
+                        functions.push(reference.clone());
                         self.get_function_definations(module.clone(), body.clone(), functions, context, reference.storage_index)?;
                     },
 
@@ -132,10 +135,19 @@ impl InterpreterCompiler {
         Ok(())
     }
 
-    fn generate_functions(&self, module: Rc<OpcodeModule>, functions: &mut Vec<FunctionDefine>, context: &mut KaramelCompilerContext) -> CompilerResult {
+    fn generate_functions(&self, module: Rc<OpcodeModule>, functions: &mut Vec<Rc<FunctionReference>>, context: &mut KaramelCompilerContext) -> CompilerResult {
         for function in functions {
+
+            /* Validate function name and parameters */
+            self.check_prohibited_names(&function.name)?;
+            for argument in &function.arguments {
+                self.check_prohibited_names(argument)?;
+            }
+
+            self.check_prohibited_names(&function.name)?;
+
             context.opcodes.push(VmOpCode::Func as u8);
-            (*function.reference).opcode_location.set(context.opcodes.len());
+            (*function).opcode_location.set(context.opcodes.len());
             context.opcodes.push(function.arguments.len() as u8);
 
             if !function.arguments.is_empty() {
@@ -143,7 +155,7 @@ impl InterpreterCompiler {
                 context.opcodes.push(function.arguments.len() as u8);
             }
 
-            self.generate_opcode(module.clone(), &function.body, &function.body, context, function.reference.storage_index as usize)?;
+            self.generate_opcode(module.clone(), &function.opcode_body.as_ref().unwrap(), &function.opcode_body.as_ref().unwrap(), context, function.storage_index as usize)?;
         }
 
         Ok(())
@@ -562,6 +574,12 @@ impl InterpreterCompiler {
     fn generate_assignment(&self, module: Rc<OpcodeModule>, variable: &BramaAstType, operator: &BramaOperatorType, expression_ast: &BramaAstType, context: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult {
         match variable {
             BramaAstType::Symbol(symbol) => {
+                
+                /* Validate function name and parameters */
+                if let BramaAstType::Symbol(variable_name) = variable {
+                    self.check_prohibited_names(variable_name)?;    
+                }
+                
                 let location = context.storages.get_mut(storage_index).unwrap().add_variable(&*symbol);
                 let storage = &context.storages[storage_index];
                 
@@ -802,5 +820,201 @@ impl InterpreterCompiler {
             self.generate_opcode(module.clone(), &ast, upper_ast, context, storage_index)?;
         }
         Ok(())
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use crate::buildin::DummyModule;
+    use crate::compiler::*;
+    use std::vec::Vec;
+    use std::rc::Rc;
+    use crate::compiler::ast::{BramaAstType};
+    use crate::compiler::storage_builder::StorageBuilder;
+    use crate::compiler::function::{FunctionReference};
+    use super::module::{OpcodeModule};
+
+    use super::storage_builder::StorageBuilderOption;
+
+    #[test]
+    fn test_1() -> Result<(), String> {
+        let mut context = KaramelCompilerContext::new();
+        let compiler = InterpreterCompiler {};
+        let storage_builder: StorageBuilder = StorageBuilder::new();
+        let mut compiler_options = StorageBuilderOption { max_stack: 0 };
+
+        let function_define = FunctionReference::opcode_function("test".to_string(), Vec::new(), Rc::new(BramaAstType::None), Rc::new(DummyModule::new()), 0, 0, true);
+
+        let mut functions = Vec::new();
+        functions.push(function_define);
+
+        let module = Rc::new(OpcodeModule::new("".to_string(), "".to_string(), Rc::new(BramaAstType::None)));
+        storage_builder.prepare(module.clone(), &BramaAstType::None, 0, &mut context, &mut compiler_options)?;
+        compiler.generate_functions(module.clone(), &mut functions, &mut context)?;
+        Ok(())
+    }
+
+    #[test]
+    fn test_2() -> Result<(), String> {
+        let mut context = KaramelCompilerContext::new();
+        let compiler = InterpreterCompiler {};
+        let storage_builder: StorageBuilder = StorageBuilder::new();
+        let mut compiler_options = StorageBuilderOption { max_stack: 0 };
+
+        let function_define = FunctionReference::opcode_function("yazı".to_string(), Vec::new(), Rc::new(BramaAstType::None), Rc::new(DummyModule::new()), 0, 0, true);
+
+        let mut functions = Vec::new();
+        functions.push(function_define);
+
+        let module = Rc::new(OpcodeModule::new("".to_string(), "".to_string(), Rc::new(BramaAstType::None)));
+        storage_builder.prepare(module.clone(), &BramaAstType::None, 0, &mut context, &mut compiler_options)?;
+        let result = compiler.generate_functions(module.clone(), &mut functions, &mut context);
+
+        match result {
+            Ok(_) => Err("yazı geçerli bir fonksiyon ismi değil".to_string()),
+            Err(_) => Ok(())
+        }
+    }
+
+    #[test]
+    fn test_3() -> Result<(), String> {
+        let mut context = KaramelCompilerContext::new();
+        let compiler = InterpreterCompiler {};
+        let storage_builder: StorageBuilder = StorageBuilder::new();
+        let mut compiler_options = StorageBuilderOption { max_stack: 0 };
+
+        let function_define = FunctionReference::opcode_function("döndür".to_string(), Vec::new(), Rc::new(BramaAstType::None), Rc::new(DummyModule::new()), 0, 0, true);
+
+        let mut functions = Vec::new();
+        functions.push(function_define);
+
+        let module = Rc::new(OpcodeModule::new("".to_string(), "".to_string(), Rc::new(BramaAstType::None)));
+        storage_builder.prepare(module.clone(), &BramaAstType::None, 0, &mut context, &mut compiler_options)?;
+        let result = compiler.generate_functions(module.clone(), &mut functions, &mut context);
+
+        match result {
+            Ok(_) => Err("yazı geçerli bir fonksiyon ismi değil".to_string()),
+            Err(_) => Ok(())
+        }
+    }
+
+    #[test]
+    fn test_4() -> Result<(), String> {
+        let mut context = KaramelCompilerContext::new();
+        let compiler = InterpreterCompiler {};
+        let storage_builder: StorageBuilder = StorageBuilder::new();
+        let mut compiler_options = StorageBuilderOption { max_stack: 0 };
+
+        let function_define = FunctionReference::opcode_function("sayı".to_string(), Vec::new(), Rc::new(BramaAstType::None), Rc::new(DummyModule::new()), 0, 0, true);
+
+        let mut functions = Vec::new();
+        functions.push(function_define);
+
+        let module = Rc::new(OpcodeModule::new("".to_string(), "".to_string(), Rc::new(BramaAstType::None)));
+        storage_builder.prepare(module.clone(), &BramaAstType::None, 0, &mut context, &mut compiler_options)?;
+        let result = compiler.generate_functions(module.clone(), &mut functions, &mut context);
+
+        match result {
+            Ok(_) => Err("sayı geçerli bir fonksiyon ismi değil".to_string()),
+            Err(_) => Ok(())
+        }
+    }
+
+    #[test]
+    fn test_5() -> Result<(), String> {
+        
+        let mut context = KaramelCompilerContext::new();
+        let compiler = InterpreterCompiler {};
+        let storage_builder: StorageBuilder = StorageBuilder::new();
+        let mut compiler_options = StorageBuilderOption { max_stack: 0 };
+
+        let function_define = FunctionReference::opcode_function("test".to_string(), vec!["test".to_string()], Rc::new(BramaAstType::None), Rc::new(DummyModule::new()), 0, 0, true);
+
+        let mut functions = Vec::new();
+        functions.push(function_define);
+
+        let module = Rc::new(OpcodeModule::new("".to_string(), "".to_string(), Rc::new(BramaAstType::None)));
+        storage_builder.prepare(module.clone(), &BramaAstType::None, 0, &mut context, &mut compiler_options)?;
+        compiler.generate_functions(module.clone(), &mut functions, &mut context)?;
+        Ok(())
+    }
+
+    #[test]
+    fn test_6() -> Result<(), String> {
+        let mut context = KaramelCompilerContext::new();
+        let compiler = InterpreterCompiler {};
+        let storage_builder: StorageBuilder = StorageBuilder::new();
+        let mut compiler_options = StorageBuilderOption { max_stack: 0 };
+
+        let function_define = FunctionReference::opcode_function("test".to_string(), vec!["sayı".to_string()], Rc::new(BramaAstType::None), Rc::new(DummyModule::new()), 0, 0, true);
+
+        let mut functions = Vec::new();
+        functions.push(function_define);
+
+        let module = Rc::new(OpcodeModule::new("".to_string(), "".to_string(), Rc::new(BramaAstType::None)));
+        storage_builder.prepare(module.clone(), &BramaAstType::None, 0, &mut context, &mut compiler_options)?;
+        let result = compiler.generate_functions(module.clone(), &mut functions, &mut context);
+
+        match result {
+            Ok(_) => Err("sayı geçerli bir fonksiyon parametresi değil".to_string()),
+            Err(_) => Ok(())
+        }
+    }
+
+    #[test]
+    fn test_7() -> Result<(), String> {
+        let mut context = KaramelCompilerContext::new();
+        let compiler = InterpreterCompiler {};
+        let storage_builder: StorageBuilder = StorageBuilder::new();
+        let mut compiler_options = StorageBuilderOption { max_stack: 0 };
+
+        let function_define = FunctionReference::opcode_function("döndür".to_string(), vec!["sayı".to_string()], Rc::new(BramaAstType::None), Rc::new(DummyModule::new()), 0, 0, true);
+
+        let mut functions = Vec::new();
+        functions.push(function_define);
+
+        let module = Rc::new(OpcodeModule::new("".to_string(), "".to_string(), Rc::new(BramaAstType::None)));
+        storage_builder.prepare(module.clone(), &BramaAstType::None, 0, &mut context, &mut compiler_options)?;
+        let result = compiler.generate_functions(module.clone(), &mut functions, &mut context);
+
+        match result {
+            Ok(_) => Err("döndür geçerli bir fonksiyon parametresi değil".to_string()),
+            Err(_) => Ok(())
+        }
+    }
+
+    #[test]
+    fn test_8() -> Result<(), String> {
+        let compiler = InterpreterCompiler {};
+        KaramelCompilerContext::new();
+        compiler.check_prohibited_names("test".to_string())
+    }
+
+    #[test]
+    fn test_9() -> Result<(), String> {
+        let compiler = InterpreterCompiler {};
+        KaramelCompilerContext::new();
+        compiler.check_prohibited_names("abc".to_string())
+    }
+
+    #[test]
+    fn test_10() -> Result<(), String> {
+        let compiler = InterpreterCompiler {};
+        KaramelCompilerContext::new();
+        match compiler.check_prohibited_names("sayı".to_string()) {
+            Ok(_) => Err("sayı tipi kullanılamaz".to_string()),
+            _ => Ok(())
+        }
+    }
+
+    #[test]
+    fn test_11() -> Result<(), String> {
+        let compiler = InterpreterCompiler {};
+        KaramelCompilerContext::new();
+        match compiler.check_prohibited_names("döndür".to_string()) {
+            Ok(_) => Err("sayı tipi kullanılamaz".to_string()),
+            _ => Ok(())
+        }
     }
 }

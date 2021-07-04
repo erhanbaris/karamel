@@ -36,7 +36,8 @@ pub enum BramaErrorType {
     CommentNotFinished = 129,
     WhileStatementNotValid = 130,
     FunctionDefinationNotValid = 131,
-    MissingIf = 132
+    MissingIf = 132,
+    KeywordCouldNotBeUsed = 133
 }
 
 #[derive(Copy)]
@@ -90,7 +91,8 @@ impl BramaErrorType {
             BramaErrorType::CommentNotFinished => "Yorum bilgisi düzgün kapatılmadı",
             BramaErrorType::WhileStatementNotValid => "Döngü düzgün tanımlanmamış",
             BramaErrorType::FunctionDefinationNotValid => "Fonksiyon tanımlaması hatalı",
-            BramaErrorType::MissingIf => "'ise' sözcüğü eksik"
+            BramaErrorType::MissingIf => "'ise' sözcüğü eksik",
+            BramaErrorType::KeywordCouldNotBeUsed => "Anahtar kelimeler kullanılamaz"
         };
         format!("(#{}) {}", *self as u8, message)
     }
