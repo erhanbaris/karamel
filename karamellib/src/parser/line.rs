@@ -1,5 +1,5 @@
 use crate::types::*;
-use crate::error::BramaErrorType;
+use crate::error::KaramelErrorType;
 
 pub struct LineParser;
 
@@ -9,7 +9,7 @@ impl TokenParser for LineParser {
         return ch.is_new_line();
     }
 
-    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<(), BramaErrorType> {
+    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<(), KaramelErrorType> {
         tokinizer.increase_index();
 
         let mut whitespace_count: u32 = 0;
@@ -23,7 +23,7 @@ impl TokenParser for LineParser {
         }
 
         tokinizer.increate_line();
-        tokinizer.add_token(start_column, BramaTokenType::NewLine(whitespace_count as u8));
+        tokinizer.add_token(start_column, KaramelTokenType::NewLine(whitespace_count as u8));
         tokinizer.column = whitespace_count;
 
         return Ok(());

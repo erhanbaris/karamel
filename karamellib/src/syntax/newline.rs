@@ -1,28 +1,28 @@
 use crate::types::*;
 use crate::syntax::{SyntaxParser, SyntaxParserTrait};
-use crate::compiler::ast::BramaAstType;
+use crate::compiler::ast::KaramelAstType;
 
 pub struct NewlineParser;
 
 impl SyntaxParserTrait for NewlineParser {
     fn parse(parser: &SyntaxParser) -> AstResult {
-        let mut result = BramaAstType::None;
+        let mut result = KaramelAstType::None;
         loop {
             if let Ok(token) = parser.peek_token() {
                 match token.token_type {
-                    BramaTokenType::NewLine(_) => {
+                    KaramelTokenType::NewLine(_) => {
                         parser.indentation_check()?;
-                        result = BramaAstType::NewLine;
+                        result = KaramelAstType::NewLine;
                         parser.consume_token();
                         continue;
                     },
-                    BramaTokenType::WhiteSpace(_) => {
-                        result = BramaAstType::NewLine;
+                    KaramelTokenType::WhiteSpace(_) => {
+                        result = KaramelAstType::NewLine;
                         parser.consume_token();
                         continue;
                     },
                     _ => {
-                        result = BramaAstType::None;
+                        result = KaramelAstType::None;
                         break;
                     }
                 }

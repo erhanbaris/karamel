@@ -1,6 +1,6 @@
 use crate::compiler::{function::{FunctionParameter, FunctionReference, NativeCall, NativeCallResult}};
 use crate::types::VmObject;
-use crate::compiler::value::BramaPrimative;
+use crate::compiler::value::KaramelPrimative;
 use crate::compiler::value::EMPTY_OBJECT;
 use crate::buildin::{Module, Class};
 use crate::{n_parameter_expected, expected_parameter_type};
@@ -70,8 +70,8 @@ impl NumModule {
         };
 
         match &*arg {
-            BramaPrimative::Number(_) => Ok(*parameter.iter().next().unwrap()),
-            BramaPrimative::Text(text) => {
+            KaramelPrimative::Number(_) => Ok(*parameter.iter().next().unwrap()),
+            KaramelPrimative::Text(text) => {
                 match (*text).parse::<f64>() {
                     Ok(num) => Ok(VmObject::from(num)),
                     _ => expected_parameter_type!("oku", "Yazı")

@@ -1,9 +1,9 @@
 use crate::types::*;
 use crate::syntax::{SyntaxParser, SyntaxParserTrait, SyntaxFlag};
 use crate::syntax::primative::PrimativeParser;
-use crate::compiler::ast::{BramaAstType};
+use crate::compiler::ast::{KaramelAstType};
 use crate::syntax::block::{SingleLineBlockParser, MultiLineBlockParser};
-use crate::error::BramaErrorType;
+use crate::error::KaramelErrorType;
 use std::rc::Rc;
 
 pub struct FunctionDefinationParser;
@@ -13,7 +13,7 @@ impl SyntaxParserTrait for FunctionDefinationParser {
         let index_backup = parser.get_index();
         parser.indentation_check()?;
 
-        if parser.match_keyword(BramaKeywordType::Fn) {
+        if parser.match_keyword(KaramelKeywordType::Fn) {
             let indentation = parser.get_indentation();
 
             parser.cleanup_whitespaces();
@@ -21,43 +21,43 @@ impl SyntaxParserTrait for FunctionDefinationParser {
             let mut arguments = Vec::new();
             let name_expression = PrimativeParser::parse_symbol(parser)?;
             let function_name = match name_expression {
-                BramaAstType::Symbol(text) => text,
+                KaramelAstType::Symbol(text) => text,
                 _ => {
-                    return Err(BramaErrorType::FunctionNameNotDefined);
+                    return Err(KaramelErrorType::FunctionNameNotDefined);
                 }
             };
 
             parser.cleanup_whitespaces();
 
             /* Arguments */
-            if let Some(_) = parser.match_operator(&[BramaOperatorType::LeftParentheses]) {
+            if let Some(_) = parser.match_operator(&[KaramelOperatorType::LeftParentheses]) {
                 loop {
                     parser.cleanup_whitespaces();
 
-                    if parser.check_operator(&BramaOperatorType::RightParentheses) {
+                    if parser.check_operator(&KaramelOperatorType::RightParentheses) {
                         break;
                     }
 
                     let argument = PrimativeParser::parse_symbol(parser)?;
                     match argument {
-                        BramaAstType::Symbol(text) => arguments.push(text),
-                        _ => return Err(BramaErrorType::ArgumentMustBeText)
+                        KaramelAstType::Symbol(text) => arguments.push(text),
+                        _ => return Err(KaramelErrorType::ArgumentMustBeText)
                     };
 
                     parser.cleanup_whitespaces();
-                    if let None = parser.match_operator(&[BramaOperatorType::Comma]) {
+                    if let None = parser.match_operator(&[KaramelOperatorType::Comma]) {
                         break;
                     }
                 }
 
-                if let None = parser.match_operator(&[BramaOperatorType::RightParentheses]) {
-                    return Err(BramaErrorType::RightParanthesesMissing);
+                if let None = parser.match_operator(&[KaramelOperatorType::RightParentheses]) {
+                    return Err(KaramelErrorType::RightParanthesesMissing);
                 }
             }
 
             parser.cleanup_whitespaces();
-            if let None = parser.match_operator(&[BramaOperatorType::ColonMark]) {
-                return Err(BramaErrorType::ColonMarkMissing);
+            if let None = parser.match_operator(&[KaramelOperatorType::ColonMark]) {
+                return Err(KaramelErrorType::ColonMarkMissing);
             }
 
             parser.cleanup_whitespaces();
@@ -73,24 +73,24 @@ impl SyntaxParserTrait for FunctionDefinationParser {
             }?;
 
             let has_return = match &body {
-                BramaAstType::Return(_) => true,
-                BramaAstType::Block(blocks) =>
+                KaramelAstType::Return(_) => true,
+                KaramelAstType::Block(blocks) =>
                     match &*blocks[blocks.len() - 1] {
-                        BramaAstType::Return(_) => true,
+                        KaramelAstType::Return(_) => true,
                         _ => false
                     },
-                BramaAstType::None => return Err(BramaErrorType::FunctionConditionBodyNotFound),
+                KaramelAstType::None => return Err(KaramelErrorType::FunctionConditionBodyNotFound),
                 _ => false
             };
 
             if !has_return {
                 body = match body {
-                    BramaAstType::Block(mut blocks) => {
-                        blocks.push(Rc::new(BramaAstType::Return(Box::new(BramaAstType::None))));
-                        BramaAstType::Block(blocks)
+                    KaramelAstType::Block(mut blocks) => {
+                        blocks.push(Rc::new(KaramelAstType::Return(Box::new(KaramelAstType::None))));
+                        KaramelAstType::Block(blocks)
                     },
                     _ => {
-                        BramaAstType::Block([Rc::new(body), Rc::new(BramaAstType::Return(Box::new(BramaAstType::None)))].to_vec())
+                        KaramelAstType::Block([Rc::new(body), Rc::new(KaramelAstType::Return(Box::new(KaramelAstType::None)))].to_vec())
                     }
                 }
             }
@@ -98,7 +98,7 @@ impl SyntaxParserTrait for FunctionDefinationParser {
             parser.set_indentation(indentation);
             parser.flags.set(parser_flags);
 
-            let function_defination_ast = BramaAstType::FunctionDefination {
+            let function_defination_ast = KaramelAstType::FunctionDefination {
                 name: function_name,
                 body: Rc::new(body),
                 arguments: arguments
@@ -109,6 +109,6 @@ impl SyntaxParserTrait for FunctionDefinationParser {
         }
         
         parser.set_index(index_backup);
-        return Ok(BramaAstType::None);
+        return Ok(KaramelAstType::None);
     }
 }

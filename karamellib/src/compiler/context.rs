@@ -3,7 +3,7 @@ use crate::buildin::num::{NumModule};
 
 use crate::{buildin::{Class, Module, ModuleCollection, base_functions, class::{dict, get_empty_class, list, number, proxy, text}, debug, io}, compiler::scope::Scope};
 
-use super::{BramaPrimative, StaticStorage, function::{FunctionReference, FunctionType, FunctionFlag}, module::OpcodeModule};
+use super::{KaramelPrimative, StaticStorage, function::{FunctionReference, FunctionType, FunctionFlag}, module::OpcodeModule};
 
 #[derive(Default)]
 pub struct ExecutionPathInfo {
@@ -127,7 +127,7 @@ impl  KaramelCompilerContext {
         }
     }
 
-    pub fn get_class(&self, value: &BramaPrimative) -> Rc<dyn Class > {
+    pub fn get_class(&self, value: &KaramelPrimative) -> Rc<dyn Class > {
         unsafe {
             self.primative_classes.get_unchecked(value.discriminant()).clone()
         }

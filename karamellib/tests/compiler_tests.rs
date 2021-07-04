@@ -43,11 +43,11 @@ mod tests {
         }
     }
 
-    memory_check!(memory_1, "10 + 10", vec![BramaPrimative::Number(10.0)]);
-    memory_check!(memory_2, "10 + 123", vec![BramaPrimative::Number(10.0), BramaPrimative::Number(123.0)]);
-    memory_check!(memory_3, "11 + 12 + 13", vec![BramaPrimative::Number(11.0), BramaPrimative::Number(12.0), BramaPrimative::Number(13.0)]);
-    memory_check!(memory_4, "11 + 12 + 13 + 14", vec![BramaPrimative::Number(11.0), BramaPrimative::Number(12.0), BramaPrimative::Number(13.0), BramaPrimative::Number(14.0)]);
-    memory_check!(memory_5, "'erhan' + 'barış'", vec![BramaPrimative::Text(Rc::new("erhan".to_string())), BramaPrimative::Text(Rc::new("barış".to_string()))]);
-    memory_check!(memory_6, "'erhan' + '-' + 'barış'", vec![BramaPrimative::Text(Rc::new("erhan".to_string())), BramaPrimative::Text(Rc::new("-".to_string())), BramaPrimative::Text(Rc::new("barış".to_string()))]);
-    memory_check!(memory_7, "doğru == yanlış", vec![BramaPrimative::Bool(true), BramaPrimative::Bool(false)]);
+    memory_check!(memory_1, "10 + 10", vec![KaramelPrimative::Number(10.0)]);
+    memory_check!(memory_2, "10 + 123", vec![KaramelPrimative::Number(10.0), KaramelPrimative::Number(123.0)]);
+    memory_check!(memory_3, "11 + 12 + 13", vec![KaramelPrimative::Number(11.0), KaramelPrimative::Number(12.0), KaramelPrimative::Number(13.0)]);
+    memory_check!(memory_4, "11 + 12 + 13 + 14", vec![KaramelPrimative::Number(11.0), KaramelPrimative::Number(12.0), KaramelPrimative::Number(13.0), KaramelPrimative::Number(14.0)]);
+    memory_check!(memory_5, "'erhan' + 'barış'", vec![KaramelPrimative::Text(Rc::new("erhan".to_string())), KaramelPrimative::Text(Rc::new("barış".to_string()))]);
+    memory_check!(memory_6, "'erhan' + '-' + 'barış'", vec![KaramelPrimative::Text(Rc::new("erhan".to_string())), KaramelPrimative::Text(Rc::new("-".to_string())), KaramelPrimative::Text(Rc::new("barış".to_string()))]);
+    memory_check!(memory_7, "doğru == yanlış", vec![KaramelPrimative::Bool(true), KaramelPrimative::Bool(false)]);
 }

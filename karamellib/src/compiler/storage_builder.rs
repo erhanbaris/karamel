@@ -1,10 +1,10 @@
 use std::rc::Rc;
 use std::cmp::max;
 
-use crate::{compiler::ast::BramaAstType};
-use crate::compiler::value::BramaPrimative;
+use crate::{compiler::ast::KaramelAstType};
+use crate::compiler::value::KaramelPrimative;
 use crate::compiler::context::KaramelCompilerContext;
-use crate::types::BramaOperatorType;
+use crate::types::KaramelOperatorType;
 
 use super::module::OpcodeModule;
 pub struct StorageBuilder;
@@ -18,18 +18,18 @@ impl StorageBuilder {
         }
     }
 
-    pub fn prepare(&self, module: Rc<OpcodeModule>, ast: &BramaAstType, storage_index: usize, options: &mut KaramelCompilerContext, compiler_options: &mut StorageBuilderOption) -> Result<(), String> {
-        self.get_temp_count_from_ast(module.clone(),ast, &BramaAstType::None, options, storage_index, compiler_options)?;
+    pub fn prepare(&self, module: Rc<OpcodeModule>, ast: &KaramelAstType, storage_index: usize, options: &mut KaramelCompilerContext, compiler_options: &mut StorageBuilderOption) -> Result<(), String> {
+        self.get_temp_count_from_ast(module.clone(),ast, &KaramelAstType::None, options, storage_index, compiler_options)?;
         options.storages[storage_index].set_temp_size(compiler_options.max_stack);
         options.storages[storage_index].build();
         Ok(())
     }
 
-    fn get_temp_count_from_ast(&self, module: Rc<OpcodeModule>, ast: &BramaAstType, _: &BramaAstType, options: &mut KaramelCompilerContext, storage_index: usize, compiler_option: &mut StorageBuilderOption) -> Result<u8, String> {
+    fn get_temp_count_from_ast(&self, module: Rc<OpcodeModule>, ast: &KaramelAstType, _: &KaramelAstType, options: &mut KaramelCompilerContext, storage_index: usize, compiler_option: &mut StorageBuilderOption) -> Result<u8, String> {
         use crate::buildin::Module;
         
         let temp_count = match ast {
-            BramaAstType::Binary {
+            KaramelAstType::Binary {
                 left,
                 operator: _,
                 right} => {
@@ -38,7 +38,7 @@ impl StorageBuilder {
                     total
                 },
             
-            BramaAstType::Control {
+            KaramelAstType::Control {
                 left,
                 operator: _,
                 right} => {
@@ -47,22 +47,22 @@ impl StorageBuilder {
                     total
                 },
             
-            BramaAstType::PrefixUnary(_, inner_ast) => {
+            KaramelAstType::PrefixUnary(_, inner_ast) => {
                 let total = self.get_temp_count_from_ast(module.clone(),inner_ast, ast, options, storage_index, compiler_option)?;
                 compiler_option.max_stack = max(total, compiler_option.max_stack);
                 total
             },
 
-            BramaAstType::SuffixUnary(_, inner_ast) => {
+            KaramelAstType::SuffixUnary(_, inner_ast) => {
                 let total = self.get_temp_count_from_ast(module.clone(),inner_ast, ast, options, storage_index, compiler_option)? + 1;
                 compiler_option.max_stack = max(total, compiler_option.max_stack);
                 total
             },
             
-            BramaAstType::Symbol(string) => {
+            KaramelAstType::Symbol(string) => {
                 match module.get_method(&string[..]) {
                     Some(reference) => {
-                        options.storages.get_mut(storage_index).unwrap().add_constant(Rc::new(BramaPrimative::Function(reference, None)));
+                        options.storages.get_mut(storage_index).unwrap().add_constant(Rc::new(KaramelPrimative::Function(reference, None)));
                     },
                     None => ()
                 };
@@ -70,7 +70,7 @@ impl StorageBuilder {
                 let function_search = options.get_function(string.to_string(), module.get_path(), storage_index);
                 match function_search {
                     Some(reference) => {
-                        options.storages.get_mut(storage_index).unwrap().add_constant(Rc::new(BramaPrimative::Function(reference, None)));
+                        options.storages.get_mut(storage_index).unwrap().add_constant(Rc::new(KaramelPrimative::Function(reference, None)));
                     },
                     None => ()
                 };
@@ -78,7 +78,7 @@ impl StorageBuilder {
                 let class_search = options.find_class(string.to_string(), module.get_path(), storage_index);
                 match class_search {
                     Some(reference) => {
-                        options.storages.get_mut(storage_index).unwrap().add_constant(Rc::new(BramaPrimative::Class(reference)));
+                        options.storages.get_mut(storage_index).unwrap().add_constant(Rc::new(KaramelPrimative::Class(reference)));
                     },
                     None => ()
                 };
@@ -88,13 +88,13 @@ impl StorageBuilder {
                 1
             },
 
-            BramaAstType::ModulePath(params) => {
+            KaramelAstType::ModulePath(params) => {
                 let name = params[params.len() - 1].to_string();
                 let module_path = params[0..(params.len() - 1)].to_vec();
 
                 let function_search = options.get_function(name, &module_path, storage_index);
                 match function_search {
-                    Some(reference) => options.storages.get_mut(storage_index).unwrap().add_constant(Rc::new(BramaPrimative::Function(reference, None))),
+                    Some(reference) => options.storages.get_mut(storage_index).unwrap().add_constant(Rc::new(KaramelPrimative::Function(reference, None))),
                     None => return Err("Fonksiyon bulunamadı".to_string())
                 };
 
@@ -102,7 +102,7 @@ impl StorageBuilder {
                 1
             },
             
-            BramaAstType::Assignment {
+            KaramelAstType::Assignment {
                 variable,
                 operator,
                 expression} =>  {
@@ -111,14 +111,14 @@ impl StorageBuilder {
                 compiler_option.max_stack = max(stack_size + var_stack_size, compiler_option.max_stack);
                 
                 let size = match *operator {
-                    BramaOperatorType::Assign => 0,
+                    KaramelOperatorType::Assign => 0,
                     _ => 2
                 };
                 compiler_option.max_stack = max(size, compiler_option.max_stack);
                 0
             },
             
-            BramaAstType::Block(asts) => {
+            KaramelAstType::Block(asts) => {
                 let mut list_temp_count = 0;
                 for array_item in asts {
                     list_temp_count += self.get_temp_count_from_ast(module.clone(),array_item, ast, options, storage_index, compiler_option)?;
@@ -128,7 +128,7 @@ impl StorageBuilder {
                 list_temp_count
             },
             
-            BramaAstType::AccessorFuncCall {
+            KaramelAstType::AccessorFuncCall {
                 source,
                 indexer,
                 assign_to_temp: _
@@ -154,7 +154,7 @@ impl StorageBuilder {
 ║   Function Pointer   ║
 ╚══════════════════════╝
  */
-            BramaAstType::FuncCall { func_name_expression, arguments, assign_to_temp } => {
+            KaramelAstType::FuncCall { func_name_expression, arguments, assign_to_temp } => {
 
                 /* Need to allocate space for function arguments */
                 let mut max_temp = 0_u8;
@@ -167,19 +167,19 @@ impl StorageBuilder {
                 //compiler_option.max_stack = max(max_temp, compiler_option.max_stack);
 
                 match &**func_name_expression {
-                    BramaAstType::Symbol(function_name) => {
+                    KaramelAstType::Symbol(function_name) => {
                         let function_search = options.get_function(function_name.to_string(), module.get_path(), storage_index);
                         if let Some(reference) = function_search {
-                            options.storages.get_mut(storage_index).unwrap().add_constant(Rc::new(BramaPrimative::Function(reference, None)));
+                            options.storages.get_mut(storage_index).unwrap().add_constant(Rc::new(KaramelPrimative::Function(reference, None)));
                         }
                         else {
-                            options.storages.get_mut(storage_index).unwrap().add_constant(Rc::new(BramaPrimative::Text(Rc::new(function_name.to_string()))));
+                            options.storages.get_mut(storage_index).unwrap().add_constant(Rc::new(KaramelPrimative::Text(Rc::new(function_name.to_string()))));
                         }
                     },
-                    BramaAstType::ModulePath(names) => {
+                    KaramelAstType::ModulePath(names) => {
                         let function_search = options.get_function(names[names.len() - 1].to_string(), &names[0..(names.len()-1)].to_vec(), storage_index);
                         match function_search {
-                            Some(reference) => options.storages.get_mut(storage_index).unwrap().add_constant(Rc::new(BramaPrimative::Function(reference, None))),
+                            Some(reference) => options.storages.get_mut(storage_index).unwrap().add_constant(Rc::new(KaramelPrimative::Function(reference, None))),
                             None => return Err("Fonksiyon bulunamadı".to_string())
                         };
                     },
@@ -201,31 +201,31 @@ impl StorageBuilder {
                 size
             },
 
-            BramaAstType::Return(expression) => {
+            KaramelAstType::Return(expression) => {
                 self.get_temp_count_from_ast(module.clone(),expression, ast, options, storage_index, compiler_option)?;
                 compiler_option.max_stack = max(1, compiler_option.max_stack);
                 1
             },
 
-            BramaAstType::EndlessLoop(expression) => {
+            KaramelAstType::EndlessLoop(expression) => {
                 self.get_temp_count_from_ast(module.clone(),expression, ast, options, storage_index, compiler_option)?;
                 0
             },
 
-            BramaAstType::WhileLoop { control, body } => {
+            KaramelAstType::WhileLoop { control, body } => {
                 self.get_temp_count_from_ast(module.clone(),control, ast, options, storage_index, compiler_option)?;
                 self.get_temp_count_from_ast(module.clone(),body, ast, options, storage_index, compiler_option)?;
                 compiler_option.max_stack = max(1, compiler_option.max_stack);
                 1
             },
 
-            BramaAstType::Primative(primative) => {
+            KaramelAstType::Primative(primative) => {
                 options.storages.get_mut(storage_index).unwrap().add_constant(Rc::clone(primative));
                 compiler_option.max_stack = max(1, compiler_option.max_stack);
                 1
             },
 
-            BramaAstType::List(list) => {
+            KaramelAstType::List(list) => {
                 let mut total_size = 1;
                 for array_item in list {
                     total_size += self.get_temp_count_from_ast(module.clone(),&*array_item, ast, options, storage_index, compiler_option)?;
@@ -234,7 +234,7 @@ impl StorageBuilder {
                 return Ok(total_size)
             },
 
-            BramaAstType::Dict(dict) => {
+            KaramelAstType::Dict(dict) => {
                 let mut total_size = 1;
                 for dict_item in dict {
                     options.storages.get_mut(storage_index).unwrap().add_constant(dict_item.key.clone());
@@ -245,7 +245,7 @@ impl StorageBuilder {
                 return Ok(total_size)
             },
 
-            BramaAstType::Indexer { body, indexer } => {
+            KaramelAstType::Indexer { body, indexer } => {
                 let body_size = self.get_temp_count_from_ast(module.clone(),body, ast, options, storage_index, compiler_option)?;
                 let indexer_size = self.get_temp_count_from_ast(module.clone(),indexer, ast, options, storage_index, compiler_option)?;
 
@@ -253,13 +253,13 @@ impl StorageBuilder {
                 indexer_size + body_size
             },
 
-            BramaAstType::FunctionDefination { name: _, arguments, body } => {
+            KaramelAstType::FunctionDefination { name: _, arguments, body } => {
                 self.get_temp_count_from_ast(module.clone(),body, ast, options, storage_index, compiler_option)?;
                 compiler_option.max_stack = max(arguments.len() as u8, compiler_option.max_stack);
                 0
             },
 
-            BramaAstType::IfStatement {
+            KaramelAstType::IfStatement {
                 condition, body, else_body, else_if} => {
                     let mut total = self.get_temp_count_from_ast(module.clone(),condition, ast, options, storage_index, compiler_option)?;
                     total = max(total, self.get_temp_count_from_ast(module.clone(),body, ast, options, storage_index, compiler_option)?);
@@ -277,8 +277,8 @@ impl StorageBuilder {
                     total
                 },
 
-                BramaAstType::None => {
-                    options.storages.get_mut(storage_index).unwrap().add_constant(Rc::new(BramaPrimative::Empty));
+                KaramelAstType::None => {
+                    options.storages.get_mut(storage_index).unwrap().add_constant(Rc::new(KaramelPrimative::Empty));
                     compiler_option.max_stack = max(1, compiler_option.max_stack);
                     1
                 },

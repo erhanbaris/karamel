@@ -1,5 +1,5 @@
 use crate::types::*;
-use crate::error::BramaErrorType;
+use crate::error::KaramelErrorType;
 
 pub struct NumberParser;
 
@@ -28,31 +28,31 @@ impl NumberParser {
         (num_count, number)
     }
 
-    fn detect_number_system(&self, tokinizer: &mut Tokinizer) -> BramaNumberSystem {
+    fn detect_number_system(&self, tokinizer: &mut Tokinizer) -> KaramelNumberSystem {
         if tokinizer.get_char() == '0' {
             return match tokinizer.get_next_char() {
                 'b' | 'B' => {
                     self.increase(tokinizer);
                     self.increase(tokinizer);
-                    BramaNumberSystem::Binary
+                    KaramelNumberSystem::Binary
                 },
                 'x' | 'X' => {
                     self.increase(tokinizer);
                     self.increase(tokinizer);
-                    BramaNumberSystem::Hexadecimal
+                    KaramelNumberSystem::Hexadecimal
                 },
                 '0'..='7' => {
                     self.increase(tokinizer);
-                    BramaNumberSystem::Octal
+                    KaramelNumberSystem::Octal
                 },
-                _ => BramaNumberSystem::Decimal
+                _ => KaramelNumberSystem::Decimal
             };
         }
 
-        return BramaNumberSystem::Decimal;
+        return KaramelNumberSystem::Decimal;
     }
 
-    fn parse_hex(&self, tokinizer: &mut Tokinizer) -> BramaTokenType {
+    fn parse_hex(&self, tokinizer: &mut Tokinizer) -> KaramelTokenType {
         let mut number :u64 = 0;
         let mut ch :char    = tokinizer.get_char();
 
@@ -67,10 +67,10 @@ impl NumberParser {
             ch = self.increase(tokinizer);
         }
 
-        BramaTokenType::Integer(number as i64)
+        KaramelTokenType::Integer(number as i64)
     }
 
-    fn parse_octal(&self, tokinizer: &mut Tokinizer) -> BramaTokenType {
+    fn parse_octal(&self, tokinizer: &mut Tokinizer) -> KaramelTokenType {
         let mut number :u64 = 0;
         let mut ch :char    = tokinizer.get_char();
 
@@ -85,10 +85,10 @@ impl NumberParser {
             ch = self.increase(tokinizer);
         }
 
-        BramaTokenType::Integer(number as i64)
+        KaramelTokenType::Integer(number as i64)
     }
 
-    fn parse_binary(&self, tokinizer: &mut Tokinizer) -> BramaTokenType {
+    fn parse_binary(&self, tokinizer: &mut Tokinizer) -> KaramelTokenType {
         let mut number :u64 = 0;
         let mut ch :char    = tokinizer.get_char();
 
@@ -103,10 +103,10 @@ impl NumberParser {
             ch = self.increase(tokinizer);
         }
 
-        BramaTokenType::Integer(number as i64)
+        KaramelTokenType::Integer(number as i64)
     }
 
-    fn parse_decimal(&self, tokinizer: &mut Tokinizer) -> BramaTokenType {
+    fn parse_decimal(&self, tokinizer: &mut Tokinizer) -> KaramelTokenType {
         /*
         [NUMBER](.[NUMBER](E(-+)[NUMBER]))
         */
@@ -149,16 +149,16 @@ impl NumberParser {
                 let num = before_comma as f64 + (after_comma as f64 * f64::powi(10.0, -1 * dot_place as i32));
 
                 return match is_minus {
-                    true  => BramaTokenType::Double(num / f64::powi(10.0, e_after as i32)),
-                    false => BramaTokenType::Double(num * f64::powi(10.0, e_after as i32))
+                    true  => KaramelTokenType::Double(num / f64::powi(10.0, e_after as i32)),
+                    false => KaramelTokenType::Double(num * f64::powi(10.0, e_after as i32))
                 }
             }
 
             let num = before_comma as f64 + (after_comma as f64 * f64::powi(10.0, -1 * dot_place as i32));
-            return BramaTokenType::Double(num)
+            return KaramelTokenType::Double(num)
         }
 
-        BramaTokenType::Integer(before_comma as i64)
+        KaramelTokenType::Integer(before_comma as i64)
     }
 }
 
@@ -169,20 +169,20 @@ impl TokenParser for NumberParser {
         (ch == '.' && (ch_next >= '0' && ch_next <= '9')) || (ch >= '0' && ch <= '9')
     }
 
-    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<(), BramaErrorType> {
+    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<(), KaramelErrorType> {
         let start_column = tokinizer.column;
         let number_system = self.detect_number_system(tokinizer);
 
         let token_type = match number_system {
-            BramaNumberSystem::Binary      => self.parse_binary(tokinizer),
-            BramaNumberSystem::Octal       => self.parse_octal(tokinizer),
-            BramaNumberSystem::Decimal     => self.parse_decimal(tokinizer),
-            BramaNumberSystem::Hexadecimal => self.parse_hex(tokinizer)
+            KaramelNumberSystem::Binary      => self.parse_binary(tokinizer),
+            KaramelNumberSystem::Octal       => self.parse_octal(tokinizer),
+            KaramelNumberSystem::Decimal     => self.parse_decimal(tokinizer),
+            KaramelNumberSystem::Hexadecimal => self.parse_hex(tokinizer)
         };
         tokinizer.add_token(start_column, token_type);
         
         if tokinizer.get_char().is_alphabetic() && !tokinizer.get_char().is_whitespace() {
-            return Err(BramaErrorType::NumberNotParsed);
+            return Err(KaramelErrorType::NumberNotParsed);
         }
         Ok(())
     }

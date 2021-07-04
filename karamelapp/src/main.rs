@@ -29,15 +29,8 @@ fn main() {
         },
         None => ExecutionParameters {
             source: ExecutionSource::Code(r#"
-dosya yükle
-fonk func:
-    fonk inner_1:
-        fonk inner_2:
-            döndür 'oldu'
-        döndür inner_2
-    döndür inner_1
-gç::satıryaz(func()()())
-gç::satıryaz(dosya::topla())
+gç::satıryaz(123)
+gç::satıryaz(123.00000001 - 0.00000001)
     "#.to_string()),
             return_opcode: true,
             return_output: true

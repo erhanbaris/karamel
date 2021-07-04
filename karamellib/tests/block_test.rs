@@ -5,8 +5,8 @@ mod tests {
     use crate::karamellib::parser::*;
     use crate::karamellib::types::*;
     use crate::karamellib::syntax::*;
-    use crate::karamellib::compiler::value::BramaPrimative;
-    use crate::karamellib::compiler::ast::BramaAstType;
+    use crate::karamellib::compiler::value::KaramelPrimative;
+    use crate::karamellib::compiler::ast::KaramelAstType;
     use std::rc::Rc;
 
     #[warn(unused_macros)]
@@ -26,22 +26,22 @@ mod tests {
         };
     }
 
-    test_compare!(block_1, "+1024", Ok(Rc::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(1024.0))))));
+    test_compare!(block_1, "+1024", Ok(Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(1024.0))))));
     test_compare!(block_2, r#"erhan=1024
-baris=2048"#, Ok(Rc::new(BramaAstType::Block([Rc::new(BramaAstType::Assignment {
-    variable: Box::new(BramaAstType::Symbol("erhan".to_string())),
-    operator: BramaOperatorType::Assign,
-    expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(1024.0))))
+baris=2048"#, Ok(Rc::new(KaramelAstType::Block([Rc::new(KaramelAstType::Assignment {
+    variable: Box::new(KaramelAstType::Symbol("erhan".to_string())),
+    operator: KaramelOperatorType::Assign,
+    expression: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(1024.0))))
 }),
-Rc::new(BramaAstType::Assignment {
-    variable: Box::new(BramaAstType::Symbol("baris".to_string())),
-    operator: BramaOperatorType::Assign,
-    expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(2048.0))))
+Rc::new(KaramelAstType::Assignment {
+    variable: Box::new(KaramelAstType::Symbol("baris".to_string())),
+    operator: KaramelOperatorType::Assign,
+    expression: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(2048.0))))
 })].to_vec()))));
 
-test_compare!(block_3, "erhan=1024", Ok(Rc::new(BramaAstType::Assignment {
-    variable: Box::new(BramaAstType::Symbol("erhan".to_string())),
-    operator: BramaOperatorType::Assign,
-    expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(1024.0))))
+test_compare!(block_3, "erhan=1024", Ok(Rc::new(KaramelAstType::Assignment {
+    variable: Box::new(KaramelAstType::Symbol("erhan".to_string())),
+    operator: KaramelOperatorType::Assign,
+    expression: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(1024.0))))
 })));
 }

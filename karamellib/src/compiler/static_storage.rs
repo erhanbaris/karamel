@@ -119,14 +119,14 @@ impl StaticStorage {
 
     /// add variable and constant data same time. Assign constant location to variable reference.
     /// If variable or constant data already assigned before, it will try to update variable value with constant.
-    pub fn add_static_data(&mut self, name: &str, value: Rc<BramaPrimative>) {
+    pub fn add_static_data(&mut self, name: &str, value: Rc<KaramelPrimative>) {
         let variable_location = self.add_variable(name);
         let constant_location = self.add_constant(value.clone());
         
         self.variables[variable_location as usize].1 = constant_location as u8;
     }
 
-    pub fn add_constant(&mut self, value: Rc<BramaPrimative>) -> usize {
+    pub fn add_constant(&mut self, value: Rc<KaramelPrimative>) -> usize {
         let constant_position = self.constants.iter().position(|x| {
             *x.deref() == *value
         });
@@ -160,14 +160,14 @@ impl StaticStorage {
     }
 
     #[allow(dead_code)]
-    pub fn get_variable_value(&self, name: &str) -> Option<Rc<BramaPrimative>> {
+    pub fn get_variable_value(&self, name: &str) -> Option<Rc<KaramelPrimative>> {
         match self.get_variable_location(name) {
             Some(loc) => Some(self.memory[loc as usize].deref()),
             _ => None
         }
     }
 
-    pub fn get_constant_location(&self, value: Rc<BramaPrimative>) -> Option<u8> {
+    pub fn get_constant_location(&self, value: Rc<KaramelPrimative>) -> Option<u8> {
         return match self.memory.iter().position(|x| { *x.deref() == *value }) {
             Some(number) => Some(number as u8),
             _ => None
@@ -177,7 +177,7 @@ impl StaticStorage {
     pub fn get_function_constant(&self, name: String, module: Rc<dyn Module>) -> Option<u8> {
         
         for (index, item) in self.memory.iter().enumerate() {
-            if let BramaPrimative::Function(reference, _) = &*item.deref() {
+            if let KaramelPrimative::Function(reference, _) = &*item.deref() {
                 if reference.name        == name && 
                    reference.module.get_path() == module.get_path() {
                     return Some(index as u8);
@@ -191,7 +191,7 @@ impl StaticStorage {
     pub fn get_class_constant(&self, name: String, _module_path: Rc<dyn Module>) -> Option<u8> {
         
         for (index, item) in self.memory.iter().enumerate() {
-            if let BramaPrimative::Class(reference) = &*item.deref() {
+            if let KaramelPrimative::Class(reference) = &*item.deref() {
                 if reference.get_class_name() == name {
                     return Some(index as u8);
                 }

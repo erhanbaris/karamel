@@ -22,7 +22,7 @@ use std::cell::Cell;
 
 use crate::types::*;
 use self::block::MultiLineBlockParser;
-use crate::compiler::ast::BramaAstType;
+use crate::compiler::ast::KaramelAstType;
 use crate::error::*;
 
 use bitflags::bitflags;
@@ -55,7 +55,7 @@ pub trait SyntaxParserTrait {
 
 pub trait ExtensionSyntaxParser: Sized {
     fn parsable    (parser: &SyntaxParser) -> bool;
-    fn parse_suffix(ast: &mut BramaAstType, parser: &SyntaxParser) -> AstResult;
+    fn parse_suffix(ast: &mut KaramelAstType, parser: &SyntaxParser) -> AstResult;
 }
 
 impl SyntaxParser {
@@ -68,15 +68,15 @@ impl SyntaxParser {
         }
     }
 
-    pub fn parse(&self) -> Result<Rc<BramaAstType>, BramaError> {
+    pub fn parse(&self) -> Result<Rc<KaramelAstType>, KaramelError> {
         return match MultiLineBlockParser::parse(&self) {
             Ok(ast) => {
                 self.cleanup();
                 
                 if let Ok(token) = self.peek_token() {
                     log::debug!("We forget this : {:?}", token);
-                    return Err(BramaError {
-                        error_type: BramaErrorType::SyntaxError,
+                    return Err(KaramelError {
+                        error_type: KaramelErrorType::SyntaxError,
                         line: token.line,
                         column: token.start
                     });
@@ -86,14 +86,14 @@ impl SyntaxParser {
             Err(error) => {
                 if let Ok(token) = self.valid_token() {
                     log::debug!("Syntax parse failed : {:?}", token);
-                    return Err(BramaError {
+                    return Err(KaramelError {
                         error_type: error,
                         line: token.line,
                         column: token.end
                     });
                 }
 
-                return Err(BramaError {
+                return Err(KaramelError {
                     error_type: error,
                     line: 0,
                     column: 0
@@ -149,8 +149,8 @@ impl SyntaxParser {
             match index.checked_sub(1) {
                 Some(index) => match self.tokens.get(index) {
                     Some(token) => match token.token_type {
-                        BramaTokenType::NewLine(_) => (),
-                        BramaTokenType::WhiteSpace(_) => (),
+                        KaramelTokenType::NewLine(_) => (),
+                        KaramelTokenType::WhiteSpace(_) => (),
                         _ => return Ok(token)
                     },
                     None => ()
@@ -175,7 +175,7 @@ impl SyntaxParser {
         self.tokens.get(self.index.get())
     }
 
-    pub fn match_keyword(&self, keyword: BramaKeywordType) -> bool {
+    pub fn match_keyword(&self, keyword: KaramelKeywordType) -> bool {
         if self.check_keyword(keyword) {
             self.consume_token();
             return true;
@@ -183,11 +183,11 @@ impl SyntaxParser {
         return false;
     }
 
-    pub fn check_keyword(&self, keyword: BramaKeywordType) -> bool {
+    pub fn check_keyword(&self, keyword: KaramelKeywordType) -> bool {
         let token = self.peek_token();
         if token.is_err() { return false; }
         return match token.unwrap().token_type {
-            BramaTokenType::Keyword(token_keyword) => {
+            KaramelTokenType::Keyword(token_keyword) => {
                 if keyword == token_keyword {
                     return true;
                 }
@@ -201,21 +201,21 @@ impl SyntaxParser {
         let token = self.peek_token();
         if token.is_err() { return (false, 0); }
         return match token.unwrap().token_type {
-            BramaTokenType::NewLine(size) => (true, size as usize),
+            KaramelTokenType::NewLine(size) => (true, size as usize),
             _ => (false, 0)
         }
     }
 
-    fn check_operator(&self, operator: &BramaOperatorType) -> bool {
+    fn check_operator(&self, operator: &KaramelOperatorType) -> bool {
         let token = self.peek_token();
         if token.is_err() { return false; }
         return match token.unwrap().token_type {
-            BramaTokenType::Operator(token_operator) => *operator == token_operator,
+            KaramelTokenType::Operator(token_operator) => *operator == token_operator,
             _ => false
         }
     }
 
-    fn match_operator(&self, operators: &[BramaOperatorType]) -> Option<BramaOperatorType> {
+    fn match_operator(&self, operators: &[KaramelOperatorType]) -> Option<KaramelOperatorType> {
         for operator in operators {
             if self.check_operator(operator) {
                 self.consume_token();
@@ -230,7 +230,7 @@ impl SyntaxParser {
         loop {
             if let Ok(current_token) = self.peek_token() {
                 let done = match current_token.token_type {
-                    BramaTokenType::WhiteSpace(_) => false,
+                    KaramelTokenType::WhiteSpace(_) => false,
                     _ => true
                 };
 
@@ -254,8 +254,8 @@ impl SyntaxParser {
         loop {
             if let Ok(current_token) = self.peek_token() {                
                 match current_token.token_type {
-                    BramaTokenType::NewLine(_) =>  true,
-                    BramaTokenType::WhiteSpace(_) => true,
+                    KaramelTokenType::NewLine(_) =>  true,
+                    KaramelTokenType::WhiteSpace(_) => true,
                     _ => break
                 };
 
@@ -269,14 +269,14 @@ impl SyntaxParser {
 
     fn indentation_check(&self) -> AstResult {
         if self.next_token().is_err() {
-            return Ok(BramaAstType::None);
+            return Ok(KaramelAstType::None);
         }
 
         while let Ok(current_token) = self.peek_token() {                
             let success = match current_token.token_type {
-                BramaTokenType::NewLine(size) => {
+                KaramelTokenType::NewLine(size) => {
                     let token_type = &self.next_token().unwrap().token_type;
-                    if let BramaTokenType::NewLine(_) = token_type {
+                    if let KaramelTokenType::NewLine(_) = token_type {
                         /* If next token is newline, no need to check */
                         true
                     }
@@ -286,32 +286,32 @@ impl SyntaxParser {
                     }
                 },
                 
-                BramaTokenType::WhiteSpace(size) => {
+                KaramelTokenType::WhiteSpace(size) => {
                     size == self.indentation.get() as u8 
                 },
                 _ => break
             };
 
             if !success {
-                return Err(BramaErrorType::IndentationIssue);
+                return Err(KaramelErrorType::IndentationIssue);
             }
 
             self.consume_token();
         }
 
-        Ok(BramaAstType::None)
+        Ok(KaramelAstType::None)
     }
 
     fn in_indication(&self) -> AstResult {
         if self.next_token().is_err() {
-            return Ok(BramaAstType::None);
+            return Ok(KaramelAstType::None);
         }
 
         while let Ok(current_token) = self.peek_token() {               
             let success = match current_token.token_type {
-                BramaTokenType::NewLine(size) => {
+                KaramelTokenType::NewLine(size) => {
                     let token_type = &self.next_token().unwrap().token_type;
-                    if let BramaTokenType::NewLine(_) = token_type {
+                    if let KaramelTokenType::NewLine(_) = token_type {
                         /* If next token is newline, no need to check */
                         true
                     }
@@ -330,12 +330,12 @@ impl SyntaxParser {
             };
 
             if !success {
-                return Err(BramaErrorType::IndentationIssue);
+                return Err(KaramelErrorType::IndentationIssue);
             }
 
             self.consume_token();
         }
 
-        Ok(BramaAstType::None)
+        Ok(KaramelAstType::None)
     }
 }

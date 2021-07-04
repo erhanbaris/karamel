@@ -2,8 +2,8 @@ use crate::types::*;
 use crate::syntax::{SyntaxParser, SyntaxParserTrait, SyntaxFlag};
 use crate::syntax::unary::UnaryParser;
 use crate::syntax::util::update_functions_for_temp_return;
-use crate::compiler::ast::BramaAstType;
-use crate::error::BramaErrorType;
+use crate::compiler::ast::KaramelAstType;
+use crate::error::KaramelErrorType;
 
 pub struct ModuloParser;
 pub struct MultiplyDivideParser;
@@ -11,27 +11,27 @@ pub struct AddSubtractParser;
 
 impl SyntaxParserTrait for ModuloParser {
     fn parse(parser: &SyntaxParser) -> AstResult {
-        return parse_binary::<MultiplyDivideParser>(parser, &[BramaOperatorType::Modulo]);
+        return parse_binary::<MultiplyDivideParser>(parser, &[KaramelOperatorType::Modulo]);
     }
 }
 
 impl SyntaxParserTrait for MultiplyDivideParser {
     fn parse(parser: &SyntaxParser) -> AstResult {
-        return parse_binary::<UnaryParser>(parser, &[BramaOperatorType::Multiplication, BramaOperatorType::Division]);
+        return parse_binary::<UnaryParser>(parser, &[KaramelOperatorType::Multiplication, KaramelOperatorType::Division]);
     }
 }
 
 impl SyntaxParserTrait for AddSubtractParser {
     fn parse(parser: &SyntaxParser) -> AstResult {
-        parse_binary::<ModuloParser>(parser, &[BramaOperatorType::Addition, BramaOperatorType::Subtraction])
+        parse_binary::<ModuloParser>(parser, &[KaramelOperatorType::Addition, KaramelOperatorType::Subtraction])
     }
 }
 
-pub fn parse_binary<T: SyntaxParserTrait>(parser: &SyntaxParser, operators: &[BramaOperatorType]) -> AstResult {
+pub fn parse_binary<T: SyntaxParserTrait>(parser: &SyntaxParser, operators: &[KaramelOperatorType]) -> AstResult {
     let mut functions_updated_for_temp = false;
     let mut left_expr = T::parse(parser)?;
     match left_expr {
-        BramaAstType::None => return Ok(left_expr),
+        KaramelAstType::None => return Ok(left_expr),
         _ => ()
     };
 
@@ -51,13 +51,13 @@ pub fn parse_binary<T: SyntaxParserTrait>(parser: &SyntaxParser, operators: &[Br
             
             let right_expr = T::parse(parser);
             match right_expr {
-                Ok(BramaAstType::None) => return Err(BramaErrorType::RightSideOfExpressionNotFound),
+                Ok(KaramelAstType::None) => return Err(KaramelErrorType::RightSideOfExpressionNotFound),
                 Ok(_) => (),
                 Err(_) => return right_expr
             };
 
             parser.flags.set(parser_flags);
-            left_expr = BramaAstType::Binary {
+            left_expr = KaramelAstType::Binary {
                 left: Box::new(left_expr),
                 operator,
                 right: Box::new(right_expr.unwrap())

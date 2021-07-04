@@ -13,11 +13,11 @@ use crate::compiler::GetType;
 pub const EMPTY_OBJECT: VmObject = VmObject(QNAN | EMPTY_FLAG);
 pub const TRUE_OBJECT: VmObject  = VmObject(QNAN | TRUE_FLAG);
 pub const FALSE_OBJECT: VmObject = VmObject(QNAN | FALSE_FLAG);
-pub static EMPTY_PRIMATIVE: BramaPrimative = BramaPrimative::Empty;
+pub static EMPTY_PRIMATIVE: KaramelPrimative = KaramelPrimative::Empty;
 
 #[repr(C)]
 #[derive(Clone)]
-pub enum BramaPrimative {
+pub enum KaramelPrimative {
     Empty,
     Number(f64),
     Bool(bool),
@@ -28,76 +28,82 @@ pub enum BramaPrimative {
     Class(Rc<dyn Class>)
 }
 
-unsafe impl Send for BramaPrimative {}
-unsafe impl Sync for BramaPrimative {}
+unsafe impl Send for KaramelPrimative {}
+unsafe impl Sync for KaramelPrimative {}
 
 unsafe impl Send for VmObject {}
 unsafe impl Sync for VmObject {}
 
-impl BramaPrimative {
+impl KaramelPrimative {
 
     pub fn format(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            BramaPrimative::Empty => write!(f, "boş"),
-            BramaPrimative::Number(number) => write!(f, "{:?}", number),
-            BramaPrimative::Bool(b) => match b {
+            KaramelPrimative::Empty => write!(f, "boş"),
+            KaramelPrimative::Number(number) => {
+                if *number == (*number as u64) as f64 {
+                    write!(f, "{:?}", (*number as u64))
+                } else {
+                    write!(f, "{:?}", number)
+                }
+            },
+            KaramelPrimative::Bool(b) => match b {
                 true => write!(f, "doğru"),
                 false => write!(f, "yanlış")
             },
-            BramaPrimative::List(b) => write!(f, "{:?}", b.borrow()),
-            BramaPrimative::Dict(b) => write!(f, "{:?}", b.borrow()),
-            BramaPrimative::Text(b) => write!(f, "\"{}\"", b),
-            BramaPrimative::Function(func, _) => write!(f, "<Fonksiyon='{}'>", func.name),
-            BramaPrimative::Class(class) => write!(f, "<Sınıf='{}'>", class.get_type())
+            KaramelPrimative::List(b) => write!(f, "{:?}", b.borrow()),
+            KaramelPrimative::Dict(b) => write!(f, "{:?}", b.borrow()),
+            KaramelPrimative::Text(b) => write!(f, "\"{}\"", b),
+            KaramelPrimative::Function(func, _) => write!(f, "<Fonksiyon='{}'>", func.name),
+            KaramelPrimative::Class(class) => write!(f, "<Sınıf='{}'>", class.get_type())
         }
     }
 
     pub fn is_true(&self) -> bool {
         match self {
-            BramaPrimative::Text(value)       => !value.is_empty(),
-            BramaPrimative::Number(value)     => *value > 0.0,
-            BramaPrimative::Bool(value)       => *value,
-            BramaPrimative::List(items)       => !items.borrow().is_empty(),
-            BramaPrimative::Dict(items) => !items.borrow().is_empty(),
-            BramaPrimative::Empty             => false,
-            BramaPrimative::Function(_, _) => true,
-            BramaPrimative::Class(_) => true
+            KaramelPrimative::Text(value)       => !value.is_empty(),
+            KaramelPrimative::Number(value)     => *value > 0.0,
+            KaramelPrimative::Bool(value)       => *value,
+            KaramelPrimative::List(items)       => !items.borrow().is_empty(),
+            KaramelPrimative::Dict(items) => !items.borrow().is_empty(),
+            KaramelPrimative::Empty             => false,
+            KaramelPrimative::Function(_, _) => true,
+            KaramelPrimative::Class(_) => true
         }
     }
 
     pub fn get_text(&self) -> String {
         match self {
-            BramaPrimative::Text(value) => value.to_string(),
+            KaramelPrimative::Text(value) => value.to_string(),
             _ => "".to_string()
         }
     }
 
     pub fn discriminant(&self) -> usize {
         match self {
-            BramaPrimative::Number(_) => 0,
-            BramaPrimative::Text(_) => 1,
-            BramaPrimative::List(_) => 2,
-            BramaPrimative::Dict(_) => 3,
+            KaramelPrimative::Number(_) => 0,
+            KaramelPrimative::Text(_) => 1,
+            KaramelPrimative::List(_) => 2,
+            KaramelPrimative::Dict(_) => 3,
             
-            BramaPrimative::Empty => 4,
-            BramaPrimative::Bool(_) => 5,
-            BramaPrimative::Function(_, _) => 6,
-            BramaPrimative::Class(_) => 7
+            KaramelPrimative::Empty => 4,
+            KaramelPrimative::Bool(_) => 5,
+            KaramelPrimative::Function(_, _) => 6,
+            KaramelPrimative::Class(_) => 7
         }
     }
 }
 
-impl GetType for BramaPrimative {
+impl GetType for KaramelPrimative {
     fn get_type(&self) -> String {
         match self {
-            BramaPrimative::Text(_)     => "yazı".to_string(),
-            BramaPrimative::Number(_)   => "sayı".to_string(),
-            BramaPrimative::Bool(_)     => "bool".to_string(),
-            BramaPrimative::List(_)     => "liste".to_string(),
-            BramaPrimative::Dict(_)     => "sözlük".to_string(),
-            BramaPrimative::Empty       => "boş".to_string(),
-            BramaPrimative::Function(_, _) => "fonksiyon".to_string(),
-            BramaPrimative::Class(_)    => "sınıf".to_string()
+            KaramelPrimative::Text(_)     => "yazı".to_string(),
+            KaramelPrimative::Number(_)   => "sayı".to_string(),
+            KaramelPrimative::Bool(_)     => "bool".to_string(),
+            KaramelPrimative::List(_)     => "liste".to_string(),
+            KaramelPrimative::Dict(_)     => "sözlük".to_string(),
+            KaramelPrimative::Empty       => "boş".to_string(),
+            KaramelPrimative::Function(_, _) => "fonksiyon".to_string(),
+            KaramelPrimative::Class(_)    => "sınıf".to_string()
         }
     }
 }
@@ -131,41 +137,41 @@ impl From<bool> for VmObject {
 
 impl From<Rc<String>> for VmObject {
     fn from(source: Rc<String>) -> Self {
-        VmObject::native_convert(BramaPrimative::Text(source))
+        VmObject::native_convert(KaramelPrimative::Text(source))
     }
 }
 
 impl From<String> for VmObject {
     fn from(source: String) -> Self {
-        VmObject::native_convert(BramaPrimative::Text(Rc::new(source)))
+        VmObject::native_convert(KaramelPrimative::Text(Rc::new(source)))
     }
 }
 
 impl From<Vec<VmObject>> for VmObject {
     fn from(source: Vec<VmObject>) -> Self {
-        VmObject::native_convert(BramaPrimative::List(RefCell::new(source)))
+        VmObject::native_convert(KaramelPrimative::List(RefCell::new(source)))
     }
 }
 
-impl From<Rc<BramaPrimative>> for VmObject {
-    fn from(source: Rc<BramaPrimative>) -> Self {
+impl From<Rc<KaramelPrimative>> for VmObject {
+    fn from(source: Rc<KaramelPrimative>) -> Self {
         VmObject::convert(source)
     }
 }
 
 impl From<HashMap<String, VmObject>> for VmObject {
     fn from(source: HashMap<String, VmObject>) -> Self {
-        VmObject::convert(Rc::new(BramaPrimative::Dict(RefCell::new(source))))
+        VmObject::convert(Rc::new(KaramelPrimative::Dict(RefCell::new(source))))
     }
 }
 
-impl fmt::Debug for BramaPrimative {
+impl fmt::Debug for KaramelPrimative {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.format(f)
     }
 }
 
-impl fmt::Display for BramaPrimative {
+impl fmt::Display for KaramelPrimative {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.format(f)
     }
@@ -183,20 +189,20 @@ impl fmt::Display for VmObject {
     }
 }
 
-impl Drop for BramaPrimative {
+impl Drop for KaramelPrimative {
     fn drop(&mut self) {
         //println!("> {:?}", self);
     }
 }
 
-impl PartialEq for BramaPrimative {
+impl PartialEq for KaramelPrimative {
     fn eq(&self, other: &Self) -> bool {
         match (self, &other) {
-            (BramaPrimative::Bool(lvalue),            BramaPrimative::Bool(rvalue)) => lvalue == rvalue,
-            (BramaPrimative::Empty,                   BramaPrimative::Empty)        => true,
-            (BramaPrimative::Number(n),               BramaPrimative::Number(m))    => if n.is_nan() && m.is_nan() { true } else { n == m },
-            (BramaPrimative::Text(lvalue),            BramaPrimative::Text(rvalue)) => lvalue == rvalue,
-            (BramaPrimative::List(l_value),           BramaPrimative::List(r_value))       => {
+            (KaramelPrimative::Bool(lvalue),            KaramelPrimative::Bool(rvalue)) => lvalue == rvalue,
+            (KaramelPrimative::Empty,                   KaramelPrimative::Empty)        => true,
+            (KaramelPrimative::Number(n),               KaramelPrimative::Number(m))    => if n.is_nan() && m.is_nan() { true } else { n == m },
+            (KaramelPrimative::Text(lvalue),            KaramelPrimative::Text(rvalue)) => lvalue == rvalue,
+            (KaramelPrimative::List(l_value),           KaramelPrimative::List(r_value))       => {
                 if (*l_value).borrow().len() != (*r_value).borrow().len() {
                     return false;
                 }
@@ -208,17 +214,17 @@ impl PartialEq for BramaPrimative {
                 }
                 true
             },
-            (BramaPrimative::Function(l_value, _), BramaPrimative::Function(r_value, _)) => {
+            (KaramelPrimative::Function(l_value, _), KaramelPrimative::Function(r_value, _)) => {
                 if l_value.name != r_value.name ||
                    l_value.module.get_path() != r_value.module.get_path() {
                     return false;
                 }
                 true
             },
-            (BramaPrimative::Class(l_value), BramaPrimative::Class(r_value)) => {
+            (KaramelPrimative::Class(l_value), KaramelPrimative::Class(r_value)) => {
                 l_value.get_type() == r_value.get_type()
             },
-            (BramaPrimative::Dict(l_value),           BramaPrimative::Dict(r_value))       => {
+            (KaramelPrimative::Dict(l_value),           KaramelPrimative::Dict(r_value))       => {
                 if (*l_value).borrow().len() != (*r_value).borrow().len() {
                     return false;
                 }
@@ -245,76 +251,76 @@ impl PartialEq for BramaPrimative {
 }
 
 impl VmObject {
-    pub fn convert(primative: Rc<BramaPrimative>) -> VmObject {
+    pub fn convert(primative: Rc<KaramelPrimative>) -> VmObject {
         match *primative {
-            BramaPrimative::Empty            => VmObject(QNAN | EMPTY_FLAG),
-            BramaPrimative::Number(number)   => VmObject(number.to_bits()),
-            BramaPrimative::Bool(true)       => TRUE_OBJECT,
-            BramaPrimative::Bool(false)      => FALSE_OBJECT,
+            KaramelPrimative::Empty            => VmObject(QNAN | EMPTY_FLAG),
+            KaramelPrimative::Number(number)   => VmObject(number.to_bits()),
+            KaramelPrimative::Bool(true)       => TRUE_OBJECT,
+            KaramelPrimative::Bool(false)      => FALSE_OBJECT,
             _                                => {
                 VmObject(QNAN | POINTER_FLAG | (POINTER_MASK & (Rc::into_raw(primative)) as u64))
             }
         }
     }
 
-    pub fn native_convert(primative: BramaPrimative) -> VmObject {
+    pub fn native_convert(primative: KaramelPrimative) -> VmObject {
         match primative {
-            BramaPrimative::Empty            => VmObject(QNAN | EMPTY_FLAG),
-            BramaPrimative::Number(number)   => VmObject(number.to_bits()),
-            BramaPrimative::Bool(true)       => TRUE_OBJECT,
-            BramaPrimative::Bool(false)      => FALSE_OBJECT,
+            KaramelPrimative::Empty            => VmObject(QNAN | EMPTY_FLAG),
+            KaramelPrimative::Number(number)   => VmObject(number.to_bits()),
+            KaramelPrimative::Bool(true)       => TRUE_OBJECT,
+            KaramelPrimative::Bool(false)      => FALSE_OBJECT,
             _                                => {
                 VmObject(QNAN | POINTER_FLAG | (POINTER_MASK & (Rc::into_raw(Rc::new(primative))) as u64))
             }
         }
     }
 
-    pub fn native_convert_by_ref(primative: Rc<BramaPrimative>) -> VmObject {
+    pub fn native_convert_by_ref(primative: Rc<KaramelPrimative>) -> VmObject {
         match &*primative {
-            BramaPrimative::Empty            => VmObject(QNAN | EMPTY_FLAG),
-            BramaPrimative::Number(number)   => VmObject(number.to_bits()),
-            BramaPrimative::Bool(true)       => TRUE_OBJECT,
-            BramaPrimative::Bool(false)      => FALSE_OBJECT,
+            KaramelPrimative::Empty            => VmObject(QNAN | EMPTY_FLAG),
+            KaramelPrimative::Number(number)   => VmObject(number.to_bits()),
+            KaramelPrimative::Bool(true)       => TRUE_OBJECT,
+            KaramelPrimative::Bool(false)      => FALSE_OBJECT,
             _                                => {
                 VmObject(QNAN | POINTER_FLAG | (POINTER_MASK & (Rc::into_raw(primative)) as u64))
             }
         }
     }
 
-    pub fn deref(&self) -> Rc<BramaPrimative> {
+    pub fn deref(&self) -> Rc<KaramelPrimative> {
         match self.0 {
-            n if (n & QNAN) != QNAN       => Rc::new(BramaPrimative::Number(f64::from_bits(n))),
-            e if e == (QNAN | EMPTY_FLAG) => Rc::new(BramaPrimative::Empty),
-            f if f == (QNAN | FALSE_FLAG) => Rc::new(BramaPrimative::Bool(false)),
-            t if t == (QNAN | TRUE_FLAG)  => Rc::new(BramaPrimative::Bool(true)),
+            n if (n & QNAN) != QNAN       => Rc::new(KaramelPrimative::Number(f64::from_bits(n))),
+            e if e == (QNAN | EMPTY_FLAG) => Rc::new(KaramelPrimative::Empty),
+            f if f == (QNAN | FALSE_FLAG) => Rc::new(KaramelPrimative::Bool(false)),
+            t if t == (QNAN | TRUE_FLAG)  => Rc::new(KaramelPrimative::Bool(true)),
             p if (p & POINTER_FLAG) == POINTER_FLAG => {
-                let pointer = (self.0 & POINTER_MASK) as *mut BramaPrimative;
+                let pointer = (self.0 & POINTER_MASK) as *mut KaramelPrimative;
                 let data = unsafe { ManuallyDrop::new(Rc::from_raw(pointer)) };
                 Rc::clone(&data)
             },
-            _ => Rc::new(BramaPrimative::Empty)
+            _ => Rc::new(KaramelPrimative::Empty)
         }
     }
 
-    pub fn deref_clean(&self) -> BramaPrimative {
+    pub fn deref_clean(&self) -> KaramelPrimative {
         match self.0 {
-            n if (n & QNAN) != QNAN       => BramaPrimative::Number(f64::from_bits(n)),
-            e if e == (QNAN | EMPTY_FLAG) => BramaPrimative::Empty,
-            f if f == (QNAN | FALSE_FLAG) => BramaPrimative::Bool(false),
-            t if t == (QNAN | TRUE_FLAG)  => BramaPrimative::Bool(true),
+            n if (n & QNAN) != QNAN       => KaramelPrimative::Number(f64::from_bits(n)),
+            e if e == (QNAN | EMPTY_FLAG) => KaramelPrimative::Empty,
+            f if f == (QNAN | FALSE_FLAG) => KaramelPrimative::Bool(false),
+            t if t == (QNAN | TRUE_FLAG)  => KaramelPrimative::Bool(true),
             p if (p & POINTER_FLAG) == POINTER_FLAG => {
-                let pointer = (self.0 & POINTER_MASK) as *mut BramaPrimative;
+                let pointer = (self.0 & POINTER_MASK) as *mut KaramelPrimative;
                 let data = unsafe { ManuallyDrop::new(Rc::from_raw(pointer)) };
                 match &**data {
-                    BramaPrimative::Text(text) => BramaPrimative::Text(text.clone()),
-                    BramaPrimative::List(list) => BramaPrimative::List(list.clone()),
-                    BramaPrimative::Dict(dict) => BramaPrimative::Dict(dict.clone()),
-                    BramaPrimative::Function(func, base) => BramaPrimative::Function(func.clone(), *base),
-                    BramaPrimative::Class(klass) => BramaPrimative::Class(klass.clone()),
-                    _ => BramaPrimative::Empty
+                    KaramelPrimative::Text(text) => KaramelPrimative::Text(text.clone()),
+                    KaramelPrimative::List(list) => KaramelPrimative::List(list.clone()),
+                    KaramelPrimative::Dict(dict) => KaramelPrimative::Dict(dict.clone()),
+                    KaramelPrimative::Function(func, base) => KaramelPrimative::Function(func.clone(), *base),
+                    KaramelPrimative::Class(klass) => KaramelPrimative::Class(klass.clone()),
+                    _ => KaramelPrimative::Empty
                 }
             },
-            _ => BramaPrimative::Empty
+            _ => KaramelPrimative::Empty
         }
     }
 

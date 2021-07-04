@@ -1,9 +1,9 @@
 use crate::types::*;
 use crate::syntax::{SyntaxParser, SyntaxParserTrait, SyntaxFlag};
-use crate::compiler::ast::{BramaAstType};
+use crate::compiler::ast::{KaramelAstType};
 use crate::syntax::block::{SingleLineBlockParser, MultiLineBlockParser};
 use crate::syntax::expression::ExpressionParser;
-use crate::error::BramaErrorType;
+use crate::error::KaramelErrorType;
 
 pub struct WhileLoopParser;
 
@@ -16,12 +16,12 @@ impl SyntaxParserTrait for WhileLoopParser {
         sonsuz
         endless
          */
-        if parser.match_keyword(BramaKeywordType::Endless) {
+        if parser.match_keyword(KaramelKeywordType::Endless) {
             let indentation = parser.get_indentation();
 
             parser.cleanup_whitespaces();
-            if let None = parser.match_operator(&[BramaOperatorType::ColonMark]) {
-                return Err(BramaErrorType::ColonMarkMissing);
+            if let None = parser.match_operator(&[KaramelOperatorType::ColonMark]) {
+                return Err(KaramelErrorType::ColonMarkMissing);
             }
 
             parser.cleanup_whitespaces();
@@ -40,33 +40,33 @@ impl SyntaxParserTrait for WhileLoopParser {
             parser.flags.set(parser_flags);
 
             parser.set_indentation(indentation);
-            return Ok(BramaAstType::EndlessLoop(Box::new(body)));
+            return Ok(KaramelAstType::EndlessLoop(Box::new(body)));
         }
 
         /* 
         döngü doğru ise
         do true while 
         */
-        else if parser.match_keyword(BramaKeywordType::WhileStartPart) {
+        else if parser.match_keyword(KaramelKeywordType::WhileStartPart) {
             parser.cleanup_whitespaces();
             let indentation = parser.get_indentation();
 
             let control = ExpressionParser::parse(parser)?;
             match control {
-                BramaAstType::None => return Ok(control),
+                KaramelAstType::None => return Ok(control),
                 _ => ()
             };
 
             parser.cleanup_whitespaces();
-            if !parser.match_keyword(BramaKeywordType::WhileEndPart) {
+            if !parser.match_keyword(KaramelKeywordType::WhileEndPart) {
                 parser.set_indentation(indentation);
-                return Err(BramaErrorType::WhileStatementNotValid);
+                return Err(KaramelErrorType::WhileStatementNotValid);
             }
 
             parser.cleanup_whitespaces();
-            if let None = parser.match_operator(&[BramaOperatorType::ColonMark]) {
+            if let None = parser.match_operator(&[KaramelOperatorType::ColonMark]) {
                 parser.set_indentation(indentation);
-                return Err(BramaErrorType::ColonMarkMissing);
+                return Err(KaramelErrorType::ColonMarkMissing);
             }
 
             parser.cleanup_whitespaces();
@@ -85,13 +85,13 @@ impl SyntaxParserTrait for WhileLoopParser {
             parser.flags.set(parser_flags);
 
             parser.set_indentation(indentation);
-            return Ok(BramaAstType::WhileLoop {
+            return Ok(KaramelAstType::WhileLoop {
                 control: Box::new(control),
                 body: Box::new(body)
             });
         }
         
         parser.set_index(index_backup);
-        return Ok(BramaAstType::None);
+        return Ok(KaramelAstType::None);
     }
 }

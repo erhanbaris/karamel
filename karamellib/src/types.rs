@@ -4,11 +4,11 @@ use std::iter::Peekable;
 use std::result::Result;
 use std::hash::Hash;
 use std::rc::Rc;
-use crate::{compiler::ast::BramaAstType, error::BramaError};
-use crate::error::BramaErrorType;
+use crate::{compiler::ast::KaramelAstType, error::KaramelError};
+use crate::error::KaramelErrorType;
 
-pub type ParseResult        = Result<(), BramaError>;
-pub type AstResult          = Result<BramaAstType, BramaErrorType>;
+pub type ParseResult        = Result<(), KaramelError>;
+pub type AstResult          = Result<KaramelAstType, KaramelErrorType>;
 pub type CompilerResult     = Result<(), String>;
 
 pub const TAG_NULL        : u64 = 0;
@@ -30,7 +30,7 @@ pub struct VmObject(pub u64);
 #[derive(Clone, Copy)]
 #[derive(Debug)]
 #[derive(PartialEq, Eq)]
-pub enum BramaKeywordType {
+pub enum KaramelKeywordType {
     None=0,
     True,
     False,
@@ -60,71 +60,71 @@ pub enum BramaKeywordType {
     Load
 }
 
-impl BramaKeywordType {
-    pub fn to_operator(&self) -> BramaOperatorType {
+impl KaramelKeywordType {
+    pub fn to_operator(&self) -> KaramelOperatorType {
         match &self {
-            BramaKeywordType::And              => BramaOperatorType::And,
-            BramaKeywordType::Or               => BramaOperatorType::Or,
-            BramaKeywordType::Modulo           => BramaOperatorType::Modulo,
-            BramaKeywordType::Not              => BramaOperatorType::Not,
-            BramaKeywordType::Equal            => BramaOperatorType::Equal,
-            BramaKeywordType::NotEqual         => BramaOperatorType::NotEqual,
-            BramaKeywordType::GreaterThan      => BramaOperatorType::GreaterThan,
-            BramaKeywordType::GreaterEqualThan => BramaOperatorType::GreaterEqualThan,
-            BramaKeywordType::LessThan         => BramaOperatorType::LessThan,
-            BramaKeywordType::LessEqualThan    => BramaOperatorType::LessEqualThan,
-            _                                  => BramaOperatorType::None
+            KaramelKeywordType::And              => KaramelOperatorType::And,
+            KaramelKeywordType::Or               => KaramelOperatorType::Or,
+            KaramelKeywordType::Modulo           => KaramelOperatorType::Modulo,
+            KaramelKeywordType::Not              => KaramelOperatorType::Not,
+            KaramelKeywordType::Equal            => KaramelOperatorType::Equal,
+            KaramelKeywordType::NotEqual         => KaramelOperatorType::NotEqual,
+            KaramelKeywordType::GreaterThan      => KaramelOperatorType::GreaterThan,
+            KaramelKeywordType::GreaterEqualThan => KaramelOperatorType::GreaterEqualThan,
+            KaramelKeywordType::LessThan         => KaramelOperatorType::LessThan,
+            KaramelKeywordType::LessEqualThan    => KaramelOperatorType::LessEqualThan,
+            _                                  => KaramelOperatorType::None
         }
     }
 }
 
-pub static KEYWORDS: &[(&str, BramaKeywordType)] = &[
-    ("doğru",  BramaKeywordType::True),
-    ("dogru",  BramaKeywordType::True),
-    ("yanlış", BramaKeywordType::False),
-    ("yanlis", BramaKeywordType::False),
-    ("kullan", BramaKeywordType::Use),
-    ("kadar",  BramaKeywordType::Until),
-    ("döngü",  BramaKeywordType::Loop),
-    ("dongu",  BramaKeywordType::Loop),
-    ("sonsuz", BramaKeywordType::Endless),
-    ("ise",    BramaKeywordType::If),
-    ("yoksa",   BramaKeywordType::Else),
-    ("ve",     BramaKeywordType::And),
-    ("veya",   BramaKeywordType::Or),
-    ("yok",    BramaKeywordType::Empty),
-    ("mod",    BramaKeywordType::Modulo),
-    ("eşittir",       BramaKeywordType::Equal),
-    ("esittir",       BramaKeywordType::Equal),
-    ("eşitdeğildir",  BramaKeywordType::NotEqual),
-    ("esitdegildir",  BramaKeywordType::NotEqual),
-    ("büyüktür",      BramaKeywordType::GreaterThan),
-    ("buyuktur",      BramaKeywordType::GreaterThan),
-    ("büyükeşittir",  BramaKeywordType::GreaterEqualThan),
-    ("buyukesittir",  BramaKeywordType::GreaterEqualThan),
-    ("küçüktür",      BramaKeywordType::LessThan),
-    ("kucuktur",      BramaKeywordType::LessThan),
-    ("küçükeşittir",  BramaKeywordType::LessEqualThan),
-    ("kucukesittir",  BramaKeywordType::LessEqualThan),
-    ("değil",         BramaKeywordType::Not),
-    ("degil",         BramaKeywordType::Not),
-    ("fonk",            BramaKeywordType::Fn),
-    ("döndür",        BramaKeywordType::Return),
-    ("dondur",        BramaKeywordType::Return),
-    ("kır",           BramaKeywordType::Break),
-    ("kir",           BramaKeywordType::Break),
-    ("devam",       BramaKeywordType::Continue),
-    ("döngü",         BramaKeywordType::WhileStartPart),
-    ("dongu",         BramaKeywordType::WhileStartPart),
-    ("iken",          BramaKeywordType::WhileEndPart),
-    ("yükle",          BramaKeywordType::Load),
-    ("yukle",          BramaKeywordType::Load)
+pub static KEYWORDS: &[(&str, KaramelKeywordType)] = &[
+    ("doğru",  KaramelKeywordType::True),
+    ("dogru",  KaramelKeywordType::True),
+    ("yanlış", KaramelKeywordType::False),
+    ("yanlis", KaramelKeywordType::False),
+    ("kullan", KaramelKeywordType::Use),
+    ("kadar",  KaramelKeywordType::Until),
+    ("döngü",  KaramelKeywordType::Loop),
+    ("dongu",  KaramelKeywordType::Loop),
+    ("sonsuz", KaramelKeywordType::Endless),
+    ("ise",    KaramelKeywordType::If),
+    ("yoksa",   KaramelKeywordType::Else),
+    ("ve",     KaramelKeywordType::And),
+    ("veya",   KaramelKeywordType::Or),
+    ("yok",    KaramelKeywordType::Empty),
+    ("mod",    KaramelKeywordType::Modulo),
+    ("eşittir",       KaramelKeywordType::Equal),
+    ("esittir",       KaramelKeywordType::Equal),
+    ("eşitdeğildir",  KaramelKeywordType::NotEqual),
+    ("esitdegildir",  KaramelKeywordType::NotEqual),
+    ("büyüktür",      KaramelKeywordType::GreaterThan),
+    ("buyuktur",      KaramelKeywordType::GreaterThan),
+    ("büyükeşittir",  KaramelKeywordType::GreaterEqualThan),
+    ("buyukesittir",  KaramelKeywordType::GreaterEqualThan),
+    ("küçüktür",      KaramelKeywordType::LessThan),
+    ("kucuktur",      KaramelKeywordType::LessThan),
+    ("küçükeşittir",  KaramelKeywordType::LessEqualThan),
+    ("kucukesittir",  KaramelKeywordType::LessEqualThan),
+    ("değil",         KaramelKeywordType::Not),
+    ("degil",         KaramelKeywordType::Not),
+    ("fonk",            KaramelKeywordType::Fn),
+    ("döndür",        KaramelKeywordType::Return),
+    ("dondur",        KaramelKeywordType::Return),
+    ("kır",           KaramelKeywordType::Break),
+    ("kir",           KaramelKeywordType::Break),
+    ("devam",       KaramelKeywordType::Continue),
+    ("döngü",         KaramelKeywordType::WhileStartPart),
+    ("dongu",         KaramelKeywordType::WhileStartPart),
+    ("iken",          KaramelKeywordType::WhileEndPart),
+    ("yükle",          KaramelKeywordType::Load),
+    ("yukle",          KaramelKeywordType::Load)
 ];
 
 #[derive(Clone, Copy)]
 #[derive(Debug)]
 #[derive(PartialEq)]
-pub enum BramaOperatorType {
+pub enum KaramelOperatorType {
     None,
     Addition,
     Subtraction,
@@ -167,13 +167,13 @@ pub enum BramaOperatorType {
 #[derive(Clone)]
 #[derive(Debug)]
 #[derive(PartialEq)]
-pub enum BramaTokenType {
+pub enum KaramelTokenType {
     Integer(i64),
     Double(f64),
     Symbol(Rc<String>),
-    Operator(BramaOperatorType),
+    Operator(KaramelOperatorType),
     Text(Rc<String>),
-    Keyword(BramaKeywordType),
+    Keyword(KaramelKeywordType),
     WhiteSpace(u8),
     NewLine(u8)
 }
@@ -182,7 +182,7 @@ pub enum BramaTokenType {
 #[derive(Clone)]
 #[derive(Debug)]
 #[derive(PartialEq)]
-pub enum BramaNumberSystem {
+pub enum KaramelNumberSystem {
     Binary      = 0,
     Octal       = 1,
     Decimal     = 2,
@@ -194,7 +194,7 @@ pub struct Token {
     pub line      : u32,
     pub start    : u32,
     pub end    : u32,
-    pub token_type: BramaTokenType
+    pub token_type: KaramelTokenType
 }
 
 pub struct Tokinizer<'a> {
@@ -230,7 +230,7 @@ impl Tokinizer<'_> {
         };
     }
 
-    pub fn add_token(&mut self, start: u32, token_type: BramaTokenType) {
+    pub fn add_token(&mut self, start: u32, token_type: KaramelTokenType) {
         let token = Token {
             line: self.line,
             start,
@@ -260,7 +260,7 @@ impl Tokinizer<'_> {
 
 pub trait TokenParser {
     fn check(&self, tokinizer: &mut Tokinizer) -> bool;
-    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<(), BramaErrorType>;
+    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<(), KaramelErrorType>;
 }
 
 pub trait CharTraits {
@@ -294,11 +294,11 @@ impl CharTraits for char {
     }
 }
 
-impl BramaTokenType {
+impl KaramelTokenType {
 
     pub fn is_symbol(&self) -> bool {
         match self {
-            BramaTokenType::Symbol(_) => true,
+            KaramelTokenType::Symbol(_) => true,
             _ => false
         }
     }
@@ -306,22 +306,22 @@ impl BramaTokenType {
     #[allow(dead_code)]
     pub fn is_keyword(&self) -> bool {
         match self {
-            BramaTokenType::Keyword(_) => true,
+            KaramelTokenType::Keyword(_) => true,
             _ => false
         }
     }
 
     pub fn get_symbol(&self) -> String {
         match self {
-            BramaTokenType::Symbol(string) => string.to_string(),
+            KaramelTokenType::Symbol(string) => string.to_string(),
             _ => String::from("")
         }
     }
 
-    pub fn get_keyword(&self) -> BramaKeywordType {
+    pub fn get_keyword(&self) -> KaramelKeywordType {
         match self {
-            BramaTokenType::Keyword(keyword) => *keyword,
-            _ => BramaKeywordType::None
+            KaramelTokenType::Keyword(keyword) => *keyword,
+            _ => KaramelKeywordType::None
         }
     }
 }

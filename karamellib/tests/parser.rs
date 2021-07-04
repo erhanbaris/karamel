@@ -20,7 +20,7 @@ mod tests {
 
                 assert_eq!(1, tokens.len());
                 match &tokens[0].token_type {
-                    BramaTokenType::$type(num) => assert_eq!(*num, $result),
+                    KaramelTokenType::$type(num) => assert_eq!(*num, $result),
                     _ => assert_eq!(true, false)
                 }
             }
@@ -41,7 +41,7 @@ mod tests {
                 let tokens = parser.tokens();
                 assert_eq!(1, tokens.len());
                 match &tokens[0].token_type {
-                    BramaTokenType::Keyword(keyword) => assert_eq!(*keyword, $result),
+                    KaramelTokenType::Keyword(keyword) => assert_eq!(*keyword, $result),
                     _ => assert_eq!(true, false)
                 }
             }
@@ -91,7 +91,7 @@ mod tests {
         assert_eq!(1, tokens.len());
         for item in tokens.iter() {
             match &item.token_type {
-                BramaTokenType::Text(text) => assert_eq!(**text, "erhan barış"),
+                KaramelTokenType::Text(text) => assert_eq!(**text, "erhan barış"),
                 _ => assert_eq!(true, false)
             }
         }
@@ -107,11 +107,11 @@ mod tests {
         let tokens = parser.tokens();
         assert_eq!(2, tokens.len());
         match &tokens[0].token_type {
-            BramaTokenType::Text(text) => assert_eq!(**text, "erhan barış"),
+            KaramelTokenType::Text(text) => assert_eq!(**text, "erhan barış"),
             _ => assert_eq!(true, false)
         }
         match &tokens[1].token_type {
-            BramaTokenType::Text(text) => assert_eq!(**text, ""),
+            KaramelTokenType::Text(text) => assert_eq!(**text, ""),
             _ => assert_eq!(true, false)
         }
     }
@@ -126,11 +126,11 @@ mod tests {
         let tokens = parser.tokens();
         assert_eq!(2, tokens.len());
         match &tokens[0].token_type {
-            BramaTokenType::Text(text) => assert_eq!(**text, "erhan barış"),
+            KaramelTokenType::Text(text) => assert_eq!(**text, "erhan barış"),
             _ => assert_eq!(true, false)
         }
         match &tokens[1].token_type {
-            BramaTokenType::Text(text) => assert_eq!(**text, ""),
+            KaramelTokenType::Text(text) => assert_eq!(**text, ""),
             _ => assert_eq!(true, false)
         }
     }
@@ -146,7 +146,7 @@ mod tests {
 
         assert_eq!(1, tokens.len());
         match &tokens[0].token_type {
-            BramaTokenType::Symbol(symbol) => assert_eq!("_test_", **symbol),
+            KaramelTokenType::Symbol(symbol) => assert_eq!("_test_", **symbol),
             _ => assert_eq!(true, false)
         }
 
@@ -159,7 +159,7 @@ mod tests {
 
         assert_eq!(1, tokens.len());
         match &tokens[0].token_type {
-            BramaTokenType::Symbol(symbol) => assert_eq!("$", **symbol),
+            KaramelTokenType::Symbol(symbol) => assert_eq!("$", **symbol),
             _ => assert_eq!(true, false)
         }
 
@@ -172,7 +172,7 @@ mod tests {
 
         assert_eq!(1, tokens.len());
         match &tokens[0].token_type {
-            BramaTokenType::Symbol(symbol) => assert_eq!("$$erhan$$", **symbol),
+            KaramelTokenType::Symbol(symbol) => assert_eq!("$$erhan$$", **symbol),
             _ => assert_eq!(true, false)
         }
     }
@@ -188,7 +188,7 @@ mod tests {
 
         assert_eq!(1, tokens.len());
         match &tokens[0].token_type {
-            BramaTokenType::NewLine(count) => assert_eq!(*count == 0, true),
+            KaramelTokenType::NewLine(count) => assert_eq!(*count == 0, true),
             _ => assert_eq!(true, false)
         }
     }
@@ -204,17 +204,17 @@ mod tests {
 
         assert_eq!(3, tokens.len());
         match &tokens[0].token_type {
-            BramaTokenType::NewLine(count) => assert_eq!(*count == 5, true),
+            KaramelTokenType::NewLine(count) => assert_eq!(*count == 5, true),
             _ => assert_eq!(true, false)
         }
 
         match &tokens[1].token_type {
-            BramaTokenType::NewLine(count) => assert_eq!(*count == 4, true),
+            KaramelTokenType::NewLine(count) => assert_eq!(*count == 4, true),
             _ => assert_eq!(true, false)
         }
 
         match &tokens[2].token_type {
-            BramaTokenType::NewLine(count) => assert_eq!(*count == 3, true),
+            KaramelTokenType::NewLine(count) => assert_eq!(*count == 3, true),
             _ => assert_eq!(true, false)
         }
     }
@@ -230,7 +230,7 @@ mod tests {
 
         assert_eq!(1, tokens.len());
         match &tokens[0].token_type {
-            BramaTokenType::WhiteSpace(count) => assert_eq!(*count == 5, true),
+            KaramelTokenType::WhiteSpace(count) => assert_eq!(*count == 5, true),
             _ => assert_eq!(true, false)
         }
     }
@@ -283,7 +283,7 @@ mod tests {
 
         assert_eq!(3, tokens.len());
         match &tokens[1].token_type {
-            BramaTokenType::Double(num) => assert_eq!(0.1024 - *num < 1e-10, true),
+            KaramelTokenType::Double(num) => assert_eq!(0.1024 - *num < 1e-10, true),
             _ => assert_eq!(true, false)
         }
     }
@@ -293,6 +293,6 @@ mod tests {
     test_number!(double_6, Double, "1_23.4_e+4_", 1234000.0);
     test_number!(double_7, Double, "09__9_999.9_", 99999.9);
 
-    test_keyword!(keyword_2, "doğru", BramaKeywordType::True);
-    test_keyword!(keyword_4, "yanlış", BramaKeywordType::False);
+    test_keyword!(keyword_2, "doğru", KaramelKeywordType::True);
+    test_keyword!(keyword_4, "yanlış", KaramelKeywordType::False);
 }

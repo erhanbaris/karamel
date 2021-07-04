@@ -1,5 +1,5 @@
 use crate::types::*;
-use crate::error::BramaErrorType;
+use crate::error::KaramelErrorType;
 
 pub struct OperatorParser;
 
@@ -8,7 +8,7 @@ impl TokenParser for OperatorParser {
         true
     }
 
-    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<(), BramaErrorType> {
+    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<(), KaramelErrorType> {
         let ch       = tokinizer.get_char();
         let ch_next  = tokinizer.get_next_char();
         let start= tokinizer.column;
@@ -16,47 +16,47 @@ impl TokenParser for OperatorParser {
         tokinizer.increase_index();
 
         let mut operator_type = match (ch, ch_next) {
-            ('!', '=') => BramaOperatorType::NotEqual,
-            ('/', '=') => BramaOperatorType::AssignDivision,
-            ('/', '/') => BramaOperatorType::CommentLine,
-            ('/', '*') => BramaOperatorType::CommentMultilineStart,
-            ('+', '+') => BramaOperatorType::Increment,
-            ('+', '=') => BramaOperatorType::AssignAddition,
-            ('-', '-') => BramaOperatorType::Deccrement,
-            ('-', '=') => BramaOperatorType::AssignSubtraction,
-            ('<', '=') => BramaOperatorType::LessEqualThan,
-            ('>', '=') => BramaOperatorType::GreaterEqualThan,
-            ('*', '=') => BramaOperatorType::AssignMultiplication,
-            ('*', '/') => BramaOperatorType::CommentMultilineEnd,
-            ('=', '=') => BramaOperatorType::Equal,
-            _ =>  BramaOperatorType::None
+            ('!', '=') => KaramelOperatorType::NotEqual,
+            ('/', '=') => KaramelOperatorType::AssignDivision,
+            ('/', '/') => KaramelOperatorType::CommentLine,
+            ('/', '*') => KaramelOperatorType::CommentMultilineStart,
+            ('+', '+') => KaramelOperatorType::Increment,
+            ('+', '=') => KaramelOperatorType::AssignAddition,
+            ('-', '-') => KaramelOperatorType::Deccrement,
+            ('-', '=') => KaramelOperatorType::AssignSubtraction,
+            ('<', '=') => KaramelOperatorType::LessEqualThan,
+            ('>', '=') => KaramelOperatorType::GreaterEqualThan,
+            ('*', '=') => KaramelOperatorType::AssignMultiplication,
+            ('*', '/') => KaramelOperatorType::CommentMultilineEnd,
+            ('=', '=') => KaramelOperatorType::Equal,
+            _ =>  KaramelOperatorType::None
         };
 
-        if operator_type != BramaOperatorType::None {
+        if operator_type != KaramelOperatorType::None {
             tokinizer.increase_index();
         }
         else {
             operator_type = match ch {
-                '=' => BramaOperatorType::Assign,
-                '*' => BramaOperatorType::Multiplication,
-                '<' => BramaOperatorType::LessThan,
-                '>' => BramaOperatorType::GreaterThan,
-                '-' => BramaOperatorType::Subtraction,
-                '+' => BramaOperatorType::Addition,
-                '/' => BramaOperatorType::Division,
-                '?' => BramaOperatorType::QuestionMark,
-                ':' => BramaOperatorType::ColonMark,
-                '(' => BramaOperatorType::LeftParentheses,
-                ')' => BramaOperatorType::RightParentheses,
-                '[' => BramaOperatorType::SquareBracketStart,
-                ']' => BramaOperatorType::SquareBracketEnd,
-                '{' => BramaOperatorType::CurveBracketStart,
-                '}' => BramaOperatorType::CurveBracketEnd,
-                ',' => BramaOperatorType::Comma,
-                ';' => BramaOperatorType::Semicolon,
-                '.' => BramaOperatorType::Dot,
-                '!' => BramaOperatorType::Not,
-                _ => BramaOperatorType::None
+                '=' => KaramelOperatorType::Assign,
+                '*' => KaramelOperatorType::Multiplication,
+                '<' => KaramelOperatorType::LessThan,
+                '>' => KaramelOperatorType::GreaterThan,
+                '-' => KaramelOperatorType::Subtraction,
+                '+' => KaramelOperatorType::Addition,
+                '/' => KaramelOperatorType::Division,
+                '?' => KaramelOperatorType::QuestionMark,
+                ':' => KaramelOperatorType::ColonMark,
+                '(' => KaramelOperatorType::LeftParentheses,
+                ')' => KaramelOperatorType::RightParentheses,
+                '[' => KaramelOperatorType::SquareBracketStart,
+                ']' => KaramelOperatorType::SquareBracketEnd,
+                '{' => KaramelOperatorType::CurveBracketStart,
+                '}' => KaramelOperatorType::CurveBracketEnd,
+                ',' => KaramelOperatorType::Comma,
+                ';' => KaramelOperatorType::Semicolon,
+                '.' => KaramelOperatorType::Dot,
+                '!' => KaramelOperatorType::Not,
+                _ => KaramelOperatorType::None
             };
         }
 
@@ -64,12 +64,12 @@ impl TokenParser for OperatorParser {
             return Ok(());
         }
 
-        if operator_type == BramaOperatorType::None {
+        if operator_type == KaramelOperatorType::None {
             log::debug!("'{}' not found", ch as usize);
-            return Err(BramaErrorType::CharNotValid);
+            return Err(KaramelErrorType::CharNotValid);
         }
         
-        tokinizer.add_token(start, BramaTokenType::Operator(operator_type));
+        tokinizer.add_token(start, KaramelTokenType::Operator(operator_type));
         return Ok(());
     }
 }

@@ -1,7 +1,7 @@
 use crate::types::*;
 use crate::syntax::{SyntaxParser, SyntaxParserTrait, SyntaxFlag};
-use crate::compiler::ast::BramaAstType;
-use crate::error::BramaErrorType;
+use crate::compiler::ast::KaramelAstType;
+use crate::error::KaramelErrorType;
 
 pub struct LoopItemParser;
 
@@ -10,24 +10,24 @@ impl SyntaxParserTrait for LoopItemParser {
         let index_backup = parser.get_index();
         parser.cleanup_whitespaces();
 
-        if parser.check_keyword(BramaKeywordType::Break) ||
-           parser.check_keyword(BramaKeywordType::Continue) {
+        if parser.check_keyword(KaramelKeywordType::Break) ||
+           parser.check_keyword(KaramelKeywordType::Continue) {
             if parser.flags.get().contains(SyntaxFlag::LOOP) {
                 let keyword = parser.peek_token().unwrap().token_type.get_keyword();
                 parser.consume_token();
                 match keyword {
-                    BramaKeywordType::Break => return Ok(BramaAstType::Break),
-                    BramaKeywordType::Continue => return Ok(BramaAstType::Continue),
+                    KaramelKeywordType::Break => return Ok(KaramelAstType::Break),
+                    KaramelKeywordType::Continue => return Ok(KaramelAstType::Continue),
                     _ => ()
                 };
             }
             else {
                 parser.set_index(index_backup);
-                return Err(BramaErrorType::BreakAndContinueBelongToLoops);
+                return Err(KaramelErrorType::BreakAndContinueBelongToLoops);
             }
         }
 
         parser.set_index(index_backup);
-        return Ok(BramaAstType::None);
+        return Ok(KaramelAstType::None);
     }
 }

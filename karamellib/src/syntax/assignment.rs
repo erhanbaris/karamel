@@ -1,7 +1,7 @@
 use crate::types::*;
 use crate::syntax::{SyntaxParser, SyntaxParserTrait, SyntaxFlag};
 use crate::syntax::expression::ExpressionParser;
-use crate::compiler::ast::BramaAstType;
+use crate::compiler::ast::KaramelAstType;
 
 pub struct AssignmentParser;
 
@@ -13,21 +13,21 @@ impl SyntaxParserTrait for AssignmentParser {
         let variable = ExpressionParser::parse(parser)?;
 
         match variable {
-            BramaAstType::Symbol(_) => (),
-            BramaAstType::Indexer{ body: _, indexer: _ } => (),
+            KaramelAstType::Symbol(_) => (),
+            KaramelAstType::Indexer{ body: _, indexer: _ } => (),
             _ =>  {
                 parser.set_index(index_backup);
-                return Ok(BramaAstType::None);
+                return Ok(KaramelAstType::None);
             }
         };
 
         parser.cleanup_whitespaces();
 
-        if let Some(operator) = parser.match_operator(&[BramaOperatorType::Assign, 
-            BramaOperatorType::AssignAddition,
-            BramaOperatorType::AssignDivision,
-            BramaOperatorType::AssignMultiplication,
-            BramaOperatorType::AssignSubtraction]) {
+        if let Some(operator) = parser.match_operator(&[KaramelOperatorType::Assign, 
+            KaramelOperatorType::AssignAddition,
+            KaramelOperatorType::AssignDivision,
+            KaramelOperatorType::AssignMultiplication,
+            KaramelOperatorType::AssignSubtraction]) {
             parser.cleanup_whitespaces();
 
             let parser_flags  = parser.flags.get();
@@ -35,14 +35,14 @@ impl SyntaxParserTrait for AssignmentParser {
             
             let expression = ExpressionParser::parse(parser);
             match expression {
-                Ok(BramaAstType::None) => return expression,
+                Ok(KaramelAstType::None) => return expression,
                 Ok(_) => (),
                 Err(_) => return expression
             };
 
             parser.flags.set(parser_flags);
 
-            let assignment_ast = BramaAstType::Assignment {
+            let assignment_ast = KaramelAstType::Assignment {
                 variable: Box::new(variable),
                 operator,
                 expression: Box::new(expression.unwrap())
@@ -51,6 +51,6 @@ impl SyntaxParserTrait for AssignmentParser {
             return Ok(assignment_ast);
         }
         parser.set_index(index_backup);
-        return Ok(BramaAstType::None);
+        return Ok(KaramelAstType::None);
     }
 }

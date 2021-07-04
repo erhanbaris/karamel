@@ -4,10 +4,10 @@ use crate::syntax::util::map_parser;
 use crate::syntax::primative::PrimativeParser;
 use crate::syntax::func_call::FuncCallParser;
 use crate::syntax::util::is_ast_empty;
-use crate::compiler::ast::BramaAstType;
-use crate::compiler::value::BramaPrimative;
+use crate::compiler::ast::KaramelAstType;
+use crate::compiler::value::KaramelPrimative;
 use crate::syntax::expression::ExpressionParser;
-use crate::error::BramaErrorType;
+use crate::error::KaramelErrorType;
 
 
 use std::rc::Rc;
@@ -21,14 +21,14 @@ impl SyntaxParserTrait for UnaryParser {
         let index_backup = parser.get_index();
         parser.cleanup_whitespaces();
         
-        if parser.match_operator(&[BramaOperatorType::SquareBracketStart]).is_some() {
+        if parser.match_operator(&[KaramelOperatorType::SquareBracketStart]).is_some() {
             parser.cleanup_whitespaces();
 
             let indexer_ast = ExpressionParser::parse(parser)?;
             parser.cleanup_whitespaces();
 
-            if parser.match_operator(&[BramaOperatorType::SquareBracketEnd]).is_some() {
-                return Ok(BramaAstType::Indexer { body: Box::new(ast), indexer: Box::new(indexer_ast) });   
+            if parser.match_operator(&[KaramelOperatorType::SquareBracketEnd]).is_some() {
+                return Ok(KaramelAstType::Indexer { body: Box::new(ast), indexer: Box::new(indexer_ast) });   
             }
         }
 
@@ -47,9 +47,9 @@ impl UnaryParser {
                     parser.cleanup_whitespaces();
 
                     if let Some(operator) = parser.match_operator(&[
-                        BramaOperatorType::Increment,
-                        BramaOperatorType::Deccrement]) {
-                        return Ok(BramaAstType::SuffixUnary(operator, Box::new(BramaAstType::Symbol(token.token_type.get_symbol().to_string()))));
+                        KaramelOperatorType::Increment,
+                        KaramelOperatorType::Deccrement]) {
+                        return Ok(KaramelAstType::SuffixUnary(operator, Box::new(KaramelAstType::Symbol(token.token_type.get_symbol().to_string()))));
                     }
                 }
             },
@@ -57,96 +57,96 @@ impl UnaryParser {
         };
         
         parser.set_index(index_backup);
-        return Ok(BramaAstType::None);
+        return Ok(KaramelAstType::None);
     }
 
-    pub fn parse_indexer(ast: Box<BramaAstType>, parser: &SyntaxParser) -> AstResult {
+    pub fn parse_indexer(ast: Box<KaramelAstType>, parser: &SyntaxParser) -> AstResult {
         let index_backup = parser.get_index();
-        if parser.match_operator(&[BramaOperatorType::SquareBracketStart]).is_some() {
+        if parser.match_operator(&[KaramelOperatorType::SquareBracketStart]).is_some() {
             parser.cleanup_whitespaces();
 
             let indexer_ast = ExpressionParser::parse(parser);
             parser.cleanup_whitespaces();
 
-            if parser.match_operator(&[BramaOperatorType::SquareBracketEnd]).is_some() && !is_ast_empty(&indexer_ast) {
-                return Ok(BramaAstType::Indexer { body: ast, indexer: Box::new(indexer_ast.unwrap()) });   
+            if parser.match_operator(&[KaramelOperatorType::SquareBracketEnd]).is_some() && !is_ast_empty(&indexer_ast) {
+                return Ok(KaramelAstType::Indexer { body: ast, indexer: Box::new(indexer_ast.unwrap()) });   
             }
         }
 
         parser.set_index(index_backup);
-        return Ok(BramaAstType::None);
+        return Ok(KaramelAstType::None);
     }
 
     fn parse_prefix_unary(parser: &SyntaxParser) -> AstResult {
         let index_backup = parser.get_index();
 
-        if let Some(operator) = parser.match_operator(&[BramaOperatorType::Addition,
-            BramaOperatorType::Subtraction,
-            BramaOperatorType::Increment,
-            BramaOperatorType::Deccrement,
-            BramaOperatorType::Not]) {
+        if let Some(operator) = parser.match_operator(&[KaramelOperatorType::Addition,
+            KaramelOperatorType::Subtraction,
+            KaramelOperatorType::Increment,
+            KaramelOperatorType::Deccrement,
+            KaramelOperatorType::Not]) {
             parser.cleanup_whitespaces();
 
-            let mut unary_ast = BramaAstType::None;
+            let mut unary_ast = KaramelAstType::None;
             let token         = &parser.peek_token().unwrap();
 
             match operator {
                 /* +1024 -1024 */
-                BramaOperatorType::Addition | BramaOperatorType::Subtraction => {
+                KaramelOperatorType::Addition | KaramelOperatorType::Subtraction => {
                     let opt = match operator {
-                        BramaOperatorType::Addition    => 1 as f64,
-                        BramaOperatorType::Subtraction => -1 as f64,
+                        KaramelOperatorType::Addition    => 1 as f64,
+                        KaramelOperatorType::Subtraction => -1 as f64,
                         _ => 1 as f64
                     };
 
                     parser.consume_token();
                     match token.token_type {
-                        BramaTokenType::Integer(integer) => return Ok(BramaAstType::Primative(Rc::new(BramaPrimative::Number(integer as f64 * opt)))),
-                        BramaTokenType::Double(double) => return Ok(BramaAstType::Primative(Rc::new(BramaPrimative::Number(double * opt)))),
+                        KaramelTokenType::Integer(integer) => return Ok(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(integer as f64 * opt)))),
+                        KaramelTokenType::Double(double) => return Ok(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(double * opt)))),
                         _ => {
                             parser.set_index(index_backup);
-                            return Err(BramaErrorType::UnaryWorksWithNumber);
+                            return Err(KaramelErrorType::UnaryWorksWithNumber);
                         }
                     }
                 },
 
                 /* ++variable, --variable*/
-                BramaOperatorType::Increment | BramaOperatorType::Deccrement => {
+                KaramelOperatorType::Increment | KaramelOperatorType::Deccrement => {
                     if token.token_type.is_symbol() {
-                        unary_ast = BramaAstType::Symbol(token.token_type.get_symbol().to_string());
+                        unary_ast = KaramelAstType::Symbol(token.token_type.get_symbol().to_string());
                         parser.consume_token();
                     }
                 },
 
-                BramaOperatorType::Not => {
+                KaramelOperatorType::Not => {
                     let expression = UnaryParser::parse(parser);
                     unary_ast = match expression {
-                        Ok(BramaAstType::None) => {
+                        Ok(KaramelAstType::None) => {
                             parser.set_index(index_backup);
-                            return Err(BramaErrorType::InvalidUnaryOperation);
+                            return Err(KaramelErrorType::InvalidUnaryOperation);
                         },
                         Ok(ast) => ast,
                         Err(_) => {
                             parser.set_index(index_backup);
-                            return Err(BramaErrorType::InvalidUnaryOperation);
+                            return Err(KaramelErrorType::InvalidUnaryOperation);
                         }
                     };
                 }
                 _ => { 
                     parser.set_index(index_backup);
-                    return Err(BramaErrorType::InvalidUnaryOperation);
+                    return Err(KaramelErrorType::InvalidUnaryOperation);
                 }
             }
 
             return match unary_ast {
-                BramaAstType::None => {
+                KaramelAstType::None => {
                     parser.set_index(index_backup);
-                    Err(BramaErrorType::InvalidUnaryOperation)
+                    Err(KaramelErrorType::InvalidUnaryOperation)
                 },
-                _ => Ok(BramaAstType::PrefixUnary(operator, Box::new(unary_ast)))
+                _ => Ok(KaramelAstType::PrefixUnary(operator, Box::new(unary_ast)))
             };
         }
 
-        return Ok(BramaAstType::None);
+        return Ok(KaramelAstType::None);
     }
 }

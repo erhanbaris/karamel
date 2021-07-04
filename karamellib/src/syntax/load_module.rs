@@ -1,6 +1,6 @@
 use crate::types::*;
 use crate::syntax::{SyntaxParser, SyntaxParserTrait};
-use crate::compiler::ast::BramaAstType;
+use crate::compiler::ast::KaramelAstType;
 use super::primative::PrimativeParser;
 use super::util::map_parser;
 
@@ -14,25 +14,25 @@ impl SyntaxParserTrait for LoadModuleParser {
         if parser.peek_token().is_ok() {
             let module_path = map_parser(parser, &[PrimativeParser::parse_module_path, PrimativeParser::parse_symbol])?;
             match module_path {
-                
+
                 /* module1::module2::module3 */
-                BramaAstType::ModulePath(path) => {
+                KaramelAstType::ModulePath(path) => {
                     parser.cleanup_whitespaces();
 
-                    if parser.match_keyword(BramaKeywordType::Load) {
+                    if parser.match_keyword(KaramelKeywordType::Load) {
                         if path.len() > 0 {
-                            return Ok(BramaAstType::Load(path.to_vec()));
+                            return Ok(KaramelAstType::Load(path.to_vec()));
                         }
                     }
                 },
 
                 /* module1 */
-                BramaAstType::Symbol(path) => {
+                KaramelAstType::Symbol(path) => {
                     parser.cleanup_whitespaces();
 
-                    if parser.match_keyword(BramaKeywordType::Load) {
+                    if parser.match_keyword(KaramelKeywordType::Load) {
                         if path.len() > 0 {
-                            return Ok(BramaAstType::Load([path].to_vec()));
+                            return Ok(KaramelAstType::Load([path].to_vec()));
                         }
                     }
                 }
@@ -41,6 +41,6 @@ impl SyntaxParserTrait for LoadModuleParser {
         }
 
         parser.set_index(index_backup);
-        return Ok(BramaAstType::None);
+        return Ok(KaramelAstType::None);
     }
 }

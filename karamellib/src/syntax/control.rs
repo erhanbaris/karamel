@@ -2,8 +2,8 @@ use crate::types::*;
 use crate::syntax::{SyntaxParser, SyntaxParserTrait, SyntaxFlag};
 use crate::syntax::binary::AddSubtractParser;
 use crate::syntax::util::update_functions_for_temp_return;
-use crate::compiler::ast::BramaAstType;
-use crate::error::BramaErrorType;
+use crate::compiler::ast::KaramelAstType;
+use crate::error::KaramelErrorType;
 
 pub struct OrParser;
 pub struct AndParser;
@@ -12,36 +12,36 @@ pub struct ControlParser;
 
 impl SyntaxParserTrait for OrParser {
     fn parse(parser: &SyntaxParser) -> AstResult {
-        parse_control::<AndParser>(parser, &[BramaOperatorType::Or])
+        parse_control::<AndParser>(parser, &[KaramelOperatorType::Or])
     }
 }
 
 impl SyntaxParserTrait for AndParser {
     fn parse(parser: &SyntaxParser) -> AstResult {
-        parse_control::<EqualityParser>(parser, &[BramaOperatorType::And])
+        parse_control::<EqualityParser>(parser, &[KaramelOperatorType::And])
     }
 }
 
 impl SyntaxParserTrait for EqualityParser {
     fn parse(parser: &SyntaxParser) -> AstResult {
-        parse_control::<ControlParser>(parser, &[BramaOperatorType::Equal, BramaOperatorType::NotEqual])
+        parse_control::<ControlParser>(parser, &[KaramelOperatorType::Equal, KaramelOperatorType::NotEqual])
     }
 }
 
 impl SyntaxParserTrait for ControlParser {
     fn parse(parser: &SyntaxParser) -> AstResult {
-        parse_control::<AddSubtractParser>(parser, &[BramaOperatorType::GreaterEqualThan, 
-            BramaOperatorType::GreaterThan,
-            BramaOperatorType::LessEqualThan, 
-            BramaOperatorType::LessThan])
+        parse_control::<AddSubtractParser>(parser, &[KaramelOperatorType::GreaterEqualThan, 
+            KaramelOperatorType::GreaterThan,
+            KaramelOperatorType::LessEqualThan, 
+            KaramelOperatorType::LessThan])
     }
 }
 
-pub fn parse_control<T: SyntaxParserTrait>(parser: &SyntaxParser, operators: &[BramaOperatorType]) -> AstResult {
+pub fn parse_control<T: SyntaxParserTrait>(parser: &SyntaxParser, operators: &[KaramelOperatorType]) -> AstResult {
     let mut functions_updated_for_temp = false;
     let mut left_expr = T::parse(parser)?;
     match left_expr {
-        BramaAstType::None => return Ok(left_expr),
+        KaramelAstType::None => return Ok(left_expr),
         _ => ()
     };
     
@@ -60,13 +60,13 @@ pub fn parse_control<T: SyntaxParserTrait>(parser: &SyntaxParser, operators: &[B
             
             let right_expr = T::parse(parser);
             match right_expr {
-                Ok(BramaAstType::None) => return Err(BramaErrorType::RightSideOfExpressionNotFound),
+                Ok(KaramelAstType::None) => return Err(KaramelErrorType::RightSideOfExpressionNotFound),
                 Ok(_) => (),
                 Err(_) => return right_expr
             };
 
             parser.flags.set(parser_flags);
-            left_expr = BramaAstType::Control {
+            left_expr = KaramelAstType::Control {
                 left: Box::new(left_expr),
                 operator,
                 right: Box::new(right_expr.unwrap())

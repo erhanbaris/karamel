@@ -6,9 +6,9 @@ use crate::syntax::func_call::FuncCallParser;
 use crate::syntax::unary::UnaryParser;
 use crate::syntax::control::OrParser;
 use crate::syntax::util::update_functions_for_temp_return;
-use crate::compiler::ast::BramaAstType;
-use crate::compiler::value::BramaPrimative;
-use crate::error::BramaErrorType;
+use crate::compiler::ast::KaramelAstType;
+use crate::compiler::value::KaramelPrimative;
+use crate::error::KaramelErrorType;
 
 pub struct ExpressionParser;
 
@@ -30,7 +30,7 @@ impl SyntaxParserTrait for ExpressionParser {
             }
             
             /* parse for 'object.method' */
-            else if let Some(_) = parser.match_operator(&[BramaOperatorType::Dot]) {
+            else if let Some(_) = parser.match_operator(&[KaramelOperatorType::Dot]) {
 
                 let inner_parser_flags  = parser.flags.get();
                 parser.flags.set(inner_parser_flags | SyntaxFlag::IN_DICT_INDEXER);
@@ -39,21 +39,21 @@ impl SyntaxParserTrait for ExpressionParser {
                 parser.flags.set(inner_parser_flags);
                 
                 ast = match &sub_ast {
-                    BramaAstType::Symbol(symbol) => {
-                        BramaAstType::Indexer 
+                    KaramelAstType::Symbol(symbol) => {
+                        KaramelAstType::Indexer 
                         { 
                             body: Box::new(ast),
                             
                             /* Convert symbol to text */
-                            indexer: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Text(Rc::new(symbol.to_string()))))) 
+                            indexer: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Text(Rc::new(symbol.to_string()))))) 
                         }
                     },
-                    _ => return Err(BramaErrorType::FunctionCallSyntaxNotValid)
+                    _ => return Err(KaramelErrorType::FunctionCallSyntaxNotValid)
                 };
             }
             
             /* parse for '["data"]' */
-            else if parser.check_operator(&BramaOperatorType::SquareBracketStart) {
+            else if parser.check_operator(&KaramelOperatorType::SquareBracketStart) {
                 ast = UnaryParser::parse_indexer(Box::new(ast), parser)?;
             } else {
                 parser.set_index(index_backup);

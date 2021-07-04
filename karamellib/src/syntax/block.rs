@@ -5,7 +5,7 @@ use crate::syntax::{SyntaxParser, SyntaxParserTrait};
 use crate::syntax::expression::ExpressionParser;
 use crate::syntax::newline::NewlineParser;
 use crate::syntax::util::map_parser;
-use crate::compiler::ast::BramaAstType;
+use crate::compiler::ast::KaramelAstType;
 use crate::syntax::statement::StatementParser;
 use crate::syntax::function_defination::FunctionDefinationParser;
 
@@ -29,7 +29,7 @@ impl SyntaxParserTrait for MultiLineBlockParser {
 
 impl BlockParser {
     fn parse(parser: &SyntaxParser, multiline: bool) -> AstResult {
-        let mut block_asts: Vec<Rc<BramaAstType>> = Vec::new();
+        let mut block_asts: Vec<Rc<KaramelAstType>> = Vec::new();
         let current_indentation = parser.get_indentation();
 
         loop {
@@ -37,8 +37,8 @@ impl BlockParser {
             let ast = map_parser(parser, &[FunctionDefinationParser::parse, StatementParser::parse, ExpressionParser::parse, NewlineParser::parse])?;
     
             match ast {
-                BramaAstType::None =>  break,
-                BramaAstType::NewLine =>  (),
+                KaramelAstType::None =>  break,
+                KaramelAstType::NewLine =>  (),
                 _ => block_asts.push(Rc::new(ast))
             };
 
@@ -51,9 +51,9 @@ impl BlockParser {
         }
 
         return match block_asts.len() {
-            0 => Ok(BramaAstType::None),
+            0 => Ok(KaramelAstType::None),
             1 => Ok((&*block_asts[0]).clone()),
-            _ => Ok(BramaAstType::Block(block_asts.to_vec()))
+            _ => Ok(KaramelAstType::Block(block_asts.to_vec()))
         }
     }
 }

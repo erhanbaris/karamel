@@ -1,4 +1,4 @@
-use crate::compiler::BramaPrimative;
+use crate::compiler::KaramelPrimative;
 use crate::{
     buildin::{Class, ClassProperty},
     compiler::function::{IndexerGetCall, IndexerSetCall, NativeCall, FunctionFlag},
@@ -24,7 +24,7 @@ impl Class for ProxyClass {
     fn has_element(&self, source: Option<VmObject>, field: Rc<String>) -> bool {
         match source {
             Some(source_object) => match &*source_object.deref() {
-                BramaPrimative::Class(class) => class.has_element(source, field),
+                KaramelPrimative::Class(class) => class.has_element(source, field),
                 _ => false
             },
             None => false,
@@ -38,7 +38,7 @@ impl Class for ProxyClass {
 fn get_element(&self, source: Option<VmObject>, field: Rc<String>) -> Option<ClassProperty> {
         match source {
             Some(source_object) => match &*source_object.deref() {
-                BramaPrimative::Class(class) => class.get_element(source, field),
+                KaramelPrimative::Class(class) => class.get_element(source, field),
                 _ => None
             },
             None => None,
@@ -51,7 +51,7 @@ fn get_element(&self, source: Option<VmObject>, field: Rc<String>) -> Option<Cla
 
     fn add_method(&mut self, _: &str, _: NativeCall, _: FunctionFlag) {}
 
-    fn add_property(&mut self, _: &str, _: Rc<BramaPrimative>) {}
+    fn add_property(&mut self, _: &str, _: Rc<KaramelPrimative>) {}
 
     fn set_getter(&mut self, _: IndexerGetCall) {}
 
@@ -86,7 +86,7 @@ impl GetType for ProxyClass {
 mod test {
     use crate::buildin::class::baseclass::BasicInnerClass;
     use crate::buildin::Class;
-    use crate::compiler::BramaPrimative;
+    use crate::compiler::KaramelPrimative;
     use crate::compiler::GetType;
     use std::rc::Rc;
 
@@ -113,8 +113,8 @@ mod test {
         let mut opcode_class: BasicInnerClass = BasicInnerClass::default();
         opcode_class.set_name("test_class");
 
-        opcode_class.add_property("field_1", Rc::new(BramaPrimative::Number(1024.0)));
-        opcode_class.add_property("field_2", Rc::new(BramaPrimative::Number(2048.0)));
+        opcode_class.add_property("field_1", Rc::new(KaramelPrimative::Number(1024.0)));
+        opcode_class.add_property("field_2", Rc::new(KaramelPrimative::Number(2048.0)));
 
         assert_eq!(opcode_class.get_class_name(), "test_class".to_string());
         assert_eq!(opcode_class.property_count(), 2);

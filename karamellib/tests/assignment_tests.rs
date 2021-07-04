@@ -5,8 +5,8 @@ mod tests {
     use crate::karamellib::parser::*;
     use crate::karamellib::types::*;
     use crate::karamellib::syntax::SyntaxParser;
-    use crate::karamellib::compiler::value::BramaPrimative;
-    use crate::karamellib::compiler::ast::BramaAstType;
+    use crate::karamellib::compiler::value::KaramelPrimative;
+    use crate::karamellib::compiler::ast::KaramelAstType;
     use std::rc::Rc;
 
     #[warn(unused_macros)]
@@ -26,19 +26,19 @@ mod tests {
         };
     }
 
-    test_compare!(assignment_1, "erhan = 2020", Ok(Rc::new(BramaAstType::Assignment {
-        variable: Box::new(BramaAstType::Symbol("erhan".to_string())),
-        operator: BramaOperatorType::Assign,
-        expression: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(2020.0))))
+    test_compare!(assignment_1, "erhan = 2020", Ok(Rc::new(KaramelAstType::Assignment {
+        variable: Box::new(KaramelAstType::Symbol("erhan".to_string())),
+        operator: KaramelOperatorType::Assign,
+        expression: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(2020.0))))
     })));
 
-    test_compare!(assignment_2, "erhan = ('erhan' * 2)", Ok(Rc::new(BramaAstType::Assignment {
-        variable: Box::new(BramaAstType::Symbol("erhan".to_string())),
-        operator: BramaOperatorType::Assign,
-        expression: Box::new(BramaAstType::Binary {
-            left: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Text(Rc::new("erhan".to_string()))))),
-            operator: BramaOperatorType::Multiplication, 
-            right: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(2.0))))
+    test_compare!(assignment_2, "erhan = ('erhan' * 2)", Ok(Rc::new(KaramelAstType::Assignment {
+        variable: Box::new(KaramelAstType::Symbol("erhan".to_string())),
+        operator: KaramelOperatorType::Assign,
+        expression: Box::new(KaramelAstType::Binary {
+            left: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Text(Rc::new("erhan".to_string()))))),
+            operator: KaramelOperatorType::Multiplication, 
+            right: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(2.0))))
         })
     })));
 }

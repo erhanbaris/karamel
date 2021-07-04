@@ -46,21 +46,21 @@ macro_rules! nativecall_test {
 #[macro_export]
 macro_rules! primative_text {
     ($text:expr) => {
-        BramaPrimative::Text(Rc::new($text.to_string()))
+        KaramelPrimative::Text(Rc::new($text.to_string()))
     };
 }
 
 #[macro_export]
 macro_rules! primative_number {
     ($number:expr) => {
-        BramaPrimative::Number($number as f64)
+        KaramelPrimative::Number($number as f64)
     };
 }
 
 #[macro_export]
 macro_rules! primative_list {
     ($list:expr) => {
-        BramaPrimative::List(RefCell::new($list))
+        KaramelPrimative::List(RefCell::new($list))
     };
 }
 

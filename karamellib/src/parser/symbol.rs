@@ -1,10 +1,10 @@
 use std::collections::HashMap;
 use std::rc::Rc;
 use crate::types::*;
-use crate::error::BramaErrorType;
+use crate::error::KaramelErrorType;
 
 pub struct SymbolParser {
-    pub keywords: HashMap<&'static str, BramaKeywordType>
+    pub keywords: HashMap<&'static str, KaramelKeywordType>
 }
 
 impl SymbolParser {
@@ -21,7 +21,7 @@ impl TokenParser for SymbolParser {
         return ch.is_symbol();
     }
 
-    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<(), BramaErrorType> {
+    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<(), KaramelErrorType> {
         let mut ch: char;
         let start             = tokinizer.index as usize;
         let mut end           = start;
@@ -43,18 +43,18 @@ impl TokenParser for SymbolParser {
         if self.keywords.contains_key(&tokinizer.data[start..end]) {
             let keyword = match self.keywords.get(&tokinizer.data[start..end]) {
                 Some(keyword) => keyword,
-                None => &BramaKeywordType::None
+                None => &KaramelKeywordType::None
             };
 
             let token_type = match keyword.to_operator() {
-                BramaOperatorType::None => BramaTokenType::Keyword(*keyword),
-                _                       => BramaTokenType::Operator(keyword.to_operator())
+                KaramelOperatorType::None => KaramelTokenType::Keyword(*keyword),
+                _                       => KaramelTokenType::Operator(keyword.to_operator())
             };
             tokinizer.add_token(start_column as u32, token_type);
             return Ok(());
         }
 
-        tokinizer.add_token(start_column as u32, BramaTokenType::Symbol(Rc::new(tokinizer.data[start..end].to_string())));
+        tokinizer.add_token(start_column as u32, KaramelTokenType::Symbol(Rc::new(tokinizer.data[start..end].to_string())));
         return Ok(());
     }
 }

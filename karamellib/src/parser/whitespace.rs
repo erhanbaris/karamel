@@ -1,5 +1,5 @@
 use crate::types::*;
-use crate::error::BramaErrorType;
+use crate::error::KaramelErrorType;
 
 pub struct WhitespaceParser;
 
@@ -9,7 +9,7 @@ impl TokenParser for WhitespaceParser {
         return ch == ' ';
     }
 
-    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<(), BramaErrorType> {
+    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<(), KaramelErrorType> {
         let mut whitespace_count: u8 = 0;
         let mut ch                   = tokinizer.get_char();
         let start_column = tokinizer.column;
@@ -20,7 +20,7 @@ impl TokenParser for WhitespaceParser {
             ch = tokinizer.get_char();
         }
 
-        tokinizer.add_token(start_column, BramaTokenType::WhiteSpace(whitespace_count));
+        tokinizer.add_token(start_column, KaramelTokenType::WhiteSpace(whitespace_count));
         return Ok(());
     }
 }

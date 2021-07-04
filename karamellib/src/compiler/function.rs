@@ -14,8 +14,8 @@ use crate::compiler::value::EMPTY_OBJECT;
 use crate::compiler::context::KaramelCompilerContext;
 
 use super::module::OpcodeModule;
-use super::{BramaPrimative, StaticStorage};
-use super::ast::BramaAstType;
+use super::{KaramelPrimative, StaticStorage};
+use super::ast::KaramelAstType;
 use super::storage_builder::{StorageBuilder, StorageBuilderOption};
 
 pub type NativeCallResult = Result<VmObject, String>;
@@ -98,7 +98,7 @@ pub struct FunctionReference {
     pub storage_index: usize,
     pub opcode_location: Cell<usize>,
     pub used_locations: RefCell<Vec<u16>>,
-    pub opcode_body: Option<Rc<BramaAstType>>,
+    pub opcode_body: Option<Rc<KaramelAstType>>,
     pub module: Rc<dyn Module>
 }
 
@@ -157,7 +157,7 @@ impl FunctionReference {
         Rc::new(reference)
     }
 
-    pub fn opcode_function(name: String, arguments: Vec<String>, body: Rc<BramaAstType>, module: Rc<dyn Module>, storage_index: usize, defined_storage_index: usize, module_level: bool) -> Rc<FunctionReference> {
+    pub fn opcode_function(name: String, arguments: Vec<String>, body: Rc<KaramelAstType>, module: Rc<dyn Module>, storage_index: usize, defined_storage_index: usize, module_level: bool) -> Rc<FunctionReference> {
         let mut reference = FunctionReference {
             callback: FunctionType::Opcode,
             flags: FunctionFlag::STATIC,
@@ -261,9 +261,9 @@ impl FunctionReference {
     }
 }
 
-pub fn find_function_definition_type(module: Rc<OpcodeModule>, ast: Rc<BramaAstType>, options: &mut KaramelCompilerContext, current_storage_index: usize, module_level: bool) -> CompilerResult {
+pub fn find_function_definition_type(module: Rc<OpcodeModule>, ast: Rc<KaramelAstType>, options: &mut KaramelCompilerContext, current_storage_index: usize, module_level: bool) -> CompilerResult {
     match ast.borrow() {
-        BramaAstType::FunctionDefination { name, arguments, body  } => {
+        KaramelAstType::FunctionDefination { name, arguments, body  } => {
             /* Create new storage for new function */
             let new_storage_index = options.storages.len();
             options.storages.push(StaticStorage::new(new_storage_index));
@@ -282,14 +282,14 @@ pub fn find_function_definition_type(module: Rc<OpcodeModule>, ast: Rc<BramaAstT
             let mut builder_option = StorageBuilderOption { max_stack: 0 };
             storage_builder.prepare(module.clone(), ast.borrow(), new_storage_index, options, &mut builder_option)?;
 
-            //options.storages[current_storage_index].add_static_data(name, Rc::new(BramaPrimative::Function(function.clone(), None)));
-            options.storages[current_storage_index].add_constant(Rc::new(BramaPrimative::Function(function.clone(), None)));
+            //options.storages[current_storage_index].add_static_data(name, Rc::new(KaramelPrimative::Function(function.clone(), None)));
+            options.storages[current_storage_index].add_constant(Rc::new(KaramelPrimative::Function(function.clone(), None)));
 
             for argument in arguments {
                 options.storages[new_storage_index].add_variable(argument);
             }
         },
-        BramaAstType::Block(blocks) => {
+        KaramelAstType::Block(blocks) => {
             for block in blocks {
                 find_function_definition_type(module.clone(), block.clone(), options, current_storage_index, module_level)?;
             }

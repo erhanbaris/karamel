@@ -1,6 +1,6 @@
 extern crate karamellib;
 
-use karamellib::{compiler::BramaPrimative, vm::executer::{ExecutionParameters, ExecutionSource}};
+use karamellib::{compiler::KaramelPrimative, vm::executer::{ExecutionParameters, ExecutionSource}};
 use wasm_bindgen::prelude::*;
 use js_sys::*;
 
@@ -30,10 +30,10 @@ pub fn execute_code(name: &str) -> Object {
                 Some(opjects) => {
                     for object in opjects.iter() {
                         match &*object.deref() {
-                            BramaPrimative::Text(text) => results.push(&JsValue::from(&**text).into()),
-                            BramaPrimative::Number(number) => results.push(&JsValue::from_f64(*number).into()),
-                            BramaPrimative::Bool(bool) => results.push(&JsValue::from_bool(*bool).into()),
-                            BramaPrimative::Empty => results.push(&JsValue::undefined().into()),
+                            KaramelPrimative::Text(text) => results.push(&JsValue::from(&**text).into()),
+                            KaramelPrimative::Number(number) => results.push(&JsValue::from_f64(*number).into()),
+                            KaramelPrimative::Bool(bool) => results.push(&JsValue::from_bool(*bool).into()),
+                            KaramelPrimative::Empty => results.push(&JsValue::undefined().into()),
                             _ => 0
                         };
                     }

@@ -14,21 +14,21 @@ use crate::syntax::SyntaxParser;
 use crate::types::CompilerResult;
 
 use super::context::KaramelCompilerContext;
-use super::ast::BramaAstType;
+use super::ast::KaramelAstType;
 use super::function::FunctionReference;
 
 pub struct OpcodeModule {
     pub name: String,
     pub storage_index: usize,
     pub file_path: String,
-    pub main_ast: Rc<BramaAstType>,
+    pub main_ast: Rc<KaramelAstType>,
     pub functions: RefCell<HashMap<String, Rc<FunctionReference>>>,
     pub modules: RefCell<HashMap<String, Rc<dyn Module>>>,
     pub path: Vec<String>
 }
 
 impl OpcodeModule {
-    pub fn new(name: String, file_path: String, main_ast: Rc<BramaAstType>) -> OpcodeModule {
+    pub fn new(name: String, file_path: String, main_ast: Rc<KaramelAstType>) -> OpcodeModule {
         OpcodeModule {
             name, 
             file_path, 
@@ -130,16 +130,16 @@ pub fn load_module(params: &[String], modules: &mut Vec<Rc<OpcodeModule>>, optio
     };
 }
 
-fn find_load_type(ast: Rc<BramaAstType>, options: &mut KaramelCompilerContext, modules: &mut Vec<Rc<OpcodeModule>>, upper_storage_index: usize) -> CompilerResult {
+fn find_load_type(ast: Rc<KaramelAstType>, options: &mut KaramelCompilerContext, modules: &mut Vec<Rc<OpcodeModule>>, upper_storage_index: usize) -> CompilerResult {
     match &*ast {
-        BramaAstType::Load(module_name) => {
+        KaramelAstType::Load(module_name) => {
             if !options.has_module(&module_name) {
                 let module = load_module(module_name, modules, options, upper_storage_index)?;
                 options.add_module(module.clone());
                 modules.push(module.clone());
             }
         },
-        BramaAstType::Block(blocks) => {
+        KaramelAstType::Block(blocks) => {
             for block in blocks {
                 find_load_type(block.clone(), options, modules, upper_storage_index)?;
             }
@@ -150,7 +150,7 @@ fn find_load_type(ast: Rc<BramaAstType>, options: &mut KaramelCompilerContext, m
     Ok(())
 }
 
-pub fn get_modules(main_ast: Rc<BramaAstType>, options: &mut KaramelCompilerContext) -> Result<Vec<Rc<OpcodeModule>>, String> {
+pub fn get_modules(main_ast: Rc<KaramelAstType>, options: &mut KaramelCompilerContext) -> Result<Vec<Rc<OpcodeModule>>, String> {
     let mut modules: Vec<Rc<OpcodeModule>> = Vec::new();
     match find_load_type(main_ast, options, &mut modules, 0) {
         Ok(()) => Ok(modules),

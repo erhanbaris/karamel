@@ -5,8 +5,8 @@ mod tests {
     use crate::karamellib::parser::*;
     use crate::karamellib::types::*;
     use crate::karamellib::syntax::*;
-    use crate::karamellib::compiler::value::BramaPrimative;
-    use crate::karamellib::compiler::ast::BramaAstType;
+    use crate::karamellib::compiler::value::KaramelPrimative;
+    use crate::karamellib::compiler::ast::KaramelAstType;
     use std::rc::Rc;
 
     #[warn(unused_macros)]
@@ -26,47 +26,47 @@ mod tests {
         };
     }
 
-    test_compare!(equality_1, "10 == 10", Ok(Rc::new(BramaAstType::Control {
-        left: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(10.0)))), 
-        operator: BramaOperatorType::Equal, 
-        right: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(10.0))))
+    test_compare!(equality_1, "10 == 10", Ok(Rc::new(KaramelAstType::Control {
+        left: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(10.0)))), 
+        operator: KaramelOperatorType::Equal, 
+        right: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(10.0))))
     })));
 
-    test_compare!(equality_2, "10 != 10", Ok(Rc::new(BramaAstType::Control {
-        left: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(10.0)))), 
-        operator: BramaOperatorType::NotEqual, 
-        right: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(10.0))))
+    test_compare!(equality_2, "10 != 10", Ok(Rc::new(KaramelAstType::Control {
+        left: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(10.0)))), 
+        operator: KaramelOperatorType::NotEqual, 
+        right: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(10.0))))
     })));
 
-    test_compare!(equality_3, "10+2 eşitdeğildir 10", Ok(Rc::new(BramaAstType::Control {
-        left: Box::new(BramaAstType::Binary {
-            left: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(10.0)))), 
-            operator: BramaOperatorType::Addition, 
-            right: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(2.0))))
+    test_compare!(equality_3, "10+2 eşitdeğildir 10", Ok(Rc::new(KaramelAstType::Control {
+        left: Box::new(KaramelAstType::Binary {
+            left: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(10.0)))), 
+            operator: KaramelOperatorType::Addition, 
+            right: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(2.0))))
         }), 
-        operator: BramaOperatorType::NotEqual, 
-        right: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(10.0))))
+        operator: KaramelOperatorType::NotEqual, 
+        right: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(10.0))))
     })));
 
-    test_compare!(equality_4, "10 eşittir 10+2", Ok(Rc::new(BramaAstType::Control {
-        left: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(10.0)))),
-        operator: BramaOperatorType::Equal,
-        right: Box::new(BramaAstType::Binary {
-            left: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(10.0)))), 
-            operator: BramaOperatorType::Addition, 
-            right: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(2.0))))
+    test_compare!(equality_4, "10 eşittir 10+2", Ok(Rc::new(KaramelAstType::Control {
+        left: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(10.0)))),
+        operator: KaramelOperatorType::Equal,
+        right: Box::new(KaramelAstType::Binary {
+            left: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(10.0)))), 
+            operator: KaramelOperatorType::Addition, 
+            right: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(2.0))))
         })
     })));
     
-    test_compare!(and_1, "10 ve 10", Ok(Rc::new(BramaAstType::Control {
-        left: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(10.0)))), 
-        operator: BramaOperatorType::And, 
-        right: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(10.0))))
+    test_compare!(and_1, "10 ve 10", Ok(Rc::new(KaramelAstType::Control {
+        left: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(10.0)))), 
+        operator: KaramelOperatorType::And, 
+        right: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(10.0))))
     })));
     
-    test_compare!(or_1, "10 veya 10", Ok(Rc::new(BramaAstType::Control {
-        left: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(10.0)))), 
-        operator: BramaOperatorType::Or, 
-        right: Box::new(BramaAstType::Primative(Rc::new(BramaPrimative::Number(10.0))))
+    test_compare!(or_1, "10 veya 10", Ok(Rc::new(KaramelAstType::Control {
+        left: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(10.0)))), 
+        operator: KaramelOperatorType::Or, 
+        right: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(10.0))))
     })));
 }

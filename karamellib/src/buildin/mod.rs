@@ -14,7 +14,7 @@ use std::collections::HashMap;
 use std::vec::Vec;
 use std::rc::Rc;
 
-use crate::compiler::{BramaPrimative, function::{FunctionReference, NativeCall}};
+use crate::compiler::{KaramelPrimative, function::{FunctionReference, NativeCall}};
 
 pub trait Module {
     fn get_module_name(&self) -> String;
@@ -71,7 +71,7 @@ impl<'a> Iterator for ModuleCollectionIterator<'a> {
 #[derive(Clone)]
 pub enum ClassProperty {
     Function(Rc<FunctionReference>),
-    Field(Rc<BramaPrimative>)
+    Field(Rc<KaramelPrimative>)
 }
 
 #[derive(Default)]
@@ -102,7 +102,7 @@ pub trait Class: GetType {
     fn properties(&self) -> std::collections::hash_map::Iter<'_, String, ClassProperty>;
     
     fn add_method(&mut self, name: &str, function: NativeCall, flags: FunctionFlag);
-    fn add_property(&mut self, name: &str, property: Rc<BramaPrimative>);
+    fn add_property(&mut self, name: &str, property: Rc<KaramelPrimative>);
     
     fn set_getter(&mut self, indexer: IndexerGetCall);
     fn get_getter(&self) -> Option<IndexerGetCall>;

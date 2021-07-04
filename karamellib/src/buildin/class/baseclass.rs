@@ -1,5 +1,5 @@
 use crate::{buildin::{Class, ClassProperty}, compiler::function::{IndexerGetCall, IndexerSetCall, NativeCall, FunctionFlag}, types::VmObject};
-use crate::compiler::{BramaPrimative, function::{FunctionReference}};
+use crate::compiler::{KaramelPrimative, function::{FunctionReference}};
 
 use std::{rc::Rc};
 use crate::compiler::GetType;
@@ -42,7 +42,7 @@ pub struct BasicInnerClass {
         self.config.properties.insert(name.to_string(), ClassProperty::Function(FunctionReference::buildin_function(function, name.to_string(), flags)));
     }
 
-    fn add_property(&mut self, name: &str, property: Rc<BramaPrimative>) {
+    fn add_property(&mut self, name: &str, property: Rc<KaramelPrimative>) {
         self.config.properties.insert(name.to_string(), ClassProperty::Field(property));
     }
 
@@ -97,7 +97,7 @@ mod test {
     use crate::buildin::Class;
     use crate::compiler::GetType;
     use crate::buildin::class::baseclass::BasicInnerClass;
-    use crate::compiler::BramaPrimative;
+    use crate::compiler::KaramelPrimative;
 
     #[test]
     fn test_opcode_class_1() {
@@ -122,8 +122,8 @@ mod test {
         let mut opcode_class: BasicInnerClass = BasicInnerClass::default();
         opcode_class.set_name("test_class");
 
-        opcode_class.add_property("field_1", Rc::new(BramaPrimative::Number(1024.0)));
-        opcode_class.add_property("field_2", Rc::new(BramaPrimative::Number(2048.0)));
+        opcode_class.add_property("field_1", Rc::new(KaramelPrimative::Number(1024.0)));
+        opcode_class.add_property("field_2", Rc::new(KaramelPrimative::Number(2048.0)));
 
         assert_eq!(opcode_class.get_class_name(), "test_class".to_string());
         assert_eq!(opcode_class.property_count(), 2);

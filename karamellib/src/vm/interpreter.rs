@@ -179,8 +179,8 @@ pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObjec
                     let right = pop_raw!(context);
                     let left  = pop_raw!(context);
                     *(*context.current_scope).stack_ptr = match (&left.deref_clean(), &right.deref_clean()) {
-                        (BramaPrimative::Number(l_value),  BramaPrimative::Number(r_value)) => VmObject::from(l_value + r_value),
-                        (BramaPrimative::Text(l_value),    BramaPrimative::Text(r_value))   => VmObject::from(Rc::new((&**l_value).to_owned() + &**r_value)),
+                        (KaramelPrimative::Number(l_value),  KaramelPrimative::Number(r_value)) => VmObject::from(l_value + r_value),
+                        (KaramelPrimative::Text(l_value),    KaramelPrimative::Text(r_value))   => VmObject::from(Rc::new((&**l_value).to_owned() + &**r_value)),
                         _ => EMPTY_OBJECT
                     };
                     inc_memory_index!(context, 1);
@@ -242,8 +242,8 @@ pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObjec
                     let right = pop!(context);
                     let left  = pop!(context);
                     *(*context.current_scope).stack_ptr = match (&*left, &*right) {
-                        (BramaPrimative::Number(l_value),  BramaPrimative::Number(r_value))   => VmObject::from(*l_value * *r_value),
-                        (BramaPrimative::Text(l_value),    BramaPrimative::Number(r_value))   => VmObject::from((*l_value).repeat((*r_value) as usize)),
+                        (KaramelPrimative::Number(l_value),  KaramelPrimative::Number(r_value))   => VmObject::from(*l_value * *r_value),
+                        (KaramelPrimative::Text(l_value),    KaramelPrimative::Number(r_value))   => VmObject::from((*l_value).repeat((*r_value) as usize)),
                         _ => EMPTY_OBJECT
                     };
                     inc_memory_index!(context, 1);
@@ -345,7 +345,7 @@ pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObjec
                     let func_location   = *context.opcodes_ptr.offset(1) as usize;
                     context.opcodes_ptr = context.opcodes_ptr.offset(1);
                     
-                    if let BramaPrimative::Function(reference, _) = &(*(*context.current_scope).memory_ptr.offset(func_location as isize)).deref_clean() {
+                    if let KaramelPrimative::Function(reference, _) = &(*(*context.current_scope).memory_ptr.offset(func_location as isize)).deref_clean() {
                         reference.execute(context, None)?;
                     }
                     else {
@@ -356,7 +356,7 @@ pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObjec
                 VmOpCode::CallStack => {
                     let function = pop_raw!(context);
                     match &*function.deref() {
-                        BramaPrimative::Function(reference, base) => reference.execute(context, *base)?,
+                        KaramelPrimative::Function(reference, base) => reference.execute(context, *base)?,
                         _ => {
                             log::debug!("{:?} not callable", &*function.deref());
                         return Err("Not callable".to_string());
@@ -424,10 +424,10 @@ pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObjec
                     let condition = pop_raw!(context);
 
                     let status = match &condition.deref_clean() {
-                        BramaPrimative::Empty => false,
-                        BramaPrimative::Bool(l_value) => *l_value,
-                        BramaPrimative::Number(l_value) => *l_value > 0.0,
-                        BramaPrimative::Text(l_value) => !(*l_value).is_empty(),
+                        KaramelPrimative::Empty => false,
+                        KaramelPrimative::Bool(l_value) => *l_value,
+                        KaramelPrimative::Number(l_value) => *l_value > 0.0,
+                        KaramelPrimative::Text(l_value) => !(*l_value).is_empty(),
                         _ => false
                     };
 
@@ -455,25 +455,25 @@ pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObjec
                     // todo: change all those codes with setter implementation
 
                     match &*object {
-                        BramaPrimative::List(value) => {
+                        KaramelPrimative::List(value) => {
                             let indexer_value = match &*indexer {
-                                BramaPrimative::Number(number) => *number as usize,
+                                KaramelPrimative::Number(number) => *number as usize,
                                 _ => return Err("Indexer must be number".to_string())
                             };
 
                             value.borrow_mut()[indexer_value] = assign_item;
                         },
-                        BramaPrimative::Dict(value) => {
+                        KaramelPrimative::Dict(value) => {
                             let indexer_value = match &*indexer {
-                                BramaPrimative::Text(text) => &*text,
+                                KaramelPrimative::Text(text) => &*text,
                                 _ => return Err("Indexer must be string".to_string())
                             };
 
                             value.borrow_mut().insert(indexer_value.to_string(), assign_item);
                         },
-                        BramaPrimative::Text(_) => {
+                        KaramelPrimative::Text(_) => {
                             let indexer_value = match &*indexer {
-                                BramaPrimative::Number(number) => *number,
+                                KaramelPrimative::Number(number) => *number,
                                 _ => return Err("Indexer must be number".to_string())
                             };
 
@@ -493,16 +493,16 @@ pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObjec
                     let object = &*raw_object.deref();
 
                     *(*context.current_scope).stack_ptr = match &*indexer {
-                        BramaPrimative::Text(text) => {
+                        KaramelPrimative::Text(text) => {
                              match context.get_class(object).get_element(Some(raw_object), text.clone()) {
                                 Some(element) => match element {
-                                    ClassProperty::Function(function) => VmObject::from(Rc::new(BramaPrimative::Function(function.clone(), Some(raw_object)))),
+                                    ClassProperty::Function(function) => VmObject::from(Rc::new(KaramelPrimative::Function(function.clone(), Some(raw_object)))),
                                     ClassProperty::Field(field) => VmObject::from(field.clone())
                                 },
                                 _ => EMPTY_OBJECT
                             }
                         },
-                        BramaPrimative::Number(index) => match context.get_class(object).get_getter() {
+                        KaramelPrimative::Number(index) => match context.get_class(object).get_getter() {
                             Some(function) => function(raw_object, *index)?,
                             _ => EMPTY_OBJECT
                         }

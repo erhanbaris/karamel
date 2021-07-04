@@ -1,5 +1,5 @@
 use crate::types::*;
-use crate::error::BramaErrorType;
+use crate::error::KaramelErrorType;
 
 pub struct CommentParser;
 
@@ -10,7 +10,7 @@ impl TokenParser for CommentParser {
         return (ch == '/' && ch_next == '*') || (ch == '/' && ch_next == '/');
     }
 
-    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<(), BramaErrorType> {
+    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<(), KaramelErrorType> {
         let mut ch                   = tokinizer.get_char();
         let mut ch_next              = tokinizer.get_next_char();
 
@@ -35,7 +35,7 @@ impl TokenParser for CommentParser {
             }
 
             if !comment_end {
-                return Err(BramaErrorType::CommentNotFinished);
+                return Err(KaramelErrorType::CommentNotFinished);
             }
         }
         else {
