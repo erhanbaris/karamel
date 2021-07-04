@@ -166,7 +166,7 @@ impl PrimativeParser {
         return Ok(BramaAstType::None);
     }
 
-    pub fn parse_function_map(parser: &SyntaxParser) -> AstResult {
+    pub fn parse_module_path(parser: &SyntaxParser) -> AstResult {
         let index_backup = parser.get_index();
         parser.cleanup_whitespaces();
         let token = parser.peek_token();
@@ -201,7 +201,7 @@ impl PrimativeParser {
             }
             
             if symbol_definitions.len() > 1 {
-                return Ok(BramaAstType::FunctionMap(symbol_definitions.to_vec()));
+                return Ok(BramaAstType::ModulePath(symbol_definitions.to_vec()));
             }
         }
 
@@ -232,6 +232,6 @@ impl PrimativeParser {
 
 impl SyntaxParserTrait for PrimativeParser {
     fn parse(parser: &SyntaxParser) -> AstResult {
-        return map_parser(parser, &[Self::parse_dict, Self::parse_list, Self::parse_parenthesis, Self::parse_function_map, Self::parse_symbol, Self::parse_basic_primatives]);
+        return map_parser(parser, &[Self::parse_dict, Self::parse_list, Self::parse_parenthesis, Self::parse_module_path, Self::parse_symbol, Self::parse_basic_primatives]);
     }
 }

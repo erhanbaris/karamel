@@ -22,7 +22,7 @@ impl SyntaxParserTrait for FuncCallParser {
         let token = parser.peek_token();
 
         if token.is_ok() {
-            let mut function_name = map_parser(parser, &[PrimativeParser::parse_function_map, PrimativeParser::parse_symbol])?;
+            let mut function_name = map_parser(parser, &[PrimativeParser::parse_module_path, PrimativeParser::parse_symbol])?;
 
             match &function_name {
                 BramaAstType::None => (),
@@ -84,7 +84,6 @@ impl ExtensionSyntaxParser for FuncCallParser {
                         }
                     },
                     _ => {
-                        parser.set_index(index_backup);
                         return Err(BramaErrorType::RightParanthesesMissing);
                     }
                 }

@@ -88,7 +88,7 @@ impl StorageBuilder {
                 1
             },
 
-            BramaAstType::FunctionMap(params) => {
+            BramaAstType::ModulePath(params) => {
                 let name = params[params.len() - 1].to_string();
                 let module_path = params[0..(params.len() - 1)].to_vec();
 
@@ -176,7 +176,7 @@ impl StorageBuilder {
                             options.storages.get_mut(storage_index).unwrap().add_constant(Rc::new(BramaPrimative::Text(Rc::new(function_name.to_string()))));
                         }
                     },
-                    BramaAstType::FunctionMap(names) => {
+                    BramaAstType::ModulePath(names) => {
                         let function_search = options.get_function(names[names.len() - 1].to_string(), &names[0..(names.len()-1)].to_vec(), storage_index);
                         match function_search {
                             Some(reference) => options.storages.get_mut(storage_index).unwrap().add_constant(Rc::new(BramaPrimative::Function(reference, None))),

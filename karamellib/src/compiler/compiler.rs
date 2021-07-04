@@ -173,7 +173,7 @@ impl InterpreterCompiler {
             BramaAstType::Indexer {body, indexer} => self.generate_indexer(module.clone(), body, indexer, upper_ast, context, storage_index),
             BramaAstType::None => self.generate_none(context, storage_index),
             BramaAstType::FunctionDefination{name: _, arguments: _, body: _} => Ok(()),
-            BramaAstType::FunctionMap(name) => self.generate_function_map(name, context, storage_index),
+            BramaAstType::ModulePath(name) => self.generate_function_map(name, context, storage_index),
             BramaAstType::Load(names) => self.generate_load_module(names, context),
         }
     }
@@ -389,7 +389,7 @@ impl InterpreterCompiler {
                 return Ok(());
             },
 
-            BramaAstType::FunctionMap(names) => {
+            BramaAstType::ModulePath(names) => {
                 let result = self.generate_func_call_by_name(&names[names.len() - 1].to_string(), &names[0..(names.len()-1)].to_vec(), &arguments, assign_to_temp, context, storage_index)?;
                 match result {
                     true => return Ok(()),

@@ -186,8 +186,8 @@ mod tests {
         println!("teardown");
     }
 
-    fn run_test<T>(test: T, to_be_removed: Vec<String>) -> ()
-        where T: FnOnce() -> () + panic::UnwindSafe
+    fn run_test<T>(test: T, to_be_removed: Vec<String>) -> Result<(), String>
+        where T: FnOnce() -> Result<(), String> + panic::UnwindSafe
     {
         setup();
 
@@ -197,13 +197,16 @@ mod tests {
 
         teardown(to_be_removed);
 
-        assert!(result.is_ok())
+        match result {
+            Ok(inner_result) => inner_result,
+            Err(error) => Err(format!("{:?}", error))
+        }
     }
 
-    fn write_to_file<T: Borrow<str>>(content: &'static str, file_name: T) -> String {
+    fn write_to_file<C: Borrow<str>, T: Borrow<str>>(content: C, file_name: T) -> String {
         let file_name = generate_file_name(file_name);
         let mut file = File::create(&file_name).unwrap();
-        file.write_all(content.as_bytes()).unwrap();
+        file.write_all(content.borrow().as_bytes()).unwrap();
         file_name
     }
 
@@ -218,7 +221,7 @@ mod tests {
     }
 
     #[test]
-    fn test_1() {
+    fn test_1() -> Result<(), String> {
         let module_1 = r#"
 fonk topla(bir, iki): dondur bir + iki"#;
         let topla_path = write_to_file(module_1, format!("topla{}", KARAMEL_FILE_EXTENSION));
@@ -227,20 +230,18 @@ fonk topla(bir, iki): dondur bir + iki"#;
             let mut modules = Vec::new();
             let mut options = KaramelCompilerContext::new();
             options.execution_path = get_execution_path(ExecutionSource::Code("".to_string()));
-            match load_module(&[String::from("topla")].to_vec(), &mut modules, &mut options, 0) {
-                Ok(_) => (),
-                Err(error) => assert!(false, "{}", error)
-            };
-        }, [topla_path].to_vec());
+            load_module(&[String::from("topla")].to_vec(), &mut modules, &mut options, 0)?;
+            Ok(())
+        }, [topla_path].to_vec())
     }
 
     #[test]
-    fn test_2() {
+    fn test_2() -> Result<(), String> {
         let module_1 = r#"
 fonk topla(bir, iki): dondur bir + iki"#;
         let module_2 = r#"
 module_1 yükle
-fonk topla2(bir, iki): dondur module_1::topla(bir + iki)"#;
+fonk topla2(bir, iki): dondur module_1::topla(bir, iki)"#;
         let module_1_path = write_to_file(module_1, format!("module_1{}", KARAMEL_FILE_EXTENSION));
         let module_2_path = write_to_file(module_2, format!("module_2{}", KARAMEL_FILE_EXTENSION));
 
@@ -248,14 +249,9 @@ fonk topla2(bir, iki): dondur module_1::topla(bir + iki)"#;
             let mut modules = Vec::new();
             let mut options = KaramelCompilerContext::new();
             options.execution_path = get_execution_path(ExecutionSource::Code("".to_string()));
-            match load_module(&[String::from("module_1")].to_vec(), &mut modules, &mut options, 1) {
-                Ok(_) => (),
-                Err(error) => assert!(false, "{}", error)
-            };
-            match load_module(&[String::from("module_2")].to_vec(), &mut modules, &mut options, 0) {
-                Ok(_) => (),
-                Err(error) => assert!(false, "{}", error)
-            };
-        }, [module_1_path, module_2_path].to_vec());
+            load_module(&[String::from("module_1")].to_vec(), &mut modules, &mut options, 1)?;
+            load_module(&[String::from("module_2")].to_vec(), &mut modules, &mut options, 0)?;
+            Ok(())
+        }, [module_1_path, module_2_path].to_vec())
     }
 }

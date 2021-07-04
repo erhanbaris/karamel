@@ -111,5 +111,5 @@ mod tests {
             assign_to_temp: Cell::new(true)
         })
     })));
-    test_compare!(func_call_12, "gç::satıryaz", Ok(Rc::new(BramaAstType::FunctionMap(["gç".to_string(), "satıryaz".to_string()].to_vec()))));
+    test_compare!(func_call_12, "gç::satıryaz", Ok(Rc::new(BramaAstType::ModulePath(["gç".to_string(), "satıryaz".to_string()].to_vec()))));
 }

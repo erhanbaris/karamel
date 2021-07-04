@@ -81,7 +81,7 @@ pub enum BramaAstType {
         body: Rc<BramaAstType>
     },
     Symbol(String),
-    FunctionMap(Vec<String>),
+    ModulePath(Vec<String>),
     Load(Vec<String>),
     List(Vec<Box<BramaAstType>>),
     Dict(Vec<Box<BramaDictItem>>),
