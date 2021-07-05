@@ -14,6 +14,11 @@ log = "0.4.14"
 lazy_static = "1.4.0"
 unicode-width = "0.1.7"
 
+# For enum
+strum = "0.21.0"
+strum_macros = "0.21.1"
+thiserror = "1.0.26"
+
 [features]
 dumpExecutionOpcode = []
 dumpMemory = []
