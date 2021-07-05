@@ -7,7 +7,7 @@ use crate::buildin::Class;
 use crate::buildin::Module;
 use crate::compiler::StaticStorage;
 use crate::compiler::function::find_function_definition_type;
-use crate::error::generate_error_message;
+use crate::error::{KaramelError, KaramelErrorType, generate_error_message};
 use crate::file::read_module_or_script;
 use crate::parser::Parser;
 use crate::syntax::SyntaxParser;
@@ -89,7 +89,7 @@ fn get_module_path(options: &KaramelCompilerContext, module_path: &PathBuf) -> V
     path
 }
 
-pub fn load_module(params: &[String], modules: &mut Vec<Rc<OpcodeModule>>, options: &mut KaramelCompilerContext, upper_storage_index: usize) -> Result<Rc<OpcodeModule>, String> {
+pub fn load_module(params: &[String], modules: &mut Vec<Rc<OpcodeModule>>, options: &mut KaramelCompilerContext, upper_storage_index: usize) -> Result<Rc<OpcodeModule>, KaramelError> {
     let mut path = PathBuf::from(&options.execution_path.path[..]);
     let module = params[(params.len() - 1)].to_string();
 
@@ -101,14 +101,11 @@ pub fn load_module(params: &[String], modules: &mut Vec<Rc<OpcodeModule>>, optio
 
     let content = match read_module_or_script(path.to_str().unwrap(), options) {
         Ok(content) => content,
-        Err(error) =>return Err(error)
+        Err(error) => return Err(KaramelError::new(0, 0, error))
     };
 
     let mut parser = Parser::new(&content);
-    match parser.parse() {
-        Err(error) => return Err(generate_error_message(&content, &error)),
-        _ => ()
-    };
+    parser.parse()?;
 
     let syntax = SyntaxParser::new(parser.tokens().to_vec());
     return match syntax.parse() {
@@ -126,7 +123,7 @@ pub fn load_module(params: &[String], modules: &mut Vec<Rc<OpcodeModule>>, optio
             find_function_definition_type(module.clone(), ast.clone(), options, module_storage, true)?;
             Ok(module.clone())
         },
-        Err(error) => return Err(generate_error_message(&content, &error))
+        Err(error) => return Err(error)
     };
 }
 

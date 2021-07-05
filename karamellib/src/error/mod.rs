@@ -5,7 +5,6 @@ use strum_macros::EnumIter;
 use strum_macros::EnumMessage;
 use thiserror::Error;
 
-#[derive(Copy)]
 #[derive(Clone)]
 #[derive(Debug)]
 #[derive(PartialEq)]
@@ -147,10 +146,28 @@ pub enum KaramelErrorType {
     
     #[error("Anahtar kelimeler kullanılamaz")]
     #[strum(message = "133")]
-    KeywordCouldNotBeUsed
+    KeywordCouldNotBeUsed,
+    
+    #[error("'{filename}' okunamadi. Hata: '{error}'")]
+    #[strum(message = "134")]
+    FileReadError {
+        filename: String,
+        error: String
+    },
+    
+    #[error("'{0}' bulunamadi")]
+    #[strum(message = "135")]
+    FileNotFound(String),
+    
+    #[error("{0}")]
+    #[strum(message = "136")]
+    GeneralError(String),
+    
+    #[error("'{0}' fonksiyonu önceden tanımlanmış")]
+    #[strum(message = "137")]
+    FunctionAlreadyDefined(String)
 }
 
-#[derive(Copy)]
 #[derive(Clone)]
 #[derive(Debug)]
 #[derive(PartialEq)]
@@ -158,6 +175,12 @@ pub struct KaramelError {
     pub error_type: KaramelErrorType,
     pub line: u32,
     pub column: u32
+}
+
+impl KaramelError {
+    pub fn new(line: u32, column: u32, error_type: KaramelErrorType) -> Self {
+        KaramelError { line, column, error_type }
+    }
 }
 
 pub fn generate_error_message<T: AsRef<str>, E: Borrow<KaramelError>>(data: T, error: E) -> String {

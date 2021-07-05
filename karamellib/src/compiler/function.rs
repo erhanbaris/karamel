@@ -8,6 +8,7 @@ use bitflags::bitflags;
 
 use crate::buildin::{DummyModule, Module};
 use crate::compiler::scope::Scope;
+use crate::error::KaramelErrorType;
 use crate::{inc_memory_index, dec_memory_index, get_memory_index};
 use crate::types::*;
 use crate::compiler::value::EMPTY_OBJECT;
@@ -116,7 +117,7 @@ impl Default for FunctionType {
 }
 
 impl FunctionReference {
-    pub fn execute(&self, compiler: &mut KaramelCompilerContext, base: Option<VmObject>) -> Result<(), String>{
+    pub fn execute(&self, compiler: &mut KaramelCompilerContext, base: Option<VmObject>) -> Result<(), KaramelErrorType>{
         unsafe {
             match self.callback {
                 FunctionType::Native(func) => FunctionReference::native_function_call(&self, func, compiler, base),
@@ -178,7 +179,7 @@ impl FunctionReference {
         Rc::new(reference)
     }
 
-    unsafe fn native_function_call(reference: &FunctionReference, func: NativeCall, compiler: &mut KaramelCompilerContext, source: Option<VmObject>) -> Result<(), String> {            
+    unsafe fn native_function_call(reference: &FunctionReference, func: NativeCall, compiler: &mut KaramelCompilerContext, source: Option<VmObject>) -> Result<(), KaramelErrorType> {            
         let total_args                 = *compiler.opcodes_ptr.offset(1);
         let call_return_assign_to_temp = *compiler.opcodes_ptr.offset(2) != 0;
         let parameter = match reference.flags {
@@ -205,7 +206,7 @@ impl FunctionReference {
         }
     }
 
-    fn opcode_function_call(reference: &FunctionReference, options: &mut KaramelCompilerContext) -> Result<(), String> {
+    fn opcode_function_call(reference: &FunctionReference, options: &mut KaramelCompilerContext) -> Result<(), KaramelErrorType> {
         unsafe {
             let argument_size              = *options.opcodes_ptr.offset(1);
             let call_return_assign_to_temp = *options.opcodes_ptr.offset(2) != 0;
@@ -273,7 +274,7 @@ pub fn find_function_definition_type(module: Rc<OpcodeModule>, ast: Rc<KaramelAs
             let old_function = module.functions.borrow_mut().insert(name.to_string(), function.clone());
 
             if let Some(_) = old_function {
-                return Err(format!("'{}' fonksiyonu önceden tanımlanmış", name));
+                return Err(KaramelErrorType::FunctionAlreadyDefined(name.to_string()));
             }
             
             find_function_definition_type(module.clone(), body.clone(), options, new_storage_index, false)?;

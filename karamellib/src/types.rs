@@ -9,7 +9,7 @@ use crate::error::KaramelErrorType;
 
 pub type ParseResult        = Result<(), KaramelError>;
 pub type AstResult          = Result<KaramelAstType, KaramelErrorType>;
-pub type CompilerResult     = Result<(), String>;
+pub type CompilerResult     = Result<(), KaramelErrorType>;
 
 pub const TAG_NULL        : u64 = 0;
 pub const TAG_FALSE       : u64 = 1;
