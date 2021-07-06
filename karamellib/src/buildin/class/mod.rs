@@ -115,7 +115,7 @@ macro_rules! nativecall_test_with_params {
 macro_rules! n_parameter_check {
     ($function_name:expr, $parameter_size:expr) => {
         if parameter.length() > 1 {
-            return n_parameter_expected!("tür_bilgisi", 1);
+            return n_parameter_expected!("tür_bilgisi".to_string(), 1);
         }
     };
 }
@@ -123,18 +123,21 @@ macro_rules! n_parameter_check {
 #[macro_export]
 macro_rules! n_parameter_expected {
     ($function_name:expr, $parameter_size:expr) => { Err(KaramelErrorType::FunctionArgumentNotMatching {
-        Function: $function_name,
-        Expected: $parameter_size, 
-        Found: 0
+        function: $function_name,
+        expected: $parameter_size, 
+        found: 0
     }) };
     ($function_name:expr, $parameter_size:expr, $parameter_found:expr) => { Err(KaramelErrorType::FunctionArgumentNotMatching {
-        Function: $function_name,
-        Expected: $parameter_size, 
-        Found: $parameter_found
+        function: $function_name,
+        expected: $parameter_size, 
+        found: $parameter_found
     }) };
 }
 
 #[macro_export]
 macro_rules! expected_parameter_type {
-    ($function_name:expr, $expected_type:expr) => { Err((format!("'{}' sadece {} parametresini kabul ediyor", $function_name, $expected_type))) };
+    ($function_name:expr, $expected_type:expr) => { Err(KaramelErrorType::FunctionExpectedThatParameterType {
+        function: $function_name,
+        expected: $expected_type
+    }) };
 }

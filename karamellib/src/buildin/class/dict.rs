@@ -114,11 +114,11 @@ pub fn get_primative_class() -> Rc<dyn Class> {
 fn get(parameter: FunctionParameter) -> NativeCallResult {
     if let KaramelPrimative::Dict(dict) = &*parameter.source().unwrap().deref() {
         return match parameter.length() {
-            0 =>  n_parameter_expected!("getir", 1),
+            0 =>  n_parameter_expected!("getir".to_string(), 1),
             1 => {
                 let key = match &*parameter.iter().next().unwrap().deref() {
                     KaramelPrimative::Text(yazi) => yazi.clone(),
-                    _ => return expected_parameter_type!("anahtar", "Yazı")
+                    _ => return expected_parameter_type!("anahtar".to_string(), "Yazı".to_string())
                 };
                 
                 return match dict.borrow().get(&*key) {
@@ -143,14 +143,14 @@ fn add(parameter: FunctionParameter) -> NativeCallResult {
 fn insert_or_update(parameter: FunctionParameter, function_name: &str) -> NativeCallResult {
     if let KaramelPrimative::Dict(dict) = &*parameter.source().unwrap().deref() {
         return match parameter.length() {
-            0 =>  n_parameter_expected!(function_name, 2),
+            0 =>  n_parameter_expected!(function_name.to_string(), 2),
             2 => {
                 let mut iter = parameter.iter();
                 let (position_object, item) = (&*iter.next().unwrap().deref(), &*iter.next().unwrap());
 
                 let position = match position_object {
                     KaramelPrimative::Text(text) => text.clone(),
-                    _ => return expected_parameter_type!("anahtar", "Yazı")
+                    _ => return expected_parameter_type!("anahtar".to_string(), "Yazı".to_string())
                 };
                 *dict.borrow_mut().entry((&position).to_string()).or_insert(*item) = *item;
                 Ok(EMPTY_OBJECT)
@@ -179,11 +179,11 @@ fn clear(parameter: FunctionParameter) -> NativeCallResult {
 fn remove(parameter: FunctionParameter) -> NativeCallResult {
     if let KaramelPrimative::Dict(dict) = &*parameter.source().unwrap().deref() {
         return match parameter.length() {
-            0 => n_parameter_expected!("sil", 1),
+            0 => n_parameter_expected!("sil".to_string(), 1),
             1 => {
                 let key = match &*parameter.iter().next().unwrap().deref() {
                     KaramelPrimative::Text(text) => text.clone(),
-                    _ => return expected_parameter_type!("anahtar", "Yazı")
+                    _ => return expected_parameter_type!("anahtar".to_string(), "Yazı".to_string())
                 };
                 
                 Ok(match dict.borrow_mut().remove(&key.to_string()) {
@@ -213,14 +213,14 @@ fn keys(parameter: FunctionParameter) -> NativeCallResult {
 fn contains(parameter: FunctionParameter) -> NativeCallResult {
     if let KaramelPrimative::Dict(dict) = &*parameter.source().unwrap().deref() {
         return match parameter.length() {
-            0 =>  n_parameter_expected!("içeriyormu", 1),
+            0 =>  n_parameter_expected!("içeriyormu".to_string(), 1),
             1 => {
                 match &*parameter.iter().next().unwrap().deref() {
                     KaramelPrimative::Text(search) =>  Ok(VmObject::from(dict.borrow().contains_key(&**search))),
-                    _ => expected_parameter_type!("içeriyormu", "Yazı")
+                    _ => expected_parameter_type!("içeriyormu".to_string(), "Yazı".to_string())
                 }
             },
-            _ => n_parameter_expected!("içeriyormu".to_string().to_string(), 1, parameter.length())
+            _ => n_parameter_expected!("içeriyormu".to_string(), 1, parameter.length())
         };
     }
     Ok(EMPTY_OBJECT)

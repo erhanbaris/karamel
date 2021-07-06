@@ -2,6 +2,7 @@ use crate::compiler::{EMPTY_OBJECT, function::{FunctionParameter, FunctionRefere
 use crate::types::VmObject;
 use crate::buildin::{Module, Class};
 use crate::compiler::GetType;
+use crate::error::KaramelErrorType;
 use crate::{n_parameter_expected};
 use std::{cell::RefCell, collections::HashMap};
 use std::rc::Rc;
@@ -62,7 +63,7 @@ impl BaseFunctionsModule  {
 
     pub fn type_info(parameter: FunctionParameter) -> NativeCallResult {        
         if parameter.length() > 1 {
-            return n_parameter_expected!("tür_bilgisi", 1);
+            return n_parameter_expected!("tür_bilgisi".to_string(), 1);
         }
 
         match parameter.iter().next() {

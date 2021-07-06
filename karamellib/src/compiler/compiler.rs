@@ -70,11 +70,11 @@ impl InterpreterCompiler {
         context.opcodes.push(0_u8);
     }
 
-    pub fn detect_modules(&self, main_ast: Rc<KaramelAstType>, context: &mut KaramelCompilerContext) -> Result<Vec<Rc<OpcodeModule>>, String> {
+    pub fn detect_modules(&self, main_ast: Rc<KaramelAstType>, context: &mut KaramelCompilerContext) -> Result<Vec<Rc<OpcodeModule>>, KaramelErrorType> {
         Ok(get_modules(main_ast.clone(), context)?)
     }
 
-    pub fn prepare_main_module(&self, main_ast: Rc<KaramelAstType>, context: &mut KaramelCompilerContext) -> Result<Rc<OpcodeModule>, String> {
+    pub fn prepare_main_module(&self, main_ast: Rc<KaramelAstType>, context: &mut KaramelCompilerContext) -> Result<Rc<OpcodeModule>, KaramelErrorType> {
         let module = OpcodeModule::new("!baz".to_string(), String::new(), main_ast.clone());
         let module = Rc::new(module);
         context.main_module = module.as_ref() as *const OpcodeModule as *mut OpcodeModule;
@@ -84,13 +84,13 @@ impl InterpreterCompiler {
         Ok(module.clone())
     }
     
-    pub fn check_prohibited_names<T: Borrow<String>>(&self, variable: T) -> Result<(), String> {
+    pub fn check_prohibited_names<T: Borrow<String>>(&self, variable: T) -> Result<(), KaramelErrorType> {
         if KEYWORDS.iter().any(|(key, _)| variable.borrow() == *key) {
-            return Err(format!("'{}' anahtar kelimesi kullanılamaz", variable.borrow()));
+            return Err(KaramelErrorType::ReservedName(variable.borrow().to_string()));
         }
 
         if PRIMATIVE_CLASS_NAMES.lock().unwrap().contains(variable.borrow()) {
-            return Err(format!("'{}' temel sınıf kelimesi kullanılamaz", variable.borrow()));
+            return Err(KaramelErrorType::ReservedName(variable.borrow().to_string()));
         }
         
         Ok(())   
@@ -121,7 +121,7 @@ impl InterpreterCompiler {
                         self.get_function_definations(module.clone(), body.clone(), functions, context, reference.storage_index)?;
                     },
 
-                    None => return Err(format!("'{}' fonksiyonu bulunamadı", name))
+                    None => return Err(KaramelErrorType::FunctionNotFound(name.to_string()))
                 };
             },
             KaramelAstType::Block(blocks) => {
@@ -200,7 +200,7 @@ impl InterpreterCompiler {
                 context.opcodes.push(index as u8);
                 Ok(())
             },
-            _ => Err("Value not found in storage".to_string())
+            _ => Err(KaramelErrorType::ValueNotFoundInStorage)
         }
     }
 
@@ -217,18 +217,21 @@ impl InterpreterCompiler {
             Ok(content) => {
                 let mut parser = Parser::new(&content);
                 match parser.parse() {
-                    Err(error) => return Err(generate_error_message(&content, &error)),
+                    Err(error) => return Err(KaramelErrorType::from(error)),
                     _ => ()
                 };
     
                 let syntax = SyntaxParser::new(parser.tokens().to_vec());
                 match syntax.parse() {
                     Ok(ast) => ast,
-                    Err(error) => return Err(generate_error_message(&content, &error))
+                    Err(error) => return Err(KaramelErrorType::from(error))
                 };
                 Ok(())
             },
-            Err(error) => Err(format!("Modül okuma sırasında hata ile karşılaşıldı. Hata  {:?}", error))
+            Err(error) => Err(KaramelErrorType::ModuleParseError{
+                name: "<Bilinmeyen>".to_string(),
+                error: error.to_string()
+            })
         }
     }
 
@@ -238,7 +241,7 @@ impl InterpreterCompiler {
         let name = params[params.len() - 1].to_string();
         let module_path = params[0..(params.len() - 1)].to_vec();
 
-        let function_search = context.get_function(name, &module_path, storage_index);
+        let function_search = context.get_function(&name, &module_path, storage_index);
         match function_search {
             Some(reference) => {
                 let result = storage.get_constant_location(Rc::new(KaramelPrimative::Function(reference, None)));
@@ -248,10 +251,10 @@ impl InterpreterCompiler {
                         context.opcodes.push(index as u8);
                         Ok(())
                     },
-                    _ => Err("Function not found in storage".to_string())
+                    _ => Err(KaramelErrorType::FunctionNotFoundInStorage(name.to_string()))
                 }
             },
-            None => Err("Function not found in storage".to_string())
+            None => Err(KaramelErrorType::FunctionNotFoundInStorage(name.to_string()))
         }
     }
 
@@ -265,7 +268,7 @@ impl InterpreterCompiler {
                 context.opcodes.push(index as u8);
                 Ok(())
             },
-            _ => Err("Value not found in storage".to_string())
+            _ => Err(KaramelErrorType::ValueNotFoundInStorage)
         }
     }
 
@@ -288,12 +291,12 @@ impl InterpreterCompiler {
         Ok(())
     }
 
-    fn generate_func_call_by_name(&self, name :&String, module_path: &Vec<String>, arguments: &Vec<Box<KaramelAstType>>, assign_to_temp: bool, context: &mut KaramelCompilerContext, storage_index: usize) -> Result<bool, String> {
+    fn generate_func_call_by_name(&self, name :&String, module_path: &Vec<String>, arguments: &Vec<Box<KaramelAstType>>, assign_to_temp: bool, context: &mut KaramelCompilerContext, storage_index: usize) -> Result<bool, KaramelErrorType> {
         let function_search = context.get_function(name.to_string(), module_path, storage_index);
 
         match function_search {
             Some(function_ref) => {
-                let search_location = context.storages[storage_index].get_constant_location(Rc::new(KaramelPrimative::Function(function_ref, None)));
+                let search_location = context.storages[storage_index].get_constant_location(Rc::new(KaramelPrimative::Function(function_ref.clone(), None)));
                 match search_location {
                     Some(location) => {
                         context.opcodes.push(VmOpCode::Call as u8);
@@ -302,7 +305,7 @@ impl InterpreterCompiler {
                         context.opcodes.push(assign_to_temp as u8);
                         return Ok(true);
                     },
-                    _ => return Err("Function not found".to_string())
+                    _ => return Err(KaramelErrorType::FunctionNotFound(function_ref.name.to_string()))
                 }
             },
             _ => ()
@@ -353,7 +356,7 @@ impl InterpreterCompiler {
                             context.opcodes.push(assign_to_temp as u8);*/
                             return Ok(());
                         },
-                        _ => return Err("Function not found".to_string())
+                        _ => return Err(KaramelErrorType::FunctionNotFound(function_name.to_string()))
                     }
                 },
                 
@@ -365,12 +368,12 @@ impl InterpreterCompiler {
                     return self.generate_func_call(module.clone(), func_name_expression, arguments, true, upper_ast, context, storage_index);
                 },
                 _ => {
-                    return Err("Function not found".to_string());
+                    return Err(KaramelErrorType::FunctionNotFound("<Bilinmeyen>".to_string()));
                 }
             }   
         }
         else {
-            return Err("Function not found".to_string());
+            return Err(KaramelErrorType::FunctionNotFound("<Bilinmeyen>".to_string()));
         }
     }
 
@@ -387,7 +390,7 @@ impl InterpreterCompiler {
                     true => return Ok(()),
                     false => {
                         log::debug!("{:?}", function_name);
-                        return Err("Function not found".to_string());
+                        return Err(KaramelErrorType::FunctionNotFound(function_name.to_string()));
                     }
                 }
             },
@@ -405,7 +408,7 @@ impl InterpreterCompiler {
                 let result = self.generate_func_call_by_name(&names[names.len() - 1].to_string(), &names[0..(names.len()-1)].to_vec(), &arguments, assign_to_temp, context, storage_index)?;
                 match result {
                     true => return Ok(()),
-                    false =>  return Err("Function not found".to_string())
+                    false =>  return Err(KaramelErrorType::FunctionNotFound(names[names.len() - 1].to_string()))
                 }
             },
             _ => {
@@ -547,7 +550,7 @@ impl InterpreterCompiler {
                 Ok(())
             },
             /* Variable not found, lets check for function */
-            None => return Err("Value not found in storage".to_string())
+            None => return Err(KaramelErrorType::ValueNotFoundInStorage)
         }
     }
 
@@ -589,7 +592,7 @@ impl InterpreterCompiler {
                         let result = storage.get_constant_location(primative.clone());
                         let primative_location = match result {
                             Some(index) => index as u8,
-                            _ => return Err("Value not found in storage".to_string())
+                            _ => return Err(KaramelErrorType::ValueNotFoundInStorage)
                         };
 
                         context.opcodes.push(VmOpCode::FastStore as u8);
@@ -663,7 +666,7 @@ impl InterpreterCompiler {
         if let KaramelAstType::Symbol(variable) = expression {
             let location = match context.storages.get_mut(storage_index).unwrap().get_variable_location(variable) {
                 Some(location) => location,
-                _ => return Err("Variable not found in storage".to_string())
+                _ => return Err(KaramelErrorType::ValueNotFoundInStorage)
             };
 
             /* Load data from memory */
@@ -673,7 +676,7 @@ impl InterpreterCompiler {
             let opcode = match operator {
                 KaramelOperatorType::Increment  => VmOpCode::Increment as u8,
                 KaramelOperatorType::Deccrement => VmOpCode::Decrement as u8,
-                _ => return Err("Unary operator not found".to_string())
+                _ => return Err(KaramelErrorType::UnaryOperatorNotFound)
             };
     
             context.opcodes.push(opcode);
@@ -682,7 +685,7 @@ impl InterpreterCompiler {
             return Ok(());
         }
 
-        Err("Unary expression not valid".to_string())
+        Err(KaramelErrorType::UnaryExpressionNotValid)
     }
 
     fn generate_not(&self, module: Rc<OpcodeModule>, expression: &KaramelAstType, context: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult { 
@@ -792,7 +795,7 @@ impl InterpreterCompiler {
         if let KaramelAstType::Symbol(variable) = expression {
             let location = match context.storages.get_mut(storage_index).unwrap().get_variable_location(variable) {
                 Some(location) => location,
-                _ => return Err("Variable not found in storage".to_string())
+                _ => return Err(KaramelErrorType::ValueNotFoundInStorage)
             };
 
             context.opcodes.push(VmOpCode::Load as u8);
@@ -803,7 +806,7 @@ impl InterpreterCompiler {
                 KaramelOperatorType::Increment  => VmOpCode::Increment as u8,
                 KaramelOperatorType::Deccrement => VmOpCode::Decrement as u8,
                 KaramelOperatorType::Not        => VmOpCode::Not as u8,
-                _ => return Err("Unary operator not found".to_string())
+                _ => return Err(KaramelErrorType::UnaryOperatorNotFound)
             };
     
             context.opcodes.push(opcode);
@@ -812,7 +815,7 @@ impl InterpreterCompiler {
             return Ok(());
         }
 
-        Err("Unary expression not valid".to_string())
+        Err(KaramelErrorType::UnaryExpressionNotValid)
     }
 
     fn generate_block(&self, module: Rc<OpcodeModule>, asts: &[Rc<KaramelAstType>], upper_ast: &KaramelAstType, context: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult {
@@ -836,9 +839,10 @@ mod tests {
     use super::module::{OpcodeModule};
 
     use super::storage_builder::StorageBuilderOption;
+    use crate::error::KaramelErrorType;
 
     #[test]
-    fn test_1() -> Result<(), String> {
+    fn test_1() -> Result<(), KaramelErrorType> {
         let mut context = KaramelCompilerContext::new();
         let compiler = InterpreterCompiler {};
         let storage_builder: StorageBuilder = StorageBuilder::new();
@@ -856,7 +860,7 @@ mod tests {
     }
 
     #[test]
-    fn test_2() -> Result<(), String> {
+    fn test_2() -> Result<(), KaramelErrorType> {
         let mut context = KaramelCompilerContext::new();
         let compiler = InterpreterCompiler {};
         let storage_builder: StorageBuilder = StorageBuilder::new();
@@ -872,13 +876,13 @@ mod tests {
         let result = compiler.generate_functions(module.clone(), &mut functions, &mut context);
 
         match result {
-            Ok(_) => Err("yazı geçerli bir fonksiyon ismi değil".to_string()),
+            Ok(_) => Err(KaramelErrorType::GeneralError("yazı geçerli bir fonksiyon ismi değil".to_string())),
             Err(_) => Ok(())
         }
     }
 
     #[test]
-    fn test_3() -> Result<(), String> {
+    fn test_3() -> Result<(), KaramelErrorType> {
         let mut context = KaramelCompilerContext::new();
         let compiler = InterpreterCompiler {};
         let storage_builder: StorageBuilder = StorageBuilder::new();
@@ -894,13 +898,13 @@ mod tests {
         let result = compiler.generate_functions(module.clone(), &mut functions, &mut context);
 
         match result {
-            Ok(_) => Err("yazı geçerli bir fonksiyon ismi değil".to_string()),
+            Ok(_) => Err(KaramelErrorType::GeneralError("yazı geçerli bir fonksiyon ismi değil".to_string())),
             Err(_) => Ok(())
         }
     }
 
     #[test]
-    fn test_4() -> Result<(), String> {
+    fn test_4() -> Result<(), KaramelErrorType> {
         let mut context = KaramelCompilerContext::new();
         let compiler = InterpreterCompiler {};
         let storage_builder: StorageBuilder = StorageBuilder::new();
@@ -916,13 +920,13 @@ mod tests {
         let result = compiler.generate_functions(module.clone(), &mut functions, &mut context);
 
         match result {
-            Ok(_) => Err("sayı geçerli bir fonksiyon ismi değil".to_string()),
+            Ok(_) => Err(KaramelErrorType::GeneralError("sayı geçerli bir fonksiyon ismi değil".to_string())),
             Err(_) => Ok(())
         }
     }
 
     #[test]
-    fn test_5() -> Result<(), String> {
+    fn test_5() -> Result<(), KaramelErrorType> {
         
         let mut context = KaramelCompilerContext::new();
         let compiler = InterpreterCompiler {};
@@ -941,7 +945,7 @@ mod tests {
     }
 
     #[test]
-    fn test_6() -> Result<(), String> {
+    fn test_6() -> Result<(), KaramelErrorType> {
         let mut context = KaramelCompilerContext::new();
         let compiler = InterpreterCompiler {};
         let storage_builder: StorageBuilder = StorageBuilder::new();
@@ -957,13 +961,13 @@ mod tests {
         let result = compiler.generate_functions(module.clone(), &mut functions, &mut context);
 
         match result {
-            Ok(_) => Err("sayı geçerli bir fonksiyon parametresi değil".to_string()),
+            Ok(_) => Err(KaramelErrorType::GeneralError("sayı geçerli bir fonksiyon parametresi değil".to_string())),
             Err(_) => Ok(())
         }
     }
 
     #[test]
-    fn test_7() -> Result<(), String> {
+    fn test_7() -> Result<(), KaramelErrorType> {
         let mut context = KaramelCompilerContext::new();
         let compiler = InterpreterCompiler {};
         let storage_builder: StorageBuilder = StorageBuilder::new();
@@ -979,41 +983,41 @@ mod tests {
         let result = compiler.generate_functions(module.clone(), &mut functions, &mut context);
 
         match result {
-            Ok(_) => Err("döndür geçerli bir fonksiyon parametresi değil".to_string()),
+            Ok(_) => Err(KaramelErrorType::GeneralError("döndür geçerli bir fonksiyon parametresi değil".to_string())),
             Err(_) => Ok(())
         }
     }
 
     #[test]
-    fn test_8() -> Result<(), String> {
+    fn test_8() -> Result<(), KaramelErrorType> {
         let compiler = InterpreterCompiler {};
         KaramelCompilerContext::new();
         compiler.check_prohibited_names("test".to_string())
     }
 
     #[test]
-    fn test_9() -> Result<(), String> {
+    fn test_9() -> Result<(), KaramelErrorType> {
         let compiler = InterpreterCompiler {};
         KaramelCompilerContext::new();
         compiler.check_prohibited_names("abc".to_string())
     }
 
     #[test]
-    fn test_10() -> Result<(), String> {
+    fn test_10() -> Result<(), KaramelErrorType> {
         let compiler = InterpreterCompiler {};
         KaramelCompilerContext::new();
         match compiler.check_prohibited_names("sayı".to_string()) {
-            Ok(_) => Err("sayı tipi kullanılamaz".to_string()),
+            Ok(_) => Err(KaramelErrorType::GeneralError("sayı tipi kullanılamaz".to_string())),
             _ => Ok(())
         }
     }
 
     #[test]
-    fn test_11() -> Result<(), String> {
+    fn test_11() -> Result<(), KaramelErrorType> {
         let compiler = InterpreterCompiler {};
         KaramelCompilerContext::new();
         match compiler.check_prohibited_names("döndür".to_string()) {
-            Ok(_) => Err("sayı tipi kullanılamaz".to_string()),
+            Ok(_) => Err(KaramelErrorType::GeneralError("sayı tipi kullanılamaz".to_string())),
             _ => Ok(())
         }
     }

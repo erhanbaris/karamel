@@ -34,6 +34,10 @@ unsafe impl Sync for KaramelPrimative {}
 unsafe impl Send for VmObject {}
 unsafe impl Sync for VmObject {}
 
+impl Default for KaramelPrimative {
+    fn default() -> Self { KaramelPrimative::Empty }
+}
+
 impl KaramelPrimative {
 
     pub fn format(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

@@ -26,11 +26,11 @@ pub fn is_ast_empty(ast: &AstResult) -> bool {
     }
 }
 
-pub fn err_or_message(ast: &AstResult, error: KaramelErrorType) -> AstResult {
-    match &ast {
-        Ok(KaramelAstType::None) => Err(error),
+pub fn err_or_message(ast: AstResult, none_error: KaramelErrorType) -> AstResult {
+    match ast {
+        Ok(KaramelAstType::None) => Err(none_error),
         Ok(_) => Ok(KaramelAstType::None),
-        Err(error) => Err(*error)
+        Err(error) => Err(error)
     }
 }
 

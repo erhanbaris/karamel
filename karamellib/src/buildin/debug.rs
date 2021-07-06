@@ -2,6 +2,7 @@ use crate::buildin::{Module, Class};
 use crate::compiler::function::{FunctionReference, NativeCall, NativeCallResult};
 use crate::compiler::function::FunctionParameter;
 use crate::compiler::value::EMPTY_OBJECT;
+use crate::error::KaramelErrorType;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -60,7 +61,7 @@ impl DebugModule  {
         match parameter.length() {
             1 => {
                 match parameter.iter().next().unwrap().deref().is_true() {
-                    false => Err("Doğrulama başarısız".to_string()),
+                    false => Err(KaramelErrorType::AssertFailed),
                     true  => Ok(EMPTY_OBJECT)
                 }
             },
@@ -69,11 +70,14 @@ impl DebugModule  {
                 let left = iter.next().unwrap().deref();
                 let right = iter.next().unwrap().deref();
                 match left == right {
-                    false => Err(format!("Doğrulama başarısız (Sol: {:?}, sağ: {:?})", left, right)),
+                    false => Err(KaramelErrorType::AssertFailedWithArgument {
+                        left: left.clone(),
+                        right: right.clone()
+                    }),
                     true  => Ok(EMPTY_OBJECT)
                 }
             },
-            _ => Err("Doğrulama başarısız".to_string())
+            _ => Err(KaramelErrorType::AssertFailed)
         }
     }
 }

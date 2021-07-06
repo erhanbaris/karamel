@@ -1,6 +1,5 @@
 use std::borrow::Borrow;
 use std::cell::RefCell;
-use std::rc::Rc;
 
 use crate::compiler::context::{ExecutionPathInfo, KaramelCompilerContext};
 use crate::file::read_module_or_script;

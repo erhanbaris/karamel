@@ -216,9 +216,9 @@ impl FunctionReference {
 
             if argument_size != *options.opcodes_ptr {
                 return Err(KaramelErrorType::FunctionArgumentNotMatching {
-                    Function: reference.name,
-                    Expected: argument_size, 
-                    Found: *options.opcodes_ptr
+                    function: reference.name.to_string(),
+                    expected: argument_size, 
+                    found: *options.opcodes_ptr
                 });
             }
 

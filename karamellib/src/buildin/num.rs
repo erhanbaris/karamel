@@ -2,6 +2,7 @@ use crate::compiler::{function::{FunctionParameter, FunctionReference, NativeCal
 use crate::types::VmObject;
 use crate::compiler::value::KaramelPrimative;
 use crate::compiler::value::EMPTY_OBJECT;
+use crate::error::KaramelErrorType;
 use crate::buildin::{Module, Class};
 use crate::{n_parameter_expected, expected_parameter_type};
 use std::{cell::RefCell, collections::HashMap};
@@ -61,7 +62,7 @@ impl NumModule {
 
     pub fn parse(parameter: FunctionParameter) -> NativeCallResult {
         if parameter.length() > 1 {
-            return n_parameter_expected!("oku", 1);
+            return n_parameter_expected!("oku".to_string(), 1);
         }
 
         let arg = match parameter.iter().next() {
@@ -74,7 +75,7 @@ impl NumModule {
             KaramelPrimative::Text(text) => {
                 match (*text).parse::<f64>() {
                     Ok(num) => Ok(VmObject::from(num)),
-                    _ => expected_parameter_type!("oku", "Yazı")
+                    _ => expected_parameter_type!("oku".to_string(), "Yazı".to_string())
                 }
             },
             _ => Ok(EMPTY_OBJECT)

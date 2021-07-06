@@ -93,7 +93,7 @@ impl StorageBuilder {
                 let name = params[params.len() - 1].to_string();
                 let module_path = params[0..(params.len() - 1)].to_vec();
 
-                let function_search = options.get_function(name, &module_path, storage_index);
+                let function_search = options.get_function(&name, &module_path, storage_index);
                 match function_search {
                     Some(reference) => options.storages.get_mut(storage_index).unwrap().add_constant(Rc::new(KaramelPrimative::Function(reference, None))),
                     None => return Err(KaramelErrorType::FunctionNotFound(name.to_string()))

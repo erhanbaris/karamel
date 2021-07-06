@@ -63,7 +63,7 @@ impl PrimativeParser {
 
                 let ast = ExpressionParser::parse(parser);
                 if is_ast_empty(&ast) {
-                    return err_or_message(&ast, KaramelErrorType::InvalidListItem);
+                    return err_or_message(ast, KaramelErrorType::InvalidListItem);
                 }
                 
                 ast_vec.push(Box::new(ast.unwrap()));
@@ -100,7 +100,7 @@ impl PrimativeParser {
 
                 let key_ast = Self::parse_basic_primatives(parser);
                 if is_ast_empty(&key_ast) {
-                    return err_or_message(&key_ast, KaramelErrorType::DictionaryKeyNotValid);
+                    return err_or_message(key_ast, KaramelErrorType::DictionaryKeyNotValid);
                 }
                 
                 /* Check dictionary key */
@@ -125,7 +125,7 @@ impl PrimativeParser {
                 parser.cleanup();
                 let value = ExpressionParser::parse(parser);
                 if is_ast_empty(&value) {
-                    return err_or_message(&value, KaramelErrorType::DictionaryValueNotValid);
+                    return err_or_message(value, KaramelErrorType::DictionaryValueNotValid);
                 }
   
                 dict_items.push(Box::new(KaramelDictItem {
@@ -215,7 +215,7 @@ impl PrimativeParser {
             
             let ast = ExpressionParser::parse(parser);
             if is_ast_empty(&ast) {
-                return err_or_message(&ast, KaramelErrorType::InvalidExpression);
+                return err_or_message(ast, KaramelErrorType::InvalidExpression);
             }
 
             if parser.match_operator(&[KaramelOperatorType::RightParentheses]).is_none() {

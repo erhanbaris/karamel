@@ -1,5 +1,6 @@
 use crate::compiler::context::KaramelCompilerContext;
 use crate::compiler::scope::Scope;
+use crate::error::KaramelErrorType;
 use crate::{pop, inc_memory_index, dec_memory_index, get_memory_index};
 use crate::types::{VmObject};
 use crate::compiler::*;
@@ -127,7 +128,7 @@ pub unsafe fn dump_opcode<W: Write>(index: usize, options: &mut KaramelCompilerC
     }
 }
 
-pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObject>, String>
+pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObject>, KaramelErrorType>
 {
     #[cfg(all(feature = "liveOpcodeView"))]
     let mut log_update = LogUpdate::new(stdout()).unwrap();
@@ -345,21 +346,23 @@ pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObjec
                     let func_location   = *context.opcodes_ptr.offset(1) as usize;
                     context.opcodes_ptr = context.opcodes_ptr.offset(1);
                     
-                    if let KaramelPrimative::Function(reference, _) = &(*(*context.current_scope).memory_ptr.offset(func_location as isize)).deref_clean() {
+                    let value = (*(*context.current_scope).memory_ptr.offset(func_location as isize)).deref();
+                    if let KaramelPrimative::Function(reference, _) = &*value {
                         reference.execute(context, None)?;
                     }
                     else {
-                        return Err("Not callable".to_string());
+                        return Err(KaramelErrorType::NotCallable(value.clone()));
                     }
                 },
 
                 VmOpCode::CallStack => {
                     let function = pop_raw!(context);
-                    match &*function.deref() {
+                    let value =  function.deref();
+                    match &*value {
                         KaramelPrimative::Function(reference, base) => reference.execute(context, *base)?,
                         _ => {
                             log::debug!("{:?} not callable", &*function.deref());
-                        return Err("Not callable".to_string());
+                        return Err(KaramelErrorType::NotCallable(value.clone()));
                         }
                     };
                 },
@@ -458,7 +461,7 @@ pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObjec
                         KaramelPrimative::List(value) => {
                             let indexer_value = match &*indexer {
                                 KaramelPrimative::Number(number) => *number as usize,
-                                _ => return Err("Indexer must be number".to_string())
+                                _ => return Err(KaramelErrorType::IndexerMustBeNumber(indexer.clone()))
                             };
 
                             value.borrow_mut()[indexer_value] = assign_item;
@@ -466,7 +469,7 @@ pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObjec
                         KaramelPrimative::Dict(value) => {
                             let indexer_value = match &*indexer {
                                 KaramelPrimative::Text(text) => &*text,
-                                _ => return Err("Indexer must be string".to_string())
+                                _ => return Err(KaramelErrorType::IndexerMustBeString(indexer.clone()))
                             };
 
                             value.borrow_mut().insert(indexer_value.to_string(), assign_item);
@@ -474,7 +477,7 @@ pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObjec
                         KaramelPrimative::Text(_) => {
                             let indexer_value = match &*indexer {
                                 KaramelPrimative::Number(number) => *number,
-                                _ => return Err("Indexer must be number".to_string())
+                                _ => return Err(KaramelErrorType::IndexerMustBeNumber(indexer.clone()))
                             };
 
                             match context.get_class(&object).get_setter() {

@@ -6,6 +6,7 @@ use crate::types::VmObject;
 use crate::{n_parameter_expected, expected_parameter_type, arc_text};
 use crate::primative_text;
 use crate::buildin::class::PRIMATIVE_CLASS_NAMES;
+use crate::error::KaramelErrorType;
 
 use unicode_width::UnicodeWidthStr;
 use std::{cell::RefCell, rc::Rc};
@@ -132,11 +133,11 @@ fn number(parameter: FunctionParameter) -> NativeCallResult {
 fn contains(parameter: FunctionParameter) -> NativeCallResult {
     if let KaramelPrimative::Text(text) = &*parameter.source().unwrap().deref() {
         return match parameter.length() {
-            0 =>  n_parameter_expected!("içeriyormu", 1),
+            0 =>  n_parameter_expected!("içeriyormu".to_string(), 1),
             1 => {
                 match &*parameter.iter().next().unwrap().deref() {
                     KaramelPrimative::Text(search) =>  Ok(VmObject::from(text.contains(&search[..]))),
-                    _ => expected_parameter_type!("içeriyormu", "Yazı")
+                    _ => expected_parameter_type!("içeriyormu".to_string(), "Yazı".to_string())
                 }
             },
             _ => n_parameter_expected!("içeriyormu".to_string(), 1, parameter.length())
@@ -197,7 +198,7 @@ fn lines(parameter: FunctionParameter) -> NativeCallResult {
 fn split(parameter: FunctionParameter) -> NativeCallResult {
     if let KaramelPrimative::Text(text) = &*parameter.source().unwrap().deref() {
         return match parameter.length() {
-            0 =>  n_parameter_expected!("parçala", 1),
+            0 =>  n_parameter_expected!("parçala".to_string(), 1),
             1 => {
                 match &*parameter.iter().next().unwrap().deref() {
                     KaramelPrimative::Text(search) =>  {
@@ -209,7 +210,7 @@ fn split(parameter: FunctionParameter) -> NativeCallResult {
                         }
                         return Ok(VmObject::native_convert(KaramelPrimative::List(RefCell::new(lines))));
                     },
-                    _ => expected_parameter_type!("parçala", "Yazı")
+                    _ => expected_parameter_type!("parçala".to_string(), "Yazı".to_string())
                 }
             },
             _ => n_parameter_expected!("parçala".to_string(), 1, parameter.length())
@@ -221,7 +222,7 @@ fn split(parameter: FunctionParameter) -> NativeCallResult {
 fn find(parameter: FunctionParameter) -> NativeCallResult {
     if let KaramelPrimative::Text(text) = &*parameter.source().unwrap().deref() {
         return match parameter.length() {
-            0 =>  n_parameter_expected!("parçala", 1),
+            0 =>  n_parameter_expected!("parçala".to_string(), 1),
             1 => {
                 match &*parameter.iter().next().unwrap().deref() {
                     KaramelPrimative::Text(search) =>  {
@@ -230,7 +231,7 @@ fn find(parameter: FunctionParameter) -> NativeCallResult {
                             _ => Ok(EMPTY_OBJECT)
                         }
                     },
-                    _ => expected_parameter_type!("parçala", "Yazı")
+                    _ => expected_parameter_type!("parçala".to_string(), "Yazı".to_string())
                 }
             },
             _ => n_parameter_expected!("parçala".to_string(), 1, parameter.length())
@@ -242,16 +243,16 @@ fn find(parameter: FunctionParameter) -> NativeCallResult {
 fn replace(parameter: FunctionParameter) -> NativeCallResult {
     if let KaramelPrimative::Text(text) = &*parameter.source().unwrap().deref() {
         return match parameter.length() {
-            0 =>  n_parameter_expected!("değiştir", 2),
+            0 =>  n_parameter_expected!("değiştir".to_string(), 2),
             2 => {
                 let mut iter = parameter.iter();
                 let (from, to) = (&*iter.next().unwrap().deref(), &*iter.next().unwrap().deref());
                 match (&*from, &*to) {
                     (KaramelPrimative::Text(from), KaramelPrimative::Text(to)) => Ok(VmObject::native_convert(KaramelPrimative::Text(Rc::new(text.replace(&**from, &**to))))),
-                    _ => expected_parameter_type!("değiştir", "Yazı")
+                    _ => expected_parameter_type!("değiştir".to_string(), "Yazı".to_string())
                 }
             },
-            _ => n_parameter_expected!("değiştir", 2, parameter.length())
+            _ => n_parameter_expected!("değiştir".to_string(), 2, parameter.length())
         };
     }
     Ok(EMPTY_OBJECT)
@@ -281,7 +282,7 @@ fn start_trim(parameter: FunctionParameter) -> NativeCallResult {
 fn substring(parameter: FunctionParameter) -> NativeCallResult {
     if let KaramelPrimative::Text(text) = &*parameter.source().unwrap().deref() {
         return match parameter.length() {
-            0 =>  n_parameter_expected!("parçagetir", 2),
+            0 =>  n_parameter_expected!("parçagetir".to_string(), 2),
             2 => {
                 let mut iter = parameter.iter();
                 let (from, to) = (&*iter.next().unwrap().deref(), &*iter.next().unwrap().deref());
@@ -300,10 +301,10 @@ fn substring(parameter: FunctionParameter) -> NativeCallResult {
                         };
                         Ok(VmObject::native_convert(primative_text!(text.get(start_size..end_size).unwrap_or(""))))
                     },
-                    _ => expected_parameter_type!("parçagetir", "Sayı")
+                    _ => expected_parameter_type!("parçagetir".to_string(), "Sayı".to_string())
                 }
             },
-            _ => n_parameter_expected!("parçagetir", 2, parameter.length())
+            _ => n_parameter_expected!("parçagetir".to_string(), 2, parameter.length())
         };
     }
     Ok(EMPTY_OBJECT)

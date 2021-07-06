@@ -4,6 +4,7 @@ use crate::{buildin::Class, compiler::function::{FunctionParameter, NativeCallRe
 use crate::compiler::value::EMPTY_OBJECT;
 use crate::buildin::class::baseclass::BasicInnerClass;
 use crate::compiler::value::KaramelPrimative;
+use crate::error::KaramelErrorType;
 use crate::types::VmObject;
 use crate::{n_parameter_expected, expected_parameter_type, arc_bool, arc_empty};
 use crate::buildin::class::PRIMATIVE_CLASS_NAMES;
@@ -31,11 +32,11 @@ pub fn get_primative_class() -> Rc<dyn Class> {
 fn get(parameter: FunctionParameter) -> NativeCallResult {
     if let KaramelPrimative::List(list) = &*parameter.source().unwrap().deref() {
         return match parameter.length() {
-            0 =>  n_parameter_expected!("getir", 1),
+            0 =>  n_parameter_expected!("getir".to_string(), 1),
             1 => {
                 let position = match &*parameter.iter().next().unwrap().deref() {
                     KaramelPrimative::Number(number) => *number as usize,
-                    _ => return expected_parameter_type!("sıra", "Sayı")
+                    _ => return expected_parameter_type!("sıra".to_string(), "Sayı".to_string())
                 };
                 
                 return match list.borrow().get(position) {
@@ -52,14 +53,14 @@ fn get(parameter: FunctionParameter) -> NativeCallResult {
 fn set(parameter: FunctionParameter) -> NativeCallResult {
     if let KaramelPrimative::List(list) = &*parameter.source().unwrap().deref() {
         return match parameter.length() {
-            0 =>  n_parameter_expected!("güncelle", 2),
+            0 =>  n_parameter_expected!("güncelle".to_string(), 2),
             2 => {
                 let mut iter = parameter.iter();
                 let (position_object, item) = (&*iter.next().unwrap().deref(), &*iter.next().unwrap());
 
                 let position = match position_object {
                     KaramelPrimative::Number(number) => *number,
-                    _ => return expected_parameter_type!("güncelle", "Sayı")
+                    _ => return expected_parameter_type!("güncelle".to_string(), "Sayı".to_string())
                 };
 
                 let is_in_size = position <= list.borrow().len() as f64;
@@ -71,7 +72,7 @@ fn set(parameter: FunctionParameter) -> NativeCallResult {
                     false => Ok(arc_bool!(false))
                 };
             },
-            _ => n_parameter_expected!("güncelle", 2, parameter.length())
+            _ => n_parameter_expected!("güncelle".to_string(), 2, parameter.length())
         };
     }
     Ok(EMPTY_OBJECT)
@@ -135,7 +136,7 @@ fn clear(parameter: FunctionParameter) -> NativeCallResult {
 pub fn add(parameter: FunctionParameter) -> NativeCallResult {
     if let KaramelPrimative::List(list) = &*parameter.source().unwrap().deref() {
         return match parameter.length() {
-            0 =>  n_parameter_expected!("ekle", 1),
+            0 =>  n_parameter_expected!("ekle".to_string(), 1),
             1 => {
                 let length = list.borrow().len() as f64;
                 list.borrow_mut().push(*parameter.iter().next().unwrap());
@@ -150,14 +151,14 @@ pub fn add(parameter: FunctionParameter) -> NativeCallResult {
 pub fn insert(parameter: FunctionParameter) -> NativeCallResult {
     if let KaramelPrimative::List(list) = &*parameter.source().unwrap().deref() {
         match parameter.length() {
-            0 => return n_parameter_expected!("arayaekle", 1),
+            0 => return n_parameter_expected!("arayaekle".to_string(), 1),
             2 => {
                 let mut iter = parameter.iter();
                 let (position_object, item) = (&*iter.next().unwrap().deref(), &*iter.next().unwrap());
 
                 let position = match position_object {
                     KaramelPrimative::Number(number) => *number,
-                    _ => return expected_parameter_type!("arayaekle", "Sayı")
+                    _ => return expected_parameter_type!("arayaekle".to_string(), "Sayı".to_string())
                 };
 
                 let is_in_size = position <= list.borrow().len() as f64;
@@ -169,7 +170,7 @@ pub fn insert(parameter: FunctionParameter) -> NativeCallResult {
                     false => Ok(arc_bool!(false))
                 };
             },
-            _ => return n_parameter_expected!("arayaekle", 2, parameter.length())
+            _ => return n_parameter_expected!("arayaekle".to_string(), 2, parameter.length())
         };
     }
     Ok(EMPTY_OBJECT)
@@ -178,11 +179,11 @@ pub fn insert(parameter: FunctionParameter) -> NativeCallResult {
 fn remove(parameter: FunctionParameter) -> NativeCallResult {
     if let KaramelPrimative::List(list) = &*parameter.source().unwrap().deref() {
         match parameter.length() {
-            0 => return n_parameter_expected!("sil", 1),
+            0 => return n_parameter_expected!("sil".to_string(), 1),
             1 => {
                 let position = match &*parameter.iter().next().unwrap().deref() {
                     KaramelPrimative::Number(number) => *number as usize,
-                    _ => return expected_parameter_type!("sıra", "Sayı")
+                    _ => return expected_parameter_type!("sıra".to_string(), "Sayı".to_string())
                 };
                 
                 let is_in_size = position <= list.borrow().len();

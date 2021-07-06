@@ -1,3 +1,4 @@
+use std::borrow::Borrow;
 use std::{cell::RefCell, ptr, rc::Rc};
 use crate::buildin::num::{NumModule};
 
@@ -95,18 +96,18 @@ impl  KaramelCompilerContext {
         self.classes.push(class_info.clone());
     }
 
-    pub fn get_function(&self, name: String, module_path: &Vec<String>, start_storage_index: usize) -> Option<Rc<FunctionReference>> {
+    pub fn get_function<T: Borrow<String>>(&self, name: T, module_path: &Vec<String>, start_storage_index: usize) -> Option<Rc<FunctionReference>> {
         let mut search_storage = start_storage_index;
         loop {
             /* Search function with storage */
             for (_, module) in self.modules.iter() {
                 for function_reference in module.get_methods().iter() {
-                    let result = match function_reference.callback {
+                    let result = match &function_reference.callback {
                         FunctionType::Native(_) =>
-                        function_reference.module.get_path() == module_path && 
-                            function_reference.name == name,
+                            function_reference.module.get_path() == module_path && 
+                            &function_reference.name == name.borrow(),
                         FunctionType::Opcode => 
-                        function_reference.name == name && 
+                            &function_reference.name == name.borrow() && 
                             function_reference.module.get_path() == module_path && 
                             (function_reference.defined_storage_index == search_storage || function_reference.flags.contains(FunctionFlag::MODULE_LEVEL))
                     };

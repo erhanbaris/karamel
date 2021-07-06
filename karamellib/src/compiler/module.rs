@@ -168,6 +168,7 @@ mod tests {
     use crate::compiler::context::KaramelCompilerContext;
     use crate::compiler::module::load_module;
     use crate::constants::KARAMEL_FILE_EXTENSION;
+    use crate::error::KaramelErrorType;
     use crate::vm::executer::ExecutionSource;
     use crate::vm::executer::get_execution_path;
 
@@ -185,8 +186,8 @@ mod tests {
         println!("teardown");
     }
 
-    fn run_test<T>(test: T, to_be_removed: Vec<String>) -> Result<(), String>
-        where T: FnOnce() -> Result<(), String> + panic::UnwindSafe
+    fn run_test<T>(test: T, to_be_removed: Vec<String>) -> Result<(), KaramelErrorType>
+        where T: FnOnce() -> Result<(), KaramelErrorType> + panic::UnwindSafe
     {
         setup();
 
@@ -198,7 +199,7 @@ mod tests {
 
         match result {
             Ok(inner_result) => inner_result,
-            Err(error) => Err(format!("{:?}", error))
+            Err(error) => Err(KaramelErrorType::GeneralError(format!("{:?}", error)))
         }
     }
 
@@ -220,7 +221,7 @@ mod tests {
     }
 
     #[test]
-    fn test_1() -> Result<(), KaramelError> {
+    fn test_1() -> Result<(), KaramelErrorType> {
         let module_1 = r#"
 fonk topla(bir, iki): dondur bir + iki"#;
         let topla_path = write_to_file(module_1, format!("topla{}", KARAMEL_FILE_EXTENSION));
@@ -235,7 +236,7 @@ fonk topla(bir, iki): dondur bir + iki"#;
     }
 
     #[test]
-    fn test_2() -> Result<(), String> {
+    fn test_2() -> Result<(), KaramelErrorType> {
         let module_1 = r#"
 fonk topla(bir, iki): dondur bir + iki"#;
         let module_2 = r#"

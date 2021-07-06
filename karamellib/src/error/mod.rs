@@ -1,16 +1,28 @@
 use std::borrow::Borrow;
+use std::rc::Rc;
 
 use strum::EnumMessage;
 use strum_macros::EnumIter;
 use strum_macros::EnumMessage;
+use strum_macros::EnumDiscriminants;
 use thiserror::Error;
 
+use crate::compiler::KaramelPrimative;
+
+
+pub enum KaramelErrorSeverity {
+    Minor,
+    Major,
+    Critical,
+    Fatal
+}
 #[derive(Clone)]
 #[derive(Debug)]
 #[derive(PartialEq)]
 #[derive(Error)]
 #[derive(EnumIter)]
 #[derive(EnumMessage)]
+#[derive(EnumDiscriminants)]
 pub enum KaramelErrorType {
     #[error("Sozdizimi hatasi")]
     #[strum(message = "100")]
@@ -28,7 +40,7 @@ pub enum KaramelErrorType {
     #[strum(message = "103")]
     RightParanthesesMissing,
     
-    #[error("Doğrulanamadı")]
+    #[error("Doğrulanama  başarısız")]
     #[strum(message = "104")]
     AssertFailed,
     
@@ -171,20 +183,66 @@ pub enum KaramelErrorType {
     #[strum(message = "138")]
     FunctionNotFound(String),
 
-    #[error("'{Function}' fonksiyon parametreleri eşleşmiyor. {Expected} adet beklenirken {Found} adet bulundu.")]
+    #[error("'{function}' fonksiyon parametreleri eşleşmiyor. {expected} adet beklenirken {found} adet bulundu")]
     #[strum(message = "139")]
     FunctionArgumentNotMatching {
-        Function: String,
-        Expected: u8,
-        Found: u8
+        function: String,
+        expected: u8,
+        found: u8
     },
 
-    #[error("'{Function}' fonksiyonu sadece {Expected} parametresini kabul ediyor")]
+    #[error("'{function}' fonksiyonu sadece {expected} parametresini kabul ediyor")]
     #[strum(message = "140")]
     FunctionExpectedThatParameterType {
-        Function: String,
-        Expected: String
-    }
+        function: String,
+        expected: String
+    },
+    
+    #[error("Doğrulama başarısız (Sol: {left:?}, sağ: {right:?})")]
+    #[strum(message = "141")]
+    AssertFailedWithArgument {
+        left: Rc<KaramelPrimative>,
+        right: Rc<KaramelPrimative>
+    },
+
+    #[error("Tekli ifade geçerli değil")]
+    #[strum(message = "142")]
+    UnaryExpressionNotValid,
+
+    #[error("Tekli operatör bulunamadi")]
+    #[strum(message = "143")]
+    UnaryOperatorNotFound,
+
+    #[error("Depoda değer bulunamadı")]
+    #[strum(message = "144")]
+    ValueNotFoundInStorage,
+
+    #[error("'{0}' reserv edilmiş kelimedir, kullanılamaz")]
+    #[strum(message = "145")]
+    ReservedName(String),
+
+    #[error("'{name}' modül okuma sırasında hata ile karşılaşıldı. Hata {error}")]
+    #[strum(message = "146")]
+    ModuleParseError {
+        name: String,
+        error: String
+    },
+
+    #[error("Depoda fonksiyon({0}) bulunamadı")]
+    #[strum(message = "147")]
+    FunctionNotFoundInStorage(String),
+
+    #[error("'{0:?}' fonksiyon olarak çağrılabilir değil")]
+    #[strum(message = "148")]
+    NotCallable(Rc<KaramelPrimative>),
+
+    #[error("'{0:?}' geçerli bir sıralayıcı değil, sayı olması gerekiyor")]
+    #[strum(message = "149")]
+    IndexerMustBeNumber(Rc<KaramelPrimative>),
+
+    #[error("'{0:?}' geçerli bir sıralayıcı değil, yazı olması gerekiyor")]
+    #[strum(message = "150")]
+    IndexerMustBeString(Rc<KaramelPrimative>)
 }
 
 impl From<KaramelErrorType> for KaramelError {
@@ -229,13 +287,13 @@ pub fn generate_error_message<T: AsRef<str>, E: Borrow<KaramelError>>(data: T, e
 mod test {
     use strum::IntoEnumIterator;
     use strum::EnumMessage;
+    use crate::error::KaramelErrorType;
 
     #[test]
     fn test_all_error_has_number() {
         for error_enum in super::KaramelErrorType::iter() {
             let error_message = format!("{}", error_enum);
-
-            if error_message.len() == 0 {
+            if error_enum != KaramelErrorType::GeneralError("".to_string()) && error_message.len() == 0 {
                 assert!(false, "'{:?}' hata mesaji yok", error_enum)
             }
 
