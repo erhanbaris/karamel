@@ -5,6 +5,7 @@ use crate::{buildin::{Class, ClassConfig, ClassProperty}, compiler::{GetType, fu
 use crate::compiler::value::EMPTY_OBJECT;
 use crate::buildin::class::baseclass::BasicInnerClass;
 use crate::compiler::value::KaramelPrimative;
+use crate::error::KaramelErrorType;
 use crate::types::VmObject;
 use crate::{n_parameter_expected, expected_parameter_type, arc_bool, primative_list};
 
@@ -125,7 +126,7 @@ fn get(parameter: FunctionParameter) -> NativeCallResult {
                     _ => Ok(EMPTY_OBJECT)
                 };
             },
-            _ => n_parameter_expected!("getir", 1, parameter.length())
+            _ => n_parameter_expected!("getir".to_string(), 1, parameter.length())
         };
     }
     Ok(EMPTY_OBJECT)
@@ -154,7 +155,7 @@ fn insert_or_update(parameter: FunctionParameter, function_name: &str) -> Native
                 *dict.borrow_mut().entry((&position).to_string()).or_insert(*item) = *item;
                 Ok(EMPTY_OBJECT)
             },
-            _ => n_parameter_expected!(function_name, 2, parameter.length())
+            _ => n_parameter_expected!(function_name.to_string(), 2, parameter.length())
         };
     }
     Ok(EMPTY_OBJECT)
@@ -190,7 +191,7 @@ fn remove(parameter: FunctionParameter) -> NativeCallResult {
                     None => arc_bool!(false)
                 })
             },
-            _ => n_parameter_expected!("sil", 1, parameter.length())
+            _ => n_parameter_expected!("sil".to_string(), 1, parameter.length())
         };
     }
     Ok(EMPTY_OBJECT)
@@ -219,7 +220,7 @@ fn contains(parameter: FunctionParameter) -> NativeCallResult {
                     _ => expected_parameter_type!("içeriyormu", "Yazı")
                 }
             },
-            _ => n_parameter_expected!("içeriyormu", 1, parameter.length())
+            _ => n_parameter_expected!("içeriyormu".to_string().to_string(), 1, parameter.length())
         };
     }
     Ok(EMPTY_OBJECT)

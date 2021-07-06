@@ -122,8 +122,16 @@ macro_rules! n_parameter_check {
 
 #[macro_export]
 macro_rules! n_parameter_expected {
-    ($function_name:expr, $parameter_size:expr) => { Err(format!("'{}' fonksiyonu {} parametre kabul ediyor", $function_name, $parameter_size)) };
-    ($function_name:expr, $parameter_size:expr, $parameter_found:expr) => { Err(format!("'{}' fonksiyonu {} parametre kabul ediyor, fakat {} adet parametre bulundu", $function_name, $parameter_size, $parameter_found)) };
+    ($function_name:expr, $parameter_size:expr) => { Err(KaramelErrorType::FunctionArgumentNotMatching {
+        Function: $function_name,
+        Expected: $parameter_size, 
+        Found: 0
+    }) };
+    ($function_name:expr, $parameter_size:expr, $parameter_found:expr) => { Err(KaramelErrorType::FunctionArgumentNotMatching {
+        Function: $function_name,
+        Expected: $parameter_size, 
+        Found: $parameter_found
+    }) };
 }
 
 #[macro_export]

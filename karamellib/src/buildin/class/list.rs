@@ -43,7 +43,7 @@ fn get(parameter: FunctionParameter) -> NativeCallResult {
                     _ => Ok(EMPTY_OBJECT)
                 };
             },
-            _ => n_parameter_expected!("getir", 1, parameter.length())
+            _ => n_parameter_expected!("getir".to_string(), 1, parameter.length())
         };
     }
     Ok(EMPTY_OBJECT)
@@ -141,7 +141,7 @@ pub fn add(parameter: FunctionParameter) -> NativeCallResult {
                 list.borrow_mut().push(*parameter.iter().next().unwrap());
                 return Ok(VmObject::from(length));
             },
-            _ => n_parameter_expected!("ekle", 1, parameter.length())
+            _ => n_parameter_expected!("ekle".to_string(), 1, parameter.length())
         };
     }
     Ok(EMPTY_OBJECT)
@@ -191,7 +191,7 @@ fn remove(parameter: FunctionParameter) -> NativeCallResult {
                     false => Ok(arc_bool!(false))
                 };
             },
-            _ => return n_parameter_expected!("sil", 1, parameter.length())
+            _ => return n_parameter_expected!("sil".to_string(), 1, parameter.length())
         };
     }
     Ok(EMPTY_OBJECT)

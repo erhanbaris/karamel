@@ -19,7 +19,7 @@ use super::{KaramelPrimative, StaticStorage};
 use super::ast::KaramelAstType;
 use super::storage_builder::{StorageBuilder, StorageBuilderOption};
 
-pub type NativeCallResult = Result<VmObject, String>;
+pub type NativeCallResult = Result<VmObject, KaramelErrorType>;
 pub type NativeCall       = fn(FunctionParameter) -> NativeCallResult;
 pub type IndexerGetCall   = fn (VmObject, f64) -> NativeCallResult ;
 pub type IndexerSetCall   = fn (VmObject, f64, VmObject) -> NativeCallResult ;
@@ -215,7 +215,11 @@ impl FunctionReference {
             options.scope_index           += 1;
 
             if argument_size != *options.opcodes_ptr {
-                return Err("Function argument error".to_string());
+                return Err(KaramelErrorType::FunctionArgumentNotMatching {
+                    Function: reference.name,
+                    Expected: argument_size, 
+                    Found: *options.opcodes_ptr
+                });
             }
 
             let memory_index = get_memory_index!(options) as usize;

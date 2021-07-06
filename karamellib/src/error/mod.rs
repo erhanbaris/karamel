@@ -165,7 +165,42 @@ pub enum KaramelErrorType {
     
     #[error("'{0}' fonksiyonu önceden tanımlanmış")]
     #[strum(message = "137")]
-    FunctionAlreadyDefined(String)
+    FunctionAlreadyDefined(String),
+
+    #[error("'{0}' fonksiyonu bulunamadı")]
+    #[strum(message = "138")]
+    FunctionNotFound(String),
+
+    #[error("'{Function}' fonksiyon parametreleri eşleşmiyor. {Expected} adet beklenirken {Found} adet bulundu.")]
+    #[strum(message = "139")]
+    FunctionArgumentNotMatching {
+        Function: String,
+        Expected: u8,
+        Found: u8
+    },
+
+    #[error("'{Function}' fonksiyonu sadece {Expected} parametresini kabul ediyor")]
+    #[strum(message = "140")]
+    FunctionExpectedThatParameterType {
+        Function: String,
+        Expected: String
+    }
+}
+
+impl From<KaramelErrorType> for KaramelError {
+    fn from(item: KaramelErrorType) -> Self {
+        KaramelError {
+            column: 0,
+            line: 0,
+            error_type: item
+        }
+    }
+}
+
+impl From<KaramelError> for KaramelErrorType {
+    fn from(item: KaramelError) -> Self {
+        item.error_type
+    }
 }
 
 #[derive(Clone)]

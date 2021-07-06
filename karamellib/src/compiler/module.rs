@@ -7,7 +7,7 @@ use crate::buildin::Class;
 use crate::buildin::Module;
 use crate::compiler::StaticStorage;
 use crate::compiler::function::find_function_definition_type;
-use crate::error::{KaramelError, KaramelErrorType, generate_error_message};
+use crate::error::{KaramelError};
 use crate::file::read_module_or_script;
 use crate::parser::Parser;
 use crate::syntax::SyntaxParser;
@@ -16,6 +16,8 @@ use crate::types::CompilerResult;
 use super::context::KaramelCompilerContext;
 use super::ast::KaramelAstType;
 use super::function::FunctionReference;
+
+use crate::error::*;
 
 pub struct OpcodeModule {
     pub name: String,
@@ -120,7 +122,7 @@ pub fn load_module(params: &[String], modules: &mut Vec<Rc<OpcodeModule>>, optio
 
             let module = Rc::new(module);
             find_load_type(module.main_ast.clone(), options, modules, module.storage_index)?;
-            find_function_definition_type(module.clone(), ast.clone(), options, module_storage, true)?;
+            find_function_definition_type(module.clone(), ast.clone(), options, module_storage, true).map_err(KaramelErrorType::from)?;
             Ok(module.clone())
         },
         Err(error) => return Err(error)
@@ -147,11 +149,11 @@ fn find_load_type(ast: Rc<KaramelAstType>, options: &mut KaramelCompilerContext,
     Ok(())
 }
 
-pub fn get_modules(main_ast: Rc<KaramelAstType>, options: &mut KaramelCompilerContext) -> Result<Vec<Rc<OpcodeModule>>, String> {
+pub fn get_modules(main_ast: Rc<KaramelAstType>, options: &mut KaramelCompilerContext) -> Result<Vec<Rc<OpcodeModule>>, KaramelError> {
     let mut modules: Vec<Rc<OpcodeModule>> = Vec::new();
     match find_load_type(main_ast, options, &mut modules, 0) {
         Ok(()) => Ok(modules),
-        Err(error) => Err(error)
+        Err(error) => Err(KaramelError::new(0, 0, error))
     }
 }
 
@@ -218,7 +220,7 @@ mod tests {
     }
 
     #[test]
-    fn test_1() -> Result<(), String> {
+    fn test_1() -> Result<(), KaramelError> {
         let module_1 = r#"
 fonk topla(bir, iki): dondur bir + iki"#;
         let topla_path = write_to_file(module_1, format!("topla{}", KARAMEL_FILE_EXTENSION));

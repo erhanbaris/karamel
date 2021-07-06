@@ -139,7 +139,7 @@ fn contains(parameter: FunctionParameter) -> NativeCallResult {
                     _ => expected_parameter_type!("içeriyormu", "Yazı")
                 }
             },
-            _ => n_parameter_expected!("içeriyormu", 1, parameter.length())
+            _ => n_parameter_expected!("içeriyormu".to_string(), 1, parameter.length())
         };
     }
     Ok(EMPTY_OBJECT)
@@ -212,7 +212,7 @@ fn split(parameter: FunctionParameter) -> NativeCallResult {
                     _ => expected_parameter_type!("parçala", "Yazı")
                 }
             },
-            _ => n_parameter_expected!("parçala", 1, parameter.length())
+            _ => n_parameter_expected!("parçala".to_string(), 1, parameter.length())
         };
     }
     Ok(EMPTY_OBJECT)
@@ -233,7 +233,7 @@ fn find(parameter: FunctionParameter) -> NativeCallResult {
                     _ => expected_parameter_type!("parçala", "Yazı")
                 }
             },
-            _ => n_parameter_expected!("parçala", 1, parameter.length())
+            _ => n_parameter_expected!("parçala".to_string(), 1, parameter.length())
         };
     }
     Ok(EMPTY_OBJECT)

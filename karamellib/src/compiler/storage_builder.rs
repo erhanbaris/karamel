@@ -1,6 +1,7 @@
 use std::rc::Rc;
 use std::cmp::max;
 
+use crate::error::KaramelErrorType;
 use crate::{compiler::ast::KaramelAstType};
 use crate::compiler::value::KaramelPrimative;
 use crate::compiler::context::KaramelCompilerContext;
@@ -18,14 +19,14 @@ impl StorageBuilder {
         }
     }
 
-    pub fn prepare(&self, module: Rc<OpcodeModule>, ast: &KaramelAstType, storage_index: usize, options: &mut KaramelCompilerContext, compiler_options: &mut StorageBuilderOption) -> Result<(), String> {
+    pub fn prepare(&self, module: Rc<OpcodeModule>, ast: &KaramelAstType, storage_index: usize, options: &mut KaramelCompilerContext, compiler_options: &mut StorageBuilderOption) -> Result<(), KaramelErrorType> {
         self.get_temp_count_from_ast(module.clone(),ast, &KaramelAstType::None, options, storage_index, compiler_options)?;
         options.storages[storage_index].set_temp_size(compiler_options.max_stack);
         options.storages[storage_index].build();
         Ok(())
     }
 
-    fn get_temp_count_from_ast(&self, module: Rc<OpcodeModule>, ast: &KaramelAstType, _: &KaramelAstType, options: &mut KaramelCompilerContext, storage_index: usize, compiler_option: &mut StorageBuilderOption) -> Result<u8, String> {
+    fn get_temp_count_from_ast(&self, module: Rc<OpcodeModule>, ast: &KaramelAstType, _: &KaramelAstType, options: &mut KaramelCompilerContext, storage_index: usize, compiler_option: &mut StorageBuilderOption) -> Result<u8, KaramelErrorType> {
         use crate::buildin::Module;
         
         let temp_count = match ast {
@@ -95,7 +96,7 @@ impl StorageBuilder {
                 let function_search = options.get_function(name, &module_path, storage_index);
                 match function_search {
                     Some(reference) => options.storages.get_mut(storage_index).unwrap().add_constant(Rc::new(KaramelPrimative::Function(reference, None))),
-                    None => return Err("Fonksiyon bulunamadı".to_string())
+                    None => return Err(KaramelErrorType::FunctionNotFound(name.to_string()))
                 };
 
                 compiler_option.max_stack = max(1, compiler_option.max_stack);
@@ -180,7 +181,7 @@ impl StorageBuilder {
                         let function_search = options.get_function(names[names.len() - 1].to_string(), &names[0..(names.len()-1)].to_vec(), storage_index);
                         match function_search {
                             Some(reference) => options.storages.get_mut(storage_index).unwrap().add_constant(Rc::new(KaramelPrimative::Function(reference, None))),
-                            None => return Err("Fonksiyon bulunamadı".to_string())
+                            None => return Err(KaramelErrorType::FunctionNotFound(names[names.len() - 1].to_string()))
                         };
                     },
                     _ => {
