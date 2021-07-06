@@ -27,6 +27,7 @@ impl TokenParser for TextParser {
 
             if ch == '\\' && ch_next == self.tag {
                 end += ch.len_utf8();
+                end += 1; // for tag char
                 tokinizer.increase_index();
             }
             else if ch == self.tag {

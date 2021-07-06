@@ -23,3 +23,13 @@ hataayıklama::doğrula("a1024.1".sayi(), yok)
 hataayıklama::doğrula("erhan".sayi(), yok)
 hataayıklama::doğrula("+123".sayi(), 123)
 hataayıklama::doğrula("-123".sayi(), -123)
+
+hataayıklama::doğrula("1 Ocak\"ta işlerim var".uzunluk(), 22)
+hataayıklama::doğrula('1 Ocak\'ta işlerim var'.uzunluk(), 22)
+
+cümle1 = "1 Ocak\"ta işlerim var"
+hataayıklama::doğrula(cümle1[cümle1.uzunluk() -1], 'r')
+
+cümle2 = '1 Ocak\'ta işlerim var'
+hataayıklama::doğrula(cümle2[cümle2.uzunluk() -1], 'r')
+
