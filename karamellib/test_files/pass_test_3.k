@@ -1,6 +1,6 @@
 kayıt = 10
 toplam = 0
-döngü kayıt iken:
+döngü kayıt:
     gç::satıryaz('doğru')
     gç::satıryaz(kayıt)
     kayıt -= 1

@@ -213,7 +213,7 @@ impl StorageBuilder {
                 0
             },
 
-            KaramelAstType::WhileLoop { control, body } => {
+            KaramelAstType::Loop { control, body } => {
                 self.get_temp_count_from_ast(module.clone(),control, ast, options, storage_index, compiler_option)?;
                 self.get_temp_count_from_ast(module.clone(),body, ast, options, storage_index, compiler_option)?;
                 compiler_option.max_stack = max(1, compiler_option.max_stack);

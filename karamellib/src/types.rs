@@ -55,8 +55,7 @@ pub enum KaramelKeywordType {
     Endless,
     Break,
     Continue,
-    WhileStartPart,
-    WhileEndPart,
+    While,
     Load
 }
 
@@ -114,9 +113,8 @@ pub static KEYWORDS: &[(&str, KaramelKeywordType)] = &[
     ("kır",           KaramelKeywordType::Break),
     ("kir",           KaramelKeywordType::Break),
     ("devam",       KaramelKeywordType::Continue),
-    ("döngü",         KaramelKeywordType::WhileStartPart),
-    ("dongu",         KaramelKeywordType::WhileStartPart),
-    ("iken",          KaramelKeywordType::WhileEndPart),
+    ("döngü",         KaramelKeywordType::While),
+    ("dongu",         KaramelKeywordType::While),
     ("yükle",          KaramelKeywordType::Load),
     ("yukle",          KaramelKeywordType::Load)
 ];

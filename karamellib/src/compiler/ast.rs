@@ -65,9 +65,9 @@ pub enum KaramelAstType {
     PrefixUnary(KaramelOperatorType, Box<KaramelAstType>),
     SuffixUnary(KaramelOperatorType, Box<KaramelAstType>),
     Assignment {
-        variable: Box<KaramelAstType>,
+        variable: Rc<KaramelAstType>,
         operator: KaramelOperatorType,
-        expression: Box<KaramelAstType>
+        expression: Rc<KaramelAstType>
     },
     IfStatement {
         condition: Box<KaramelAstType>,
@@ -90,7 +90,7 @@ pub enum KaramelAstType {
     Break,
     Continue,
     EndlessLoop(Box<KaramelAstType>),
-    WhileLoop {
+    Loop {
         control: Box<KaramelAstType>,
         body: Box<KaramelAstType>
     }

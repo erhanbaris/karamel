@@ -176,7 +176,7 @@ impl InterpreterCompiler {
             KaramelAstType::PrefixUnary (operator, expression) => self.generate_prefix_unary(module.clone(), operator, expression, upper_ast, context, storage_index),
             KaramelAstType::SuffixUnary (operator, expression) => self.generate_suffix_unary(operator, expression, upper_ast, context, storage_index),
             KaramelAstType::NewLine => Ok(()),
-            KaramelAstType::WhileLoop { control, body } => self.generate_whileloop(module.clone(), control, body, upper_ast, context, storage_index),
+            KaramelAstType::Loop { control, body } => self.generate_whileloop(module.clone(), control, body, upper_ast, context, storage_index),
             KaramelAstType::EndlessLoop(expression) => self.generate_endlessloop(module.clone(), expression, upper_ast, context, storage_index),
             KaramelAstType::Break => self.generate_break(upper_ast, context, storage_index),
             KaramelAstType::Continue => self.generate_continue(upper_ast, context, storage_index),

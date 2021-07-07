@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use crate::types::*;
 use crate::syntax::{SyntaxParser, SyntaxParserTrait, SyntaxFlag};
 use crate::syntax::expression::ExpressionParser;
@@ -43,9 +45,9 @@ impl SyntaxParserTrait for AssignmentParser {
             parser.flags.set(parser_flags);
 
             let assignment_ast = KaramelAstType::Assignment {
-                variable: Box::new(variable),
+                variable: Rc::new(variable),
                 operator,
-                expression: Box::new(expression.unwrap())
+                expression: Rc::new(expression.unwrap())
             };
 
             return Ok(assignment_ast);

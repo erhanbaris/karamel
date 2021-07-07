@@ -55,7 +55,7 @@ CodeMirror.defineSimpleMode("simplemode", {
     {regex: /(fonk)(\s+)([^( )]+)/, token: ["keyword", null, "def"]},
     // Rules are matched in the order in which they appear, so there is
     // no ambiguity between this one and the one above
-    {regex: /(?:döngü|dongu|fonk|döndür|mod|dondur|ise|iken|sonsuz|kır|kir|veya|kadar|ve|devam)\b/, token: "keyword"},
+    {regex: /(?:döngü|dongu|fonk|döndür|mod|dondur|ise|sonsuz|kır|kir|veya|kadar|ve|devam)\b/, token: "keyword"},
     {regex: /(?:doğru|dogru|yanlış|yanlis|bos|boş|degil|değil)\b/, token: "atom"},
     {regex: /0x[a-f\d]+|[-+]?(?:\.\d+|\d+\.?\d*)(?:e[-+]?\d+)?/i, token: "number"},
     {regex: /\/\/.*/, token: "comment"},
