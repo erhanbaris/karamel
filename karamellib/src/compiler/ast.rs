@@ -3,6 +3,7 @@ use std::vec::Vec;
 use std::rc::Rc;
 
 use crate::compiler::value::KaramelPrimative;
+use crate::syntax::loops::LoopType;
 use crate::types::KaramelOperatorType;
 
 #[repr(C)]
@@ -10,8 +11,8 @@ use crate::types::KaramelOperatorType;
 #[derive(Debug)]
 #[derive(PartialEq)]
 pub struct KaramelIfStatementElseItem {
-    pub condition: Box<KaramelAstType>,
-    pub body: Box<KaramelAstType>
+    pub condition: Rc<KaramelAstType>,
+    pub body: Rc<KaramelAstType>
 }
 
 #[repr(C)]
@@ -24,7 +25,7 @@ pub struct KaramelDictItem {
 }
 
 impl KaramelIfStatementElseItem {
-    pub fn new(condition: Box<KaramelAstType>, body: Box<KaramelAstType>) -> KaramelIfStatementElseItem {
+    pub fn new(condition: Rc<KaramelAstType>, body: Rc<KaramelAstType>) -> KaramelIfStatementElseItem {
         KaramelIfStatementElseItem {
             condition,
             body,
@@ -41,39 +42,43 @@ pub enum KaramelAstType {
     NewLine,
     Block(Vec<Rc<KaramelAstType>>),
     FuncCall {
-        func_name_expression: Box<KaramelAstType>,
-        arguments: Vec<Box<KaramelAstType>>,
+        func_name_expression: Rc<KaramelAstType>,
+        arguments: Vec<Rc<KaramelAstType>>,
         assign_to_temp: Cell<bool>
     },
     AccessorFuncCall {
-        source: Box<KaramelAstType>,
-        indexer: Box<KaramelAstType>,
+        source: Rc<KaramelAstType>,
+        indexer: Rc<KaramelAstType>,
         assign_to_temp: Cell<bool>
     },
     Primative(Rc<KaramelPrimative>),
     Binary {
-        left: Box<KaramelAstType>, 
+        left: Rc<KaramelAstType>, 
         operator: KaramelOperatorType, 
-        right: Box<KaramelAstType>
+        right: Rc<KaramelAstType>
     },
     Control {
-        left: Box<KaramelAstType>, 
+        left: Rc<KaramelAstType>, 
         operator: KaramelOperatorType, 
-        right: Box<KaramelAstType>
+        right: Rc<KaramelAstType>
     },
     /*Control,*/
-    PrefixUnary(KaramelOperatorType, Box<KaramelAstType>),
-    SuffixUnary(KaramelOperatorType, Box<KaramelAstType>),
+    PrefixUnary { 
+        operator: KaramelOperatorType, 
+        expression: Rc<KaramelAstType>, 
+        assign_to_temp: Cell<bool>
+    },
+    SuffixUnary(KaramelOperatorType, Rc<KaramelAstType>),
     Assignment {
-        variable: Box<KaramelAstType>,
+        variable: Rc<KaramelAstType>,
         operator: KaramelOperatorType,
-        expression: Box<KaramelAstType>
+        expression: Rc<KaramelAstType>
     },
     IfStatement {
-        condition: Box<KaramelAstType>,
-        body: Box<KaramelAstType>,
-        else_body: Option<Box<KaramelAstType>>,
-        else_if: Vec<Box<KaramelIfStatementElseItem>>
+        condition: Rc<KaramelAstType>,
+        body: Rc<KaramelAstType>,
+        else_body: Option<Rc<KaramelAstType>>,
+        else_if: Vec<Rc<KaramelIfStatementElseItem>>
     },
     FunctionDefination {
         name: String,
@@ -83,15 +88,14 @@ pub enum KaramelAstType {
     Symbol(String),
     ModulePath(Vec<String>),
     Load(Vec<String>),
-    List(Vec<Box<KaramelAstType>>),
-    Dict(Vec<Box<KaramelDictItem>>),
-    Indexer { body: Box<KaramelAstType>, indexer: Box<KaramelAstType> },
-    Return(Box<KaramelAstType>),
+    List(Vec<Rc<KaramelAstType>>),
+    Dict(Vec<Rc<KaramelDictItem>>),
+    Indexer { body: Rc<KaramelAstType>, indexer: Rc<KaramelAstType> },
+    Return(Rc<KaramelAstType>),
     Break,
     Continue,
-    EndlessLoop(Box<KaramelAstType>),
-    WhileLoop {
-        control: Box<KaramelAstType>,
-        body: Box<KaramelAstType>
+    Loop {
+        loop_type: LoopType,
+        body: Rc<KaramelAstType>
     }
 }

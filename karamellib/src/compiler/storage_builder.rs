@@ -2,10 +2,11 @@ use std::rc::Rc;
 use std::cmp::max;
 
 use crate::error::KaramelErrorType;
-use crate::{compiler::ast::KaramelAstType};
+use crate::compiler::ast::KaramelAstType;
 use crate::compiler::value::KaramelPrimative;
 use crate::compiler::context::KaramelCompilerContext;
 use crate::types::KaramelOperatorType;
+use crate::syntax::loops::LoopType;
 
 use super::module::OpcodeModule;
 pub struct StorageBuilder;
@@ -48,14 +49,18 @@ impl StorageBuilder {
                     total
                 },
             
-            KaramelAstType::PrefixUnary(_, inner_ast) => {
-                let total = self.get_temp_count_from_ast(module.clone(),inner_ast, ast, options, storage_index, compiler_option)?;
+            KaramelAstType::PrefixUnary { operator: _, expression, assign_to_temp } => {
+                let total = self.get_temp_count_from_ast(module.clone(),expression, ast, options, storage_index, compiler_option)?;
+                let total = match assign_to_temp.get() {
+                    true => total + 1,
+                    false => total
+                };
                 compiler_option.max_stack = max(total, compiler_option.max_stack);
                 total
             },
 
-            KaramelAstType::SuffixUnary(_, inner_ast) => {
-                let total = self.get_temp_count_from_ast(module.clone(),inner_ast, ast, options, storage_index, compiler_option)? + 1;
+            KaramelAstType::SuffixUnary(_, expression) => {
+                let total = self.get_temp_count_from_ast(module.clone(),expression, ast, options, storage_index, compiler_option)? + 1;
                 compiler_option.max_stack = max(total, compiler_option.max_stack);
                 total
             },
@@ -208,16 +213,25 @@ impl StorageBuilder {
                 1
             },
 
-            KaramelAstType::EndlessLoop(expression) => {
-                self.get_temp_count_from_ast(module.clone(),expression, ast, options, storage_index, compiler_option)?;
-                0
-            },
-
-            KaramelAstType::WhileLoop { control, body } => {
-                self.get_temp_count_from_ast(module.clone(),control, ast, options, storage_index, compiler_option)?;
-                self.get_temp_count_from_ast(module.clone(),body, ast, options, storage_index, compiler_option)?;
-                compiler_option.max_stack = max(1, compiler_option.max_stack);
-                1
+            KaramelAstType::Loop {
+                loop_type,
+                body
+            } => {
+                let mut total = 0;
+                match loop_type {
+                    LoopType::Scalar { variable, control, increment } => {
+                        total = max(total, self.get_temp_count_from_ast(module.clone(),&*variable, ast, options, storage_index, compiler_option)?);
+                        total = max(total, self.get_temp_count_from_ast(module.clone(),&*control, ast, options, storage_index, compiler_option)?);
+                        total = max(total, self.get_temp_count_from_ast(module.clone(),&*increment, ast, options, storage_index, compiler_option)?);
+                    },
+                    LoopType::Simple(control) => {
+                        total = self.get_temp_count_from_ast(module.clone(),&*control, ast, options, storage_index, compiler_option)?
+                    },
+                    LoopType::Endless => {}
+                };
+                total = max(total, self.get_temp_count_from_ast(module.clone(),&*body, ast, options, storage_index, compiler_option)?);
+                compiler_option.max_stack = max(total, compiler_option.max_stack);
+                total
             },
 
             KaramelAstType::Primative(primative) => {

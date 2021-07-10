@@ -34,11 +34,11 @@ fonk test():
         name: "test".to_string(),
         arguments: Vec::new(),
         body: Rc::new(KaramelAstType::Block([Rc::new(KaramelAstType::Assignment {
-            variable: Box::new(KaramelAstType::Symbol("erhan".to_string())),
+            variable: Rc::new(KaramelAstType::Symbol("erhan".to_string())),
             operator: KaramelOperatorType::Assign,
-            expression: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(123.0))))
+            expression: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(123.0))))
         }),
-        Rc::new(KaramelAstType::Return(Box::new(KaramelAstType::None)))].to_vec()))
+        Rc::new(KaramelAstType::Return(Rc::new(KaramelAstType::None)))].to_vec()))
     })));
     test_compare!(func_def_2, r#"
 fonk test(a):
@@ -46,11 +46,11 @@ fonk test(a):
         name: "test".to_string(),
         arguments: ["a".to_string()].to_vec(),
         body: Rc::new(KaramelAstType::Block([Rc::new(KaramelAstType::Assignment {
-            variable: Box::new(KaramelAstType::Symbol("erhan".to_string())),
+            variable: Rc::new(KaramelAstType::Symbol("erhan".to_string())),
             operator: KaramelOperatorType::Assign,
-            expression: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(123.0))))
+            expression: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(123.0))))
         }),
-        Rc::new(KaramelAstType::Return(Box::new(KaramelAstType::None)))].to_vec()))
+        Rc::new(KaramelAstType::Return(Rc::new(KaramelAstType::None)))].to_vec()))
     })));
     test_compare!(func_def_3, r#"
 fonk test(a, b    ,   c):
@@ -58,11 +58,11 @@ fonk test(a, b    ,   c):
         name: "test".to_string(),
         arguments: ["a".to_string(), "b".to_string(), "c".to_string()].to_vec(),
         body: Rc::new(KaramelAstType::Block([Rc::new(KaramelAstType::Assignment {
-            variable: Box::new(KaramelAstType::Symbol("erhan".to_string())),
+            variable: Rc::new(KaramelAstType::Symbol("erhan".to_string())),
             operator: KaramelOperatorType::Assign,
-            expression: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(123.0))))
+            expression: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(123.0))))
         }),
-        Rc::new(KaramelAstType::Return(Box::new(KaramelAstType::None)))].to_vec()))
+        Rc::new(KaramelAstType::Return(Rc::new(KaramelAstType::None)))].to_vec()))
     })));
     test_compare!(func_def_4, r#"
 fonk test:
@@ -70,11 +70,11 @@ fonk test:
             name: "test".to_string(),
             arguments: Vec::new(),
             body: Rc::new(KaramelAstType::Block([Rc::new(KaramelAstType::Assignment {
-                variable: Box::new(KaramelAstType::Symbol("erhan".to_string())),
+                variable: Rc::new(KaramelAstType::Symbol("erhan".to_string())),
                 operator: KaramelOperatorType::Assign,
-                expression: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(123.0))))
+                expression: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(123.0))))
             }),
-            Rc::new(KaramelAstType::Return(Box::new(KaramelAstType::None)))].to_vec()))
+            Rc::new(KaramelAstType::Return(Rc::new(KaramelAstType::None)))].to_vec()))
         })));
         test_compare!(func_def_6, r#"
 fonk test   :
@@ -85,11 +85,11 @@ fonk test   :
                 name: "test".to_string(),
                 arguments: Vec::new(),
                 body: Rc::new(KaramelAstType::Block([Rc::new(KaramelAstType::Assignment {
-                    variable: Box::new(KaramelAstType::Symbol("erhan".to_string())),
+                    variable: Rc::new(KaramelAstType::Symbol("erhan".to_string())),
                     operator: KaramelOperatorType::Assign,
-                    expression: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(123.0))))
+                    expression: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(123.0))))
                 }),
-                Rc::new(KaramelAstType::Return(Box::new(KaramelAstType::None)))].to_vec()))
+                Rc::new(KaramelAstType::Return(Rc::new(KaramelAstType::None)))].to_vec()))
             })));
             test_compare!(func_def_7, r#"
 fonk test
@@ -158,11 +158,11 @@ fonk test():
     name: "test".to_string(),
     arguments: Vec::new(),
     body: Rc::new(KaramelAstType::Block([Rc::new(KaramelAstType::Assignment {
-        variable: Box::new(KaramelAstType::Symbol("erhan".to_string())),
+        variable: Rc::new(KaramelAstType::Symbol("erhan".to_string())),
         operator: KaramelOperatorType::Assign,
-        expression: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(123.0))))
+        expression: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(123.0))))
     }),
-    Rc::new(KaramelAstType::Return(Box::new(KaramelAstType::Symbol("erhan".to_string()))))].to_vec()))
+    Rc::new(KaramelAstType::Return(Rc::new(KaramelAstType::Symbol("erhan".to_string()))))].to_vec()))
 })));
 test_compare!(func_def_16, r#"
 fonk test():
@@ -171,10 +171,10 @@ fonk test():
     name: "test".to_string(),
     arguments: Vec::new(),
     body: Rc::new(KaramelAstType::Block([Rc::new(KaramelAstType::Assignment {
-        variable: Box::new(KaramelAstType::Symbol("erhan".to_string())),
+        variable: Rc::new(KaramelAstType::Symbol("erhan".to_string())),
         operator: KaramelOperatorType::Assign,
-        expression: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(123.0))))
+        expression: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(123.0))))
     }),
-    Rc::new(KaramelAstType::Return(Box::new(KaramelAstType::None)))].to_vec()))
+    Rc::new(KaramelAstType::Return(Rc::new(KaramelAstType::None)))].to_vec()))
 })));
 }

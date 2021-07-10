@@ -29,19 +29,19 @@ mod tests {
     test_compare!(block_1, "+1024", Ok(Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(1024.0))))));
     test_compare!(block_2, r#"erhan=1024
 baris=2048"#, Ok(Rc::new(KaramelAstType::Block([Rc::new(KaramelAstType::Assignment {
-    variable: Box::new(KaramelAstType::Symbol("erhan".to_string())),
+    variable: Rc::new(KaramelAstType::Symbol("erhan".to_string())),
     operator: KaramelOperatorType::Assign,
-    expression: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(1024.0))))
+    expression: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(1024.0))))
 }),
 Rc::new(KaramelAstType::Assignment {
-    variable: Box::new(KaramelAstType::Symbol("baris".to_string())),
+    variable: Rc::new(KaramelAstType::Symbol("baris".to_string())),
     operator: KaramelOperatorType::Assign,
-    expression: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(2048.0))))
+    expression: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(2048.0))))
 })].to_vec()))));
 
 test_compare!(block_3, "erhan=1024", Ok(Rc::new(KaramelAstType::Assignment {
-    variable: Box::new(KaramelAstType::Symbol("erhan".to_string())),
+    variable: Rc::new(KaramelAstType::Symbol("erhan".to_string())),
     operator: KaramelOperatorType::Assign,
-    expression: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(1024.0))))
+    expression: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(1024.0))))
 })));
 }

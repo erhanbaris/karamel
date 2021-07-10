@@ -11,11 +11,12 @@ pub mod if_condition;
 pub mod statement;
 pub mod function_defination;
 pub mod function_return;
-pub mod while_loop;
+pub mod loops;
 pub mod loop_item;
 pub mod expression;
 pub mod load_module;
 
+use std::borrow::Borrow;
 use std::rc::Rc;
 use std::vec::Vec;
 use std::cell::Cell;
@@ -183,12 +184,12 @@ impl SyntaxParser {
         return false;
     }
 
-    pub fn check_keyword(&self, keyword: KaramelKeywordType) -> bool {
+    pub fn check_keyword<T: Borrow<KaramelKeywordType>>(&self, keyword: T) -> bool {
         let token = self.peek_token();
         if token.is_err() { return false; }
-        return match token.unwrap().token_type {
+        return match &token.unwrap().token_type {
             KaramelTokenType::Keyword(token_keyword) => {
-                if keyword == token_keyword {
+                if keyword.borrow() == token_keyword {
                     return true;
                 }
                 return false;
@@ -220,6 +221,17 @@ impl SyntaxParser {
             if self.check_operator(operator) {
                 self.consume_token();
                 return Some(*operator);
+            }
+        }
+
+        return None;
+    }
+
+    pub fn match_keywords(&self, keywords: &[KaramelKeywordType]) -> Option<KaramelKeywordType> {
+        for keyword in keywords {
+            if self.check_keyword(keyword) {
+                self.consume_token();
+                return Some(*keyword);
             }
         }
 

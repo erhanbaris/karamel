@@ -1,9 +1,13 @@
+use std::rc::Rc;
+
 use crate::types::*;
 use crate::syntax::{SyntaxParser, SyntaxParserTrait, SyntaxFlag};
 use crate::syntax::binary::AddSubtractParser;
 use crate::syntax::util::update_functions_for_temp_return;
 use crate::compiler::ast::KaramelAstType;
 use crate::error::KaramelErrorType;
+
+use super::util::with_flag;
 
 pub struct OrParser;
 pub struct AndParser;
@@ -55,21 +59,17 @@ pub fn parse_control<T: SyntaxParserTrait>(parser: &SyntaxParser, operators: &[K
             }
 
             parser.cleanup_whitespaces();
-            let parser_flags  = parser.flags.get();
-            parser.flags.set(parser_flags | SyntaxFlag::IN_EXPRESSION);
-            
-            let right_expr = T::parse(parser);
+            let right_expr = with_flag(SyntaxFlag::IN_EXPRESSION, parser, || T::parse(parser));
             match right_expr {
                 Ok(KaramelAstType::None) => return Err(KaramelErrorType::RightSideOfExpressionNotFound),
                 Ok(_) => (),
                 Err(_) => return right_expr
             };
 
-            parser.flags.set(parser_flags);
             left_expr = KaramelAstType::Control {
-                left: Box::new(left_expr),
+                left: Rc::new(left_expr),
                 operator,
-                right: Box::new(right_expr.unwrap())
+                right: Rc::new(right_expr.unwrap())
             };
         }        
         else {

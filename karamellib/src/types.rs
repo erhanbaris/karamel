@@ -1,3 +1,5 @@
+use std::borrow::Borrow;
+use std::mem::{self, discriminant};
 use std::vec::Vec;
 use std::str::Chars;
 use std::iter::Peekable;
@@ -36,7 +38,6 @@ pub enum KaramelKeywordType {
     False,
     Use,
     Until,
-    Loop,
     If,
     Else,
     And,
@@ -55,8 +56,7 @@ pub enum KaramelKeywordType {
     Endless,
     Break,
     Continue,
-    WhileStartPart,
-    WhileEndPart,
+    While,
     Load
 }
 
@@ -85,8 +85,6 @@ pub static KEYWORDS: &[(&str, KaramelKeywordType)] = &[
     ("yanlis", KaramelKeywordType::False),
     ("kullan", KaramelKeywordType::Use),
     ("kadar",  KaramelKeywordType::Until),
-    ("döngü",  KaramelKeywordType::Loop),
-    ("dongu",  KaramelKeywordType::Loop),
     ("sonsuz", KaramelKeywordType::Endless),
     ("ise",    KaramelKeywordType::If),
     ("yoksa",   KaramelKeywordType::Else),
@@ -114,9 +112,8 @@ pub static KEYWORDS: &[(&str, KaramelKeywordType)] = &[
     ("kır",           KaramelKeywordType::Break),
     ("kir",           KaramelKeywordType::Break),
     ("devam",       KaramelKeywordType::Continue),
-    ("döngü",         KaramelKeywordType::WhileStartPart),
-    ("dongu",         KaramelKeywordType::WhileStartPart),
-    ("iken",          KaramelKeywordType::WhileEndPart),
+    ("döngü",         KaramelKeywordType::While),
+    ("dongu",         KaramelKeywordType::While),
     ("yükle",          KaramelKeywordType::Load),
     ("yukle",          KaramelKeywordType::Load)
 ];
@@ -162,6 +159,12 @@ pub enum KaramelOperatorType {
     CurveBracketStart,
     CurveBracketEnd
 }
+
+ impl KaramelOperatorType {
+     pub fn is_same<T: Borrow<Self>>(&self, other: T) -> bool {
+        discriminant(self) == discriminant(other.borrow())
+     }
+ }
 
 #[repr(C)]
 #[derive(Clone)]

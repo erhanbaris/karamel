@@ -1,4 +1,5 @@
 use std::borrow::Borrow;
+use std::cell::Cell;
 use std::vec::Vec;
 use std::rc::Rc;
 use std::path::PathBuf;
@@ -7,6 +8,7 @@ use std::cell::RefCell;
 use ast::KaramelDictItem;
 use crate::buildin::Module;
 use crate::file::read_module_or_script;
+use crate::syntax::loops::LoopType;
 use crate::types::*;
 use crate::error::*;
 use crate::compiler::*;
@@ -24,6 +26,7 @@ use super::context::KaramelCompilerContext;
 use super::function::find_function_definition_type;
 use super::module::{OpcodeModule, get_modules};
 use super::storage_builder::StorageBuilderOption;
+
 
 pub struct InterpreterCompiler;
 impl InterpreterCompiler {   
@@ -173,11 +176,10 @@ impl InterpreterCompiler {
             KaramelAstType::Dict(dict) => self.generate_dict(module.clone(), dict, upper_ast, context, storage_index),
             KaramelAstType::FuncCall { func_name_expression, arguments, assign_to_temp } => self.generate_func_call(module.clone(), func_name_expression, arguments, assign_to_temp.get(), upper_ast, context, storage_index),
             KaramelAstType::AccessorFuncCall { source, indexer, assign_to_temp } => self.generate_accessor_func_call(module.clone(), source, indexer, assign_to_temp.get(), upper_ast, context, storage_index),
-            KaramelAstType::PrefixUnary (operator, expression) => self.generate_prefix_unary(module.clone(), operator, expression, upper_ast, context, storage_index),
-            KaramelAstType::SuffixUnary (operator, expression) => self.generate_suffix_unary(operator, expression, upper_ast, context, storage_index),
+            KaramelAstType::PrefixUnary { operator, expression, assign_to_temp } => self.generate_prefix_unary(module.clone(), operator, expression, assign_to_temp, upper_ast, context, storage_index),
+            KaramelAstType::SuffixUnary(operator, expression) => self.generate_suffix_unary(operator, expression, upper_ast, context, storage_index),
             KaramelAstType::NewLine => Ok(()),
-            KaramelAstType::WhileLoop { control, body } => self.generate_whileloop(module.clone(), control, body, upper_ast, context, storage_index),
-            KaramelAstType::EndlessLoop(expression) => self.generate_endlessloop(module.clone(), expression, upper_ast, context, storage_index),
+            KaramelAstType::Loop { loop_type, body } => self.generate_loop(module.clone(), loop_type, body, upper_ast, context, storage_index),
             KaramelAstType::Break => self.generate_break(upper_ast, context, storage_index),
             KaramelAstType::Continue => self.generate_continue(upper_ast, context, storage_index),
             KaramelAstType::Return(expression) => self.generate_return(module.clone(), expression, upper_ast, context, storage_index),
@@ -272,7 +274,7 @@ impl InterpreterCompiler {
         }
     }
 
-    fn generate_list(&self, module: Rc<OpcodeModule>, list: &Vec<Box<KaramelAstType>>, upper_ast: &KaramelAstType, context: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult {
+    fn generate_list(&self, module: Rc<OpcodeModule>, list: &Vec<Rc<KaramelAstType>>, upper_ast: &KaramelAstType, context: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult {
         for item in list.iter().rev() {
             self.generate_opcode(module.clone(), item, upper_ast, context, storage_index)?;
         }
@@ -281,7 +283,7 @@ impl InterpreterCompiler {
         Ok(())
     }
 
-    fn generate_dict(&self, module: Rc<OpcodeModule>, dict: &Vec<Box<KaramelDictItem>>, upper_ast: &KaramelAstType, context: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult {
+    fn generate_dict(&self, module: Rc<OpcodeModule>, dict: &Vec<Rc<KaramelDictItem>>, upper_ast: &KaramelAstType, context: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult {
         for item in dict.iter().rev() {
             self.generate_primative(item.key.clone(), upper_ast, context, storage_index)?;
             self.generate_opcode(module.clone(), &item.value, upper_ast, context, storage_index)?;
@@ -291,7 +293,7 @@ impl InterpreterCompiler {
         Ok(())
     }
 
-    fn generate_func_call_by_name(&self, name :&String, module_path: &Vec<String>, arguments: &Vec<Box<KaramelAstType>>, assign_to_temp: bool, context: &mut KaramelCompilerContext, storage_index: usize) -> Result<bool, KaramelErrorType> {
+    fn generate_func_call_by_name(&self, name :&String, module_path: &Vec<String>, arguments: &Vec<Rc<KaramelAstType>>, assign_to_temp: bool, context: &mut KaramelCompilerContext, storage_index: usize) -> Result<bool, KaramelErrorType> {
         let function_search = context.get_function(name.to_string(), module_path, storage_index);
 
         match function_search {
@@ -377,7 +379,7 @@ impl InterpreterCompiler {
         }
     }
 
-    fn generate_func_call(&self, module: Rc<OpcodeModule>, func_name_expression: &KaramelAstType, arguments: &Vec<Box<KaramelAstType>>, assign_to_temp: bool,  upper_ast: &KaramelAstType, context: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult {
+    fn generate_func_call(&self, module: Rc<OpcodeModule>, func_name_expression: &KaramelAstType, arguments: &Vec<Rc<KaramelAstType>>, assign_to_temp: bool,  upper_ast: &KaramelAstType, context: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult {
         /* Build arguments */
         for argument in arguments {
             self.generate_opcode(module.clone(), argument, upper_ast, context, storage_index)?;
@@ -443,20 +445,50 @@ impl InterpreterCompiler {
         Ok(())
     }
 
-    fn generate_whileloop(&self, module: Rc<OpcodeModule>, control: &KaramelAstType, body: &KaramelAstType, upper_ast: &KaramelAstType, context: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult {
+    fn generate_loop(&self, module: Rc<OpcodeModule>, loop_type: &LoopType, body: &KaramelAstType, upper_ast: &KaramelAstType, context: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult {
         /* Backup loop informations */
         let loop_breaks = context.loop_breaks.to_vec();
         let loop_continues = context.loop_continues.to_vec();
-        
-        let start_location = context.opcodes.len(); 
-        self.generate_opcode(module.clone(), control, upper_ast, context, storage_index)?;
-        context.opcodes.push(VmOpCode::Compare as u8);
-        let compare_location = context.opcodes.len();
+        let mut compare_location = 0;
 
-        context.opcodes.push(0_u8);
-        context.opcodes.push(0_u8);
+        let (variable, control, increment) = match loop_type {
+            LoopType::Endless => {
+                (None, None, None)
+            },
+
+            LoopType::Simple(control) => {
+                (None, Some(control.clone()), None)
+            },
+
+            LoopType::Scalar {
+                variable, 
+                control,
+                increment
+            } => {
+                (Some(variable.clone()), Some(control.clone()), Some(increment.clone()))
+            }
+        };
+
+        if let Some(variable) = &variable {
+            self.generate_opcode(module.clone(), &*&variable, upper_ast, context, storage_index)?;
+        }
+
+        let start_location = context.opcodes.len();
+        
+        if let Some(control) = &control {
+            self.generate_opcode(module.clone(), &*control, upper_ast, context, storage_index)?;
+            context.opcodes.push(VmOpCode::Compare as u8);
+            compare_location = context.opcodes.len();
+
+            context.opcodes.push(0_u8);
+            context.opcodes.push(0_u8);
+        }
 
         self.generate_opcode(module.clone(), body, upper_ast, context, storage_index)?;
+
+        if let Some(increment) = &increment {
+            self.generate_opcode(module.clone(), &*&increment, upper_ast, context, storage_index)?;
+        }
 
         context.opcodes.push(VmOpCode::Jump as u8);
         context.opcodes.push(start_location as u8);
@@ -477,45 +509,11 @@ impl InterpreterCompiler {
         context.loop_breaks    = loop_breaks.to_vec();
         context.loop_continues = loop_continues.to_vec();
 
-        let end_location = current_location - compare_location;
-        context.opcodes[compare_location]     = end_location as u8;
-        context.opcodes[compare_location + 1] = (end_location >> 8) as u8;
-
-        Ok(())
-    }
-
-    fn generate_endlessloop(&self, module: Rc<OpcodeModule>, expression: &KaramelAstType, upper_ast: &KaramelAstType, context: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult {
-        /* Backup loop informations */
-        let loop_breaks = context.loop_breaks.to_vec();
-        let loop_continues = context.loop_continues.to_vec();
-        
-        let start_location = context.opcodes.len(); 
-        self.generate_opcode(module.clone(), expression, upper_ast, context, storage_index)?;
-
-        /* 
-        1. ... Endless loop start location
-        2. ...
-        3. ...
-        4. ...
-        5. Jump to  1.*/
-        context.opcodes.push(VmOpCode::Jump as u8);
-        context.opcodes.push(start_location as u8);
-        context.opcodes.push((start_location >> 8) as u8);
-
-        let current_location = context.opcodes.len(); 
-
-        for break_info in &context.loop_breaks {
-            context.opcodes[*break_info]     = current_location as u8;
-            context.opcodes[*break_info + 1] = (current_location >> 8) as u8;
-        } 
-
-        for continue_info in &context.loop_continues {
-            context.opcodes[*continue_info]     = start_location as u8;
-            context.opcodes[*continue_info + 1] = (start_location >> 8) as u8;
-        } 
-
-        context.loop_breaks = loop_breaks.to_vec();
-        context.loop_continues = loop_continues.to_vec();
+        if control.is_some() {
+            let end_location = current_location - compare_location;
+            context.opcodes[compare_location]     = end_location as u8;
+            context.opcodes[compare_location + 1] = (end_location >> 8) as u8;
+        }
 
         Ok(())
     }
@@ -657,7 +655,7 @@ impl InterpreterCompiler {
         Ok(())
     }
 
-    fn generate_prefix_unary(&self, module: Rc<OpcodeModule>, operator: &KaramelOperatorType, expression: &KaramelAstType, _: &KaramelAstType, context: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult { 
+    fn generate_prefix_unary(&self, module: Rc<OpcodeModule>, operator: &KaramelOperatorType, expression: &KaramelAstType, assign_to_temp: &Cell<bool>, _: &KaramelAstType, context: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult { 
         
         if *operator == KaramelOperatorType::Not { 
             return self.generate_not(module.clone(), expression, context, storage_index);
@@ -680,7 +678,13 @@ impl InterpreterCompiler {
             };
     
             context.opcodes.push(opcode);
-            context.opcodes.push(VmOpCode::CopyToStore as u8);
+
+            // Keep value at the stack if assign_to_temp is true
+            match assign_to_temp.get() {
+                true => context.opcodes.push(VmOpCode::CopyToStore as u8),
+                false => context.opcodes.push(VmOpCode::Store as u8),
+            }
+            
             context.opcodes.push(location);
             return Ok(());
         }
@@ -723,7 +727,7 @@ impl InterpreterCompiler {
         context.opcodes[jump_location + 1] = (current_location >> 8) as u8;
     }
 
-    fn generate_if_condition(&self, module: Rc<OpcodeModule>, condition: &KaramelAstType, body: &KaramelAstType, else_body: &Option<Box<KaramelAstType>>, else_if: &Vec<Box<KaramelIfStatementElseItem>>, upper_ast: &KaramelAstType, context: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult {
+    fn generate_if_condition(&self, module: Rc<OpcodeModule>, condition: &KaramelAstType, body: &KaramelAstType, else_body: &Option<Rc<KaramelAstType>>, else_if: &Vec<Rc<KaramelIfStatementElseItem>>, upper_ast: &KaramelAstType, context: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult {
         /*
         ╔════════════════════╗
         ║   IF CONDITION     ║

@@ -1,4 +1,5 @@
 use std::cell::Cell;
+use std::rc::Rc;
 
 use crate::types::*;
 use crate::syntax::util::update_functions_for_temp_return;
@@ -90,14 +91,14 @@ impl ExtensionSyntaxParser for FuncCallParser {
 
                 match param_expression {
                     Ok(KaramelAstType::None) => (),
-                    Ok(data) => arguments.push(Box::new(data)),
+                    Ok(data) => arguments.push(Rc::new(data)),
                     _ => (),
                 };
             }
 
             parser.flags.set(inner_parser_flags);
             return Ok(KaramelAstType::FuncCall {
-                func_name_expression: Box::new(ast.clone()),
+                func_name_expression: Rc::new(ast.clone()),
                 arguments,
                 assign_to_temp: Cell::new(parser.flags.get().contains(SyntaxFlag::IN_EXPRESSION)
                                 || parser.flags.get().contains(SyntaxFlag::IN_ASSIGNMENT)
@@ -121,8 +122,8 @@ impl ExtensionSyntaxParser for FuncCallParser {
                         KaramelAstType::Symbol(_) => {
                             update_functions_for_temp_return(ast);
                             Ok(KaramelAstType::AccessorFuncCall {
-                                source: Box::new(ast.clone()),
-                                indexer: Box::new(sub_ast),
+                                source: Rc::new(ast.clone()),
+                                indexer: Rc::new(sub_ast),
                                 assign_to_temp: Cell::new(true)
                             })
                         },

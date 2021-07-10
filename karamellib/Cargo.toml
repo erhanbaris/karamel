@@ -28,6 +28,11 @@ wasmBuild = []
 unittest = []
 default = []
 
+dbg = []
+dbg_level1 = []
+dbg_level2 = []
+dbg_level3 = []
+
 [lib]
 crate-type = ["cdylib", "rlib"]
 doctest = false

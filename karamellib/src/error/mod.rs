@@ -242,7 +242,15 @@ pub enum KaramelErrorType {
 
     #[error("'{0:?}' geçerli bir sıralayıcı değil, yazı olması gerekiyor")]
     #[strum(message = "150")]
-    IndexerMustBeString(Rc<KaramelPrimative>)
+    IndexerMustBeString(Rc<KaramelPrimative>),
+
+    #[error("Döngü ile sadece atama öperatörü kullanılabilir")]
+    #[strum(message = "151")]
+    AssignOperatorRequiredForLoop,
+
+    #[error("',' eksik")]
+    #[strum(message = "152")]
+    CommaIsMissing
 }
 
 impl From<KaramelErrorType> for KaramelError {

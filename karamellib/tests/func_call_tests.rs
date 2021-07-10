@@ -29,40 +29,40 @@ mod tests {
     }
 
     test_compare!(func_call_1, "print()", Ok(Rc::new(KaramelAstType::FuncCall {
-        func_name_expression: Box::new(KaramelAstType::Symbol("print".to_string())),
+        func_name_expression: Rc::new(KaramelAstType::Symbol("print".to_string())),
         arguments: Vec::new(),
         assign_to_temp: Cell::new(false)
     })));
 
     test_compare!(func_call_2, "print(1)", Ok(Rc::new(KaramelAstType::FuncCall {
-        func_name_expression: Box::new(KaramelAstType::Symbol("print".to_string())),
-        arguments: [Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(1.0))))].to_vec(),
+        func_name_expression: Rc::new(KaramelAstType::Symbol("print".to_string())),
+        arguments: [Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(1.0))))].to_vec(),
         assign_to_temp: Cell::new(false)
     })));
 
     test_compare!(func_call_3, "print( 1 )", Ok(Rc::new(KaramelAstType::FuncCall {
-        func_name_expression: Box::new(KaramelAstType::Symbol("print".to_string())),
-        arguments: [Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(1.0))))].to_vec(),
+        func_name_expression: Rc::new(KaramelAstType::Symbol("print".to_string())),
+        arguments: [Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(1.0))))].to_vec(),
         assign_to_temp: Cell::new(false)
     })));
 
     test_compare!(func_call_4, "print( 1 , 2 )", Ok(Rc::new(KaramelAstType::FuncCall {
-        func_name_expression: Box::new(KaramelAstType::Symbol("print".to_string())),
-        arguments: [Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(1.0)))), Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(2.0))))].to_vec(),
+        func_name_expression: Rc::new(KaramelAstType::Symbol("print".to_string())),
+        arguments: [Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(1.0)))), Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(2.0))))].to_vec(),
         assign_to_temp: Cell::new(false)
     })));
 
     test_compare!(func_call_5, "print(1,2)", Ok(Rc::new(KaramelAstType::FuncCall {
-        func_name_expression: Box::new(KaramelAstType::Symbol("print".to_string())),
-        arguments: [Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(1.0)))), Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(2.0))))].to_vec(),
+        func_name_expression: Rc::new(KaramelAstType::Symbol("print".to_string())),
+        arguments: [Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(1.0)))), Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(2.0))))].to_vec(),
         assign_to_temp: Cell::new(false)
     })));
 
     test_compare!(func_call_6, "print(1,2,'erhan')", Ok(Rc::new(KaramelAstType::FuncCall {
-        func_name_expression: Box::new(KaramelAstType::Symbol("print".to_string())),
-        arguments: [Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(1.0)))),
-                    Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(2.0)))),
-                    Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Text(Rc::new("erhan".to_string())))))].to_vec(),
+        func_name_expression: Rc::new(KaramelAstType::Symbol("print".to_string())),
+        arguments: [Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(1.0)))),
+                    Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(2.0)))),
+                    Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Text(Rc::new("erhan".to_string())))))].to_vec(),
                     assign_to_temp: Cell::new(false)
     })));
 
@@ -77,36 +77,36 @@ mod tests {
         line: 0
     }));
     test_compare!(func_call_9, "data=print()", Ok(Rc::new(KaramelAstType::Assignment {
-        variable: Box::new(KaramelAstType::Symbol("data".to_string())),
+        variable: Rc::new(KaramelAstType::Symbol("data".to_string())),
         operator: karamellib::types::KaramelOperatorType::Assign,
-        expression: Box::new(KaramelAstType::FuncCall {
-            func_name_expression: Box::new(KaramelAstType::Symbol("print".to_string())),
+        expression: Rc::new(KaramelAstType::FuncCall {
+            func_name_expression: Rc::new(KaramelAstType::Symbol("print".to_string())),
             arguments: Vec::new(),
             assign_to_temp: Cell::new(true)
         })
     })));
     test_compare!(func_call_10, "data1() + data2()", Ok(Rc::new(KaramelAstType::Binary {
-        left: Box::new(KaramelAstType::FuncCall {
-            func_name_expression: Box::new(KaramelAstType::Symbol("data1".to_string())),
+        left: Rc::new(KaramelAstType::FuncCall {
+            func_name_expression: Rc::new(KaramelAstType::Symbol("data1".to_string())),
             arguments: Vec::new(),
             assign_to_temp: Cell::new(true)
         }),
         operator: karamellib::types::KaramelOperatorType::Addition,
-        right: Box::new(KaramelAstType::FuncCall {
-            func_name_expression: Box::new(KaramelAstType::Symbol("data2".to_string())),
+        right: Rc::new(KaramelAstType::FuncCall {
+            func_name_expression: Rc::new(KaramelAstType::Symbol("data2".to_string())),
             arguments: Vec::new(),
             assign_to_temp: Cell::new(true)
         })
     })));
     test_compare!(func_call_11, "data1() > data2()", Ok(Rc::new(KaramelAstType::Control {
-        left: Box::new(KaramelAstType::FuncCall {
-            func_name_expression: Box::new(KaramelAstType::Symbol("data1".to_string())),
+        left: Rc::new(KaramelAstType::FuncCall {
+            func_name_expression: Rc::new(KaramelAstType::Symbol("data1".to_string())),
             arguments: Vec::new(),
             assign_to_temp: Cell::new(true)
         }),
         operator: karamellib::types::KaramelOperatorType::GreaterThan,
-        right: Box::new(KaramelAstType::FuncCall {
-            func_name_expression: Box::new(KaramelAstType::Symbol("data2".to_string())),
+        right: Rc::new(KaramelAstType::FuncCall {
+            func_name_expression: Rc::new(KaramelAstType::Symbol("data2".to_string())),
             arguments: Vec::new(),
             assign_to_temp: Cell::new(true)
         })

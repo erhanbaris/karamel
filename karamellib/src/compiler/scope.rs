@@ -10,7 +10,7 @@ pub struct Scope {
     pub location: *mut u8,
     pub call_return_assign_to_temp: bool,
     pub const_size: u8,
-    pub stack_ptr: *mut VmObject ,
+    pub stack_ptr: *mut VmObject,
     pub memory_ptr: *mut VmObject ,
     pub storage_index: isize
 }
