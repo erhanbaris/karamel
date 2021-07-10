@@ -8,7 +8,7 @@ use std::cell::RefCell;
 use ast::KaramelDictItem;
 use crate::buildin::Module;
 use crate::file::read_module_or_script;
-use crate::syntax::while_loop::LoopType;
+use crate::syntax::loops::LoopType;
 use crate::types::*;
 use crate::error::*;
 use crate::compiler::*;

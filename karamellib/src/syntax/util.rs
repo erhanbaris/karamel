@@ -3,12 +3,25 @@ use crate::syntax::{SyntaxParser};
 use crate::syntax::ParseType;
 use crate::compiler::ast::KaramelAstType;
 use crate::error::KaramelErrorType;
+use crate::syntax::SyntaxFlag;
 
 // https://github.com/rust-lang/rust/issues/75429
 
 pub fn map_parser(parser: &SyntaxParser, parser_funcs: &[ParseType]) -> AstResult {
     for parser_func in parser_funcs {
         match parser_func(parser) {
+            Ok(KaramelAstType::None) => (),
+            Ok(ast) => return Ok(ast),
+            Err(err) => return Err(err)
+        }
+    }
+
+    Ok(KaramelAstType::None)
+}
+
+pub fn map_parser_with_flag(flag: SyntaxFlag, parser: &SyntaxParser, parser_funcs: &[ParseType]) -> AstResult {
+    for parser_func in parser_funcs {
+        match with_flag(flag, parser, || parser_func(parser)) {
             Ok(KaramelAstType::None) => (),
             Ok(ast) => return Ok(ast),
             Err(err) => return Err(err)
@@ -55,4 +68,20 @@ pub fn update_functions_for_temp_return(ast: &KaramelAstType) {
         },
         _ => ()
     };
+}
+
+pub fn with_flag<F: Fn() -> AstResult>(flag: SyntaxFlag, parser: &SyntaxParser, func: F) -> AstResult {
+    let parser_flags  = parser.flags.get();
+    parser.flags.set(parser_flags | flag);
+    let loop_control = func()?;
+    parser.flags.set(parser_flags);
+    Ok(loop_control)
+}
+
+pub fn mut_with_flag<F: FnMut() -> AstResult>(flag: SyntaxFlag, parser: &SyntaxParser, mut func: F) -> AstResult {
+    let parser_flags  = parser.flags.get();
+    parser.flags.set(parser_flags | flag);
+    let loop_control = func()?;
+    parser.flags.set(parser_flags);
+    Ok(loop_control)
 }

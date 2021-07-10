@@ -6,7 +6,7 @@ use crate::syntax::assignment::AssignmentParser;
 use crate::syntax::load_module::LoadModuleParser;
 use crate::syntax::function_return::FunctionReturnParser;
 use crate::syntax::loop_item::LoopItemParser;
-use crate::syntax::while_loop::WhileLoopParser;
+use crate::syntax::loops::WhileLoopParser;
 
 pub struct StatementParser;
 

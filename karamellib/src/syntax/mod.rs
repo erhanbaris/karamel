@@ -11,7 +11,7 @@ pub mod if_condition;
 pub mod statement;
 pub mod function_defination;
 pub mod function_return;
-pub mod while_loop;
+pub mod loops;
 pub mod loop_item;
 pub mod expression;
 pub mod load_module;

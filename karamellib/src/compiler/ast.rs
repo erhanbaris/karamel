@@ -3,7 +3,7 @@ use std::vec::Vec;
 use std::rc::Rc;
 
 use crate::compiler::value::KaramelPrimative;
-use crate::syntax::while_loop::LoopType;
+use crate::syntax::loops::LoopType;
 use crate::types::KaramelOperatorType;
 
 #[repr(C)]

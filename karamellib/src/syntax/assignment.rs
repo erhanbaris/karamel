@@ -5,6 +5,8 @@ use crate::syntax::{SyntaxParser, SyntaxParserTrait, SyntaxFlag};
 use crate::syntax::expression::ExpressionParser;
 use crate::compiler::ast::KaramelAstType;
 
+use super::util::with_flag;
+
 pub struct AssignmentParser;
 
 impl SyntaxParserTrait for AssignmentParser {
@@ -32,17 +34,12 @@ impl SyntaxParserTrait for AssignmentParser {
             KaramelOperatorType::AssignSubtraction]) {
             parser.cleanup_whitespaces();
 
-            let parser_flags  = parser.flags.get();
-            parser.flags.set(parser_flags | SyntaxFlag::IN_ASSIGNMENT);
-            
-            let expression = ExpressionParser::parse(parser);
+            let expression = with_flag(SyntaxFlag::IN_ASSIGNMENT, parser, || ExpressionParser::parse(parser));            
             match expression {
                 Ok(KaramelAstType::None) => return expression,
                 Ok(_) => (),
                 Err(_) => return expression
             };
-
-            parser.flags.set(parser_flags);
 
             let assignment_ast = KaramelAstType::Assignment {
                 variable: Rc::new(variable),

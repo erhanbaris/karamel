@@ -6,7 +6,7 @@ use crate::compiler::ast::KaramelAstType;
 use crate::compiler::value::KaramelPrimative;
 use crate::compiler::context::KaramelCompilerContext;
 use crate::types::KaramelOperatorType;
-use crate::syntax::while_loop::LoopType;
+use crate::syntax::loops::LoopType;
 
 use super::module::OpcodeModule;
 pub struct StorageBuilder;

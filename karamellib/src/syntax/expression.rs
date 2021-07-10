@@ -10,6 +10,8 @@ use crate::compiler::ast::KaramelAstType;
 use crate::compiler::value::KaramelPrimative;
 use crate::error::KaramelErrorType;
 
+use super::util::{mut_with_flag, with_flag};
+
 pub struct ExpressionParser;
 
 impl SyntaxParserTrait for ExpressionParser {
@@ -22,22 +24,13 @@ impl SyntaxParserTrait for ExpressionParser {
             /* parse for 'object()()' */
             if FuncCallParser::parsable(parser) {
                 update_functions_for_temp_return(&ast);
-
-                let inner_parser_flags  = parser.flags.get();
-                parser.flags.set(inner_parser_flags | SyntaxFlag::IN_DICT_INDEXER);
-                ast = FuncCallParser::parse_suffix(&mut ast, parser)?;
-                parser.flags.set(inner_parser_flags);
+                ast = mut_with_flag(SyntaxFlag::IN_DICT_INDEXER, parser, || FuncCallParser::parse_suffix(&mut ast, parser))?;
             }
             
             /* parse for 'object.method' */
             else if let Some(_) = parser.match_operator(&[KaramelOperatorType::Dot]) {
 
-                let inner_parser_flags  = parser.flags.get();
-                parser.flags.set(inner_parser_flags | SyntaxFlag::IN_DICT_INDEXER);
-
-                let sub_ast = ExpressionParser::parse(parser)?;
-                parser.flags.set(inner_parser_flags);
-                
+                let sub_ast = with_flag(SyntaxFlag::IN_DICT_INDEXER, parser, || ExpressionParser::parse(parser))?;
                 ast = match &sub_ast {
                     KaramelAstType::Symbol(symbol) => {
                         KaramelAstType::Indexer 
