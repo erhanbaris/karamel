@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use crate::types::*;
 use crate::syntax::{SyntaxParser, SyntaxParserTrait, SyntaxFlag};
 use crate::compiler::ast::KaramelAstType;
@@ -23,7 +25,7 @@ impl SyntaxParserTrait for FunctionReturnParser {
             parser.flags.set(parser_flags | SyntaxFlag::IN_RETURN);
             
             let ast = ExpressionParser::parse(parser)?;
-            let return_ast = KaramelAstType::Return(Box::new(ast));
+            let return_ast = KaramelAstType::Return(Rc::new(ast));
             parser.flags.set(parser_flags);
 
             return Ok(return_ast);

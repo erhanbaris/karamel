@@ -34,35 +34,35 @@ mod tests {
 veya: 
   erhan=1234
 "#, Ok(Rc::new(KaramelAstType::IfStatement {
-    condition: Box::new(KaramelAstType::Binary {
-        left: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(1024.0)))), 
+    condition: Rc::new(KaramelAstType::Binary {
+        left: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(1024.0)))), 
         operator: KaramelOperatorType::Multiplication, 
-        right: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(123.0))))
+        right: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(123.0))))
     }),
-    body: Box::new(KaramelAstType::Assignment {
-        variable: Box::new(KaramelAstType::Symbol("erhan".to_string())),
+    body: Rc::new(KaramelAstType::Assignment {
+        variable: Rc::new(KaramelAstType::Symbol("erhan".to_string())),
         operator: KaramelOperatorType::Assign,
-        expression: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(123.0))))
+        expression: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(123.0))))
     }),
-    else_body: Some(Box::new(KaramelAstType::Assignment {
-        variable: Box::new(KaramelAstType::Symbol("erhan".to_string())),
+    else_body: Some(Rc::new(KaramelAstType::Assignment {
+        variable: Rc::new(KaramelAstType::Symbol("erhan".to_string())),
         operator: KaramelOperatorType::Assign,
-        expression: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(1234.0))))
+        expression: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(1234.0))))
     })),
     else_if: Vec::new()
     })));
 
     test_compare!(if_2, r#"1024 * 123 ise:
     erhan=123   "#, Ok(Rc::new(KaramelAstType::IfStatement {
-    condition: Box::new(KaramelAstType::Binary {
-        left: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(1024.0)))), 
+    condition: Rc::new(KaramelAstType::Binary {
+        left: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(1024.0)))), 
         operator: KaramelOperatorType::Multiplication, 
-        right: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(123.0))))
+        right: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(123.0))))
     }),
-    body: Box::new(KaramelAstType::Assignment {
-        variable: Box::new(KaramelAstType::Symbol("erhan".to_string())),
+    body: Rc::new(KaramelAstType::Assignment {
+        variable: Rc::new(KaramelAstType::Symbol("erhan".to_string())),
         operator: KaramelOperatorType::Assign,
-        expression: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(123.0))))
+        expression: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(123.0))))
     }),
     else_body:None,
     else_if: Vec::new()
@@ -71,19 +71,19 @@ veya:
     test_compare!(if_3, r#"1024 * 123 ise:
     erhan=123   
     print(1)"#, Ok(Rc::new(KaramelAstType::IfStatement {
-    condition: Box::new(KaramelAstType::Binary {
-        left: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(1024.0)))), 
+    condition: Rc::new(KaramelAstType::Binary {
+        left: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(1024.0)))), 
         operator: KaramelOperatorType::Multiplication, 
-        right: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(123.0))))
+        right: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(123.0))))
     }),
-    body: Box::new(KaramelAstType::Block([Rc::new(KaramelAstType::Assignment {
-        variable: Box::new(KaramelAstType::Symbol("erhan".to_string())),
+    body: Rc::new(KaramelAstType::Block([Rc::new(KaramelAstType::Assignment {
+        variable: Rc::new(KaramelAstType::Symbol("erhan".to_string())),
         operator: KaramelOperatorType::Assign,
-        expression: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(123.0))))
+        expression: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(123.0))))
     }),
     Rc::new(KaramelAstType::FuncCall {
-        func_name_expression: Box::new(KaramelAstType::Symbol("print".to_string())),
-        arguments: [Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(1.0))))].to_vec(),
+        func_name_expression: Rc::new(KaramelAstType::Symbol("print".to_string())),
+        arguments: [Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(1.0))))].to_vec(),
         assign_to_temp: Cell::new(false)
     })
     ].to_vec())),
@@ -97,30 +97,30 @@ veya:
 veya : 
     erhan=321 
     print(2)"#, Ok(Rc::new(KaramelAstType::IfStatement {
-    condition: Box::new(KaramelAstType::Binary {
-        left: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(1024.0)))), 
+    condition: Rc::new(KaramelAstType::Binary {
+        left: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(1024.0)))), 
         operator: KaramelOperatorType::Multiplication, 
-        right: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(123.0))))
+        right: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(123.0))))
     }),
-    body: Box::new(KaramelAstType::Block([Rc::new(KaramelAstType::Assignment {
-        variable: Box::new(KaramelAstType::Symbol("erhan".to_string())),
+    body: Rc::new(KaramelAstType::Block([Rc::new(KaramelAstType::Assignment {
+        variable: Rc::new(KaramelAstType::Symbol("erhan".to_string())),
         operator: KaramelOperatorType::Assign,
-        expression: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(123.0))))
+        expression: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(123.0))))
     }),
     Rc::new(KaramelAstType::FuncCall {
-        func_name_expression: Box::new(KaramelAstType::Symbol("print".to_string())),
-        arguments: [Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(1.0))))].to_vec(),
+        func_name_expression: Rc::new(KaramelAstType::Symbol("print".to_string())),
+        arguments: [Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(1.0))))].to_vec(),
         assign_to_temp: Cell::new(false)
     })
     ].to_vec())),
-    else_body: Some(Box::new(KaramelAstType::Block([Rc::new(KaramelAstType::Assignment {
-        variable: Box::new(KaramelAstType::Symbol("erhan".to_string())),
+    else_body: Some(Rc::new(KaramelAstType::Block([Rc::new(KaramelAstType::Assignment {
+        variable: Rc::new(KaramelAstType::Symbol("erhan".to_string())),
         operator: KaramelOperatorType::Assign,
-        expression: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(321.0))))
+        expression: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(321.0))))
     }),
     Rc::new(KaramelAstType::FuncCall {
-        func_name_expression: Box::new(KaramelAstType::Symbol("print".to_string())),
-        arguments: [Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(2.0))))].to_vec(),
+        func_name_expression: Rc::new(KaramelAstType::Symbol("print".to_string())),
+        arguments: [Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(2.0))))].to_vec(),
         assign_to_temp: Cell::new(false)
     })
     ].to_vec()))),
@@ -134,33 +134,33 @@ veya 1024 * 123 > 10_000_000 ise:
 veya:
     erhan=1234
 "#, Ok(Rc::new(KaramelAstType::IfStatement {
-    condition: Box::new(KaramelAstType::Binary {
-        left: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(1024.0)))), 
+    condition: Rc::new(KaramelAstType::Binary {
+        left: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(1024.0)))), 
         operator: KaramelOperatorType::Multiplication, 
-        right: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(123.0))))
+        right: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(123.0))))
     }),
-    body: Box::new(KaramelAstType::Assignment {
-        variable: Box::new(KaramelAstType::Symbol("erhan".to_string())),
+    body: Rc::new(KaramelAstType::Assignment {
+        variable: Rc::new(KaramelAstType::Symbol("erhan".to_string())),
         operator: KaramelOperatorType::Assign,
-        expression: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(123.0))))
+        expression: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(123.0))))
     }),
-    else_body: Some(Box::new(KaramelAstType::Assignment {
-        variable: Box::new(KaramelAstType::Symbol("erhan".to_string())),
+    else_body: Some(Rc::new(KaramelAstType::Assignment {
+        variable: Rc::new(KaramelAstType::Symbol("erhan".to_string())),
         operator: KaramelOperatorType::Assign,
-        expression: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(1234.0))))
+        expression: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(1234.0))))
     })),
-    else_if: [Box::new(KaramelIfStatementElseItem::new(Box::new(KaramelAstType::Control {
-        left: Box::new(KaramelAstType::Binary {
-            left: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(1024.0)))),
+    else_if: [Rc::new(KaramelIfStatementElseItem::new(Rc::new(KaramelAstType::Control {
+        left: Rc::new(KaramelAstType::Binary {
+            left: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(1024.0)))),
             operator: KaramelOperatorType::Multiplication,
-            right: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(123.0))))
+            right: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(123.0))))
         }),
         operator: KaramelOperatorType::GreaterThan,
-        right: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(10000000.0)))),
-    }), Box::new(KaramelAstType::Assignment {
-        variable: Box::new(KaramelAstType::Symbol("erhan".to_string())),
+        right: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(10000000.0)))),
+    }), Rc::new(KaramelAstType::Assignment {
+        variable: Rc::new(KaramelAstType::Symbol("erhan".to_string())),
         operator: KaramelOperatorType::Assign,
-        expression: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(12345.0))))
+        expression: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(12345.0))))
     })))].to_vec()
     })));
 
@@ -173,46 +173,46 @@ veya 1024 * 123 < 10_000_000 ise:
 veya:
     erhan=1234
 "#, Ok(Rc::new(KaramelAstType::IfStatement {
-    condition: Box::new(KaramelAstType::Binary {
-        left: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(1024.0)))), 
+    condition: Rc::new(KaramelAstType::Binary {
+        left: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(1024.0)))), 
         operator: KaramelOperatorType::Multiplication, 
-        right: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(123.0))))
+        right: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(123.0))))
     }),
-    body: Box::new(KaramelAstType::Assignment {
-        variable: Box::new(KaramelAstType::Symbol("erhan".to_string())),
+    body: Rc::new(KaramelAstType::Assignment {
+        variable: Rc::new(KaramelAstType::Symbol("erhan".to_string())),
         operator: KaramelOperatorType::Assign,
-        expression: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(123.0))))
+        expression: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(123.0))))
     }),
-    else_body: Some(Box::new(KaramelAstType::Assignment {
-        variable: Box::new(KaramelAstType::Symbol("erhan".to_string())),
+    else_body: Some(Rc::new(KaramelAstType::Assignment {
+        variable: Rc::new(KaramelAstType::Symbol("erhan".to_string())),
         operator: KaramelOperatorType::Assign,
-        expression: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(1234.0))))
+        expression: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(1234.0))))
     })),
-    else_if: [Box::new(KaramelIfStatementElseItem::new(Box::new(KaramelAstType::Control {
-        left: Box::new(KaramelAstType::Binary {
-            left: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(1024.0)))),
+    else_if: [Rc::new(KaramelIfStatementElseItem::new(Rc::new(KaramelAstType::Control {
+        left: Rc::new(KaramelAstType::Binary {
+            left: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(1024.0)))),
             operator: KaramelOperatorType::Multiplication,
-            right: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(123.0))))
+            right: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(123.0))))
         }),
         operator: KaramelOperatorType::GreaterThan,
-        right: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(10000000.0)))),
-    }), Box::new(KaramelAstType::Assignment {
-        variable: Box::new(KaramelAstType::Symbol("erhan".to_string())),
+        right: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(10000000.0)))),
+    }), Rc::new(KaramelAstType::Assignment {
+        variable: Rc::new(KaramelAstType::Symbol("erhan".to_string())),
         operator: KaramelOperatorType::Assign,
-        expression: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(12345.0))))
+        expression: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(12345.0))))
     }))),
-    Box::new(KaramelIfStatementElseItem::new(Box::new(KaramelAstType::Control {
-        left: Box::new(KaramelAstType::Binary {
-            left: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(1024.0)))),
+    Rc::new(KaramelIfStatementElseItem::new(Rc::new(KaramelAstType::Control {
+        left: Rc::new(KaramelAstType::Binary {
+            left: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(1024.0)))),
             operator: KaramelOperatorType::Multiplication,
-            right: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(123.0))))
+            right: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(123.0))))
         }),
         operator: KaramelOperatorType::LessThan,
-        right: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(10000000.0)))),
-    }), Box::new(KaramelAstType::Assignment {
-        variable: Box::new(KaramelAstType::Symbol("erhan".to_string())),
+        right: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(10000000.0)))),
+    }), Rc::new(KaramelAstType::Assignment {
+        variable: Rc::new(KaramelAstType::Symbol("erhan".to_string())),
         operator: KaramelOperatorType::Assign,
-        expression: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(123456.0))))
+        expression: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(123456.0))))
     })))].to_vec()
     })));
 
@@ -253,29 +253,29 @@ test_compare!(if_9, r#"1024 * 123 ise:
 veya 1024 * 123 > 10_000_000 ise:
     erhan=12345
 "#, Ok(Rc::new(KaramelAstType::IfStatement {
-condition: Box::new(KaramelAstType::Binary {
-    left: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(1024.0)))), 
+condition: Rc::new(KaramelAstType::Binary {
+    left: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(1024.0)))), 
     operator: KaramelOperatorType::Multiplication, 
-    right: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(123.0))))
+    right: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(123.0))))
 }),
-body: Box::new(KaramelAstType::Assignment {
-    variable: Box::new(KaramelAstType::Symbol("erhan".to_string())),
+body: Rc::new(KaramelAstType::Assignment {
+    variable: Rc::new(KaramelAstType::Symbol("erhan".to_string())),
     operator: KaramelOperatorType::Assign,
-    expression: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(123.0))))
+    expression: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(123.0))))
 }),
 else_body: None,
-else_if: [Box::new(KaramelIfStatementElseItem::new(Box::new(KaramelAstType::Control {
-    left: Box::new(KaramelAstType::Binary {
-        left: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(1024.0)))),
+else_if: [Rc::new(KaramelIfStatementElseItem::new(Rc::new(KaramelAstType::Control {
+    left: Rc::new(KaramelAstType::Binary {
+        left: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(1024.0)))),
         operator: KaramelOperatorType::Multiplication,
-        right: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(123.0))))
+        right: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(123.0))))
     }),
     operator: KaramelOperatorType::GreaterThan,
-    right: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(10000000.0)))),
-}), Box::new(KaramelAstType::Assignment {
-    variable: Box::new(KaramelAstType::Symbol("erhan".to_string())),
+    right: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(10000000.0)))),
+}), Rc::new(KaramelAstType::Assignment {
+    variable: Rc::new(KaramelAstType::Symbol("erhan".to_string())),
     operator: KaramelOperatorType::Assign,
-    expression: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(12345.0))))
+    expression: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(12345.0))))
 })))].to_vec()
 })));
 }

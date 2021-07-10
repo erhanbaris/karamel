@@ -8,6 +8,7 @@ pub mod ast;
 pub mod module;
 pub mod scope;
 pub mod context;
+pub mod generator;
 
 pub use self::compiler::*;
 pub use self::static_storage::*;

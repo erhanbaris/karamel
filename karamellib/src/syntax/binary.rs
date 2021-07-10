@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use crate::types::*;
 use crate::syntax::{SyntaxParser, SyntaxParserTrait, SyntaxFlag};
 use crate::syntax::unary::UnaryParser;
@@ -58,9 +60,9 @@ pub fn parse_binary<T: SyntaxParserTrait>(parser: &SyntaxParser, operators: &[Ka
 
             parser.flags.set(parser_flags);
             left_expr = KaramelAstType::Binary {
-                left: Box::new(left_expr),
+                left: Rc::new(left_expr),
                 operator,
-                right: Box::new(right_expr.unwrap())
+                right: Rc::new(right_expr.unwrap())
             };
         }
         else {

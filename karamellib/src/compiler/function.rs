@@ -24,6 +24,7 @@ pub type NativeCall       = fn(FunctionParameter) -> NativeCallResult;
 pub type IndexerGetCall   = fn (VmObject, f64) -> NativeCallResult ;
 pub type IndexerSetCall   = fn (VmObject, f64, VmObject) -> NativeCallResult ;
 
+#[derive(Debug)]
 pub struct FunctionParameter<'a> {
     stack: &'a Vec<VmObject>, 
     source: Option<VmObject>, 
@@ -182,9 +183,11 @@ impl FunctionReference {
     unsafe fn native_function_call(reference: &FunctionReference, func: NativeCall, compiler: &mut KaramelCompilerContext, source: Option<VmObject>) -> Result<(), KaramelErrorType> {            
         let total_args                 = *compiler.opcodes_ptr.offset(1);
         let call_return_assign_to_temp = *compiler.opcodes_ptr.offset(2) != 0;
+        let before = get_memory_index!(compiler);
+
         let parameter = match reference.flags {
-            FunctionFlag::IN_CLASS => FunctionParameter::new(&(*compiler.current_scope).stack, source, get_memory_index!(compiler) as usize, total_args, &compiler.stdout, &compiler.stderr),
-            _ => FunctionParameter::new(&(*compiler.current_scope).stack, source, get_memory_index!(compiler) as usize, total_args, &compiler.stdout, &compiler.stderr)
+            FunctionFlag::IN_CLASS => FunctionParameter::new(&(*compiler.current_scope).stack, source, get_memory_index!(compiler) as usize, karamel_dbg!(total_args), &compiler.stdout, &compiler.stderr),
+            _ => FunctionParameter::new(&(*compiler.current_scope).stack, source, get_memory_index!(compiler) as usize, karamel_dbg!(total_args), &compiler.stdout, &compiler.stderr)
         };
         
         match func(parameter) {
@@ -200,6 +203,7 @@ impl FunctionReference {
                 Ok(())
             },
             Err(error) => {
+                dec_memory_index!(compiler, total_args as usize);
                 println!("{:?}", error);
                 Err(error)
             }

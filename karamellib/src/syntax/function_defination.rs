@@ -86,11 +86,11 @@ impl SyntaxParserTrait for FunctionDefinationParser {
             if !has_return {
                 body = match body {
                     KaramelAstType::Block(mut blocks) => {
-                        blocks.push(Rc::new(KaramelAstType::Return(Box::new(KaramelAstType::None))));
+                        blocks.push(Rc::new(KaramelAstType::Return(Rc::new(KaramelAstType::None))));
                         KaramelAstType::Block(blocks)
                     },
                     _ => {
-                        KaramelAstType::Block([Rc::new(body), Rc::new(KaramelAstType::Return(Box::new(KaramelAstType::None)))].to_vec())
+                        KaramelAstType::Block([Rc::new(body), Rc::new(KaramelAstType::Return(Rc::new(KaramelAstType::None)))].to_vec())
                     }
                 }
             }

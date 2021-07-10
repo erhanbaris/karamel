@@ -27,18 +27,18 @@ mod tests {
     }
 
     test_compare!(assignment_1, "erhan = 2020", Ok(Rc::new(KaramelAstType::Assignment {
-        variable: Box::new(KaramelAstType::Symbol("erhan".to_string())),
+        variable: Rc::new(KaramelAstType::Symbol("erhan".to_string())),
         operator: KaramelOperatorType::Assign,
-        expression: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(2020.0))))
+        expression: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(2020.0))))
     })));
 
     test_compare!(assignment_2, "erhan = ('erhan' * 2)", Ok(Rc::new(KaramelAstType::Assignment {
-        variable: Box::new(KaramelAstType::Symbol("erhan".to_string())),
+        variable: Rc::new(KaramelAstType::Symbol("erhan".to_string())),
         operator: KaramelOperatorType::Assign,
-        expression: Box::new(KaramelAstType::Binary {
-            left: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Text(Rc::new("erhan".to_string()))))),
+        expression: Rc::new(KaramelAstType::Binary {
+            left: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Text(Rc::new("erhan".to_string()))))),
             operator: KaramelOperatorType::Multiplication, 
-            right: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(2.0))))
+            right: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(2.0))))
         })
     })));
 }

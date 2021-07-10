@@ -29,95 +29,95 @@ mod tests {
     }
 
     test_compare!(add_subtract_1, "10 + 10", Ok(Rc::new(KaramelAstType::Binary {
-        left: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(10.0)))), 
+        left: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(10.0)))), 
         operator: KaramelOperatorType::Addition, 
-        right: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(10.0))))
+        right: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(10.0))))
     })));
 
     test_compare!(add_subtract_2, "10 - 10", Ok(Rc::new(KaramelAstType::Binary {
-        left: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(10.0)))), 
+        left: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(10.0)))), 
         operator: KaramelOperatorType::Subtraction, 
-        right: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(10.0))))
+        right: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(10.0))))
     })));
 
     test_compare!(add_subtract_3, "5 * 2 mod 2 - 10", Ok(Rc::new(KaramelAstType::Binary {
-        left: Box::new(KaramelAstType::Binary {
-            left: Box::new(KaramelAstType::Binary {
-                left: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(5.0)))),
+        left: Rc::new(KaramelAstType::Binary {
+            left: Rc::new(KaramelAstType::Binary {
+                left: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(5.0)))),
                 operator: KaramelOperatorType::Multiplication, 
-                right: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(2.0))))
+                right: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(2.0))))
             }),
             operator: KaramelOperatorType::Modulo, 
-            right: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(2.0))))
+            right: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(2.0))))
         }), 
         operator: KaramelOperatorType::Subtraction, 
-        right: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(10.0))))
+        right: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(10.0))))
     })));
 
     test_compare!(add_subtract_4, "22 + 5 * 2 mod 2", Ok(Rc::new(KaramelAstType::Binary {
-        left: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(22.0)))), 
+        left: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(22.0)))), 
         operator: KaramelOperatorType::Addition, 
-        right: Box::new(KaramelAstType::Binary {
-            left: Box::new(KaramelAstType::Binary {
-                left: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(5.0)))),
+        right: Rc::new(KaramelAstType::Binary {
+            left: Rc::new(KaramelAstType::Binary {
+                left: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(5.0)))),
                 operator: KaramelOperatorType::Multiplication, 
-                right: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(2.0))))
+                right: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(2.0))))
             }),
             operator: KaramelOperatorType::Modulo, 
-            right: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(2.0))))
+            right: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(2.0))))
         })
     })));
 
     test_compare!(add_subtract_5, "11 + 12 + 13", Ok(Rc::new(KaramelAstType::Binary {
-        left: Box::new(KaramelAstType::Binary {
-            left: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(11.0)))), 
+        left: Rc::new(KaramelAstType::Binary {
+            left: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(11.0)))), 
             operator: KaramelOperatorType::Addition, 
-            right: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(12.0))))
+            right: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(12.0))))
         }), 
         operator: KaramelOperatorType::Addition, 
-        right: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(13.0))))
+        right: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(13.0))))
     })));
 
     test_compare!(multiply_divide_1, "10*10", Ok(Rc::new(KaramelAstType::Binary {
-        left: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(10.0)))), 
+        left: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(10.0)))), 
         operator: KaramelOperatorType::Multiplication, 
-        right: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(10.0))))
+        right: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(10.0))))
     })));
 
     test_compare!(multiply_divide_2, "10*-10", Ok(Rc::new(KaramelAstType::Binary {
-        left: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(10.0)))), 
+        left: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(10.0)))), 
         operator: KaramelOperatorType::Multiplication, 
-        right: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(-10.0))))
+        right: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(-10.0))))
     })));
 
     test_compare!(multiply_divide_3, "-10*-10", Ok(Rc::new(KaramelAstType::Binary {
-        left: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(-10.0)))), 
+        left: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(-10.0)))), 
         operator: KaramelOperatorType::Multiplication, 
-        right: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(-10.0))))
+        right: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(-10.0))))
     })));
 
     test_compare!(multiply_divide_4, "-10/-10", Ok(Rc::new(KaramelAstType::Binary {
-        left: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(-10.0)))), 
+        left: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(-10.0)))), 
         operator: KaramelOperatorType::Division, 
-        right: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(-10.0))))
+        right: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(-10.0))))
     })));
 
     test_compare!(multiply_divide_5, "10/10", Ok(Rc::new(KaramelAstType::Binary {
-        left: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(10.0)))), 
+        left: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(10.0)))), 
         operator: KaramelOperatorType::Division, 
-        right: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(10.0))))
+        right: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(10.0))))
     })));
 
     test_compare!(multiply_divide_6, "doğru * doğru", Ok(Rc::new(KaramelAstType::Binary {
-        left: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Bool(true)))),
+        left: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Bool(true)))),
         operator: KaramelOperatorType::Multiplication, 
-        right: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Bool(true)))), 
+        right: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Bool(true)))), 
     })));
 
     test_compare!(multiply_divide_7, "doğru / doğru", Ok(Rc::new(KaramelAstType::Binary {
-        left: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Bool(true)))),
+        left: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Bool(true)))),
         operator: KaramelOperatorType::Division, 
-        right: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Bool(true)))), 
+        right: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Bool(true)))), 
     })));
 
     test_compare!(multiply_divide_8, "1/", Err(KaramelError {
@@ -132,34 +132,34 @@ mod tests {
     }));
 
     test_compare!(modulo_1, "10 mod 10", Ok(Rc::new(KaramelAstType::Binary {
-        left: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(10.0)))), 
+        left: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(10.0)))), 
         operator: KaramelOperatorType::Modulo, 
-        right: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(10.0))))
+        right: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(10.0))))
     })));
 
     test_compare!(modulo_2, "10 mod 10", Ok(Rc::new(KaramelAstType::Binary {
-        left: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(10.0)))), 
+        left: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(10.0)))), 
         operator: KaramelOperatorType::Modulo, 
-        right: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(10.0))))
+        right: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(10.0))))
     })));
 
     test_compare!(modulo_3, "10 mod 5*2", Ok(Rc::new(KaramelAstType::Binary {
-        left: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(10.0)))),
+        left: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(10.0)))),
         operator: KaramelOperatorType::Modulo, 
-        right: Box::new(KaramelAstType::Binary {
-            left: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(5.0)))),
+        right: Rc::new(KaramelAstType::Binary {
+            left: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(5.0)))),
             operator: KaramelOperatorType::Multiplication, 
-            right: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(2.0))))
+            right: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(2.0))))
         })
     })));
 
     test_compare!(modulo_4, "5*2 mod 2", Ok(Rc::new(KaramelAstType::Binary {
-        left: Box::new(KaramelAstType::Binary {
-            left: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(5.0)))),
+        left: Rc::new(KaramelAstType::Binary {
+            left: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(5.0)))),
             operator: KaramelOperatorType::Multiplication, 
-            right: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(2.0))))
+            right: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(2.0))))
         }),
         operator: KaramelOperatorType::Modulo, 
-        right: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(2.0))))
+        right: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(2.0))))
     })));
 }

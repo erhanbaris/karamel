@@ -42,10 +42,10 @@ impl SyntaxParserTrait for ExpressionParser {
                     KaramelAstType::Symbol(symbol) => {
                         KaramelAstType::Indexer 
                         { 
-                            body: Box::new(ast),
+                            body: Rc::new(ast),
                             
                             /* Convert symbol to text */
-                            indexer: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Text(Rc::new(symbol.to_string()))))) 
+                            indexer: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Text(Rc::new(symbol.to_string()))))) 
                         }
                     },
                     _ => return Err(KaramelErrorType::FunctionCallSyntaxNotValid)
@@ -54,7 +54,7 @@ impl SyntaxParserTrait for ExpressionParser {
             
             /* parse for '["data"]' */
             else if parser.check_operator(&KaramelOperatorType::SquareBracketStart) {
-                ast = UnaryParser::parse_indexer(Box::new(ast), parser)?;
+                ast = UnaryParser::parse_indexer(Rc::new(ast), parser)?;
             } else {
                 parser.set_index(index_backup);
                 break;

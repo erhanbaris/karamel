@@ -10,6 +10,7 @@ mod tests {
     use crate::karamellib::compiler::value::KaramelPrimative;
     use crate::karamellib::compiler::ast::KaramelAstType;
     use std::rc::Rc;
+    use std::cell::Cell;
 
     #[warn(unused_macros)]
     macro_rules! test_compare {
@@ -32,10 +33,28 @@ mod tests {
     test_compare!(unary_2, "-1024", Ok(Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(-1024.0))))));
     test_compare!(unary_3, "+1024.0", Ok(Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(1024.0))))));
     test_compare!(unary_4, "-1024.0", Ok(Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(-1024.0))))));
-    test_compare!(unary_5, "değil doğru", Ok(Rc::new(KaramelAstType::PrefixUnary(KaramelOperatorType::Not, Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Bool(true))))))));
-    test_compare!(unary_6, "değil yanlış", Ok(Rc::new(KaramelAstType::PrefixUnary(KaramelOperatorType::Not, Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Bool(false))))))));
-    test_compare!(unary_7, "değil doğru", Ok(Rc::new(KaramelAstType::PrefixUnary(KaramelOperatorType::Not, Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Bool(true))))))));
-    test_compare!(unary_8, "değil yanlış", Ok(Rc::new(KaramelAstType::PrefixUnary(KaramelOperatorType::Not, Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Bool(false))))))));
+    test_compare!(unary_5, "değil doğru", Ok(Rc::new(KaramelAstType::PrefixUnary{ 
+            operator: KaramelOperatorType::Not, 
+            expression: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Bool(true)))), 
+            assign_to_temp: Cell::new(false)
+        })));
+    test_compare!(unary_6, "değil yanlış", Ok(Rc::new(KaramelAstType::PrefixUnary
+        { 
+            operator: KaramelOperatorType::Not, 
+            expression: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Bool(false)))), 
+            assign_to_temp: Cell::new(false)
+        })));
+    test_compare!(unary_7, "değil doğru", Ok(Rc::new(KaramelAstType::PrefixUnary
+        { 
+            operator: KaramelOperatorType::Not, 
+            expression: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Bool(true)))), 
+            assign_to_temp: Cell::new(false)
+        })));
+    test_compare!(unary_8, "değil yanlış", Ok(Rc::new(KaramelAstType::PrefixUnary { 
+        operator: KaramelOperatorType::Not, 
+        expression: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Bool(false)))), 
+        assign_to_temp: Cell::new(false)
+    })));
     
     test_compare!(unary_9, "+[]", Err(KaramelError {
         error_type: KaramelErrorType::UnaryWorksWithNumber,
@@ -58,17 +77,33 @@ mod tests {
         line: 0
     }));
 
-    test_compare!(unary_13, "++data", Ok(Rc::new(KaramelAstType::PrefixUnary(KaramelOperatorType::Increment, Box::new(KaramelAstType::Symbol("data".to_string()))))));
-    test_compare!(unary_14, "--data", Ok(Rc::new(KaramelAstType::PrefixUnary(KaramelOperatorType::Deccrement, Box::new(KaramelAstType::Symbol("data".to_string()))))));
-    test_compare!(unary_15, "--data", Ok(Rc::new(KaramelAstType::PrefixUnary(KaramelOperatorType::Deccrement, Box::new(KaramelAstType::Symbol("data".to_string()))))));
-    test_compare!(unary_16, "data--", Ok(Rc::new(KaramelAstType::SuffixUnary(KaramelOperatorType::Deccrement, Box::new(KaramelAstType::Symbol("data".to_string()))))));
-    test_compare!(unary_17, "data++", Ok(Rc::new(KaramelAstType::SuffixUnary(KaramelOperatorType::Increment, Box::new(KaramelAstType::Symbol("data".to_string()))))));
+    test_compare!(unary_13, "++data", Ok(Rc::new(KaramelAstType::PrefixUnary { 
+        operator: KaramelOperatorType::Increment, 
+        expression: Rc::new(KaramelAstType::Symbol("data".to_string())), 
+        assign_to_temp: Cell::new(false)
+    })));
+    test_compare!(unary_14, "--data", Ok(Rc::new(KaramelAstType::PrefixUnary { 
+        operator: KaramelOperatorType::Deccrement, 
+        expression: Rc::new(KaramelAstType::Symbol("data".to_string())),
+        assign_to_temp: Cell::new(false)
+    })));
+    test_compare!(unary_15, "--data", Ok(Rc::new(KaramelAstType::PrefixUnary { 
+        operator: KaramelOperatorType::Deccrement, 
+        expression: Rc::new(KaramelAstType::Symbol("data".to_string())),
+        assign_to_temp: Cell::new(false)
+    })));
+    test_compare!(unary_16, "data--", Ok(Rc::new(KaramelAstType::SuffixUnary(KaramelOperatorType::Deccrement, Rc::new(KaramelAstType::Symbol("data".to_string()))))));
+    test_compare!(unary_17, "data++", Ok(Rc::new(KaramelAstType::SuffixUnary(KaramelOperatorType::Increment, Rc::new(KaramelAstType::Symbol("data".to_string()))))));
 
     test_compare!(unary_18, "+ 1024", Ok(Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(1024.0))))));
     test_compare!(unary_19, "++data - 1", Ok(Rc::new(KaramelAstType::Binary {
-        left: Box::new(KaramelAstType::PrefixUnary(KaramelOperatorType::Increment, Box::new(KaramelAstType::Symbol("data".to_string())))),
+        left: Rc::new(KaramelAstType::PrefixUnary { 
+                operator: KaramelOperatorType::Increment, 
+                expression: Rc::new(KaramelAstType::Symbol("data".to_string())), 
+                assign_to_temp: Cell::new(false)
+            }),
         operator: KaramelOperatorType::Subtraction,
-        right: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(1.0))))
+        right: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(1.0))))
     })));
-    //test_compare!(unary_19, "doğru değil", Ok(Rc::new(KaramelAstType::SuffixUnary(KaramelOperatorType::Not, Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Bool(true)))))));
+    //test_compare!(unary_19, "doğru değil", Ok(Rc::new(KaramelAstType::SuffixUnary(KaramelOperatorType::Not, Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Bool(true)))))));
 }

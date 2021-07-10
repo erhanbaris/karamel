@@ -75,18 +75,18 @@ mod tests {
     test_success!(bool_4, "yanlış", Ok(Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Bool(false))))));
 
     test_success!(dict_1, "{}", Ok(Rc::new(KaramelAstType::Dict(Vec::new()))));
-    test_success!(dict_2, "{'1':1}", Ok(Rc::new(KaramelAstType::Dict([Box::new(KaramelDictItem {
+    test_success!(dict_2, "{'1':1}", Ok(Rc::new(KaramelAstType::Dict([Rc::new(KaramelDictItem {
         key: Rc::new(KaramelPrimative::Text(Rc::new("1".to_string()))),
         value: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(1.0))))
     })].to_vec()))));
     test_success!(dict_3, r#"{
         '1' : 1, 
         '2': 2
-}"#, Ok(Rc::new(KaramelAstType::Dict([Box::new(KaramelDictItem {
+}"#, Ok(Rc::new(KaramelAstType::Dict([Rc::new(KaramelDictItem {
         key: Rc::new(KaramelPrimative::Text(Rc::new("1".to_string()))),
         value: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(1.0))))
     }),
-    Box::new(KaramelDictItem {
+    Rc::new(KaramelDictItem {
         key: Rc::new(KaramelPrimative::Text(Rc::new("2".to_string()))),
         value: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(2.0))))
     })].to_vec()))));
@@ -94,33 +94,33 @@ mod tests {
         '1': 1, 
         '2': 2,
         '1': 2
-}"#, Ok(Rc::new(KaramelAstType::Dict([Box::new(KaramelDictItem {
+}"#, Ok(Rc::new(KaramelAstType::Dict([Rc::new(KaramelDictItem {
         key: Rc::new(KaramelPrimative::Text(Rc::new("1".to_string()))),
         value: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(1.0))))
     }),
-    Box::new(KaramelDictItem {
+    Rc::new(KaramelDictItem {
         key: Rc::new(KaramelPrimative::Text(Rc::new("2".to_string()))),
         value: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(2.0))))
     }),
-    Box::new(KaramelDictItem {
+    Rc::new(KaramelDictItem {
         key: Rc::new(KaramelPrimative::Text(Rc::new("1".to_string()))),
         value: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(2.0))))
     })].to_vec()))));
     
 
     test_success!(list_1, "[]", Ok(Rc::new(KaramelAstType::List(Vec::new()))));
-    test_success!(list_2, "[1]", Ok(Rc::new(KaramelAstType::List([Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(1.0))))].to_vec()))));
-    test_success!(list_3, "[doğru]", Ok(Rc::new(KaramelAstType::List([Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Bool(true))))].to_vec()))));
+    test_success!(list_2, "[1]", Ok(Rc::new(KaramelAstType::List([Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(1.0))))].to_vec()))));
+    test_success!(list_3, "[doğru]", Ok(Rc::new(KaramelAstType::List([Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Bool(true))))].to_vec()))));
     test_success!(list_4, "[ ]", Ok(Rc::new(KaramelAstType::List(Vec::new()))));
-    test_success!(list_5, "[123,doğru,'merhaba dünya',1.3]", Ok(Rc::new(KaramelAstType::List([Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(123.0)))), Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Bool(true)))), Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Text(Rc::new("merhaba dünya".to_string()))))), Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(1.3))))].to_vec()))));
-    test_success!(list_6, "[[]]", Ok(Rc::new(KaramelAstType::List([Box::new(KaramelAstType::List(Vec::new()))].to_vec()))));
+    test_success!(list_5, "[123,doğru,'merhaba dünya',1.3]", Ok(Rc::new(KaramelAstType::List([Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(123.0)))), Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Bool(true)))), Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Text(Rc::new("merhaba dünya".to_string()))))), Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(1.3))))].to_vec()))));
+    test_success!(list_6, "[[]]", Ok(Rc::new(KaramelAstType::List([Rc::new(KaramelAstType::List(Vec::new()))].to_vec()))));
 
     test_success!(list_7, "[123", Err(KaramelError {
         error_type: KaramelErrorType::ArrayNotClosed,
         column: 4,
         line: 0
     }));
-    test_success!(list_8, "[data]", Ok(Rc::new(KaramelAstType::List([Box::new(KaramelAstType::Symbol("data".to_string()))].to_vec()))));
+    test_success!(list_8, "[data]", Ok(Rc::new(KaramelAstType::List([Rc::new(KaramelAstType::Symbol("data".to_string()))].to_vec()))));
 
     test_success!(empty_1, "yok", Ok(Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Empty)))));
 
@@ -128,17 +128,17 @@ mod tests {
     test_success!(symbol_2, "data_test", Ok(Rc::new(KaramelAstType::Symbol("data_test".to_string()))));
 
     test_success!(parenthesis_1, "(10*10)", Ok(Rc::new(KaramelAstType::Binary {
-        left: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(10.0)))), 
+        left: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(10.0)))), 
         operator: KaramelOperatorType::Multiplication, 
-        right: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(10.0))))
+        right: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(10.0))))
     })));
     test_success!(parenthesis_2, "(10+10)-10", Ok(Rc::new(KaramelAstType::Binary {
-        left: Box::new(KaramelAstType::Binary {
-            left: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(10.0)))), 
+        left: Rc::new(KaramelAstType::Binary {
+            left: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(10.0)))), 
             operator: KaramelOperatorType::Addition, 
-            right: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(10.0))))
+            right: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(10.0))))
         }), 
         operator: KaramelOperatorType::Subtraction, 
-        right: Box::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(10.0))))
+        right: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(10.0))))
     })));
 }

@@ -8,8 +8,9 @@ use crate::compiler::ast::KaramelAstType;
 use crate::compiler::value::KaramelPrimative;
 use crate::syntax::expression::ExpressionParser;
 use crate::error::KaramelErrorType;
+use crate::syntax::SyntaxFlag;
 
-
+use std::cell::Cell;
 use std::rc::Rc;
 
 pub struct UnaryParser;
@@ -28,7 +29,7 @@ impl SyntaxParserTrait for UnaryParser {
             parser.cleanup_whitespaces();
 
             if parser.match_operator(&[KaramelOperatorType::SquareBracketEnd]).is_some() {
-                return Ok(KaramelAstType::Indexer { body: Box::new(ast), indexer: Box::new(indexer_ast) });   
+                return Ok(KaramelAstType::Indexer { body: Rc::new(ast), indexer: Rc::new(indexer_ast) });   
             }
         }
 
@@ -49,7 +50,7 @@ impl UnaryParser {
                     if let Some(operator) = parser.match_operator(&[
                         KaramelOperatorType::Increment,
                         KaramelOperatorType::Deccrement]) {
-                        return Ok(KaramelAstType::SuffixUnary(operator, Box::new(KaramelAstType::Symbol(token.token_type.get_symbol().to_string()))));
+                        return Ok(KaramelAstType::SuffixUnary(operator, Rc::new(KaramelAstType::Symbol(token.token_type.get_symbol().to_string()))));
                     }
                 }
             },
@@ -60,7 +61,7 @@ impl UnaryParser {
         return Ok(KaramelAstType::None);
     }
 
-    pub fn parse_indexer(ast: Box<KaramelAstType>, parser: &SyntaxParser) -> AstResult {
+    pub fn parse_indexer(ast: Rc<KaramelAstType>, parser: &SyntaxParser) -> AstResult {
         let index_backup = parser.get_index();
         if parser.match_operator(&[KaramelOperatorType::SquareBracketStart]).is_some() {
             parser.cleanup_whitespaces();
@@ -69,7 +70,7 @@ impl UnaryParser {
             parser.cleanup_whitespaces();
 
             if parser.match_operator(&[KaramelOperatorType::SquareBracketEnd]).is_some() && !is_ast_empty(&indexer_ast) {
-                return Ok(KaramelAstType::Indexer { body: ast, indexer: Box::new(indexer_ast.unwrap()) });   
+                return Ok(KaramelAstType::Indexer { body: ast, indexer: Rc::new(indexer_ast.unwrap()) });   
             }
         }
 
@@ -143,7 +144,14 @@ impl UnaryParser {
                     parser.set_index(index_backup);
                     Err(KaramelErrorType::InvalidUnaryOperation)
                 },
-                _ => Ok(KaramelAstType::PrefixUnary(operator, Box::new(unary_ast)))
+                _ => Ok(KaramelAstType::PrefixUnary { 
+                    operator, 
+                    expression: Rc::new(unary_ast), 
+                    assign_to_temp: Cell::new(parser.flags.get().contains(SyntaxFlag::IN_EXPRESSION)
+                        || parser.flags.get().contains(SyntaxFlag::IN_ASSIGNMENT)
+                        || parser.flags.get().contains(SyntaxFlag::IN_FUNCTION_ARG)
+                        || parser.flags.get().contains(SyntaxFlag::IN_RETURN))
+                })
             };
         }
 

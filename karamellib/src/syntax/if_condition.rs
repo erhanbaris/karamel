@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use crate::types::*;
 use crate::syntax::{SyntaxParser, SyntaxParserTrait};
 use crate::syntax::expression::ExpressionParser;
@@ -39,8 +41,8 @@ impl SyntaxParserTrait for IfConditiontParser {
 
             parser.cleanup_whitespaces();
 
-            let mut else_body: Option<Box<KaramelAstType>> = None;
-            let mut else_if: Vec<Box<KaramelIfStatementElseItem>> = Vec::new();
+            let mut else_body: Option<Rc<KaramelAstType>> = None;
+            let mut else_if: Vec<Rc<KaramelIfStatementElseItem>> = Vec::new();
 
             while parser.is_same_indentation(indentation) {
                 if let Some(_) = parser.match_operator(&[KaramelOperatorType::Or]) {
@@ -87,8 +89,8 @@ impl SyntaxParserTrait for IfConditiontParser {
                     parser.set_indentation(indentation);
 
                     match else_condition {
-                        KaramelAstType::None => else_body = Some(Box::new(body)),
-                        _                  => else_if.push(Box::new(KaramelIfStatementElseItem::new(Box::new(else_condition), Box::new(body))))
+                        KaramelAstType::None => else_body = Some(Rc::new(body)),
+                        _                  => else_if.push(Rc::new(KaramelIfStatementElseItem::new(Rc::new(else_condition), Rc::new(body))))
                     };
                 }
                 else {
@@ -101,8 +103,8 @@ impl SyntaxParserTrait for IfConditiontParser {
             }
 
             let assignment_ast = KaramelAstType::IfStatement {
-                condition: Box::new(expression),
-                body: Box::new(true_body),
+                condition: Rc::new(expression),
+                body: Rc::new(true_body),
                 else_body,
                 else_if: else_if.to_vec()
             };

@@ -189,7 +189,6 @@ impl SyntaxParser {
         if token.is_err() { return false; }
         return match &token.unwrap().token_type {
             KaramelTokenType::Keyword(token_keyword) => {
-                println!("{:?} == {:?}", keyword.borrow(), token_keyword);
                 if keyword.borrow() == token_keyword {
                     return true;
                 }

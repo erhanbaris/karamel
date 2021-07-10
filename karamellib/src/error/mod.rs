@@ -246,7 +246,11 @@ pub enum KaramelErrorType {
 
     #[error("Döngü ile sadece atama öperatörü kullanılabilir")]
     #[strum(message = "151")]
-    AssignOperatorRequiredForLoop
+    AssignOperatorRequiredForLoop,
+
+    #[error("',' eksik")]
+    #[strum(message = "152")]
+    CommaIsMissing
 }
 
 impl From<KaramelErrorType> for KaramelError {

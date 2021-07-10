@@ -66,7 +66,7 @@ impl PrimativeParser {
                     return err_or_message(ast, KaramelErrorType::InvalidListItem);
                 }
                 
-                ast_vec.push(Box::new(ast.unwrap()));
+                ast_vec.push(Rc::new(ast.unwrap()));
 
                 parser.cleanup_whitespaces();
                 if parser.match_operator(&[KaramelOperatorType::Comma]).is_none()  {
@@ -128,7 +128,7 @@ impl PrimativeParser {
                     return err_or_message(value, KaramelErrorType::DictionaryValueNotValid);
                 }
   
-                dict_items.push(Box::new(KaramelDictItem {
+                dict_items.push(Rc::new(KaramelDictItem {
                     key,
                     value: Rc::new(value.unwrap())
                 }));
