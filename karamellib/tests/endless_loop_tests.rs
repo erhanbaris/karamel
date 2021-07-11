@@ -7,9 +7,6 @@ mod tests {
     use crate::karamellib::types::*;
     use crate::karamellib::parser::*;
     use crate::karamellib::syntax::*;
-    use std::cell::Cell;
-    use std::rc::Rc;
-
     #[warn(unused_macros)]
     macro_rules! test_compare {
         ($name:ident, $text:expr, $result:expr) => {

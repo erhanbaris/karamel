@@ -24,6 +24,7 @@ use log;
 
 use super::context::KaramelCompilerContext;
 use super::function::find_function_definition_type;
+use super::generator::OpcodeLocation;
 use super::module::{OpcodeModule, get_modules};
 use super::storage_builder::StorageBuilderOption;
 
@@ -34,7 +35,9 @@ impl InterpreterCompiler {
         let storage_builder: StorageBuilder = StorageBuilder::new();
         let mut compiler_options = StorageBuilderOption { max_stack: 0 };
 
-        self.add_initial_jump(context);
+        let main_location = context.opcode_generator.create_location();
+
+        context.opcode_generator.create_jump(main_location.clone());
         
         /* Save all function information */
         let modules = self.detect_modules(main_ast.clone(), context)?;
@@ -54,23 +57,14 @@ impl InterpreterCompiler {
         self.generate_functions(main_module.clone(), &mut functions, context)?;
 
         /* Prepare jump code for main function */
-        let current_location = context.opcodes.len();
-        context.opcodes[1] = current_location as u8;
-        context.opcodes[2] = (current_location >> 8) as u8;
+        main_location.set(context.opcodes.len());
 
         /* Generate main function code */
         self.generate_opcode(main_module.clone(), &*main_ast, &KaramelAstType::None, context, 0)?;
-        context.opcodes.push(VmOpCode::Halt as u8);
+        context.opcode_generator.add_opcode(VmOpCode::Halt);
         context.opcodes_ptr = context.opcodes.as_mut_ptr();
 
         Ok(())
-    }
-
-    pub fn add_initial_jump(&self, context: &mut KaramelCompilerContext) {
-        /* Jump over all function definations to main function */
-        context.opcodes.push(VmOpCode::Jump as u8);
-        context.opcodes.push(0_u8);
-        context.opcodes.push(0_u8);
     }
 
     pub fn detect_modules(&self, main_ast: Rc<KaramelAstType>, context: &mut KaramelCompilerContext) -> Result<Vec<Rc<OpcodeModule>>, KaramelErrorType> {
@@ -198,8 +192,7 @@ impl InterpreterCompiler {
         let result = storage.get_constant_location(primative);
         match result {
             Some(index) => {
-                context.opcodes.push(VmOpCode::Load as u8);
-                context.opcodes.push(index as u8);
+                context.opcode_generator.create_load(index);
                 Ok(())
             },
             _ => Err(KaramelErrorType::ValueNotFoundInStorage)
@@ -249,8 +242,7 @@ impl InterpreterCompiler {
                 let result = storage.get_constant_location(Rc::new(KaramelPrimative::Function(reference, None)));
                 match result {
                     Some(index) => {
-                        context.opcodes.push(VmOpCode::Load as u8);
-                        context.opcodes.push(index as u8);
+                        context.opcode_generator.create_load(index);
                         Ok(())
                     },
                     _ => Err(KaramelErrorType::FunctionNotFoundInStorage(name.to_string()))
@@ -266,8 +258,7 @@ impl InterpreterCompiler {
         let result = storage.get_constant_location(Rc::new(KaramelPrimative::Empty));
         match result {
             Some(index) => {
-                context.opcodes.push(VmOpCode::Load as u8);
-                context.opcodes.push(index as u8);
+                context.opcode_generator.create_load(index);
                 Ok(())
             },
             _ => Err(KaramelErrorType::ValueNotFoundInStorage)
@@ -301,10 +292,7 @@ impl InterpreterCompiler {
                 let search_location = context.storages[storage_index].get_constant_location(Rc::new(KaramelPrimative::Function(function_ref.clone(), None)));
                 match search_location {
                     Some(location) => {
-                        context.opcodes.push(VmOpCode::Call as u8);
-                        context.opcodes.push(location as u8);
-                        context.opcodes.push(arguments.len() as u8);
-                        context.opcodes.push(assign_to_temp as u8);
+                        context.opcode_generator.create_call(location, arguments.len() as u8, assign_to_temp);
                         return Ok(true);
                     },
                     _ => return Err(KaramelErrorType::FunctionNotFound(function_ref.name.to_string()))
@@ -316,8 +304,7 @@ impl InterpreterCompiler {
         match context.storages[storage_index].get_variable_location(&name) {
             /* Variable found */
             Some(location) => {
-                context.opcodes.push(VmOpCode::Load as u8);
-                context.opcodes.push(location as u8);
+                context.opcode_generator.create_load(location);
 
                 context.opcodes.push(VmOpCode::CallStack as u8);
                 context.opcodes.push(arguments.len() as u8);
@@ -347,10 +334,9 @@ impl InterpreterCompiler {
                     let search_location = context.storages[storage_index].get_constant_location(Rc::new(KaramelPrimative::Text(Rc::new(function_name.to_string()))));
                     match search_location {
                         Some(location) => {
-                            context.opcodes.push(VmOpCode::Load as u8);
-                            context.opcodes.push(location as u8);
-                            context.opcodes.push(VmOpCode::GetItem as u8);
-                            
+                            context.opcode_generator.create_load(location);
+                            context.opcode_generator.add_opcode(VmOpCode::GetItem);
+                                                        
                             context.opcodes.push(VmOpCode::CallStack as u8);
                             context.opcodes.push(arguments.len() as u8);
                             context.opcodes.push(true as u8);
@@ -424,32 +410,29 @@ impl InterpreterCompiler {
     }
 
     fn generate_break(&self, _: &KaramelAstType, context: &mut KaramelCompilerContext, _: usize) -> CompilerResult {       
-        context.opcodes.push(VmOpCode::Jump as u8);
-        context.loop_breaks.push(context.opcodes.len());
-        context.opcodes.push(0);
-        context.opcodes.push(0);
+        let location = context.opcode_generator.create_location_with_data(context.opcodes.len());
+        context.opcode_generator.add_break_location(location.clone());
+        context.opcode_generator.create_jump(location.clone());
         Ok(())
     }
 
     fn generate_continue(&self, _: &KaramelAstType, context: &mut KaramelCompilerContext, _: usize) -> CompilerResult {       
-        context.opcodes.push(VmOpCode::Jump as u8);
-        context.loop_continues.push(context.opcodes.len());
-        context.opcodes.push(0);
-        context.opcodes.push(0);
+        let location = context.opcode_generator.create_location_with_data(context.opcodes.len());
+        context.opcode_generator.add_continue_location(location.clone());
+        context.opcode_generator.create_jump(location.clone());
         Ok(())
     }
 
     fn generate_return(&self, module: Rc<OpcodeModule>, expression: &KaramelAstType, upper_ast: &KaramelAstType, context: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult {
         self.generate_opcode(module.clone(), expression, upper_ast, context, storage_index)?;
-        context.opcodes.push(VmOpCode::Return as u8);
+        context.opcode_generator.add_opcode(VmOpCode::Return);
         Ok(())
     }
 
     fn generate_loop(&self, module: Rc<OpcodeModule>, loop_type: &LoopType, body: &KaramelAstType, upper_ast: &KaramelAstType, context: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult {
         /* Backup loop informations */
-        let loop_breaks = context.loop_breaks.to_vec();
-        let loop_continues = context.loop_continues.to_vec();
-        let mut compare_location = 0;
+        context.opcode_generator.loop_started();
+        let mut compare_location: Option<Rc<OpcodeLocation>> = None;
 
         let (variable, control, increment) = match loop_type {
             LoopType::Endless => {
@@ -473,15 +456,17 @@ impl InterpreterCompiler {
             self.generate_opcode(module.clone(), &*&variable, upper_ast, context, storage_index)?;
         }
 
-        let start_location = context.opcodes.len();
+        let start_location = context.opcode_generator.create_location();
+        start_location.set(context.opcodes.len());
+
         
         if let Some(control) = &control {
             self.generate_opcode(module.clone(), &*control, upper_ast, context, storage_index)?;
-            context.opcodes.push(VmOpCode::Compare as u8);
-            compare_location = context.opcodes.len();
-
-            context.opcodes.push(0_u8);
-            context.opcodes.push(0_u8);
+            compare_location = Some(context.opcode_generator.create_location_with_data(context.opcodes.len()));
+            match &compare_location {
+                Some(location) => { context.opcode_generator.create_compare(location.clone()); },
+                None => assert_eq!(false, false, "Döngü grubu bulunamadı")
+            };
         }
 
         self.generate_opcode(module.clone(), body, upper_ast, context, storage_index)?;
@@ -490,30 +475,17 @@ impl InterpreterCompiler {
             self.generate_opcode(module.clone(), &*&increment, upper_ast, context, storage_index)?;
         }
 
-        context.opcodes.push(VmOpCode::Jump as u8);
-        context.opcodes.push(start_location as u8);
-        context.opcodes.push((start_location >> 8) as u8);
+        context.opcode_generator.create_jump(start_location.clone());
 
-        let current_location = context.opcodes.len(); 
-
-        for break_info in &context.loop_breaks {
-            context.opcodes[*break_info]     = current_location as u8;
-            context.opcodes[*break_info + 1] = (current_location >> 8) as u8;
-        } 
-
-        for continue_info in &context.loop_continues {
-            context.opcodes[*continue_info]     = start_location as u8;
-            context.opcodes[*continue_info + 1] = (start_location >> 8) as u8;
-        } 
-
-        context.loop_breaks    = loop_breaks.to_vec();
-        context.loop_continues = loop_continues.to_vec();
-
-        if control.is_some() {
-            let end_location = current_location - compare_location;
-            context.opcodes[compare_location]     = end_location as u8;
-            context.opcodes[compare_location + 1] = (end_location >> 8) as u8;
+        let current_location = context.opcode_generator.create_location_with_data(context.opcodes.len());
+        if let Some(compare_location) = &compare_location {
+            compare_location.set(current_location.get() - compare_location.get());
         }
+
+        context.opcode_generator.set_breaks_locations(current_location.clone());
+        context.opcode_generator.set_continues_locations(start_location.clone());
+
+        context.opcode_generator.loop_finished();
 
         Ok(())
     }
@@ -523,8 +495,7 @@ impl InterpreterCompiler {
         let result = storage.get_function_constant(variable.to_string(), module.clone());
         match result {
             Some(index) => {
-                context.opcodes.push(VmOpCode::Load as u8);
-                context.opcodes.push(index as u8);
+                context.opcode_generator.create_load(index);
                 return Ok(())
             },
             _ => ()
@@ -533,8 +504,7 @@ impl InterpreterCompiler {
         let result = storage.get_class_constant(variable.to_string(), module.clone());
         match result {
             Some(index) => {
-                context.opcodes.push(VmOpCode::Load as u8);
-                context.opcodes.push(index as u8);
+                context.opcode_generator.create_load(index);
                 return Ok(())
             },
             _ => ()
@@ -542,9 +512,8 @@ impl InterpreterCompiler {
 
         match storage.get_variable_location(variable) {
             /* Variable found */
-            Some(location) => {
-                context.opcodes.push(VmOpCode::Load as u8);
-                context.opcodes.push(location as u8);
+            Some(index) => {
+                context.opcode_generator.create_load(index);
                 Ok(())
             },
             /* Variable not found, lets check for function */
@@ -557,18 +526,18 @@ impl InterpreterCompiler {
         self.generate_opcode(module.clone(), right_ast, &KaramelAstType::None, context, storage_index)?;
 
         let opcode = match operator {
-            KaramelOperatorType::Or               => VmOpCode::Or as u8,
-            KaramelOperatorType::And              => VmOpCode::And as u8,
-            KaramelOperatorType::Equal            => VmOpCode::Equal as u8,
-            KaramelOperatorType::NotEqual         => VmOpCode::NotEqual as u8,
-            KaramelOperatorType::GreaterThan      => VmOpCode::GreaterThan as u8,
-            KaramelOperatorType::LessThan         => VmOpCode::LessThan as u8,
-            KaramelOperatorType::GreaterEqualThan => VmOpCode::GreaterEqualThan as u8,
-            KaramelOperatorType::LessEqualThan    => VmOpCode::LessEqualThan as u8,
-            _ => VmOpCode::None as u8
+            KaramelOperatorType::Or               => VmOpCode::Or,
+            KaramelOperatorType::And              => VmOpCode::And,
+            KaramelOperatorType::Equal            => VmOpCode::Equal,
+            KaramelOperatorType::NotEqual         => VmOpCode::NotEqual,
+            KaramelOperatorType::GreaterThan      => VmOpCode::GreaterThan,
+            KaramelOperatorType::LessThan         => VmOpCode::LessThan,
+            KaramelOperatorType::GreaterEqualThan => VmOpCode::GreaterEqualThan,
+            KaramelOperatorType::LessEqualThan    => VmOpCode::LessEqualThan,
+            _ => VmOpCode::None
         };
 
-        context.opcodes.push(opcode);
+        context.opcode_generator.add_opcode(opcode);
         Ok(())
     }
 
@@ -593,9 +562,7 @@ impl InterpreterCompiler {
                             _ => return Err(KaramelErrorType::ValueNotFoundInStorage)
                         };
 
-                        context.opcodes.push(VmOpCode::FastStore as u8);
-                        context.opcodes.push(location);
-                        context.opcodes.push(primative_location);
+                        context.opcode_generator.create_fast_store(location, primative_location);
                         return Ok(());
                     }
                 }
@@ -603,36 +570,33 @@ impl InterpreterCompiler {
                 if *operator != KaramelOperatorType::Assign {
 
                     /* Load variable data to stack */
-                    context.opcodes.push(VmOpCode::Load as u8);
-                    context.opcodes.push(location);
+                    context.opcode_generator.create_load(location);
 
                     self.generate_opcode(module.clone(), expression_ast, &KaramelAstType::None, context, storage_index)?;
 
                     let opcode = match operator {
-                        KaramelOperatorType::AssignAddition       => VmOpCode::Addition as u8,
-                        KaramelOperatorType::AssignDivision       => VmOpCode::Division as u8,
-                        KaramelOperatorType::AssignMultiplication => VmOpCode::Multiply as u8,
-                        KaramelOperatorType::AssignSubtraction    => VmOpCode::Subraction as u8,
-                        _ => KaramelOperatorType::None as u8
+                        KaramelOperatorType::AssignAddition       => VmOpCode::Addition,
+                        KaramelOperatorType::AssignDivision       => VmOpCode::Division,
+                        KaramelOperatorType::AssignMultiplication => VmOpCode::Multiply,
+                        KaramelOperatorType::AssignSubtraction    => VmOpCode::Subraction,
+                        _ => VmOpCode::None
                     };
 
-                    context.opcodes.push(opcode);
+                    context.opcode_generator.add_opcode(opcode);
                 } else {
                     self.generate_opcode(module.clone(), expression_ast, &KaramelAstType::None, context, storage_index)?;
                 }
-                
-                context.opcodes.push(VmOpCode::Store as u8);
-                context.opcodes.push(location);
+
+                context.opcode_generator.create_store(location);
                 Ok(())
             },
 
             KaramelAstType::Indexer {body, indexer} => {
                 self.generate_opcode(module.clone(), body, &KaramelAstType::None, context, storage_index)?;
                 self.generate_opcode(module.clone(), indexer, &KaramelAstType::None, context, storage_index)?;
-
                 self.generate_opcode(module.clone(), expression_ast, &KaramelAstType::None, context, storage_index)?;
                 
-                context.opcodes.push(VmOpCode::SetItem as u8);
+                context.opcode_generator.add_opcode(VmOpCode::SetItem);
                 Ok(())
             },
             _ => Ok(())
@@ -643,15 +607,15 @@ impl InterpreterCompiler {
         self.generate_opcode(module.clone(), left_ast, &KaramelAstType::None, context, storage_index)?;
         self.generate_opcode(module.clone(), right_ast, &KaramelAstType::None, context, storage_index)?;
         let opcode = match operator {
-            KaramelOperatorType::Addition       => VmOpCode::Addition as u8,
-            KaramelOperatorType::Subtraction    => VmOpCode::Subraction as u8,
-            KaramelOperatorType::Multiplication => VmOpCode::Multiply as u8,
-            KaramelOperatorType::Division       => VmOpCode::Division as u8,
-            KaramelOperatorType::Modulo         => VmOpCode::Module as u8,
-            _ => VmOpCode::None as u8
+            KaramelOperatorType::Addition       => VmOpCode::Addition,
+            KaramelOperatorType::Subtraction    => VmOpCode::Subraction,
+            KaramelOperatorType::Multiplication => VmOpCode::Multiply,
+            KaramelOperatorType::Division       => VmOpCode::Division,
+            KaramelOperatorType::Modulo         => VmOpCode::Module,
+            _ => VmOpCode::None
         };
 
-        context.opcodes.push(opcode);
+        context.opcode_generator.add_opcode(opcode);
         Ok(())
     }
 
@@ -668,24 +632,22 @@ impl InterpreterCompiler {
             };
 
             /* Load data from memory */
-            context.opcodes.push(VmOpCode::Load as u8);
-            context.opcodes.push(location);
+            context.opcode_generator.create_load(location);
         
             let opcode = match operator {
-                KaramelOperatorType::Increment  => VmOpCode::Increment as u8,
-                KaramelOperatorType::Deccrement => VmOpCode::Decrement as u8,
+                KaramelOperatorType::Increment  => VmOpCode::Increment,
+                KaramelOperatorType::Deccrement => VmOpCode::Decrement,
                 _ => return Err(KaramelErrorType::UnaryOperatorNotFound)
             };
     
-            context.opcodes.push(opcode);
+            context.opcode_generator.add_opcode(opcode);
 
             // Keep value at the stack if assign_to_temp is true
             match assign_to_temp.get() {
-                true => context.opcodes.push(VmOpCode::CopyToStore as u8),
-                false => context.opcodes.push(VmOpCode::Store as u8),
-            }
+                true => context.opcode_generator.create_copy_to_store(location),
+                false => context.opcode_generator.create_store(location),
+            };
             
-            context.opcodes.push(location);
             return Ok(());
         }
 
@@ -694,7 +656,7 @@ impl InterpreterCompiler {
 
     fn generate_not(&self, module: Rc<OpcodeModule>, expression: &KaramelAstType, context: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult { 
         self.generate_opcode(module.clone(), expression, &KaramelAstType::None, context, storage_index)?;
-        context.opcodes.push(VmOpCode::Not as u8);
+        context.opcode_generator.add_opcode(VmOpCode::Not);
         Ok(())
     }
 
@@ -802,8 +764,7 @@ impl InterpreterCompiler {
                 _ => return Err(KaramelErrorType::ValueNotFoundInStorage)
             };
 
-            context.opcodes.push(VmOpCode::Load as u8);
-            context.opcodes.push(location);
+            context.opcode_generator.create_load(location);
             context.opcodes.push(VmOpCode::Dublicate as u8);
 
             let opcode = match operator {
@@ -814,8 +775,7 @@ impl InterpreterCompiler {
             };
     
             context.opcodes.push(opcode);
-            context.opcodes.push(VmOpCode::Store as u8);
-            context.opcodes.push(location);
+            context.opcode_generator.create_store(location);
             return Ok(());
         }
 
@@ -880,7 +840,7 @@ mod tests {
         let result = compiler.generate_functions(module.clone(), &mut functions, &mut context);
 
         match result {
-            Ok(_) => Err(KaramelErrorType::GeneralError("yazı geçerli bir fonksiyon ismi değil".to_string())),
+            Ok(_) => Err(KaramelErrorType::GeneralError("Yazı geçerli bir fonksiyon ismi değil".to_string())),
             Err(_) => Ok(())
         }
     }

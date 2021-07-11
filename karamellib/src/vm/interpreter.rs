@@ -539,7 +539,6 @@ pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObjec
                 },
             }
 
-            let after = get_memory_index!(context);
             context.opcodes_ptr = context.opcodes_ptr.offset(1);
         }
 

@@ -4,6 +4,7 @@ use crate::buildin::num::{NumModule};
 
 use crate::{buildin::{Class, Module, ModuleCollection, base_functions, class::{dict, get_empty_class, list, number, proxy, text}, debug, io}, compiler::scope::Scope};
 
+use super::generator::OpcodeGenerator;
 use super::{KaramelPrimative, StaticStorage, function::{FunctionReference, FunctionType, FunctionFlag}, module::OpcodeModule};
 
 #[derive(Default)]
@@ -18,8 +19,6 @@ pub struct KaramelCompilerContext {
     pub storages: Vec<StaticStorage>,
     pub main_module: *mut OpcodeModule,
     pub modules: ModuleCollection,
-    pub loop_breaks: Vec<usize>,
-    pub loop_continues: Vec<usize>,
     pub scopes: Vec<Scope>,
     pub current_scope: *mut Scope,
     pub scope_index: usize,
@@ -28,7 +27,8 @@ pub struct KaramelCompilerContext {
     pub stdout: Option<RefCell<String>>,
     pub stderr: Option<RefCell<String>>,
     pub opcodes_ptr: *mut u8,
-    pub primative_classes: Vec<Rc<dyn Class>>
+    pub primative_classes: Vec<Rc<dyn Class>>,
+    pub opcode_generator: OpcodeGenerator
 }
 
 impl  KaramelCompilerContext {
@@ -38,8 +38,6 @@ impl  KaramelCompilerContext {
             opcodes: Vec::new(),
             storages: vec![StaticStorage::new(0)],
             modules: ModuleCollection::new(),
-            loop_breaks: Vec::new(),
-            loop_continues: Vec::new(),
             scopes: Vec::new(),
             current_scope: ptr::null_mut(),
             scope_index: 0,
@@ -49,7 +47,8 @@ impl  KaramelCompilerContext {
             stderr: None,
             opcodes_ptr: ptr::null_mut(),
             primative_classes: Vec::new(),
-            main_module: ptr::null_mut()
+            main_module: ptr::null_mut(),
+            opcode_generator: OpcodeGenerator::new()
         };
 
         compiler.primative_classes.push(number::get_primative_class());

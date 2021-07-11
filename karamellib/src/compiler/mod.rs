@@ -87,15 +87,25 @@ pub enum VmOpCode {
     Decrement,
     Not,
 
+    /// Compare previous two opcode.
+    /// If true, jump over 2 opcode and continue to execution.
+    /// If false, read next 2 opcode than calculate false jump location via high and low byte.
     Compare,
     Jump,
 
     InitList,
     InitDict,
 
+    /// Copy value from memory to stack.
     Load,
+
+    /// Copy stack value to memory and remove value from stack.
     Store,
+
+    /// Dublicate value at memory. Take value from memory and copy to destination location. Stack not involved at this operation.
     FastStore,
+
+    /// Copy last stack value to memory and keep copied value at stack.
     CopyToStore,
     Dublicate,
     GetItem,
