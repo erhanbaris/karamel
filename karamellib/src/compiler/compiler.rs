@@ -660,33 +660,16 @@ impl InterpreterCompiler {
         Ok(())
     }
 
-    fn create_exit_jump(&self, context: &mut KaramelCompilerContext, exit_locations: &mut Vec<usize>) {
-        context.opcodes.push(VmOpCode::Jump as u8);
-        exit_locations.push(context.opcodes.len());
-        context.opcodes.push(0_u8);
-        context.opcodes.push(0_u8);
+    fn create_exit_jump(&self, context: &mut KaramelCompilerContext, exit_locations: &mut Vec<Rc<OpcodeLocation>>) {
+        let location = context.opcode_generator.create_location_with_data(context.opcodes.len());
+        context.opcode_generator.create_jump(location.clone());
+        exit_locations.push(location.clone())
     }
 
-    fn create_compare(&self, context: &mut KaramelCompilerContext) -> usize {
-        context.opcodes.push(VmOpCode::Compare as u8);
-        let compare_location = context.opcodes.len();
-
-        context.opcodes.push(0_u8);
-        context.opcodes.push(0_u8);
-
-        compare_location
-    }
-
-    fn build_jump_location(&self, context: &mut KaramelCompilerContext, jump_location: usize) {
-        let current_location = context.opcodes.len();
-        context.opcodes[jump_location]     = current_location as u8;
-        context.opcodes[jump_location + 1] = (current_location >> 8) as u8;
-    }
-
-    fn build_compare_location(&self, context: &mut KaramelCompilerContext, jump_location: usize) {
-        let current_location = context.opcodes.len() - jump_location;
-        context.opcodes[jump_location]     = current_location as u8;
-        context.opcodes[jump_location + 1] = (current_location >> 8) as u8;
+    fn create_compare(&self, context: &mut KaramelCompilerContext) -> Rc<OpcodeLocation> {
+        let location = context.opcode_generator.create_location_with_data(context.opcodes.len());
+        context.opcode_generator.create_compare(location.clone());
+        location.clone()
     }
 
     fn generate_if_condition(&self, module: Rc<OpcodeModule>, condition: &KaramelAstType, body: &KaramelAstType, else_body: &Option<Rc<KaramelAstType>>, else_if: &Vec<Rc<KaramelIfStatementElseItem>>, upper_ast: &KaramelAstType, context: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult {
@@ -707,7 +690,7 @@ impl InterpreterCompiler {
         ║   IF CONDITION     ║
         ╚════════════════════╝
         */
-        let mut exit_locations: Vec<usize> = Vec::new();
+        let mut exit_locations: Vec<Rc<OpcodeLocation>> = Vec::new();
         
         self.generate_opcode(module.clone(), condition, upper_ast, context, storage_index)?;
         let mut if_failed_location = self.create_compare(context);
@@ -721,7 +704,7 @@ impl InterpreterCompiler {
 
         for else_if_item in else_if {
             /* Previous conditon should jump to this location */
-            self.build_compare_location(context, if_failed_location);
+            if_failed_location.set(context.opcodes.len() - if_failed_location.get());
 
             /* Build condition */
             self.generate_opcode(module.clone(), &else_if_item.condition, upper_ast, context, storage_index)?;
@@ -735,15 +718,16 @@ impl InterpreterCompiler {
         }
 
         if let Some(_else_body) = else_body {
-            self.build_compare_location(context, if_failed_location);
+            if_failed_location.set(context.opcodes.len() - if_failed_location.get());
             self.generate_opcode(module.clone(), _else_body, upper_ast, context, storage_index)?;
         }
         else {
-            self.build_compare_location(context, if_failed_location);
+            if_failed_location.set(context.opcodes.len() - if_failed_location.get());
         }
 
+        let current_location = context.opcodes.len();
         for exit_location in exit_locations {
-            self.build_jump_location(context, exit_location);
+            exit_location.set(current_location);
         }
 
         Ok(())
