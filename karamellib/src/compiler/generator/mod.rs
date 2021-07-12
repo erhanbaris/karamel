@@ -98,7 +98,7 @@ impl OpcodeGenerator {
     }
 
     pub fn create_location(&self) -> Rc<OpcodeLocation> {
-        Rc::new(OpcodeLocation(Cell::new(0)))
+        Rc::new(OpcodeLocation::empty())
     }
 
     pub fn build_location(&self, location: Rc<OpcodeLocation>) {
@@ -107,7 +107,7 @@ impl OpcodeGenerator {
     }
 
     pub fn create_location_with_data(&self, location: usize) -> Rc<OpcodeLocation> {
-        Rc::new(OpcodeLocation(Cell::new(location)))
+        Rc::new(OpcodeLocation::new(location))
     }
 
     pub fn create_jump(&self, location: Rc<OpcodeLocation>) -> Rc<JumpGenerator> {
