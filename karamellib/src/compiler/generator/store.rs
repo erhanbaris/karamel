@@ -23,15 +23,15 @@ impl OpcodeGeneratorTrait for StoreGenerator {
     fn generate(&self, context: &mut KaramelCompilerContext) {
         match self.store_type {
             StoreType::Store(destination) => {
-                context.opcodes.push(VmOpCode::Store as u8);
+                context.opcodes.push(VmOpCode::Store.into());
                 context.opcodes.push(destination);
             },
             StoreType::CopyToStore(destination) => {
-                context.opcodes.push(VmOpCode::CopyToStore as u8);
+                context.opcodes.push(VmOpCode::CopyToStore.into());
                 context.opcodes.push(destination);
             },
             StoreType::FastStore { destination, source} => {
-                context.opcodes.push(VmOpCode::FastStore as u8);
+                context.opcodes.push(VmOpCode::FastStore.into());
                 context.opcodes.push(destination);
                 context.opcodes.push(source);
             }

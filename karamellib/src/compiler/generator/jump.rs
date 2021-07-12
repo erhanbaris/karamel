@@ -9,7 +9,7 @@ use super::{OpcodeGeneratorTrait, OpcodeLocation};
 pub struct JumpGenerator { pub location:  Rc<OpcodeLocation> }
 impl OpcodeGeneratorTrait for JumpGenerator {
     fn generate(&self, context: &mut KaramelCompilerContext) {
-        context.opcodes.push(VmOpCode::Jump as u8);
+        context.opcodes.push(VmOpCode::Jump.into());
         context.opcodes.push(self.location.get() as u8);
         context.opcodes.push((self.location.get() >> 8) as u8);
     }

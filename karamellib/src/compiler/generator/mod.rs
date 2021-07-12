@@ -1,6 +1,6 @@
 use std::{borrow::Borrow, cell::{Cell, RefCell}, collections::VecDeque, rc::Rc};
 
-use self::{call::CallGenerator, compare::CompareGenerator, jump::JumpGenerator, load::LoadGenerator, location_group::OpcodeLocationGroup, opcode_item::OpcodeItem, store::{StoreGenerator, StoreType}};
+use self::{call::CallGenerator, compare::CompareGenerator, init_dict::InitDictGenerator, init_list::InitListGenerator, jump::JumpGenerator, load::LoadGenerator, location_group::OpcodeLocationGroup, opcode_item::OpcodeItem, store::{StoreGenerator, StoreType}};
 
 use super::{KaramelCompilerContext, VmOpCode};
 
@@ -12,6 +12,8 @@ pub mod compare;
 pub mod load;
 pub mod call;
 pub mod location_group;
+pub mod init_list;
+pub mod init_dict;
 
 pub trait OpcodeGeneratorTrait {
     fn generate(&self, context: &mut KaramelCompilerContext);
@@ -159,6 +161,18 @@ impl OpcodeGenerator {
                 argument_size,
                 assign_to_temp
              });
+        self.generators.borrow_mut().push(generator.clone());
+        generator
+    }
+
+    pub fn create_init_list(&self, argument_size: usize) -> Rc<InitListGenerator> {
+        let generator = Rc::new(InitListGenerator { argument_size });
+        self.generators.borrow_mut().push(generator.clone());
+        generator
+    }
+
+    pub fn create_init_dict(&self, argument_size: usize) -> Rc<InitDictGenerator> {
+        let generator = Rc::new(InitDictGenerator { argument_size });
         self.generators.borrow_mut().push(generator.clone());
         generator
     }

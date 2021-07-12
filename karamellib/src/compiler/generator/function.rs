@@ -10,12 +10,12 @@ use super::{OpcodeGeneratorTrait};
 pub struct FunctionGenerator(Rc<FunctionReference>);
 impl OpcodeGeneratorTrait for FunctionGenerator {
     fn generate(&self, context: &mut KaramelCompilerContext) {
-        context.opcodes.push(VmOpCode::Func as u8);
+        context.opcodes.push(VmOpCode::Func.into());
         (*self.0).opcode_location.set(context.opcodes.len());
         context.opcodes.push(self.0.arguments.len() as u8);
 
         if !self.0.arguments.is_empty() {
-            context.opcodes.push(VmOpCode::InitArguments as u8);
+            context.opcodes.push(VmOpCode::InitArguments.into());
             context.opcodes.push(self.0.arguments.len() as u8);
         }
     }

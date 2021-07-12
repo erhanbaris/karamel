@@ -10,7 +10,7 @@ use super::{OpcodeGeneratorTrait, OpcodeLocation};
 pub struct CompareGenerator { pub location: Rc<OpcodeLocation> }
 impl OpcodeGeneratorTrait for CompareGenerator {
     fn generate(&self, context: &mut KaramelCompilerContext) {
-        context.opcodes.push(VmOpCode::Compare as u8);
+        context.opcodes.push(VmOpCode::Compare.into());
         context.opcodes.push(self.get() as u8);
         context.opcodes.push((self.get() >> 8) as u8);
     }

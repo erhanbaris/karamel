@@ -13,9 +13,9 @@ pub struct CallGenerator {
 
 impl OpcodeGeneratorTrait for CallGenerator {
     fn generate(&self, context: &mut KaramelCompilerContext) {
-        context.opcodes.push(VmOpCode::Call as u8);
-        context.opcodes.push(self.function_location as u8);
-        context.opcodes.push(self.argument_size as u8);
-        context.opcodes.push(self.assign_to_temp as u8);
+        context.opcodes.push(VmOpCode::Call.into());
+        context.opcodes.push(self.function_location);
+        context.opcodes.push(self.argument_size);
+        context.opcodes.push(self.assign_to_temp.into());
     }
 }

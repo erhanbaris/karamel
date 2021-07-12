@@ -12,6 +12,6 @@ pub struct OpcodeItem {
 
 impl OpcodeGeneratorTrait for OpcodeItem {
     fn generate(&self, context: &mut KaramelCompilerContext) {
-        context.opcodes.push(self.opcode as u8);
+        context.opcodes.push(self.opcode.into());
     }
 }

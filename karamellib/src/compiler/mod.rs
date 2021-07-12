@@ -112,3 +112,15 @@ pub enum VmOpCode {
     SetItem,
     Halt
 }
+
+impl From<VmOpCode> for u8 {
+    fn from(opcode: VmOpCode) -> Self {
+        opcode as u8
+    }
+}
+
+impl From<&VmOpCode> for u8 {
+    fn from(opcode: &VmOpCode) -> Self {
+        *opcode as u8
+    }
+}
