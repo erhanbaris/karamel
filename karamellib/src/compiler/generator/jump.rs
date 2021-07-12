@@ -10,7 +10,6 @@ pub struct JumpGenerator { pub location:  Rc<OpcodeLocation> }
 impl OpcodeGeneratorTrait for JumpGenerator {
     fn generate(&self, opcodes: &mut Vec<u8>) {
         opcodes.push(VmOpCode::Jump.into());
-        opcodes.push(self.location.get() as u8);
-        opcodes.push((self.location.get() >> 8) as u8);
+        self.location.apply(opcodes);
     }
 }

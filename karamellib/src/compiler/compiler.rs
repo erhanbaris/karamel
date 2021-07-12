@@ -20,12 +20,12 @@ use crate::compiler::storage_builder::StorageBuilder;
 use crate::compiler::function::FunctionReference;
 use crate::buildin::class::PRIMATIVE_CLASS_NAMES;
 use super::generator::OpcodeGeneratorTrait;
+use super::generator::location::OpcodeLocation;
 
 use log;
 
 use super::context::KaramelCompilerContext;
 use super::function::find_function_definition_type;
-use super::generator::OpcodeLocation;
 use super::module::{OpcodeModule, get_modules};
 use super::storage_builder::StorageBuilderOption;
 
@@ -58,7 +58,7 @@ impl InterpreterCompiler {
         self.generate_functions(main_module.clone(), &mut functions, context)?;
 
         /* Prepare jump code for main function */
-        main_location.set(context.opcodes.len());
+        context.opcode_generator.build_location(main_location.clone());
 
         /* Generate main function code */
         self.generate_opcode(main_module.clone(), &*main_ast, &KaramelAstType::None, context, 0)?;
@@ -437,7 +437,7 @@ impl InterpreterCompiler {
         }
 
         let start_location = context.opcode_generator.create_location();
-        start_location.set(context.opcodes.len());
+        context.opcode_generator.build_location(start_location.clone());
 
         
         if let Some(control) = &control {

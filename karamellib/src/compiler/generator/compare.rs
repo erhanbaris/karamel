@@ -11,8 +11,7 @@ pub struct CompareGenerator { pub location: Rc<OpcodeLocation> }
 impl OpcodeGeneratorTrait for CompareGenerator {
     fn generate(&self, opcodes: &mut Vec<u8>) {
         opcodes.push(VmOpCode::Compare.into());
-        opcodes.push(self.get() as u8);
-        opcodes.push((self.get() >> 8) as u8);
+        self.location.apply(opcodes);
     }
 }
 

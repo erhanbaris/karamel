@@ -1,10 +1,11 @@
 use std::{borrow::Borrow, cell::{Cell, RefCell}, collections::VecDeque, rc::Rc};
 
-use self::{call::{CallGenerator, CallType}, compare::CompareGenerator, function::FunctionGenerator, init_dict::InitDictGenerator, init_list::InitListGenerator, jump::JumpGenerator, load::LoadGenerator, location_group::OpcodeLocationGroup, opcode_item::OpcodeItem, store::{StoreGenerator, StoreType}};
+use self::{call::{CallGenerator, CallType}, compare::CompareGenerator, function::FunctionGenerator, init_dict::InitDictGenerator, init_list::InitListGenerator, jump::JumpGenerator, load::LoadGenerator, location::{CurrentLocationUpdateGenerator, OpcodeLocation}, location_group::OpcodeLocationGroup, opcode_item::OpcodeItem, store::{StoreGenerator, StoreType}};
 
 use super::{VmOpCode, function::FunctionReference};
 
 pub mod opcode_item;
+pub mod location;
 pub mod function;
 pub mod jump;
 pub mod store;
@@ -17,18 +18,6 @@ pub mod init_dict;
 
 pub trait OpcodeGeneratorTrait {
     fn generate(&self, opcodes: &mut Vec<u8>);
-}
-
-#[derive(Clone)]
-pub struct OpcodeLocation(Cell<usize>);
-impl OpcodeLocation {
-    pub fn get(&self) -> usize {
-        self.0.get()
-    }
-
-    pub fn set(&self, location: usize) {
-        self.0.set(location);
-    }
 }
 
 pub struct LoopItem {
@@ -110,6 +99,11 @@ impl OpcodeGenerator {
 
     pub fn create_location(&self) -> Rc<OpcodeLocation> {
         Rc::new(OpcodeLocation(Cell::new(0)))
+    }
+
+    pub fn build_location(&self, location: Rc<OpcodeLocation>) {
+        let generator = Rc::new(CurrentLocationUpdateGenerator { location: location.clone() });
+        self.generators.borrow_mut().push(generator.clone());
     }
 
     pub fn create_location_with_data(&self, location: usize) -> Rc<OpcodeLocation> {
