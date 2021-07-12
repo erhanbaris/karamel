@@ -1,4 +1,4 @@
-use crate::compiler::{KaramelCompilerContext, VmOpCode};
+use crate::compiler::VmOpCode;
 
 use super::OpcodeGeneratorTrait;
 
@@ -11,7 +11,7 @@ pub struct OpcodeItem {
 }
 
 impl OpcodeGeneratorTrait for OpcodeItem {
-    fn generate(&self, context: &mut KaramelCompilerContext) {
-        context.opcodes.push(self.opcode.into());
+    fn generate(&self, opcodes: &mut Vec<u8>) {
+        opcodes.push(self.opcode.into());
     }
 }

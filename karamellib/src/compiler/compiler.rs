@@ -17,8 +17,9 @@ use crate::syntax::SyntaxParser;
 use crate::compiler::value::KaramelPrimative;
 use crate::compiler::ast::{KaramelAstType, KaramelIfStatementElseItem};
 use crate::compiler::storage_builder::StorageBuilder;
-use crate::compiler::function::{FunctionReference};
+use crate::compiler::function::FunctionReference;
 use crate::buildin::class::PRIMATIVE_CLASS_NAMES;
+use super::generator::OpcodeGeneratorTrait;
 
 use log;
 
@@ -62,6 +63,9 @@ impl InterpreterCompiler {
         /* Generate main function code */
         self.generate_opcode(main_module.clone(), &*main_ast, &KaramelAstType::None, context, 0)?;
         context.opcode_generator.add_opcode(VmOpCode::Halt);
+        context.opcode_generator.generate(&mut context.opcodes);
+
+        println!("{:?}", context.opcodes);
         context.opcodes_ptr = context.opcodes.as_mut_ptr();
 
         Ok(())
@@ -142,16 +146,7 @@ impl InterpreterCompiler {
             }
 
             self.check_prohibited_names(&function.name)?;
-
-            context.opcodes.push(VmOpCode::Func as u8);
-            (*function).opcode_location.set(context.opcodes.len());
-            context.opcodes.push(function.arguments.len() as u8);
-
-            if !function.arguments.is_empty() {
-                context.opcodes.push(VmOpCode::InitArguments as u8);
-                context.opcodes.push(function.arguments.len() as u8);
-            }
-
+            context.opcode_generator.create_function_definition(function.clone());
             self.generate_opcode(module.clone(), &function.opcode_body.as_ref().unwrap(), &function.opcode_body.as_ref().unwrap(), context, function.storage_index as usize)?;
         }
 
@@ -303,10 +298,7 @@ impl InterpreterCompiler {
             /* Variable found */
             Some(location) => {
                 context.opcode_generator.create_load(location);
-
-                context.opcodes.push(VmOpCode::CallStack as u8);
-                context.opcodes.push(arguments.len() as u8);
-                context.opcodes.push(assign_to_temp as u8);
+                context.opcode_generator.create_call_stack(arguments.len() as u8, assign_to_temp);
                 return Ok(true);
             },
             /* Variable not found, lets check for function */
@@ -334,10 +326,7 @@ impl InterpreterCompiler {
                         Some(location) => {
                             context.opcode_generator.create_load(location);
                             context.opcode_generator.add_opcode(VmOpCode::GetItem);
-                                                        
-                            context.opcodes.push(VmOpCode::CallStack as u8);
-                            context.opcodes.push(arguments.len() as u8);
-                            context.opcodes.push(assign_to_temp as u8);
+                            context.opcode_generator.create_call_stack(arguments.len() as u8, assign_to_temp);
                             return Ok(());
                         },
                         _ => return Err(KaramelErrorType::FunctionNotFound(function_name.to_string()))
@@ -381,10 +370,7 @@ impl InterpreterCompiler {
 
             KaramelAstType::FuncCall {func_name_expression, arguments: inner_arguments, assign_to_temp: _} => {
                 self.generate_func_call(module.clone(), func_name_expression, inner_arguments, true, upper_ast, context, storage_index)?;
-                context.opcodes.push(VmOpCode::CallStack as u8);
-                context.opcodes.push(arguments.len() as u8);
-                context.opcodes.push(assign_to_temp as u8);
-
+                context.opcode_generator.create_call_stack(arguments.len() as u8, assign_to_temp);
                 return Ok(());
             },
 
@@ -397,9 +383,7 @@ impl InterpreterCompiler {
             },
             _ => {
                 self.generate_opcode(module.clone(), func_name_expression, upper_ast, context, storage_index)?;
-                context.opcodes.push(VmOpCode::CallStack as u8);
-                context.opcodes.push(arguments.len() as u8);
-                context.opcodes.push(assign_to_temp as u8);
+                context.opcode_generator.create_call_stack(arguments.len() as u8, assign_to_temp);
                 return Ok(());
             }
         }

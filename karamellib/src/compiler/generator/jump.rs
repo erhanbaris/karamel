@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use crate::compiler::{KaramelCompilerContext, VmOpCode};
+use crate::compiler::VmOpCode;
 
 use super::{OpcodeGeneratorTrait, OpcodeLocation};
 
@@ -8,9 +8,9 @@ use super::{OpcodeGeneratorTrait, OpcodeLocation};
 /// Generate jump opcodes. 
 pub struct JumpGenerator { pub location:  Rc<OpcodeLocation> }
 impl OpcodeGeneratorTrait for JumpGenerator {
-    fn generate(&self, context: &mut KaramelCompilerContext) {
-        context.opcodes.push(VmOpCode::Jump.into());
-        context.opcodes.push(self.location.get() as u8);
-        context.opcodes.push((self.location.get() >> 8) as u8);
+    fn generate(&self, opcodes: &mut Vec<u8>) {
+        opcodes.push(VmOpCode::Jump.into());
+        opcodes.push(self.location.get() as u8);
+        opcodes.push((self.location.get() >> 8) as u8);
     }
 }

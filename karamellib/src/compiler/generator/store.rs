@@ -1,4 +1,4 @@
-use crate::compiler::{KaramelCompilerContext, VmOpCode};
+use crate::compiler::VmOpCode;
 
 use super::OpcodeGeneratorTrait;
 
@@ -20,20 +20,20 @@ pub struct StoreGenerator {
 }
 
 impl OpcodeGeneratorTrait for StoreGenerator {
-    fn generate(&self, context: &mut KaramelCompilerContext) {
+    fn generate(&self, opcodes: &mut Vec<u8>) {
         match self.store_type {
             StoreType::Store(destination) => {
-                context.opcodes.push(VmOpCode::Store.into());
-                context.opcodes.push(destination);
+                opcodes.push(VmOpCode::Store.into());
+                opcodes.push(destination);
             },
             StoreType::CopyToStore(destination) => {
-                context.opcodes.push(VmOpCode::CopyToStore.into());
-                context.opcodes.push(destination);
+                opcodes.push(VmOpCode::CopyToStore.into());
+                opcodes.push(destination);
             },
             StoreType::FastStore { destination, source} => {
-                context.opcodes.push(VmOpCode::FastStore.into());
-                context.opcodes.push(destination);
-                context.opcodes.push(source);
+                opcodes.push(VmOpCode::FastStore.into());
+                opcodes.push(destination);
+                opcodes.push(source);
             }
         };
     }

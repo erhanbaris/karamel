@@ -1,4 +1,4 @@
-use crate::compiler::{KaramelCompilerContext, VmOpCode};
+use crate::compiler::VmOpCode;
 
 use super::OpcodeGeneratorTrait;
 
@@ -9,8 +9,8 @@ pub struct InitListGenerator {
 }
 
 impl OpcodeGeneratorTrait for InitListGenerator {
-    fn generate(&self, context: &mut KaramelCompilerContext) {
-        context.opcodes.push(VmOpCode::InitList.into());
-        context.opcodes.push(self.argument_size as u8);
+    fn generate(&self, opcodes: &mut Vec<u8>) {
+        opcodes.push(VmOpCode::InitList.into());
+        opcodes.push(self.argument_size as u8);
     }
 }

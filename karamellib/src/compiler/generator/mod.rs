@@ -1,8 +1,8 @@
 use std::{borrow::Borrow, cell::{Cell, RefCell}, collections::VecDeque, rc::Rc};
 
-use self::{call::CallGenerator, compare::CompareGenerator, init_dict::InitDictGenerator, init_list::InitListGenerator, jump::JumpGenerator, load::LoadGenerator, location_group::OpcodeLocationGroup, opcode_item::OpcodeItem, store::{StoreGenerator, StoreType}};
+use self::{call::{CallGenerator, CallType}, compare::CompareGenerator, function::FunctionGenerator, init_dict::InitDictGenerator, init_list::InitListGenerator, jump::JumpGenerator, load::LoadGenerator, location_group::OpcodeLocationGroup, opcode_item::OpcodeItem, store::{StoreGenerator, StoreType}};
 
-use super::{KaramelCompilerContext, VmOpCode};
+use super::{VmOpCode, function::FunctionReference};
 
 pub mod opcode_item;
 pub mod function;
@@ -16,7 +16,7 @@ pub mod init_list;
 pub mod init_dict;
 
 pub trait OpcodeGeneratorTrait {
-    fn generate(&self, context: &mut KaramelCompilerContext);
+    fn generate(&self, opcodes: &mut Vec<u8>);
 }
 
 #[derive(Clone)]
@@ -157,10 +157,26 @@ impl OpcodeGenerator {
 
     pub fn create_call(&self, function_location: u8, argument_size: u8, assign_to_temp: bool) -> Rc<CallGenerator> {
         let generator = Rc::new(CallGenerator { 
-                function_location,
+                call_type: CallType::Call { location: function_location },
                 argument_size,
                 assign_to_temp
              });
+        self.generators.borrow_mut().push(generator.clone());
+        generator
+    }
+
+    pub fn create_call_stack(&self, argument_size: u8, assign_to_temp: bool) -> Rc<CallGenerator> {
+        let generator = Rc::new(CallGenerator { 
+                call_type: CallType::CallStack,
+                argument_size,
+                assign_to_temp
+             });
+        self.generators.borrow_mut().push(generator.clone());
+        generator
+    }
+
+    pub fn create_function_definition(&self, function: Rc<FunctionReference>) -> Rc<FunctionGenerator> {
+        let generator = Rc::new(FunctionGenerator { function: function.clone() });
         self.generators.borrow_mut().push(generator.clone());
         generator
     }
@@ -179,9 +195,9 @@ impl OpcodeGenerator {
 }
 
 impl OpcodeGeneratorTrait for OpcodeGenerator {
-    fn generate(&self, context: &mut KaramelCompilerContext) {
+    fn generate(&self, opcodes: &mut Vec<u8>) {
         for generator in self.generators.borrow().iter() {
-            generator.generate(context);
+            generator.generate(opcodes);
         }
     }
 }
