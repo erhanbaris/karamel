@@ -63,54 +63,54 @@ impl VmByteDecode for u8 {
 #[repr(u8)]
 pub enum VmOpCode {
     None = 0,
-    Addition,
-    Subraction,
-    Multiply,
-    Division,
-    Module,
-    And,
-    Or,
-    Equal,
-    NotEqual,
-    GreaterThan,
-    LessThan,
-    GreaterEqualThan,
-    LessEqualThan,
+    Addition = 1,
+    Subraction = 2,
+    Multiply = 3,
+    Division = 4,
+    Module = 5,
+    And = 6,
+    Or = 7,
+    Equal = 8,
+    NotEqual = 9,
+    GreaterThan = 10,
+    LessThan = 11,
+    GreaterEqualThan = 12,
+    LessEqualThan = 13,
 
-    Func,
-    InitArguments,
-    Call,
-    CallStack,
-    Return,
+    Func = 14,
+    InitArguments = 15,
+    Call = 16,
+    CallStack = 17,
+    Return = 18,
 
-    Increment,
-    Decrement,
-    Not,
+    Increment = 19,
+    Decrement = 20,
+    Not = 21,
 
     /// Compare previous two opcode.
     /// If true, jump over 2 opcode and continue to execution.
     /// If false, read next 2 opcode than calculate false jump location via high and low byte.
-    Compare,
-    Jump,
+    Compare = 22,
+    Jump = 23,
 
-    InitList,
-    InitDict,
+    InitList = 24,
+    InitDict = 25,
 
     /// Copy value from memory to stack.
-    Load,
-
+    Load = 26,
+    
     /// Copy stack value to memory and remove value from stack.
-    Store,
+    Store = 27,
 
     /// Dublicate value at memory. Take value from memory and copy to destination location. Stack not involved at this operation.
-    FastStore,
+    FastStore = 28,
 
     /// Copy last stack value to memory and keep copied value at stack.
-    CopyToStore,
-    Dublicate,
-    GetItem,
-    SetItem,
-    Halt
+    CopyToStore = 29,
+    Dublicate = 30,
+    GetItem = 31,
+    SetItem = 32,
+    Halt = 33
 }
 
 impl From<VmOpCode> for u8 {

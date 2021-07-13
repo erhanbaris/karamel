@@ -540,7 +540,7 @@ impl InterpreterCompiler {
                             _ => return Err(KaramelErrorType::ValueNotFoundInStorage)
                         };
 
-                        context.opcode_generator.create_fast_store(location, primative_location);
+                        context.opcode_generator.create_fast_store(primative_location, location);
                         return Ok(());
                     }
                 }
