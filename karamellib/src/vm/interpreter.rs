@@ -447,6 +447,7 @@ pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObjec
                     else {
                         let location = ((*context.opcodes_ptr.offset(2) as u16 * 256) + *context.opcodes_ptr.offset(1) as u16) as usize;
                         context.opcodes_ptr = context.opcodes_ptr.offset(location as isize);
+                        continue;
                     }
                 },
 

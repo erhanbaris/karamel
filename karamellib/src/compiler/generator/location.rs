@@ -50,7 +50,10 @@ impl OpcodeLocation {
     pub fn get(&self) -> usize {
         match &*self.location.borrow() {
             LocationType::Fixed(location) => *location,
-            LocationType::Subtraction { left_hand, right_hand } => left_hand.get() - right_hand.get()
+            LocationType::Subtraction { left_hand, right_hand } => {
+                println!("{} {}", left_hand.get(), right_hand.get());
+                left_hand.get() - right_hand.get()
+            }
         }
     }
 
@@ -98,5 +101,21 @@ pub struct DynamicLocationUpdateGenerator {
 impl OpcodeGeneratorTrait for DynamicLocationUpdateGenerator {
     fn generate(&self, opcodes: &mut Vec<u8>) {
         self.target.set(self.source.get(), opcodes);
+    }
+}
+
+#[derive(Clone)]
+pub struct SubtractionGenerator { 
+    pub target:  Rc<OpcodeLocation>,
+    pub left_hand:  Rc<OpcodeLocation>,
+    pub right_hand:  Rc<OpcodeLocation>
+}
+
+impl OpcodeGeneratorTrait for SubtractionGenerator {
+    fn generate(&self, opcodes: &mut Vec<u8>) {
+        let left = self.left_hand.get();
+        let right = self.right_hand.get();
+
+        self.target.set(left - right, opcodes);
     }
 }

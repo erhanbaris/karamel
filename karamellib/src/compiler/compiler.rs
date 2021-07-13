@@ -455,12 +455,12 @@ impl InterpreterCompiler {
 
         context.opcode_generator.create_jump(start_location.clone());
 
-        let current_location = context.opcode_generator.current_location();
+        let end_location = context.opcode_generator.current_location();
         if let Some(compare_location) = &compare_location {
-            compare_location.subtraction(current_location.clone(), compare_location.clone());
+            context.opcode_generator.subtract_location(compare_location.clone(), end_location.clone(), compare_location.clone());
         }
 
-        context.opcode_generator.set_breaks_locations(current_location.clone());
+        context.opcode_generator.set_breaks_locations(end_location.clone());
         context.opcode_generator.set_continues_locations(start_location.clone());
 
         context.opcode_generator.loop_finished();
@@ -682,7 +682,7 @@ impl InterpreterCompiler {
 
         for else_if_item in else_if {
             /* Previous conditon should jump to this location */
-            if_failed_location.subtraction(context.opcode_generator.build_current_location(), if_failed_location.clone());
+            context.opcode_generator.subtract_location(if_failed_location.clone(), context.opcode_generator.build_current_location(), if_failed_location.clone());
 
             /* Build condition */
             self.generate_opcode(module.clone(), &else_if_item.condition, upper_ast, context, storage_index)?;
@@ -695,7 +695,7 @@ impl InterpreterCompiler {
             self.create_exit_jump(context, &mut exit_locations);
         }
 
-        if_failed_location.subtraction(context.opcode_generator.build_current_location(), if_failed_location.clone());
+        context.opcode_generator.subtract_location(if_failed_location.clone(), context.opcode_generator.build_current_location(), if_failed_location.clone());
 
         if let Some(_else_body) = else_body {
             self.generate_opcode(module.clone(), _else_body, upper_ast, context, storage_index)?;

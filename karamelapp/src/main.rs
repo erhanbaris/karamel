@@ -18,7 +18,8 @@ fn main() {
                                .long("dosya")
                                .value_name("FILE")
                                .help("Çalıştırılacak karamel dosyası")
-                               .default_value("C:\\Codes\\rust_test\\karamellib\\test_files\\pass_loop_2.k")
+
+                               .default_value("/Users/erhanbaris/ClionProjects/TPD/karamellib/test_files/pass_loop_3.k")
                                .takes_value(true))
                           .get_matches();
 
@@ -31,8 +32,8 @@ fn main() {
         None => ExecutionParameters {
             source: ExecutionSource::Code(r#"
 gç::satıryaz(123)
-gç::satıryaz(123.00000001 - 0.00000001)
-    "#.to_string()),
+        
+"#.to_string()),
             return_opcode: true,
             return_output: true
         }

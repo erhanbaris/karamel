@@ -2,7 +2,7 @@ use std::{borrow::Borrow, cell::RefCell, collections::VecDeque, rc::Rc};
 
 use crate::compiler::generator::location::DynamicLocationUpdateGenerator;
 
-use self::{call::{CallGenerator, CallType}, compare::CompareGenerator, function::FunctionGenerator, init_dict::InitDictGenerator, init_list::InitListGenerator, jump::JumpGenerator, load::LoadGenerator, location::{CurrentLocationUpdateGenerator, OpcodeLocation}, location_group::OpcodeLocationGroup, opcode_item::OpcodeItem, store::{StoreGenerator, StoreType}};
+use self::{call::{CallGenerator, CallType}, compare::CompareGenerator, function::FunctionGenerator, init_dict::InitDictGenerator, init_list::InitListGenerator, jump::JumpGenerator, load::LoadGenerator, location::{CurrentLocationUpdateGenerator, OpcodeLocation, SubtractionGenerator}, location_group::OpcodeLocationGroup, opcode_item::OpcodeItem, store::{StoreGenerator, StoreType}};
 
 use super::{VmOpCode, function::FunctionReference};
 
@@ -109,6 +109,7 @@ impl OpcodeGenerator {
         self.loop_groups.borrow_mut().pop_back();
     }
 
+    /// Create empty location point. It is used for jump and compare location positions.
     pub fn create_location(&self) -> Rc<OpcodeLocation> {
         Rc::new(OpcodeLocation::empty())
     }
@@ -118,6 +119,11 @@ impl OpcodeGenerator {
     /// * `location` - OpcodeLocation reference to be updated dynamically at generation time
     pub fn set_current_location(&self, location: Rc<OpcodeLocation>) {
         let generator = Rc::new(CurrentLocationUpdateGenerator { location: location.clone() });
+        self.generators.borrow_mut().push(generator.clone());
+    }
+
+    pub fn subtract_location(&self, target: Rc<OpcodeLocation>, left_hand: Rc<OpcodeLocation>, right_hand: Rc<OpcodeLocation>) {
+        let generator = Rc::new(SubtractionGenerator { target, left_hand, right_hand });
         self.generators.borrow_mut().push(generator.clone());
     }
 
