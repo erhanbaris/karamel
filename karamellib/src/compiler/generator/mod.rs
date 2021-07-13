@@ -1,4 +1,6 @@
-use std::{borrow::Borrow, cell::{Cell, RefCell}, collections::VecDeque, rc::Rc};
+use std::{borrow::Borrow, cell::RefCell, collections::VecDeque, rc::Rc};
+
+use crate::compiler::generator::location::DynamicLocationUpdateGenerator;
 
 use self::{call::{CallGenerator, CallType}, compare::CompareGenerator, function::FunctionGenerator, init_dict::InitDictGenerator, init_list::InitListGenerator, jump::JumpGenerator, load::LoadGenerator, location::{CurrentLocationUpdateGenerator, OpcodeLocation}, location_group::OpcodeLocationGroup, opcode_item::OpcodeItem, store::{StoreGenerator, StoreType}};
 
@@ -74,7 +76,12 @@ impl OpcodeGenerator {
     pub fn set_continues_locations(&self, location: Rc<OpcodeLocation>) {
         match self.loop_groups.borrow().back() {
             Some(group) => {
-                group.loop_continues.set_all(location.get());
+                for target_location in group.loop_continues.locations.borrow().iter() {
+                    self.generators.borrow_mut().push(Rc::new(DynamicLocationUpdateGenerator {
+                        target: target_location.clone(),
+                        source: location.clone()
+                    }));
+                }
             },
             None => assert_eq!(false, false, "Döngü grubu bulunamadı")
         };
@@ -83,7 +90,12 @@ impl OpcodeGenerator {
     pub fn set_breaks_locations(&self, location: Rc<OpcodeLocation>) {
         match self.loop_groups.borrow().back() {
             Some(group) => {
-                group.loop_breaks.set_all(location.get());
+                for target_location in group.loop_breaks.locations.borrow().iter() {
+                    self.generators.borrow_mut().push(Rc::new(DynamicLocationUpdateGenerator {
+                        target: target_location.clone(),
+                        source: location.clone()
+                    }));
+                }
             },
             None => assert_eq!(false, false, "Döngü grubu bulunamadı")
         };
@@ -101,13 +113,30 @@ impl OpcodeGenerator {
         Rc::new(OpcodeLocation::empty())
     }
 
-    pub fn build_location(&self, location: Rc<OpcodeLocation>) {
+    /// Set location information with opcode length
+    /// # Arguments
+    /// * `location` - OpcodeLocation reference to be updated dynamically at generation time
+    pub fn set_current_location(&self, location: Rc<OpcodeLocation>) {
         let generator = Rc::new(CurrentLocationUpdateGenerator { location: location.clone() });
         self.generators.borrow_mut().push(generator.clone());
     }
 
+    pub fn build_current_location(&self) -> Rc<OpcodeLocation> {
+        let location = self.create_location();
+        let generator = Rc::new(CurrentLocationUpdateGenerator { location: location.clone() });
+        self.generators.borrow_mut().push(generator.clone());
+        location
+    }
+
     pub fn create_location_with_data(&self, location: usize) -> Rc<OpcodeLocation> {
         Rc::new(OpcodeLocation::new(location))
+    }
+
+    /// Create a new location information and that location information should be populated at generation time with current location
+    pub fn current_location(&self) -> Rc<OpcodeLocation> {
+        let location = Rc::new(OpcodeLocation::empty());
+        self.set_current_location(location.clone());
+        location
     }
 
     pub fn create_jump(&self, location: Rc<OpcodeLocation>) -> Rc<JumpGenerator> {
@@ -205,6 +234,7 @@ mod tests {
 
     #[test]
     fn test_1() {
+        let mut opcodes = Vec::new();
         let generator = OpcodeGenerator::new();
         let location = generator.create_location();
         assert_eq!(location.get(), 0);
@@ -212,19 +242,20 @@ mod tests {
         let jump = generator.create_jump(location.clone());
         assert_eq!(jump.location.get(), 0);
 
-        location.set(100);
+        location.set(100, &mut opcodes);
         assert_eq!(jump.location.get(), 100);
         assert_eq!(location.get(), 100);
     }
 
     #[test]
     fn test_2() {
+        let mut opcodes = Vec::new();
         let generator = OpcodeGenerator::new();
         let location = generator.create_location();
 
         let jump_1 = generator.create_jump(location.clone());
         let jump_2 = generator.create_jump(location.clone());
-        location.set(100);
+        location.set(100, &mut opcodes);
         assert_eq!(location.get(), 100);
         assert_eq!(jump_1.location.get(), 100);
         assert_eq!(jump_2.location.get(), 100);

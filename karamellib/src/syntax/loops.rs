@@ -138,8 +138,6 @@ impl SyntaxParserTrait for WhileLoopParser {
 #[cfg(test)]
 mod tests {
     use crate::error::{KaramelError, KaramelErrorType};
-
-    use crate::types::*;
     use crate::parser::*;
     use crate::syntax::*;
     use crate::compiler::value::KaramelPrimative;

@@ -19,8 +19,4 @@ impl CompareGenerator {
     pub fn get(&self) -> usize {
         self.location.get()
     }
-
-    pub fn set(&self, location: usize) {
-        self.location.set(location);
-    }
 }

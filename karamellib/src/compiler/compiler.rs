@@ -58,7 +58,7 @@ impl InterpreterCompiler {
         self.generate_functions(main_module.clone(), &mut functions, context)?;
 
         /* Prepare jump code for main function */
-        context.opcode_generator.build_location(main_location.clone());
+        context.opcode_generator.set_current_location(main_location.clone());
 
         /* Generate main function code */
         self.generate_opcode(main_module.clone(), &*main_ast, &KaramelAstType::None, context, 0)?;
@@ -390,14 +390,14 @@ impl InterpreterCompiler {
     }
 
     fn generate_break(&self, _: &KaramelAstType, context: &mut KaramelCompilerContext, _: usize) -> CompilerResult {       
-        let location = context.opcode_generator.create_location_with_data(context.opcodes.len());
+        let location = context.opcode_generator.current_location();
         context.opcode_generator.add_break_location(location.clone());
         context.opcode_generator.create_jump(location.clone());
         Ok(())
     }
 
     fn generate_continue(&self, _: &KaramelAstType, context: &mut KaramelCompilerContext, _: usize) -> CompilerResult {       
-        let location = context.opcode_generator.create_location_with_data(context.opcodes.len());
+        let location = context.opcode_generator.current_location();
         context.opcode_generator.add_continue_location(location.clone());
         context.opcode_generator.create_jump(location.clone());
         Ok(())
@@ -436,13 +436,11 @@ impl InterpreterCompiler {
             self.generate_opcode(module.clone(), &*&variable, upper_ast, context, storage_index)?;
         }
 
-        let start_location = context.opcode_generator.create_location();
-        context.opcode_generator.build_location(start_location.clone());
+        let start_location = context.opcode_generator.current_location();
 
-        
         if let Some(control) = &control {
             self.generate_opcode(module.clone(), &*control, upper_ast, context, storage_index)?;
-            compare_location = Some(context.opcode_generator.create_location_with_data(context.opcodes.len()));
+            compare_location = Some(context.opcode_generator.current_location());
             match &compare_location {
                 Some(location) => { context.opcode_generator.create_compare(location.clone()); },
                 None => assert_eq!(false, false, "Döngü grubu bulunamadı")
@@ -457,9 +455,9 @@ impl InterpreterCompiler {
 
         context.opcode_generator.create_jump(start_location.clone());
 
-        let current_location = context.opcode_generator.create_location_with_data(context.opcodes.len());
+        let current_location = context.opcode_generator.current_location();
         if let Some(compare_location) = &compare_location {
-            compare_location.set(current_location.get() - compare_location.get());
+            compare_location.subtraction(current_location.clone(), compare_location.clone());
         }
 
         context.opcode_generator.set_breaks_locations(current_location.clone());
@@ -641,13 +639,13 @@ impl InterpreterCompiler {
     }
 
     fn create_exit_jump(&self, context: &mut KaramelCompilerContext, exit_locations: &mut Vec<Rc<OpcodeLocation>>) {
-        let location = context.opcode_generator.create_location_with_data(context.opcodes.len());
+        let location = context.opcode_generator.current_location();
         context.opcode_generator.create_jump(location.clone());
         exit_locations.push(location.clone())
     }
 
     fn create_compare(&self, context: &mut KaramelCompilerContext) -> Rc<OpcodeLocation> {
-        let location = context.opcode_generator.create_location_with_data(context.opcodes.len());
+        let location = context.opcode_generator.current_location();
         context.opcode_generator.create_compare(location.clone());
         location.clone()
     }
@@ -684,7 +682,7 @@ impl InterpreterCompiler {
 
         for else_if_item in else_if {
             /* Previous conditon should jump to this location */
-            if_failed_location.set(context.opcodes.len() - if_failed_location.get());
+            if_failed_location.subtraction(context.opcode_generator.build_current_location(), if_failed_location.clone());
 
             /* Build condition */
             self.generate_opcode(module.clone(), &else_if_item.condition, upper_ast, context, storage_index)?;
@@ -697,17 +695,14 @@ impl InterpreterCompiler {
             self.create_exit_jump(context, &mut exit_locations);
         }
 
+        if_failed_location.subtraction(context.opcode_generator.build_current_location(), if_failed_location.clone());
+
         if let Some(_else_body) = else_body {
-            if_failed_location.set(context.opcodes.len() - if_failed_location.get());
             self.generate_opcode(module.clone(), _else_body, upper_ast, context, storage_index)?;
         }
-        else {
-            if_failed_location.set(context.opcodes.len() - if_failed_location.get());
-        }
 
-        let current_location = context.opcodes.len();
         for exit_location in exit_locations {
-            exit_location.set(current_location);
+            context.opcode_generator.set_current_location(exit_location);
         }
 
         Ok(())

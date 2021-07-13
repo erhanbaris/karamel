@@ -18,6 +18,7 @@ fn main() {
                                .long("dosya")
                                .value_name("FILE")
                                .help("Çalıştırılacak karamel dosyası")
+                               .default_value("C:\\Codes\\rust_test\\karamellib\\test_files\\pass_loop_2.k")
                                .takes_value(true))
                           .get_matches();
 

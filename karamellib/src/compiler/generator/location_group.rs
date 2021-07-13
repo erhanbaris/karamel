@@ -5,7 +5,7 @@ use super::OpcodeLocation;
 
 
 #[derive(Clone)]
-pub struct OpcodeLocationGroup { locations: RefCell<Vec<Rc<OpcodeLocation>>> }
+pub struct OpcodeLocationGroup { pub locations: RefCell<Vec<Rc<OpcodeLocation>>> }
 impl OpcodeLocationGroup {
     pub fn new() -> Self {
         OpcodeLocationGroup {
@@ -15,12 +15,6 @@ impl OpcodeLocationGroup {
 
     pub fn add(&self, location: Rc<OpcodeLocation>) {
         self.locations.borrow_mut().push(location.clone());
-    }
-
-    pub fn set_all(&self, address: usize) {
-        for location in self.locations.borrow().iter() {
-            location.set(address);
-        }
     }
 
     pub fn clear(&self) {
