@@ -20,6 +20,7 @@ pub mod init_dict;
 
 pub trait OpcodeGeneratorTrait {
     fn generate(&self, opcodes: &mut Vec<u8>);
+    fn dump(&self, buffer: &mut String);
 }
 
 pub struct LoopItem {
@@ -227,6 +228,12 @@ impl OpcodeGeneratorTrait for OpcodeGenerator {
     fn generate(&self, opcodes: &mut Vec<u8>) {
         for generator in self.generators.borrow().iter() {
             generator.generate(opcodes);
+        }
+    }
+
+    fn dump(&self, buffer: &mut String) {
+        for generator in self.generators.borrow().iter() {
+            generator.dump(buffer);
         }
     }
 }

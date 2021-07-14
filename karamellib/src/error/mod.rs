@@ -250,7 +250,11 @@ pub enum KaramelErrorType {
 
     #[error("',' eksik")]
     #[strum(message = "152")]
-    CommaIsMissing
+    CommaIsMissing,
+
+    #[error("Öperatör geçerli değil")]
+    #[strum(message = "153")]
+    OperatorNotValid
 }
 
 impl From<KaramelErrorType> for KaramelError {

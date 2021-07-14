@@ -62,7 +62,6 @@ impl VmByteDecode for u8 {
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[repr(u8)]
 pub enum VmOpCode {
-    None = 0,
     Addition = 1,
     Subraction = 2,
     Multiply = 3,
@@ -77,7 +76,6 @@ pub enum VmOpCode {
     GreaterEqualThan = 12,
     LessEqualThan = 13,
 
-    Func = 14,
     InitArguments = 15,
     Call = 16,
     CallStack = 17,

@@ -93,8 +93,7 @@ pub unsafe fn dump_opcode<W: Write>(index: usize, context: &mut KaramelCompilerC
                 build_arrow(index, opcode_index, 1, &mut buffer, &data);
                 opcode_index += 1;
             },
-
-            VmOpCode::None |
+            
             VmOpCode::Halt |
             VmOpCode::Return => {
                 let data = format!("║ {:4} ║ {:15} ║ {:^5} ║ {:^5} ║", opcode_index, format!("{:?}", opcode), "", "").to_string();
@@ -533,8 +532,6 @@ pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObjec
 
                     context.opcodes_ptr = context.opcodes_ptr.offset(1);
                 },
-                VmOpCode::Func => (),
-                VmOpCode::None => (),
                 VmOpCode::Halt => {
                     break;
                 },

@@ -41,6 +41,10 @@ impl OpcodeGeneratorTrait for CallGenerator {
         opcodes.push(self.argument_size);
         opcodes.push(self.assign_to_temp.into());
     }
+
+    fn dump(&self, buffer: &mut String) {
+
+    }
 }
 
 

@@ -13,7 +13,6 @@ pub struct FunctionGenerator {
 
 impl OpcodeGeneratorTrait for FunctionGenerator {
     fn generate(&self, opcodes: &mut Vec<u8>) {
-        opcodes.push(VmOpCode::Func.into());
         (*self.function).opcode_location.set(opcodes.len());
         opcodes.push(self.function.arguments.len() as u8);
 

@@ -512,7 +512,7 @@ impl InterpreterCompiler {
             KaramelOperatorType::LessThan         => VmOpCode::LessThan,
             KaramelOperatorType::GreaterEqualThan => VmOpCode::GreaterEqualThan,
             KaramelOperatorType::LessEqualThan    => VmOpCode::LessEqualThan,
-            _ => VmOpCode::None
+            _ => return Err(KaramelErrorType::OperatorNotValid)
         };
 
         context.opcode_generator.add_opcode(opcode);
@@ -557,7 +557,7 @@ impl InterpreterCompiler {
                         KaramelOperatorType::AssignDivision       => VmOpCode::Division,
                         KaramelOperatorType::AssignMultiplication => VmOpCode::Multiply,
                         KaramelOperatorType::AssignSubtraction    => VmOpCode::Subraction,
-                        _ => VmOpCode::None
+                        _ => return Err(KaramelErrorType::OperatorNotValid)
                     };
 
                     context.opcode_generator.add_opcode(opcode);
@@ -590,7 +590,7 @@ impl InterpreterCompiler {
             KaramelOperatorType::Multiplication => VmOpCode::Multiply,
             KaramelOperatorType::Division       => VmOpCode::Division,
             KaramelOperatorType::Modulo         => VmOpCode::Module,
-            _ => VmOpCode::None
+            _ => return Err(KaramelErrorType::OperatorNotValid)
         };
 
         context.opcode_generator.add_opcode(opcode);
