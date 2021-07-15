@@ -29,3 +29,6 @@ _Liste_'ye en son eklenen *nesne* geri döndürülür ve _Liste_'den bu nesne si
 ### sil(sıra)
 
 _Liste_'den *sıra*da ki eleman silinir ve geriye döndürülür. Eğer sıra numarası _Liste_ sınırları dışında ise geriye *boş* döndürülür.
+
+
+**Türkçelik bilgi:** tizme, tizbe, tizim, dizim, dizme sözcükleri liste anlamında Türkçede karşımıza çıkıyor. Bilişimde Türkiye Türkçesine göre dizme mi, dizim mi kullanacağımızı araştırıyoruz.
