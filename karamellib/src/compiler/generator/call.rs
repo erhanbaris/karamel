@@ -1,3 +1,5 @@
+use std::{rc::Rc, sync::atomic::AtomicUsize};
+
 use crate::compiler::VmOpCode;
 
 use super::{OpcodeGeneratorTrait};
@@ -42,7 +44,7 @@ impl OpcodeGeneratorTrait for CallGenerator {
         opcodes.push(self.assign_to_temp.into());
     }
 
-    fn dump(&self, buffer: &mut String) {
+    fn dump(&self, index: Rc<AtomicUsize>, opcodes: &Vec<u8>, buffer: &mut String) {
 
     }
 }

@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::{rc::Rc, sync::atomic::AtomicUsize};
 
 use crate::compiler::{VmOpCode, function::FunctionReference};
 
@@ -20,5 +20,9 @@ impl OpcodeGeneratorTrait for FunctionGenerator {
             opcodes.push(VmOpCode::InitArguments.into());
             opcodes.push(self.function.arguments.len() as u8);
         }
+    }
+
+    fn dump(&self, index: Rc<AtomicUsize>, opcodes: &Vec<u8>, buffer: &mut String) {
+
     }
 }

@@ -1,3 +1,5 @@
+use std::{rc::Rc, sync::atomic::AtomicUsize};
+
 use crate::compiler::VmOpCode;
 
 use super::OpcodeGeneratorTrait;
@@ -36,5 +38,9 @@ impl OpcodeGeneratorTrait for StoreGenerator {
                 opcodes.push(source);
             }
         };
+    }
+
+    fn dump(&self, index: Rc<AtomicUsize>, opcodes: &Vec<u8>, buffer: &mut String) {
+
     }
 }

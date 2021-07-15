@@ -90,6 +90,10 @@ impl OpcodeGeneratorTrait for CurrentLocationUpdateGenerator {
     fn generate(&self, opcodes: &mut Vec<u8>) {
         self.location.set(opcodes.len(), opcodes);
     }
+
+    fn dump(&self, index: Rc<AtomicUsize>, opcodes: &Vec<u8>, buffer: &mut String) {
+
+    }
 }
 
 #[derive(Clone)]
@@ -101,6 +105,10 @@ pub struct DynamicLocationUpdateGenerator {
 impl OpcodeGeneratorTrait for DynamicLocationUpdateGenerator {
     fn generate(&self, opcodes: &mut Vec<u8>) {
         self.target.set(self.source.get(), opcodes);
+    }
+
+    fn dump(&self, index: Rc<AtomicUsize>, opcodes: &Vec<u8>, buffer: &mut String) {
+
     }
 }
 
@@ -117,5 +125,9 @@ impl OpcodeGeneratorTrait for SubtractionGenerator {
         let right = self.right_hand.get();
 
         self.target.set(left - right, opcodes);
+    }
+
+    fn dump(&self, index: Rc<AtomicUsize>, opcodes: &Vec<u8>, buffer: &mut String) {
+
     }
 }

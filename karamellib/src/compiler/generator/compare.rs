@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::{rc::Rc, sync::atomic::AtomicUsize};
 
 use crate::compiler::VmOpCode;
 
@@ -12,6 +12,10 @@ impl OpcodeGeneratorTrait for CompareGenerator {
     fn generate(&self, opcodes: &mut Vec<u8>) {
         opcodes.push(VmOpCode::Compare.into());
         self.location.apply(opcodes);
+    }
+
+    fn dump(&self, index: Rc<AtomicUsize>, opcodes: &Vec<u8>, buffer: &mut String) {
+
     }
 }
 

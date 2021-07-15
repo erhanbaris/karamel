@@ -1,6 +1,6 @@
-use std::{borrow::Borrow, cell::RefCell, collections::VecDeque, rc::Rc};
+use std::{borrow::Borrow, cell::RefCell, collections::VecDeque, rc::Rc, sync::atomic::AtomicUsize};
 
-use crate::compiler::generator::location::DynamicLocationUpdateGenerator;
+use crate::{compiler::generator::location::DynamicLocationUpdateGenerator, constants::{DUMP_INDEX_WIDTH, DUMP_OPCODE_COLUMN_1, DUMP_OPCODE_COLUMN_2, DUMP_OPCODE_COLUMN_3, DUMP_OPCODE_WIDTH}};
 
 use self::{call::{CallGenerator, CallType}, compare::CompareGenerator, function::FunctionGenerator, init_dict::InitDictGenerator, init_list::InitListGenerator, jump::JumpGenerator, load::LoadGenerator, location::{CurrentLocationUpdateGenerator, OpcodeLocation, SubtractionGenerator}, location_group::OpcodeLocationGroup, opcode_item::OpcodeItem, store::{StoreGenerator, StoreType}};
 
@@ -20,7 +20,12 @@ pub mod init_dict;
 
 pub trait OpcodeGeneratorTrait {
     fn generate(&self, opcodes: &mut Vec<u8>);
-    fn dump(&self, buffer: &mut String);
+    fn dump(&self, index: Rc<AtomicUsize>, opcodes: &Vec<u8>, buffer: &mut String);
+}
+
+pub fn print_opcode<T: Borrow<VmOpCode>>(index: usize, opcode: T, buffer: &mut String) {
+    let data = format!("║ {:DUMP_INDEX_WIDTH$} ║ {:DUMP_OPCODE_WIDTH$} ║ {:^DUMP_OPCODE_COLUMN_1$} ║ {:^DUMP_OPCODE_COLUMN_2$} ║ {:^DUMP_OPCODE_COLUMN_3$} ║", index, format!("{:?}", opcode.borrow()), "", "", DUMP_INDEX_WIDTH=DUMP_INDEX_WIDTH, DUMP_OPCODE_WIDTH=DUMP_OPCODE_WIDTH, DUMP_OPCODE_COLUMN_1=DUMP_OPCODE_COLUMN_1, DUMP_OPCODE_COLUMN_2=DUMP_OPCODE_COLUMN_2, DUMP_OPCODE_COLUMN_3=DUMP_OPCODE_COLUMN_3).to_string();
+    buffer.push_str(&format!("║{:4}{}\r\n", "", data))
 }
 
 pub struct LoopItem {
@@ -231,10 +236,17 @@ impl OpcodeGeneratorTrait for OpcodeGenerator {
         }
     }
 
-    fn dump(&self, buffer: &mut String) {
+    fn dump(&self, index: Rc<AtomicUsize>, opcodes: &Vec<u8>, buffer: &mut String) {
+
+        buffer.push_str("╔════════════════════════════════════════════════════╗\r\n");
+        buffer.push_str("║                        OPCODE                      ║\r\n");
+        buffer.push_str("╠═══╦══════╦═════════════════╦═══════╦═══════╦═══════╣\r\n");
+
         for generator in self.generators.borrow().iter() {
-            generator.dump(buffer);
+            generator.dump(index.clone(), opcodes, buffer);
         }
+
+        buffer.push_str("╚═══╩══════╩═════════════════╩═══════╩═══════╩═══════╝\r\n");
     }
 }
 
@@ -242,7 +254,7 @@ impl OpcodeGeneratorTrait for OpcodeGenerator {
 
 #[cfg(test)]
 mod tests {
-    use super::OpcodeGenerator;
+    use super::*;
 
 
     #[test]
@@ -272,5 +284,45 @@ mod tests {
         assert_eq!(location.get(), 100);
         assert_eq!(jump_1.location.get(), 100);
         assert_eq!(jump_2.location.get(), 100);
+    }
+
+    #[test]
+    fn test_dump_1() {
+        let mut generated = String::with_capacity(1024);
+        let mut expected = String::with_capacity(1024);
+        let mut opcodes = Vec::new();
+        let generator = OpcodeGenerator::new();
+        let indexer = Rc::new(AtomicUsize::new(0));
+
+        generator.generate(&mut opcodes);
+        generator.dump(indexer, &opcodes, &mut generated);
+
+        expected.push_str("╔════════════════════════════════════════════════════╗\r\n");
+        expected.push_str("║                        OPCODE                      ║\r\n");
+        expected.push_str("╠═══╦══════╦═════════════════╦═══════╦═══════╦═══════╣\r\n");
+        expected.push_str("╚═══╩══════╩═════════════════╩═══════╩═══════╩═══════╝\r\n");
+
+        assert_eq!(expected, generated);
+    }
+
+    #[test]
+    fn test_dump_2() {
+        let mut generated = String::with_capacity(1024);
+        let mut expected = String::with_capacity(1024);
+        let mut opcodes = Vec::new();
+        let generator = OpcodeGenerator::new();
+        let indexer = Rc::new(AtomicUsize::new(0));
+        generator.add_opcode(VmOpCode::Equal);
+
+
+        generator.generate(&mut opcodes);
+        generator.dump(indexer, &opcodes, &mut generated);
+
+        expected.push_str("╔════════════════════════════════════════════════════╗\r\n");
+        expected.push_str("║                        OPCODE                      ║\r\n");
+        expected.push_str("╠═══╦══════╦═════════════════╦═══════╦═══════╦═══════╣\r\n");
+        expected.push_str("╚═══╩══════╩═════════════════╩═══════╩═══════╩═══════╝\r\n");
+
+        assert_eq!(expected, generated);
     }
 }

@@ -8,3 +8,10 @@ pub static KARAMEL_HELP_ABOUT: &'static str = r#"Karamel Programlama Dili Derley
 https://github.com/erhanbaris/karamel"#;
 
 pub static STARTUP_MODULE_NAME: &'static str = "baz.k";
+
+
+pub static DUMP_INDEX_WIDTH: usize = 5;
+pub static DUMP_OPCODE_WIDTH: usize = 15;
+pub static DUMP_OPCODE_COLUMN_1: usize = 5;
+pub static DUMP_OPCODE_COLUMN_2: usize = 5;
+pub static DUMP_OPCODE_COLUMN_3: usize = 5;
