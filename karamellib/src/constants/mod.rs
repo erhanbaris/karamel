@@ -10,6 +10,7 @@ https://github.com/erhanbaris/karamel"#;
 pub static STARTUP_MODULE_NAME: &'static str = "baz.k";
 
 
+pub static DUMP_OPCODE_TITLE: &'static str = "OPCODE DUMP";
 pub static DUMP_INDEX_WIDTH: usize = 5;
 pub static DUMP_OPCODE_WIDTH: usize = 15;
 pub static DUMP_OPCODE_COLUMN_1: usize = 5;

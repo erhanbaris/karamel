@@ -77,13 +77,6 @@ pub unsafe fn dump_opcode<W: Write>(index: usize, context: &mut KaramelCompilerC
                 opcode_index += 2;
             },
 
-            VmOpCode::Func => {
-                let data = format!("║ {:4} ║ {:15} ║ {:^5?} ║ {:^5} ║", opcode_index, format!("{:?}", opcode), opcode_index + 1, "");
-                build_arrow(index, opcode_index, 1, &mut buffer, &data);
-                opcode_index += 1;
-            },
-
-            VmOpCode::InitArguments |
             VmOpCode::CopyToStore |
             VmOpCode::Load |
             VmOpCode::InitList |
@@ -522,16 +515,6 @@ pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObjec
                     inc_memory_index!(context, 1);
                 },
 
-                VmOpCode::InitArguments => {
-                    let size = *context.opcodes_ptr.offset(1) as usize;
-                    let const_size = (*context.current_scope).const_size as usize;
-                    for i in 0..size {
-                        dec_memory_index!(context, 1);
-                        *(*context.current_scope).memory_ptr.offset((i + const_size) as isize) = *(*context.current_scope).stack_ptr;
-                    }
-
-                    context.opcodes_ptr = context.opcodes_ptr.offset(1);
-                },
                 VmOpCode::Halt => {
                     break;
                 },

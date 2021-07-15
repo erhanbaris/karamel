@@ -262,6 +262,12 @@ impl FunctionReference {
                     *scope.stack_ptr = arguments[argument_size as usize-index as usize - 1];
                     inc_memory_index!(options, 1);
                 }
+
+                let const_size = (*options.current_scope).const_size as usize;
+                for i in 0..argument_size as usize {
+                    dec_memory_index!(options, 1);
+                    *(*options.current_scope).memory_ptr.offset((i + const_size) as isize) = *(*options.current_scope).stack_ptr;
+                }
             }
         }
         Ok(())

@@ -1,8 +1,8 @@
-use std::{borrow::Borrow, rc::Rc, sync::atomic::{AtomicUsize, Ordering}};
+use std::{rc::Rc, sync::atomic::{AtomicUsize, Ordering}};
 
-use crate::{compiler::VmOpCode, constants::{DUMP_INDEX_WIDTH, DUMP_OPCODE_WIDTH}};
+use crate::{compiler::VmOpCode};
 
-use super::{OpcodeGeneratorTrait, print_opcode};
+use super::{OpcodeGeneratorTrait, dump_single_opcode};
 
 
 #[derive(Debug)]
@@ -19,6 +19,6 @@ impl OpcodeGeneratorTrait for OpcodeItem {
 
     fn dump(&self, index: Rc<AtomicUsize>, _: &Vec<u8>, buffer: &mut String) {
         let opcode_index = index.fetch_add(1, Ordering::SeqCst);
-        print_opcode(opcode_index, self.opcode, buffer);
+        dump_single_opcode(opcode_index, self.opcode.to_string(), buffer);
     }
 }

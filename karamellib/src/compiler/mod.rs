@@ -76,7 +76,6 @@ pub enum VmOpCode {
     GreaterEqualThan = 12,
     LessEqualThan = 13,
 
-    InitArguments = 15,
     Call = 16,
     CallStack = 17,
     Return = 18,
@@ -120,5 +119,12 @@ impl From<VmOpCode> for u8 {
 impl From<&VmOpCode> for u8 {
     fn from(opcode: &VmOpCode) -> Self {
         *opcode as u8
+    }
+}
+
+
+impl fmt::Display for VmOpCode {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", self)
     }
 }
