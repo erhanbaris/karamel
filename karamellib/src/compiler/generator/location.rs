@@ -1,7 +1,9 @@
 use std::{cell::RefCell, rc::Rc};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
-use super::OpcodeGeneratorTrait;
+use crate::compiler::VmOpCode;
+
+use super::{OpcodeGeneratorTrait, dump_default};
 
 #[cfg(debug_assertions)]
 static OPCODE_LOCATION_INDEXER: AtomicUsize = AtomicUsize::new(0);
@@ -91,8 +93,8 @@ impl OpcodeGeneratorTrait for CurrentLocationUpdateGenerator {
         self.location.set(opcodes.len(), opcodes);
     }
 
-    fn dump(&self, index: Rc<AtomicUsize>, opcodes: &Vec<u8>, buffer: &mut String) {
-
+    fn dump(&self, _: Rc<AtomicUsize>, _: &Vec<u8>, _: &mut String) {
+        // Dynamically location calculator
     }
 }
 
@@ -107,8 +109,8 @@ impl OpcodeGeneratorTrait for DynamicLocationUpdateGenerator {
         self.target.set(self.source.get(), opcodes);
     }
 
-    fn dump(&self, index: Rc<AtomicUsize>, opcodes: &Vec<u8>, buffer: &mut String) {
-
+    fn dump(&self, _: Rc<AtomicUsize>, _: &Vec<u8>, _: &mut String) {
+        // Dynamically location calculator
     }
 }
 
@@ -127,7 +129,7 @@ impl OpcodeGeneratorTrait for SubtractionGenerator {
         self.target.set(left - right, opcodes);
     }
 
-    fn dump(&self, index: Rc<AtomicUsize>, opcodes: &Vec<u8>, buffer: &mut String) {
-
+    fn dump(&self, _: Rc<AtomicUsize>, _: &Vec<u8>, _: &mut String) {
+        // Dynamically location calculator
     }
 }

@@ -1,8 +1,8 @@
-use std::{rc::Rc, sync::atomic::AtomicUsize};
+use std::{rc::Rc, sync::atomic::{AtomicUsize, Ordering}};
 
 use crate::compiler::VmOpCode;
 
-use super::OpcodeGeneratorTrait;
+use super::{OpcodeGeneratorTrait, dump_default};
 
 #[derive(Debug)]
 #[derive(Clone)]
@@ -40,7 +40,21 @@ impl OpcodeGeneratorTrait for StoreGenerator {
         };
     }
 
-    fn dump(&self, index: Rc<AtomicUsize>, opcodes: &Vec<u8>, buffer: &mut String) {
+    fn dump(&self, index: Rc<AtomicUsize>, _: &Vec<u8>, buffer: &mut String) {
+        let opcode_index = index.fetch_add(2, Ordering::SeqCst);
+        
+        match self.store_type {
+            StoreType::Store(destination) => {
+                dump_default(opcode_index, VmOpCode::Store.to_string(), buffer, destination.to_string(), "", "");
+            },
+            StoreType::CopyToStore(destination) => {
+                dump_default(opcode_index, VmOpCode::CopyToStore.to_string(), buffer, destination.to_string(), "", "");
 
+            },
+            StoreType::FastStore { destination, source} => {
+                dump_default(opcode_index, VmOpCode::FastStore.to_string(), buffer, destination.to_string(), source.to_string(), "");
+                index.fetch_add(1, Ordering::SeqCst);
+            }
+        };
     }
 }

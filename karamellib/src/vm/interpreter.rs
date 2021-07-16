@@ -1,4 +1,5 @@
 use crate::compiler::context::KaramelCompilerContext;
+use crate::compiler::generator::{OpcodeGenerator, OpcodeGeneratorTrait};
 use crate::compiler::scope::Scope;
 use crate::error::KaramelErrorType;
 use crate::{pop, inc_memory_index, dec_memory_index, get_memory_index, karamel_dbg};
@@ -8,13 +9,14 @@ use std::rc::Rc;
 use std::mem;
 use std::collections::HashMap;
 use std::io::stdout;
+use std::sync::atomic::AtomicUsize;
 use log_update::LogUpdate;
 use std::io::{self, Write};
 use std::ptr;
 use colored::*;
 use crate::buildin::ClassProperty;
 
-#[cfg(all(feature = "dumpOpcodes"))]
+#[cfg(all(feature = "NONONO"))]
 pub unsafe fn dump_opcode<W: Write>(index: usize, context: &mut KaramelCompilerContext, log_update: &mut LogUpdate<W>) {
     #[cfg(feature = "liveOpcodeView")] {
         use std::{thread, time};
@@ -30,93 +32,6 @@ pub unsafe fn dump_opcode<W: Write>(index: usize, context: &mut KaramelCompilerC
         }
     }
 
-    buffer.push_str("╔════════════════════════════════════════════╗\r\n");
-    buffer.push_str("║                    OPCODE                  ║\r\n");
-    buffer.push_str("╠═══╦══════╦═════════════════╦═══════╦═══════╣\r\n");
-    let opcode_size   = context.opcodes.len();
-    let mut opcode_index = 0;
-
-    while opcode_size > opcode_index {
-        let opcode =  mem::transmute::<u8, VmOpCode>(context.opcodes[opcode_index]);
-        match opcode {
-            VmOpCode::Division |
-            VmOpCode::Not |
-            VmOpCode::Equal |
-            VmOpCode::NotEqual |
-            VmOpCode::Dublicate |
-            VmOpCode::Increment |
-            VmOpCode::Decrement | 
-            VmOpCode::Addition | 
-            VmOpCode::Module |
-            VmOpCode::And | 
-            VmOpCode::Or |
-            VmOpCode::Subraction | 
-            VmOpCode::GreaterEqualThan |
-            VmOpCode::GreaterThan | 
-            VmOpCode::LessEqualThan | 
-            VmOpCode::LessThan | 
-            VmOpCode::GetItem | 
-            VmOpCode::SetItem |
-            VmOpCode::Multiply => {
-                let data = format!("║ {:4} ║ {:15} ║ {:^5} ║ {:^5} ║", opcode_index, format!("{:?}", opcode), "", "").to_string();
-                build_arrow(index, opcode_index, 0, &mut buffer, &data);
-            },
-
-            
-            VmOpCode::Compare => {
-                let location = opcode_index + ((context.opcodes[opcode_index+2] as u16 * 256) + context.opcodes[opcode_index+1] as u16) as usize;
-                let data = format!("║ {:4} ║ {:15} ║ {:^5?} ║ {:^5} ║", opcode_index, format!("{:?}", opcode), location, "");
-                build_arrow(index, opcode_index, 0, &mut buffer, &data);
-                opcode_index += 2;
-            },
-
-            VmOpCode::Jump => {
-                let location = ((context.opcodes[opcode_index+2] as u16 * 256) + context.opcodes[opcode_index+1] as u16) as usize;
-                let data = format!("║ {:4} ║ {:15} ║ {:^5?} ║ {:^5} ║", opcode_index, format!("{:?}", opcode), location + 1, "");
-                build_arrow(index, opcode_index, 0, &mut buffer, &data);
-                opcode_index += 2;
-            },
-
-            VmOpCode::CopyToStore |
-            VmOpCode::Load |
-            VmOpCode::InitList |
-            VmOpCode::InitDict |
-            VmOpCode::Store => {
-                let data = format!("║ {:4} ║ {:15} ║ {:^5?} ║ {:^5} ║", opcode_index, format!("{:?}", opcode), context.opcodes[opcode_index + 1], "");
-                build_arrow(index, opcode_index, 1, &mut buffer, &data);
-                opcode_index += 1;
-            },
-            
-            VmOpCode::Halt |
-            VmOpCode::Return => {
-                let data = format!("║ {:4} ║ {:15} ║ {:^5} ║ {:^5} ║", opcode_index, format!("{:?}", opcode), "", "").to_string();
-                build_arrow(index, opcode_index, 0, &mut buffer, &data);
-            },
-
-            VmOpCode::CallStack => {
-                let location = (context.opcodes[opcode_index+1] as u16) as usize;
-                let data = format!("║ {:4} ║ {:15} ║ {:^5?} ║ {:^5} ║", opcode_index, format!("{:?}", opcode), location, context.opcodes[opcode_index + 2]);
-                build_arrow(index, opcode_index, 2, &mut buffer, &data);
-                opcode_index += 2;
-            },
-
-            VmOpCode::Call => {
-                let location = (context.opcodes[opcode_index+1] as u16) as usize;
-                let data = format!("║ {:4} ║ {:15} ║ {:^5?} ║ {:^5} ║", opcode_index, format!("{:?}", opcode), location, context.opcodes[opcode_index + 2]);
-                build_arrow(index, opcode_index, 2, &mut buffer, &data);
-                opcode_index += 3;
-            },
-            
-            VmOpCode::FastStore => {
-                let data = format!("║ {:4} ║ {:15} ║ {:^5?} ║ {:^5} ║", opcode_index, format!("{:?}", opcode), context.opcodes[opcode_index + 1], context.opcodes[opcode_index + 2]);
-                build_arrow(index, opcode_index, 2, &mut buffer, &data);
-                opcode_index += 2;
-            }
-        }
-
-        opcode_index += 1;
-    }
-    buffer.push_str("╚═══╩══════╩═════════════════╩═══════╩═══════╝\r\n");
     #[cfg(not(feature = "test"))] {
         log_update.render(&format!("{}", buffer)).unwrap();
         io::stdout().flush().unwrap();
@@ -136,7 +51,11 @@ pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObjec
     }
     
     #[cfg(all(feature = "dumpOpcodes"))] {
-        dump_opcode(0, context, &mut log_update);
+        let mut generated = String::with_capacity(1024);
+        let indexer = Rc::new(AtomicUsize::new(0));
+    
+        context.opcode_generator.dump(indexer, &context.opcodes, &mut generated);
+        log_update.render(&generated[..]);
         return Ok(Vec::new());
     }
     {
