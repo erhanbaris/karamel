@@ -248,7 +248,7 @@ pub enum KaramelErrorType {
     #[strum(message = "151")]
     AssignOperatorRequiredForLoop,
 
-    #[error("',' eksik")]
+    #[error("virgül eksik")]
     #[strum(message = "152")]
     CommaIsMissing,
 

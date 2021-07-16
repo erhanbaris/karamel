@@ -19,6 +19,6 @@ impl OpcodeGeneratorTrait for FunctionGenerator {
 
     fn dump(&self, index: Rc<AtomicUsize>, opcodes: &Vec<u8>, buffer: &mut String) {
         let opcode_index = index.fetch_add(1, Ordering::SeqCst);
-        dump_default(opcode_index, "[FUNCTION]", buffer, opcodes[opcode_index].to_string(), "", "");
+        dump_default(opcode_index, format!("[{}]", self.function.name), buffer, opcodes[opcode_index].to_string(), "", "");
     }
 }
