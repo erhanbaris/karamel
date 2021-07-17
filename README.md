@@ -85,12 +85,3 @@ fonk faktoriyel(faktoriyel_sayısı):
 faktoriyel_sonucu = faktoriyel(10)
 gç::satıryaz('faktoriyel 10 => ', faktoriyel_sonucu)
 ```
-
-
-
-
-Border.dk
-CO Asenov
-
-olması gerekiyor
- 
