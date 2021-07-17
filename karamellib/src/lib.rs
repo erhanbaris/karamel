@@ -1,5 +1,3 @@
-#![feature(once_cell)]
-
 extern crate unicode_width;
 
 #[macro_use]
