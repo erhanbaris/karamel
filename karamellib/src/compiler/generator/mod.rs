@@ -1,4 +1,4 @@
-use std::{borrow::Borrow, cell::RefCell, collections::VecDeque, rc::Rc, sync::atomic::{AtomicUsize, Ordering}};
+use std::{borrow::Borrow, cell::{Cell, RefCell}, cmp, collections::VecDeque, rc::Rc, sync::atomic::{AtomicUsize, Ordering}};
 
 use crate::{compiler::generator::location::DynamicLocationUpdateGenerator, constants::{DUMP_INDEX_WIDTH, DUMP_OPCODE_COLUMN_1, DUMP_OPCODE_COLUMN_2, DUMP_OPCODE_COLUMN_3, DUMP_OPCODE_TITLE, DUMP_OPCODE_WIDTH}};
 
@@ -20,15 +20,15 @@ pub mod init_dict;
 
 pub trait OpcodeGeneratorTrait {
     fn generate(&self, opcodes: &mut Vec<u8>);
-    fn dump(&self, index: Rc<AtomicUsize>, opcodes: &Vec<u8>, buffer: &mut String);
+    fn dump<'a>(&self, builder: &'a DumpBuilder, index: Rc<AtomicUsize>, opcodes: &Vec<u8>);
 }
 
-pub fn dump_single_opcode<T: Borrow<str>>(index: usize, opcode: T, buffer: &mut String) {
-    dump_default(index, opcode, buffer, "", "", "");
+pub fn dump_single_opcode<'a, T: Borrow<String>>(builder: &'a DumpBuilder, index: usize, opcode: T, buffer: &mut String) {
+    dump_default(builder, index, opcode, buffer, "".to_string(), "".to_string(), "".to_string());
 }
 
-pub fn dump_default<T: Borrow<str>, S1: Borrow<str>, S2: Borrow<str>, S3: Borrow<str>>(index: usize, opcode: T, buffer: &mut String, c1: S1, c2: S2, c3: S3) {
-    buffer.push_str(&format!("║ {:DUMP_INDEX_WIDTH$} ║ {:DUMP_OPCODE_WIDTH$} ║ {:^DUMP_OPCODE_COLUMN_1$} ║ {:^DUMP_OPCODE_COLUMN_2$} ║ {:^DUMP_OPCODE_COLUMN_3$} ║\n", index, opcode.borrow(), c1.borrow(), c2.borrow(), c3.borrow(), DUMP_INDEX_WIDTH=DUMP_INDEX_WIDTH, DUMP_OPCODE_WIDTH=DUMP_OPCODE_WIDTH, DUMP_OPCODE_COLUMN_1=DUMP_OPCODE_COLUMN_1, DUMP_OPCODE_COLUMN_2=DUMP_OPCODE_COLUMN_2, DUMP_OPCODE_COLUMN_3=DUMP_OPCODE_COLUMN_3)[..]);
+pub fn dump_default<'a, T: Borrow<String>, S1: Borrow<String>, S2: Borrow<String>, S3: Borrow<String>>(builder: &'a DumpBuilder, index: usize, opcode: T, buffer: &mut String, c1: S1, c2: S2, c3: S3) {
+    buffer.push_str(&format!("║ {:DUMP_INDEX_WIDTH$} ║ {:DUMP_OPCODE_WIDTH$} ║ {:^DUMP_OPCODE_COLUMN_1$} ║ {:^DUMP_OPCODE_COLUMN_2$} ║ {:^DUMP_OPCODE_COLUMN_3$} ║\n", index, opcode.borrow(), c1.borrow(), c2.borrow(), c3.borrow(), DUMP_INDEX_WIDTH=builder.max_index_width.get(), DUMP_OPCODE_WIDTH=builder.max_opcode_width.get(), DUMP_OPCODE_COLUMN_1=builder.max_column1_width.get(), DUMP_OPCODE_COLUMN_2=builder.max_column2_width.get(), DUMP_OPCODE_COLUMN_3=builder.max_column3_width.get())[..]);
 }
 
 pub fn opcode_to_location(index: Rc<AtomicUsize>, opcodes: &Vec<u8>) -> usize {
@@ -49,6 +49,72 @@ impl LoopItem {
             loop_breaks: OpcodeLocationGroup::new(),
             loop_continues: OpcodeLocationGroup::new()
         }
+    }
+}
+
+pub enum DumpItemType {
+    Opcode(VmOpCode),
+    Text(String)
+}
+
+pub struct DumpItem {
+    pub index: usize,
+    pub opcode: DumpItemType,
+    pub column1: String,
+    pub column2: String,
+    pub column3: String
+}
+
+pub struct DumpBuilder {
+    pub dumps: RefCell<Vec<DumpItem>>,
+    pub max_index_width: Cell<usize>,
+    pub max_opcode_width: Cell<usize>,
+    pub max_column1_width: Cell<usize>,
+    pub max_column2_width: Cell<usize>,
+    pub max_column3_width: Cell<usize>
+}
+
+impl DumpBuilder {
+    pub fn new() -> Self {
+        DumpBuilder {
+            dumps: RefCell::new(Vec::new()),
+            max_index_width: Cell::new(DUMP_INDEX_WIDTH),
+            max_opcode_width: Cell::new(DUMP_OPCODE_WIDTH),
+            max_column1_width: Cell::new(DUMP_OPCODE_COLUMN_1),
+            max_column2_width: Cell::new(DUMP_OPCODE_COLUMN_2),
+            max_column3_width: Cell::new(DUMP_OPCODE_COLUMN_3)
+        }
+    }
+
+    pub fn add(&self, index: usize, opcode: VmOpCode, column1: String, column2: String, column3: String) {
+        self.max_column1_width.set(cmp::max(self.max_column1_width.get(), column1.len()));
+        self.max_column2_width.set(cmp::max(self.max_column2_width.get(), column2.len()));
+        self.max_column3_width.set(cmp::max(self.max_column3_width.get(), column3.len()));
+
+        let item = DumpItem {
+            index: index,
+            opcode: DumpItemType::Opcode(opcode),
+            column1: column1,
+            column2: column2,
+            column3: column3
+        };
+        self.dumps.borrow_mut().push(item);
+    }
+
+    pub fn add_with_text(&self, index: usize, opcode: String, column1: String, column2: String, column3: String) {
+        self.max_column1_width.set(cmp::max(self.max_column1_width.get(), column1.len()));
+        self.max_column2_width.set(cmp::max(self.max_column2_width.get(), column2.len()));
+        self.max_column3_width.set(cmp::max(self.max_column3_width.get(), column3.len()));
+        self.max_opcode_width.set(cmp::max(self.max_opcode_width.get(), opcode.len()));
+
+        let item = DumpItem {
+            index: index,
+            opcode: DumpItemType::Text(opcode),
+            column1: column1,
+            column2: column2,
+            column3: column3
+        };
+        self.dumps.borrow_mut().push(item);
     }
 }
 
@@ -239,28 +305,48 @@ impl OpcodeGenerator {
     }
 }
 
-impl OpcodeGeneratorTrait for OpcodeGenerator {
-    fn generate(&self, opcodes: &mut Vec<u8>) {
+impl OpcodeGenerator {
+    pub fn generate(&self, opcodes: &mut Vec<u8>) {
         for generator in self.generators.borrow().iter() {
             generator.generate(opcodes);
         }
     }
 
-    fn dump(&self, index: Rc<AtomicUsize>, opcodes: &Vec<u8>, buffer: &mut String) {
-        let total_width = DUMP_INDEX_WIDTH+DUMP_OPCODE_WIDTH+DUMP_OPCODE_COLUMN_1+DUMP_OPCODE_COLUMN_2+DUMP_OPCODE_COLUMN_3+12;
+    pub fn dump(&self, opcodes: &Vec<u8>) -> String {
+        let builder = DumpBuilder::new();
+        let indexer = Rc::new(AtomicUsize::new(0));
+
+        let mut buffer = String::with_capacity(1024);
+
+        for generator in self.generators.borrow().iter() {
+            generator.dump(&builder, indexer.clone(), opcodes);
+        }
+
+        match &self.generators.borrow().len() {
+            0 => (),
+            _ => builder.max_index_width.set(format!("{}", builder.dumps.borrow().iter().last().unwrap().index).len())
+        };
+        
+
+        let total_width = builder.max_index_width.get()+builder.max_opcode_width.get()+builder.max_column1_width.get()+builder.max_column2_width.get()+builder.max_column3_width.get()+12;
         let left_width = (total_width - DUMP_OPCODE_TITLE.len()) / 2;
         let right_width = (total_width - DUMP_OPCODE_TITLE.len()) - left_width;
 
         buffer.push_str(&format!("╔═{:═<WIDTH$}═╗\n", "═", WIDTH=total_width)[..]);
         buffer.push_str(&format!("║ {:<LEFT_WIDTH$}{}{:<RIGHT_WIDTH$} ║\n", " ", DUMP_OPCODE_TITLE, " ", LEFT_WIDTH=left_width, RIGHT_WIDTH=right_width)[..]);
-        buffer.push_str(&format!("╠═{:═<DUMP_INDEX_WIDTH$}═╦═{:═<DUMP_OPCODE_WIDTH$}═╦═{:═<DUMP_OPCODE_COLUMN_1$}═╦═{:═<DUMP_OPCODE_COLUMN_2$}═╦═{:═<DUMP_OPCODE_COLUMN_3$}═╣\n", "═", "═", "═", "═", "═", DUMP_INDEX_WIDTH=DUMP_INDEX_WIDTH, DUMP_OPCODE_WIDTH=DUMP_OPCODE_WIDTH, DUMP_OPCODE_COLUMN_1=DUMP_OPCODE_COLUMN_1, DUMP_OPCODE_COLUMN_2=DUMP_OPCODE_COLUMN_2, DUMP_OPCODE_COLUMN_3=DUMP_OPCODE_COLUMN_3)[..]);
+        buffer.push_str(&format!("╠═{:═<DUMP_INDEX_WIDTH$}═╦═{:═<DUMP_OPCODE_WIDTH$}═╦═{:═<DUMP_OPCODE_COLUMN_1$}═╦═{:═<DUMP_OPCODE_COLUMN_2$}═╦═{:═<DUMP_OPCODE_COLUMN_3$}═╣\n", "═", "═", "═", "═", "═", DUMP_INDEX_WIDTH=builder.max_index_width.get(), DUMP_OPCODE_WIDTH=builder.max_opcode_width.get(), DUMP_OPCODE_COLUMN_1=builder.max_column1_width.get(), DUMP_OPCODE_COLUMN_2=builder.max_column2_width.get(), DUMP_OPCODE_COLUMN_3=builder.max_column3_width.get())[..]);
 
+        for item in builder.dumps.borrow().iter() {
+            let item_type = match &item.opcode {
+                DumpItemType::Opcode(opcode) => opcode.to_string(),
+                DumpItemType::Text(text) => text.to_string()
+            };
 
-        for generator in self.generators.borrow().iter() {
-            generator.dump(index.clone(), opcodes, buffer);
+            dump_default(&builder, item.index, item_type, &mut buffer, &item.column1, &item.column2, &item.column3);
         }
 
-        buffer.push_str(&format!("╚═{:═<DUMP_INDEX_WIDTH$}═╩═{:═<DUMP_OPCODE_WIDTH$}═╩═{:═<DUMP_OPCODE_COLUMN_1$}═╩═{:═<DUMP_OPCODE_COLUMN_2$}═╩═{:═<DUMP_OPCODE_COLUMN_3$}═╝", "═", "═", "═", "═", "═", DUMP_INDEX_WIDTH=DUMP_INDEX_WIDTH, DUMP_OPCODE_WIDTH=DUMP_OPCODE_WIDTH, DUMP_OPCODE_COLUMN_1=DUMP_OPCODE_COLUMN_1, DUMP_OPCODE_COLUMN_2=DUMP_OPCODE_COLUMN_2, DUMP_OPCODE_COLUMN_3=DUMP_OPCODE_COLUMN_3)[..]);
+        buffer.push_str(&format!("╚═{:═<DUMP_INDEX_WIDTH$}═╩═{:═<DUMP_OPCODE_WIDTH$}═╩═{:═<DUMP_OPCODE_COLUMN_1$}═╩═{:═<DUMP_OPCODE_COLUMN_2$}═╩═{:═<DUMP_OPCODE_COLUMN_3$}═╝", "═", "═", "═", "═", "═", DUMP_INDEX_WIDTH=builder.max_index_width.get(), DUMP_OPCODE_WIDTH=builder.max_opcode_width.get(), DUMP_OPCODE_COLUMN_1=builder.max_column1_width.get(), DUMP_OPCODE_COLUMN_2=builder.max_column2_width.get(), DUMP_OPCODE_COLUMN_3=builder.max_column3_width.get())[..]);
+        buffer
     }
 }
 
@@ -304,14 +390,12 @@ mod tests {
 
     #[test]
     fn test_dump_1() {
-        let mut generated = String::with_capacity(1024);
         let mut expected = String::with_capacity(1024);
         let mut opcodes = Vec::new();
         let generator = OpcodeGenerator::new();
-        let indexer = Rc::new(AtomicUsize::new(0));
 
         generator.generate(&mut opcodes);
-        generator.dump(indexer, &opcodes, &mut generated);
+        let generated = generator.dump(&opcodes);
 
         expected.push_str(r#"╔═════════════════════════════════════════════════╗
 ║                   OPCODE DUMP                   ║
@@ -323,61 +407,57 @@ mod tests {
 
     #[test]
     fn test_dump_2() {
-        let mut generated = String::with_capacity(1024);
         let mut expected = String::with_capacity(1024);
         let mut opcodes = Vec::new();
         let generator = OpcodeGenerator::new();
-        let indexer = Rc::new(AtomicUsize::new(0));
         generator.add_opcode(VmOpCode::Equal);
         generator.add_opcode(VmOpCode::Compare);
         generator.add_opcode(VmOpCode::And);
 
         generator.generate(&mut opcodes);
-        generator.dump(indexer, &opcodes, &mut generated);
+        let generated = generator.dump(&opcodes);
+        println!("{}", generated);
 
-        expected.push_str(r#"╔═════════════════════════════════════════════════╗
-║                   OPCODE DUMP                   ║
-╠═══════╦═════════════════╦═══════╦═══════╦═══════╣
-║     0 ║ Equal           ║       ║       ║       ║
-║     1 ║ Compare         ║       ║       ║       ║
-║     2 ║ And             ║       ║       ║       ║
-╚═══════╩═════════════════╩═══════╩═══════╩═══════╝"#);
+        expected.push_str(r#"╔═════════════════════════════════════════════╗
+║                 OPCODE DUMP                 ║
+╠═══╦═════════════════╦═══════╦═══════╦═══════╣
+║ 0 ║ Equal           ║       ║       ║       ║
+║ 1 ║ Compare         ║       ║       ║       ║
+║ 2 ║ And             ║       ║       ║       ║
+╚═══╩═════════════════╩═══════╩═══════╩═══════╝"#);
 
         assert_eq!(expected, generated);
     }
 
     #[test]
     fn test_dump_3() {
-        let mut generated = String::with_capacity(1024);
         let mut expected = String::with_capacity(1024);
         let mut opcodes = Vec::new();
         let generator = OpcodeGenerator::new();
-        let indexer = Rc::new(AtomicUsize::new(0));
 
         generator.add_opcode(VmOpCode::Halt);
         let location = generator.current_location();
         generator.create_compare(location);
 
         generator.generate(&mut opcodes);
-        generator.dump(indexer, &opcodes, &mut generated);
+        let generated = generator.dump(&opcodes);
+        println!("{}", generated);
 
-        expected.push_str(r#"╔═════════════════════════════════════════════════╗
-║                   OPCODE DUMP                   ║
-╠═══════╦═════════════════╦═══════╦═══════╦═══════╣
-║     0 ║ Halt            ║       ║       ║       ║
-║     1 ║ Compare         ║   1   ║       ║       ║
-╚═══════╩═════════════════╩═══════╩═══════╩═══════╝"#);
+        expected.push_str(r#"╔═════════════════════════════════════════════╗
+║                 OPCODE DUMP                 ║
+╠═══╦═════════════════╦═══════╦═══════╦═══════╣
+║ 0 ║ Halt            ║       ║       ║       ║
+║ 1 ║ Compare         ║   1   ║       ║       ║
+╚═══╩═════════════════╩═══════╩═══════╩═══════╝"#);
 
         assert_eq!(expected, generated);
     }
 
     #[test]
     fn test_dump_4() {
-        let mut generated = String::with_capacity(1024);
         let mut expected = String::with_capacity(1024);
         let mut opcodes = Vec::new();
         let generator = OpcodeGenerator::new();
-        let indexer = Rc::new(AtomicUsize::new(0));
 
         let function = FunctionReference::opcode_function("TEST FUNCTION".to_string(), Vec::new(), Rc::new(KaramelAstType::None), Rc::new(DummyModule::new()), 0, 0, true);
 
@@ -385,291 +465,269 @@ mod tests {
         generator.create_function_definition(function);
 
         generator.generate(&mut opcodes);
-        generator.dump(indexer, &opcodes, &mut generated);
+        let generated = generator.dump(&opcodes);
         println!("{}", generated);
 
-        expected.push_str(r#"╔═════════════════════════════════════════════════╗
-║                   OPCODE DUMP                   ║
-╠═══════╦═════════════════╦═══════╦═══════╦═══════╣
-║     0 ║ Halt            ║       ║       ║       ║
-║     1 ║ [FUNCTION: TEST FUNCTION] ║   0   ║       ║       ║
-╚═══════╩═════════════════╩═══════╩═══════╩═══════╝"#);
+        expected.push_str(r#"╔═══════════════════════════════════════════════════════╗
+║                      OPCODE DUMP                      ║
+╠═══╦═══════════════════════════╦═══════╦═══════╦═══════╣
+║ 0 ║ Halt                      ║       ║       ║       ║
+║ 1 ║ [FUNCTION: TEST FUNCTION] ║   0   ║       ║       ║
+╚═══╩═══════════════════════════╩═══════╩═══════╩═══════╝"#);
 
         assert_eq!(expected, generated);
     }
 
     #[test]
     fn test_dump_5() {
-        let mut generated = String::with_capacity(1024);
         let mut expected = String::with_capacity(1024);
         let mut opcodes = Vec::new();
         let generator = OpcodeGenerator::new();
-        let indexer = Rc::new(AtomicUsize::new(0));
 
         generator.add_opcode(VmOpCode::Halt);
         let location = generator.current_location();
         generator.create_jump(location);
 
         generator.generate(&mut opcodes);
-        generator.dump(indexer, &opcodes, &mut generated);
+        let generated = generator.dump(&opcodes);
         println!("{}", generated);
 
-        expected.push_str(r#"╔═════════════════════════════════════════════════╗
-║                   OPCODE DUMP                   ║
-╠═══════╦═════════════════╦═══════╦═══════╦═══════╣
-║     0 ║ Halt            ║       ║       ║       ║
-║     1 ║ Jump            ║   1   ║       ║       ║
-╚═══════╩═════════════════╩═══════╩═══════╩═══════╝"#);
+        expected.push_str(r#"╔═════════════════════════════════════════════╗
+║                 OPCODE DUMP                 ║
+╠═══╦═════════════════╦═══════╦═══════╦═══════╣
+║ 0 ║ Halt            ║       ║       ║       ║
+║ 1 ║ Jump            ║   1   ║       ║       ║
+╚═══╩═════════════════╩═══════╩═══════╩═══════╝"#);
 
         assert_eq!(expected, generated);
     }
 
     #[test]
     fn test_dump_6() {
-        let mut generated = String::with_capacity(1024);
         let mut expected = String::with_capacity(1024);
         let mut opcodes = Vec::new();
         let generator = OpcodeGenerator::new();
-        let indexer = Rc::new(AtomicUsize::new(0));
 
         generator.add_opcode(VmOpCode::Halt);
         generator.create_call(20, 1, true);
 
         generator.generate(&mut opcodes);
-        generator.dump(indexer, &opcodes, &mut generated);
+        let generated = generator.dump(&opcodes);
         println!("{}", generated);
 
-        expected.push_str(r#"╔═════════════════════════════════════════════════╗
-║                   OPCODE DUMP                   ║
-╠═══════╦═════════════════╦═══════╦═══════╦═══════╣
-║     0 ║ Halt            ║       ║       ║       ║
-║     1 ║ Call            ║  20   ║   1   ║   1   ║
-╚═══════╩═════════════════╩═══════╩═══════╩═══════╝"#);
+        expected.push_str(r#"╔═════════════════════════════════════════════╗
+║                 OPCODE DUMP                 ║
+╠═══╦═════════════════╦═══════╦═══════╦═══════╣
+║ 0 ║ Halt            ║       ║       ║       ║
+║ 1 ║ Call            ║  20   ║   1   ║   1   ║
+╚═══╩═════════════════╩═══════╩═══════╩═══════╝"#);
 
         assert_eq!(expected, generated);
     }
 
     #[test]
     fn test_dump_7() {
-        let mut generated = String::with_capacity(1024);
         let mut expected = String::with_capacity(1024);
         let mut opcodes = Vec::new();
         let generator = OpcodeGenerator::new();
-        let indexer = Rc::new(AtomicUsize::new(0));
 
         generator.add_opcode(VmOpCode::Halt);
         generator.create_call(10, 0, false);
 
         generator.generate(&mut opcodes);
-        generator.dump(indexer, &opcodes, &mut generated);
+        let generated = generator.dump(&opcodes);
         println!("{}", generated);
 
-        expected.push_str(r#"╔═════════════════════════════════════════════════╗
-║                   OPCODE DUMP                   ║
-╠═══════╦═════════════════╦═══════╦═══════╦═══════╣
-║     0 ║ Halt            ║       ║       ║       ║
-║     1 ║ Call            ║  10   ║   0   ║   0   ║
-╚═══════╩═════════════════╩═══════╩═══════╩═══════╝"#);
+        expected.push_str(r#"╔═════════════════════════════════════════════╗
+║                 OPCODE DUMP                 ║
+╠═══╦═════════════════╦═══════╦═══════╦═══════╣
+║ 0 ║ Halt            ║       ║       ║       ║
+║ 1 ║ Call            ║  10   ║   0   ║   0   ║
+╚═══╩═════════════════╩═══════╩═══════╩═══════╝"#);
 
         assert_eq!(expected, generated);
     }
 
     #[test]
     fn test_dump_8() {
-        let mut generated = String::with_capacity(1024);
         let mut expected = String::with_capacity(1024);
         let mut opcodes = Vec::new();
         let generator = OpcodeGenerator::new();
-        let indexer = Rc::new(AtomicUsize::new(0));
 
         generator.add_opcode(VmOpCode::Halt);
         generator.create_call_stack(0, false);
 
         generator.generate(&mut opcodes);
-        generator.dump(indexer, &opcodes, &mut generated);
+        let generated = generator.dump(&opcodes);
         println!("{}", generated);
 
-        expected.push_str(r#"╔═════════════════════════════════════════════════╗
-║                   OPCODE DUMP                   ║
-╠═══════╦═════════════════╦═══════╦═══════╦═══════╣
-║     0 ║ Halt            ║       ║       ║       ║
-║     1 ║ CallStack       ║   0   ║   0   ║       ║
-╚═══════╩═════════════════╩═══════╩═══════╩═══════╝"#);
+        expected.push_str(r#"╔═════════════════════════════════════════════╗
+║                 OPCODE DUMP                 ║
+╠═══╦═════════════════╦═══════╦═══════╦═══════╣
+║ 0 ║ Halt            ║       ║       ║       ║
+║ 1 ║ CallStack       ║   0   ║   0   ║       ║
+╚═══╩═════════════════╩═══════╩═══════╩═══════╝"#);
 
         assert_eq!(expected, generated);
     }
 
     #[test]
     fn test_dump_9() {
-        let mut generated = String::with_capacity(1024);
         let mut expected = String::with_capacity(1024);
         let mut opcodes = Vec::new();
         let generator = OpcodeGenerator::new();
-        let indexer = Rc::new(AtomicUsize::new(0));
 
         generator.add_opcode(VmOpCode::Halt);
         generator.create_call_stack(5, true);
 
         generator.generate(&mut opcodes);
-        generator.dump(indexer, &opcodes, &mut generated);
+        let generated = generator.dump(&opcodes);
         println!("{}", generated);
 
-        expected.push_str(r#"╔═════════════════════════════════════════════════╗
-║                   OPCODE DUMP                   ║
-╠═══════╦═════════════════╦═══════╦═══════╦═══════╣
-║     0 ║ Halt            ║       ║       ║       ║
-║     1 ║ CallStack       ║   5   ║   1   ║       ║
-╚═══════╩═════════════════╩═══════╩═══════╩═══════╝"#);
+        expected.push_str(r#"╔═════════════════════════════════════════════╗
+║                 OPCODE DUMP                 ║
+╠═══╦═════════════════╦═══════╦═══════╦═══════╣
+║ 0 ║ Halt            ║       ║       ║       ║
+║ 1 ║ CallStack       ║   5   ║   1   ║       ║
+╚═══╩═════════════════╩═══════╩═══════╩═══════╝"#);
 
         assert_eq!(expected, generated);
     }
 
     #[test]
     fn test_dump_10() {
-        let mut generated = String::with_capacity(1024);
         let mut expected = String::with_capacity(1024);
         let mut opcodes = Vec::new();
         let generator = OpcodeGenerator::new();
-        let indexer = Rc::new(AtomicUsize::new(0));
 
         generator.add_opcode(VmOpCode::Halt);
         generator.create_init_dict(22);
 
         generator.generate(&mut opcodes);
-        generator.dump(indexer, &opcodes, &mut generated);
+        let generated = generator.dump(&opcodes);
         println!("{}", generated);
 
-        expected.push_str(r#"╔═════════════════════════════════════════════════╗
-║                   OPCODE DUMP                   ║
-╠═══════╦═════════════════╦═══════╦═══════╦═══════╣
-║     0 ║ Halt            ║       ║       ║       ║
-║     1 ║ InitDict        ║  22   ║       ║       ║
-╚═══════╩═════════════════╩═══════╩═══════╩═══════╝"#);
+        expected.push_str(r#"╔═════════════════════════════════════════════╗
+║                 OPCODE DUMP                 ║
+╠═══╦═════════════════╦═══════╦═══════╦═══════╣
+║ 0 ║ Halt            ║       ║       ║       ║
+║ 1 ║ InitDict        ║  22   ║       ║       ║
+╚═══╩═════════════════╩═══════╩═══════╩═══════╝"#);
 
         assert_eq!(expected, generated);
     }
 
     #[test]
     fn test_dump_11() {
-        let mut generated = String::with_capacity(1024);
         let mut expected = String::with_capacity(1024);
         let mut opcodes = Vec::new();
         let generator = OpcodeGenerator::new();
-        let indexer = Rc::new(AtomicUsize::new(0));
 
         generator.add_opcode(VmOpCode::Halt);
         generator.create_init_dict(22);
 
         generator.generate(&mut opcodes);
-        generator.dump(indexer, &opcodes, &mut generated);
+        let generated = generator.dump(&opcodes);
         println!("{}", generated);
 
-        expected.push_str(r#"╔═════════════════════════════════════════════════╗
-║                   OPCODE DUMP                   ║
-╠═══════╦═════════════════╦═══════╦═══════╦═══════╣
-║     0 ║ Halt            ║       ║       ║       ║
-║     1 ║ InitDict        ║  22   ║       ║       ║
-╚═══════╩═════════════════╩═══════╩═══════╩═══════╝"#);
+        expected.push_str(r#"╔═════════════════════════════════════════════╗
+║                 OPCODE DUMP                 ║
+╠═══╦═════════════════╦═══════╦═══════╦═══════╣
+║ 0 ║ Halt            ║       ║       ║       ║
+║ 1 ║ InitDict        ║  22   ║       ║       ║
+╚═══╩═════════════════╩═══════╩═══════╩═══════╝"#);
 
         assert_eq!(expected, generated);
     }
 
     #[test]
     fn test_dump_12() {
-        let mut generated = String::with_capacity(1024);
         let mut expected = String::with_capacity(1024);
         let mut opcodes = Vec::new();
         let generator = OpcodeGenerator::new();
-        let indexer = Rc::new(AtomicUsize::new(0));
 
         generator.add_opcode(VmOpCode::Halt);
         generator.create_load(11);
 
         generator.generate(&mut opcodes);
-        generator.dump(indexer, &opcodes, &mut generated);
+        let generated = generator.dump(&opcodes);
         println!("{}", generated);
 
-        expected.push_str(r#"╔═════════════════════════════════════════════════╗
-║                   OPCODE DUMP                   ║
-╠═══════╦═════════════════╦═══════╦═══════╦═══════╣
-║     0 ║ Halt            ║       ║       ║       ║
-║     1 ║ Load            ║  11   ║       ║       ║
-╚═══════╩═════════════════╩═══════╩═══════╩═══════╝"#);
+        expected.push_str(r#"╔═════════════════════════════════════════════╗
+║                 OPCODE DUMP                 ║
+╠═══╦═════════════════╦═══════╦═══════╦═══════╣
+║ 0 ║ Halt            ║       ║       ║       ║
+║ 1 ║ Load            ║  11   ║       ║       ║
+╚═══╩═════════════════╩═══════╩═══════╩═══════╝"#);
 
         assert_eq!(expected, generated);
     }
 
     #[test]
     fn test_dump_13() {
-        let mut generated = String::with_capacity(1024);
         let mut expected = String::with_capacity(1024);
         let mut opcodes = Vec::new();
         let generator = OpcodeGenerator::new();
-        let indexer = Rc::new(AtomicUsize::new(0));
 
         generator.add_opcode(VmOpCode::Halt);
         generator.create_store(11);
 
         generator.generate(&mut opcodes);
-        generator.dump(indexer, &opcodes, &mut generated);
+        let generated = generator.dump(&opcodes);
         println!("{}", generated);
 
-        expected.push_str(r#"╔═════════════════════════════════════════════════╗
-║                   OPCODE DUMP                   ║
-╠═══════╦═════════════════╦═══════╦═══════╦═══════╣
-║     0 ║ Halt            ║       ║       ║       ║
-║     1 ║ Store           ║  11   ║       ║       ║
-╚═══════╩═════════════════╩═══════╩═══════╩═══════╝"#);
+        expected.push_str(r#"╔═════════════════════════════════════════════╗
+║                 OPCODE DUMP                 ║
+╠═══╦═════════════════╦═══════╦═══════╦═══════╣
+║ 0 ║ Halt            ║       ║       ║       ║
+║ 1 ║ Store           ║  11   ║       ║       ║
+╚═══╩═════════════════╩═══════╩═══════╩═══════╝"#);
 
         assert_eq!(expected, generated);
     }
 
     #[test]
     fn test_dump_14() {
-        let mut generated = String::with_capacity(1024);
         let mut expected = String::with_capacity(1024);
         let mut opcodes = Vec::new();
         let generator = OpcodeGenerator::new();
-        let indexer = Rc::new(AtomicUsize::new(0));
 
         generator.add_opcode(VmOpCode::Halt);
         generator.create_fast_store(11, 22);
 
         generator.generate(&mut opcodes);
-        generator.dump(indexer, &opcodes, &mut generated);
+        let generated = generator.dump(&opcodes);
         println!("{}", generated);
 
-        expected.push_str(r#"╔═════════════════════════════════════════════════╗
-║                   OPCODE DUMP                   ║
-╠═══════╦═════════════════╦═══════╦═══════╦═══════╣
-║     0 ║ Halt            ║       ║       ║       ║
-║     1 ║ FastStore       ║  22   ║  11   ║       ║
-╚═══════╩═════════════════╩═══════╩═══════╩═══════╝"#);
+        expected.push_str(r#"╔═════════════════════════════════════════════╗
+║                 OPCODE DUMP                 ║
+╠═══╦═════════════════╦═══════╦═══════╦═══════╣
+║ 0 ║ Halt            ║       ║       ║       ║
+║ 1 ║ FastStore       ║  22   ║  11   ║       ║
+╚═══╩═════════════════╩═══════╩═══════╩═══════╝"#);
 
         assert_eq!(expected, generated);
     }
 
     #[test]
     fn test_dump_15() {
-        let mut generated = String::with_capacity(1024);
         let mut expected = String::with_capacity(1024);
         let mut opcodes = Vec::new();
         let generator = OpcodeGenerator::new();
-        let indexer = Rc::new(AtomicUsize::new(0));
 
         generator.add_opcode(VmOpCode::Halt);
         generator.create_copy_to_store(33);
 
         generator.generate(&mut opcodes);
-        generator.dump(indexer, &opcodes, &mut generated);
+        let generated = generator.dump(&opcodes);
         println!("{}", generated);
 
-        expected.push_str(r#"╔═════════════════════════════════════════════════╗
-║                   OPCODE DUMP                   ║
-╠═══════╦═════════════════╦═══════╦═══════╦═══════╣
-║     0 ║ Halt            ║       ║       ║       ║
-║     1 ║ CopyToStore     ║  33   ║       ║       ║
-╚═══════╩═════════════════╩═══════╩═══════╩═══════╝"#);
+        expected.push_str(r#"╔═════════════════════════════════════════════╗
+║                 OPCODE DUMP                 ║
+╠═══╦═════════════════╦═══════╦═══════╦═══════╣
+║ 0 ║ Halt            ║       ║       ║       ║
+║ 1 ║ CopyToStore     ║  33   ║       ║       ║
+╚═══╩═════════════════╩═══════╩═══════╩═══════╝"#);
 
         assert_eq!(expected, generated);
     }

@@ -2,7 +2,7 @@ use std::{rc::Rc, sync::atomic::{AtomicUsize, Ordering}};
 
 use crate::{compiler::VmOpCode};
 
-use super::{OpcodeGeneratorTrait, dump_single_opcode};
+use super::{DumpBuilder, OpcodeGeneratorTrait};
 
 
 #[derive(Debug)]
@@ -17,8 +17,8 @@ impl OpcodeGeneratorTrait for OpcodeItem {
         opcodes.push(self.opcode.into());
     }
 
-    fn dump(&self, index: Rc<AtomicUsize>, _: &Vec<u8>, buffer: &mut String) {
+    fn dump<'a>(&self, builder: &'a DumpBuilder, index: Rc<AtomicUsize>, _: &Vec<u8>) {
         let opcode_index = index.fetch_add(1, Ordering::SeqCst);
-        dump_single_opcode(opcode_index, self.opcode.to_string(), buffer);
+        builder.add(opcode_index, self.opcode, "".to_string(), "".to_string(), "".to_string());
     }
 }

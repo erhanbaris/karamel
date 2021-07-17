@@ -19,7 +19,6 @@ use crate::compiler::ast::{KaramelAstType, KaramelIfStatementElseItem};
 use crate::compiler::storage_builder::StorageBuilder;
 use crate::compiler::function::FunctionReference;
 use crate::buildin::class::PRIMATIVE_CLASS_NAMES;
-use super::generator::OpcodeGeneratorTrait;
 use super::generator::location::OpcodeLocation;
 
 use log;

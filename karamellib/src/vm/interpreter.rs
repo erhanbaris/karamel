@@ -1,5 +1,4 @@
 use crate::compiler::context::KaramelCompilerContext;
-use crate::compiler::generator::{OpcodeGenerator, OpcodeGeneratorTrait};
 use crate::compiler::scope::Scope;
 use crate::error::KaramelErrorType;
 use crate::{pop, inc_memory_index, dec_memory_index, get_memory_index, karamel_dbg};
@@ -50,11 +49,8 @@ pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObjec
         context.storages[0].dump();
     }
     
-    #[cfg(all(feature = "dumpOpcodes"))] {
-        let mut generated = String::with_capacity(1024);
-        let indexer = Rc::new(AtomicUsize::new(0));
-    
-        context.opcode_generator.dump(indexer, &context.opcodes, &mut generated);
+    #[cfg(all(feature = "dumpOpcodes"))] {    
+        let generated = context.opcode_generator.dump(&context.opcodes);
         log_update.render(&generated[..]);
         return Ok(Vec::new());
     }

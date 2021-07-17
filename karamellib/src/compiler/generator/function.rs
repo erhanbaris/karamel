@@ -1,8 +1,8 @@
 use std::{rc::Rc, sync::atomic::{AtomicUsize, Ordering}};
 
-use crate::compiler::{VmOpCode, function::FunctionReference};
+use crate::compiler::function::FunctionReference;
 
-use super::{OpcodeGeneratorTrait, dump_default};
+use super::{OpcodeGeneratorTrait, DumpBuilder};
 
 
 #[derive(Clone)]
@@ -17,8 +17,8 @@ impl OpcodeGeneratorTrait for FunctionGenerator {
         opcodes.push(self.function.arguments.len() as u8);
     }
 
-    fn dump(&self, index: Rc<AtomicUsize>, opcodes: &Vec<u8>, buffer: &mut String) {
+    fn dump<'a>(&self, builder: &'a DumpBuilder, index: Rc<AtomicUsize>, opcodes: &Vec<u8>) {
         let opcode_index = index.fetch_add(1, Ordering::SeqCst);
-        dump_default(opcode_index, format!("[FUNCTION: {}]", self.function.name), buffer, opcodes[opcode_index].to_string(), "", "");
+        builder.add_with_text(opcode_index, format!("[FUNCTION: {}]", self.function.name), opcodes[opcode_index].to_string(), "".to_string(), "".to_string());
     }
 }

@@ -2,7 +2,7 @@ use std::{rc::Rc, sync::atomic::{AtomicUsize, Ordering}};
 
 use crate::compiler::VmOpCode;
 
-use super::{OpcodeGeneratorTrait, OpcodeLocation, dump_default, opcode_to_location};
+use super::{DumpBuilder, OpcodeGeneratorTrait, OpcodeLocation, opcode_to_location};
 
 
 #[derive(Clone)]
@@ -14,10 +14,10 @@ impl OpcodeGeneratorTrait for CompareGenerator {
         self.location.apply(opcodes);
     }
 
-    fn dump(&self, index: Rc<AtomicUsize>, opcodes: &Vec<u8>, buffer: &mut String) {
+    fn dump<'a>(&self, builder: &'a DumpBuilder, index: Rc<AtomicUsize>, opcodes: &Vec<u8>) {
         let opcode_index = index.fetch_add(1, Ordering::SeqCst);
         let location = opcode_to_location(index, opcodes);
-        dump_default(opcode_index, VmOpCode::Compare.to_string(), buffer, location.to_string(), "", "");
+        builder.add(opcode_index, VmOpCode::Compare, location.to_string(), "".to_string(), "".to_string());
     }
 }
 

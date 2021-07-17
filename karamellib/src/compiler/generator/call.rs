@@ -2,7 +2,7 @@ use std::{rc::Rc, sync::atomic::{AtomicUsize, Ordering}};
 
 use crate::compiler::VmOpCode;
 
-use super::{OpcodeGeneratorTrait, dump_default};
+use super::{DumpBuilder, OpcodeGeneratorTrait};
 
 #[derive(Clone)]
 
@@ -44,20 +44,18 @@ impl OpcodeGeneratorTrait for CallGenerator {
         opcodes.push(self.assign_to_temp.into());
     }
 
-    fn dump(&self, index: Rc<AtomicUsize>, _: &Vec<u8>, buffer: &mut String) {
-        let opcode_index = index.fetch_add(1, Ordering::SeqCst);
+    fn dump<'a>(&self, builder: &'a DumpBuilder, index: Rc<AtomicUsize>, _: &Vec<u8>) {
+        let opcode_index = index.fetch_add(3, Ordering::SeqCst);
 
         match self.call_type {
             CallType::Call { location } => {
                 index.fetch_add(1, Ordering::SeqCst);
-                dump_default(opcode_index, VmOpCode::Call.to_string(), buffer, location.to_string(), self.argument_size.to_string(), (self.assign_to_temp as u8).to_string());
+                builder.add(opcode_index, VmOpCode::Call, location.to_string(), self.argument_size.to_string(), (self.assign_to_temp as u8).to_string());
             },
             CallType::CallStack => {
-                dump_default(opcode_index, VmOpCode::CallStack.to_string(), buffer, self.argument_size.to_string(), (self.assign_to_temp as u8).to_string(), "");
+                builder.add(opcode_index, VmOpCode::CallStack, self.argument_size.to_string(), (self.assign_to_temp as u8).to_string(), "".to_string());
             }
         };
-
-        index.fetch_add(2, Ordering::SeqCst);
     }
 }
 

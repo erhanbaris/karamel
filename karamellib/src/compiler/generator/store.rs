@@ -2,7 +2,7 @@ use std::{rc::Rc, sync::atomic::{AtomicUsize, Ordering}};
 
 use crate::compiler::VmOpCode;
 
-use super::{OpcodeGeneratorTrait, dump_default};
+use super::{DumpBuilder, OpcodeGeneratorTrait};
 
 #[derive(Debug)]
 #[derive(Clone)]
@@ -40,19 +40,18 @@ impl OpcodeGeneratorTrait for StoreGenerator {
         };
     }
 
-    fn dump(&self, index: Rc<AtomicUsize>, _: &Vec<u8>, buffer: &mut String) {
+    fn dump<'a>(&self, builder: &'a DumpBuilder, index: Rc<AtomicUsize>, _: &Vec<u8>) {
         let opcode_index = index.fetch_add(2, Ordering::SeqCst);
         
         match self.store_type {
             StoreType::Store(destination) => {
-                dump_default(opcode_index, VmOpCode::Store.to_string(), buffer, destination.to_string(), "", "");
+                builder.add(opcode_index, VmOpCode::Store, destination.to_string(), "".to_string(), "".to_string());
             },
             StoreType::CopyToStore(destination) => {
-                dump_default(opcode_index, VmOpCode::CopyToStore.to_string(), buffer, destination.to_string(), "", "");
-
+                builder.add(opcode_index, VmOpCode::CopyToStore, destination.to_string(), "".to_string(), "".to_string());
             },
             StoreType::FastStore { destination, source} => {
-                dump_default(opcode_index, VmOpCode::FastStore.to_string(), buffer, destination.to_string(), source.to_string(), "");
+                builder.add(opcode_index, VmOpCode::FastStore, destination.to_string(), source.to_string(), "".to_string());
                 index.fetch_add(1, Ordering::SeqCst);
             }
         };

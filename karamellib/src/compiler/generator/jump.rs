@@ -2,7 +2,7 @@ use std::{rc::Rc, sync::atomic::{AtomicUsize, Ordering}};
 
 use crate::compiler::VmOpCode;
 
-use super::{OpcodeGeneratorTrait, OpcodeLocation, dump_default, opcode_to_location};
+use super::{DumpBuilder, OpcodeGeneratorTrait, OpcodeLocation, opcode_to_location};
 
 #[derive(Clone)]
 /// Generate jump opcodes. 
@@ -13,9 +13,9 @@ impl OpcodeGeneratorTrait for JumpGenerator {
         self.location.apply(opcodes);
     }
 
-    fn dump(&self, index: Rc<AtomicUsize>, opcodes: &Vec<u8>, buffer: &mut String) {
+    fn dump<'a>(&self, builder: &'a DumpBuilder, index: Rc<AtomicUsize>, opcodes: &Vec<u8>) {
         let opcode_index = index.fetch_add(1, Ordering::SeqCst);
         let location = opcode_to_location(index, opcodes);
-        dump_default(opcode_index, VmOpCode::Jump.to_string(), buffer, location.to_string(), "", "");
+        builder.add(opcode_index, VmOpCode::Jump, location.to_string(), "".to_string(), "".to_string());
     }
 }
