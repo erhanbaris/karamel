@@ -18,8 +18,6 @@ fn main() {
                                .long("dosya")
                                .value_name("FILE")
                                .help("Çalıştırılacak karamel dosyası")
-
-                               .default_value("/Users/erhanbaris/ClionProjects/TPD/karamellib/test_files/pass_loop_3.k")
                                .takes_value(true))
                           .get_matches();
 
