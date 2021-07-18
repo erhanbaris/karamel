@@ -341,7 +341,7 @@ pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObjec
                     };
                     
                     inc_memory_index!(context, 1);
-                    context.opcodes_ptr = context.opcodes_ptr.offset(1);
+                    context.opcodes_ptr = context.opcodes_ptr.offset(2);
                 },
 
                 VmOpCode::Compare => {
