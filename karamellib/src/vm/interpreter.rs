@@ -308,31 +308,38 @@ pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObjec
                     };
                 },
 
-                VmOpCode::InitList => {
-                    let total_item = *context.opcodes_ptr.offset(1);
-                    let mut list = Vec::with_capacity(total_item.into());
+                VmOpCode::Init => {
+                    let init_type = *context.opcodes_ptr.offset(1) as usize;
+                    let total_item = *context.opcodes_ptr.offset(2) as usize;
 
-                    for _ in 0..total_item {
-                        list.push(pop_raw!(context));
-                    }
+                    *(*context.current_scope).stack_ptr = match init_type {
+                        // Dict
+                        0 => {
+                            let mut dict   = HashMap::new();
+        
+                            for _ in 0..total_item {
+                                let value = pop_raw!(context);
+                                let key   = pop!(context);
+                                
+                                dict.insert(key.get_text(), value);
+                            }
+
+                            VmObject::from(dict)
+                        },
+
+                        // List
+                        1 => {
+                            let mut list = Vec::with_capacity(total_item.into());
+
+                            for _ in 0..total_item {
+                                list.push(pop_raw!(context));
+                            }
+                            
+                            VmObject::from(list)
+                        },
+                         _ => return Err(KaramelErrorType::GeneralError("Geçersiz yükleme tipi".to_string()))
+                    };
                     
-                    *(*context.current_scope).stack_ptr = VmObject::from(list);
-                    inc_memory_index!(context, 1);
-                    context.opcodes_ptr = context.opcodes_ptr.offset(1);
-                },
-
-                VmOpCode::InitDict => {
-                    let total_item = *context.opcodes_ptr.offset(1) as usize;
-                    let mut dict   = HashMap::new();
-
-                    for _ in 0..total_item {
-                        let value = pop_raw!(context);
-                        let key   = pop!(context);
-                        
-                        dict.insert(key.get_text(), value);
-                    }
-                    
-                    *(*context.current_scope).stack_ptr = VmObject::from(dict);
                     inc_memory_index!(context, 1);
                     context.opcodes_ptr = context.opcodes_ptr.offset(1);
                 },

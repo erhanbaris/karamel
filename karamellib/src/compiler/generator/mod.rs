@@ -611,7 +611,7 @@ mod tests {
 ║                 OPCODE DUMP                 ║
 ╠═══╦═════════════════╦═══════╦═══════╦═══════╣
 ║ 0 ║ Halt            ║       ║       ║       ║
-║ 1 ║ InitDict        ║  22   ║       ║       ║
+║ 1 ║ Init            ║   0   ║  22   ║       ║
 ╚═══╩═════════════════╩═══════╩═══════╩═══════╝"#);
 
         assert_eq!(expected, generated);
@@ -634,7 +634,7 @@ mod tests {
 ║                 OPCODE DUMP                 ║
 ╠═══╦═════════════════╦═══════╦═══════╦═══════╣
 ║ 0 ║ Halt            ║       ║       ║       ║
-║ 1 ║ InitDict        ║  22   ║       ║       ║
+║ 1 ║ Init            ║   0   ║  22   ║       ║
 ╚═══╩═════════════════╩═══════╩═══════╩═══════╝"#);
 
         assert_eq!(expected, generated);
@@ -727,6 +727,29 @@ mod tests {
 ╠═══╦═════════════════╦═══════╦═══════╦═══════╣
 ║ 0 ║ Halt            ║       ║       ║       ║
 ║ 1 ║ CopyToStore     ║  33   ║       ║       ║
+╚═══╩═════════════════╩═══════╩═══════╩═══════╝"#);
+
+        assert_eq!(expected, generated);
+    }
+
+    #[test]
+    fn test_dump_16() {
+        let mut expected = String::with_capacity(1024);
+        let mut opcodes = Vec::new();
+        let generator = OpcodeGenerator::new();
+
+        generator.add_opcode(VmOpCode::Halt);
+        generator.create_init_list(44);
+
+        generator.generate(&mut opcodes);
+        let generated = generator.dump(&opcodes);
+        println!("{}", generated);
+
+        expected.push_str(r#"╔═════════════════════════════════════════════╗
+║                 OPCODE DUMP                 ║
+╠═══╦═════════════════╦═══════╦═══════╦═══════╣
+║ 0 ║ Halt            ║       ║       ║       ║
+║ 1 ║ Init            ║   1   ║  44   ║       ║
 ╚═══╩═════════════════╩═══════╩═══════╩═══════╝"#);
 
         assert_eq!(expected, generated);

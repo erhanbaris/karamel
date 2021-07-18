@@ -90,8 +90,7 @@ pub enum VmOpCode {
     Compare = 22,
     Jump = 23,
 
-    InitList = 24,
-    InitDict = 25,
+    Init = 24,
 
     /// Copy value from memory to stack.
     Load = 26,

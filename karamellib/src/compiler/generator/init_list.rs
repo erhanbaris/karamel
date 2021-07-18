@@ -12,12 +12,13 @@ pub struct InitListGenerator {
 
 impl OpcodeGeneratorTrait for InitListGenerator {
     fn generate(&self, opcodes: &mut Vec<u8>) {
-        opcodes.push(VmOpCode::InitList.into());
+        opcodes.push(VmOpCode::Init.into());
+        opcodes.push(1);
         opcodes.push(self.argument_size as u8);
     }
 
     fn dump<'a>(&self, builder: &'a DumpBuilder, index: Rc<AtomicUsize>, _: &Vec<u8>) {
-        let opcode_index = index.fetch_add(2, Ordering::SeqCst);
-        builder.add(opcode_index, VmOpCode::InitList, self.argument_size.to_string(), "".to_string(), "".to_string());
+        let opcode_index = index.fetch_add(3, Ordering::SeqCst);
+        builder.add(opcode_index, VmOpCode::Init, "1".to_string(), self.argument_size.to_string(), "".to_string());
     }
 }
