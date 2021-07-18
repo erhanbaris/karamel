@@ -234,28 +234,6 @@ pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObjec
                     inc_memory_index!(context, 1);
                 },
 
-                VmOpCode::LessThan => {
-                    let right = pop_raw!(context);
-                    let left  = pop_raw!(context);
-                    
-                    *(*context.current_scope).stack_ptr = match (left.as_number(), right.as_number()) {
-                        (Some(l_value),  Some(r_value))   => VmObject::from(karamel_dbg!(l_value) < karamel_dbg!(r_value)),
-                        _ => EMPTY_OBJECT
-                    };
-                    inc_memory_index!(context, 1);
-                },
-
-                VmOpCode::LessEqualThan => {
-                    let right = pop_raw!(context);
-                    let left  = pop_raw!(context);
-                    
-                    *(*context.current_scope).stack_ptr = match (left.as_number(), right.as_number()) {
-                        (Some(l_value),  Some(r_value))   => VmObject::from(karamel_dbg!(l_value) <= karamel_dbg!(r_value)),
-                        _ => EMPTY_OBJECT
-                    };
-                    inc_memory_index!(context, 1);
-                },
-
                 VmOpCode::Call => {
                     let func_location   = *context.opcodes_ptr.offset(1) as usize;
                     context.opcodes_ptr = context.opcodes_ptr.offset(1);

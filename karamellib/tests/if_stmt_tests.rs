@@ -202,13 +202,13 @@ veya:
         expression: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(12345.0))))
     }))),
     Rc::new(KaramelIfStatementElseItem::new(Rc::new(KaramelAstType::Control {
-        left: Rc::new(KaramelAstType::Binary {
+        left: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(10000000.0)))),
+        operator: KaramelOperatorType::GreaterThan,
+        right: Rc::new(KaramelAstType::Binary {
             left: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(1024.0)))),
             operator: KaramelOperatorType::Multiplication,
             right: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(123.0))))
         }),
-        operator: KaramelOperatorType::LessThan,
-        right: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(10000000.0)))),
     }), Rc::new(KaramelAstType::Assignment {
         variable: Rc::new(KaramelAstType::Symbol("erhan".to_string())),
         operator: KaramelOperatorType::Assign,

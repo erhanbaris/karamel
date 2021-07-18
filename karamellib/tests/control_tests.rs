@@ -38,7 +38,7 @@ mod tests {
         right: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(10.0))))
     })));
 
-    test_compare!(equality_3, "10+2 eşitdeğildir 10", Ok(Rc::new(KaramelAstType::Control {
+    test_compare!(equality_3, "10+2 != 10", Ok(Rc::new(KaramelAstType::Control {
         left: Rc::new(KaramelAstType::Binary {
             left: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(10.0)))), 
             operator: KaramelOperatorType::Addition, 
@@ -48,7 +48,7 @@ mod tests {
         right: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(10.0))))
     })));
 
-    test_compare!(equality_4, "10 eşittir 10+2", Ok(Rc::new(KaramelAstType::Control {
+    test_compare!(equality_4, "10 == 10+2", Ok(Rc::new(KaramelAstType::Control {
         left: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(10.0)))),
         operator: KaramelOperatorType::Equal,
         right: Rc::new(KaramelAstType::Binary {

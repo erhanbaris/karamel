@@ -240,9 +240,9 @@ mod tests {
                 expression: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(1.0))))
             }), 
             control: Rc::new(KaramelAstType::Control {
-                left: Rc::new(KaramelAstType::Symbol("i".to_string())), 
-                operator: KaramelOperatorType::LessThan, 
-                right: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(2.0))))
+                left: Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(2.0)))), 
+                operator: KaramelOperatorType::GreaterThan, 
+                right: Rc::new(KaramelAstType::Symbol("i".to_string()))
             }),
             increment: Rc::new(KaramelAstType::PrefixUnary {
                 operator: KaramelOperatorType::Increment, 

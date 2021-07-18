@@ -508,9 +508,7 @@ impl InterpreterCompiler {
             KaramelOperatorType::Equal            => VmOpCode::Equal,
             KaramelOperatorType::NotEqual         => VmOpCode::NotEqual,
             KaramelOperatorType::GreaterThan      => VmOpCode::GreaterThan,
-            KaramelOperatorType::LessThan         => VmOpCode::LessThan,
             KaramelOperatorType::GreaterEqualThan => VmOpCode::GreaterEqualThan,
-            KaramelOperatorType::LessEqualThan    => VmOpCode::LessEqualThan,
             _ => return Err(KaramelErrorType::OperatorNotValid)
         };
 

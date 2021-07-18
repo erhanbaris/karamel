@@ -158,7 +158,7 @@ mod tests {
     test_last_memory!(vm_41, "10/2", KaramelPrimative::Number(5.0));
     test_last_memory!(vm_42, "9/2", KaramelPrimative::Number(4.5));
     test_last_memory!(vm_43, "0/0", KaramelPrimative::Empty);
-    test_last_memory!(vm_45, "10 küçüktür 100 ve 'erhan' eşitdeğildir 'barış' eşittir doğru", KaramelPrimative::Bool(true));
+    test_last_memory!(vm_45, "10 < 100 ve 'erhan' != 'barış' == doğru", KaramelPrimative::Bool(true));
     test_last_memory!(vm_49, "1_024 * 1_024 == 1_048_576", KaramelPrimative::Bool(true));
     test_last_memory!(vm_50, "empty == empty", KaramelPrimative::Bool(true));
     test_last_memory!(vm_51, "empty != empty", KaramelPrimative::Bool(false));

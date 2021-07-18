@@ -72,9 +72,7 @@ pub enum VmOpCode {
     Equal = 8,
     NotEqual = 9,
     GreaterThan = 10,
-    LessThan = 11,
     GreaterEqualThan = 12,
-    LessEqualThan = 13,
 
     Call = 16,
     CallStack = 17,

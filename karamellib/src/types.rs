@@ -71,8 +71,6 @@ impl KaramelKeywordType {
             KaramelKeywordType::NotEqual         => KaramelOperatorType::NotEqual,
             KaramelKeywordType::GreaterThan      => KaramelOperatorType::GreaterThan,
             KaramelKeywordType::GreaterEqualThan => KaramelOperatorType::GreaterEqualThan,
-            KaramelKeywordType::LessThan         => KaramelOperatorType::LessThan,
-            KaramelKeywordType::LessEqualThan    => KaramelOperatorType::LessEqualThan,
             _                                  => KaramelOperatorType::None
         }
     }
@@ -92,18 +90,6 @@ pub static KEYWORDS: &[(&str, KaramelKeywordType)] = &[
     ("veya",   KaramelKeywordType::Or),
     ("yok",    KaramelKeywordType::Empty),
     ("mod",    KaramelKeywordType::Modulo),
-    ("eşittir",       KaramelKeywordType::Equal),
-    ("esittir",       KaramelKeywordType::Equal),
-    ("eşitdeğildir",  KaramelKeywordType::NotEqual),
-    ("esitdegildir",  KaramelKeywordType::NotEqual),
-    ("büyüktür",      KaramelKeywordType::GreaterThan),
-    ("buyuktur",      KaramelKeywordType::GreaterThan),
-    ("büyükeşittir",  KaramelKeywordType::GreaterEqualThan),
-    ("buyukesittir",  KaramelKeywordType::GreaterEqualThan),
-    ("küçüktür",      KaramelKeywordType::LessThan),
-    ("kucuktur",      KaramelKeywordType::LessThan),
-    ("küçükeşittir",  KaramelKeywordType::LessEqualThan),
-    ("kucukesittir",  KaramelKeywordType::LessEqualThan),
     ("değil",         KaramelKeywordType::Not),
     ("degil",         KaramelKeywordType::Not),
     ("fonk",            KaramelKeywordType::Fn),
