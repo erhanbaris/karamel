@@ -33,7 +33,7 @@ impl<'a> Parser<'a> {
                 iter: data.chars().peekable(),
                 iter_second: data.chars().peekable(),
                 iter_third: data.chars().peekable(),
-                data: data.to_string(),
+                data: data,
                 index: 0
             }
         };
@@ -44,7 +44,7 @@ impl<'a> Parser<'a> {
         return parser;
     }
 
-    pub fn tokens(&self) -> Vec<Token> {
+    pub fn tokens(&self) -> Vec<Token<'a>> {
         self.tokinizer.tokens.to_vec()
     }
 
@@ -53,7 +53,7 @@ impl<'a> Parser<'a> {
         let line_parser         = LineParser       {};
         let comment_parser      = CommentParser    {};
         let whitespace_parser   = WhitespaceParser {};
-        let number_parser       = NumberParser     {};
+        let number_parser       = NumberParser::new();
         let text_parser_single  = TextParser       { tag:'\'' };
         let text_parser_double  = TextParser       { tag:'"' };
         let operator_parser     = OperatorParser   {};

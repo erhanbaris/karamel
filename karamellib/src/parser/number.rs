@@ -1,15 +1,25 @@
+use std::marker::PhantomData;
+
 use crate::types::*;
 use crate::error::KaramelErrorType;
 
-pub struct NumberParser;
+pub struct NumberParser<'a> {
+    _marker: PhantomData<&'a bool>
+}
 
-impl NumberParser {
-    fn increase(&self, tokinizer: &mut Tokinizer) -> char {
+impl<'a> NumberParser<'a> {
+    pub fn new() -> Self {
+        NumberParser {
+            _marker: PhantomData
+        }    
+    }
+
+    fn increase(&self, tokinizer: &mut Tokinizer<'a>) -> char {
         tokinizer.increase_index();
         tokinizer.get_char()
     }
 
-    fn get_digits(&self, tokinizer: &mut Tokinizer) -> (u8, u64) {
+    fn get_digits(&self, tokinizer: &mut Tokinizer<'a>) -> (u8, u64) {
         let mut number: u64    = 0;
         let mut num_count: u8  = 0;
         let mut ch :char       = tokinizer.get_char();
@@ -28,7 +38,7 @@ impl NumberParser {
         (num_count, number)
     }
 
-    fn detect_number_system(&self, tokinizer: &mut Tokinizer) -> KaramelNumberSystem {
+    fn detect_number_system(&self, tokinizer: &mut Tokinizer<'a>) -> KaramelNumberSystem {
         if tokinizer.get_char() == '0' {
             return match tokinizer.get_next_char() {
                 'b' | 'B' => {
@@ -52,7 +62,7 @@ impl NumberParser {
         return KaramelNumberSystem::Decimal;
     }
 
-    fn parse_hex(&self, tokinizer: &mut Tokinizer) -> KaramelTokenType {
+    fn parse_hex(&self, tokinizer: &mut Tokinizer<'a>) -> KaramelTokenType<'a> {
         let mut number :u64 = 0;
         let mut ch :char    = tokinizer.get_char();
 
@@ -70,7 +80,7 @@ impl NumberParser {
         KaramelTokenType::Integer(number as i64)
     }
 
-    fn parse_octal(&self, tokinizer: &mut Tokinizer) -> KaramelTokenType {
+    fn parse_octal(&self, tokinizer: &mut Tokinizer<'a>) -> KaramelTokenType<'a> {
         let mut number :u64 = 0;
         let mut ch :char    = tokinizer.get_char();
 
@@ -88,7 +98,7 @@ impl NumberParser {
         KaramelTokenType::Integer(number as i64)
     }
 
-    fn parse_binary(&self, tokinizer: &mut Tokinizer) -> KaramelTokenType {
+    fn parse_binary(&self, tokinizer: &mut Tokinizer<'a>) -> KaramelTokenType<'a> {
         let mut number :u64 = 0;
         let mut ch :char    = tokinizer.get_char();
 
@@ -106,7 +116,7 @@ impl NumberParser {
         KaramelTokenType::Integer(number as i64)
     }
 
-    fn parse_decimal(&self, tokinizer: &mut Tokinizer) -> KaramelTokenType {
+    fn parse_decimal(&self, tokinizer: &mut Tokinizer<'a>) -> KaramelTokenType<'a> {
         /*
         [NUMBER](.[NUMBER](E(-+)[NUMBER]))
         */
@@ -162,14 +172,14 @@ impl NumberParser {
     }
 }
 
-impl TokenParser for NumberParser {
-    fn check(&self, tokinizer: &mut Tokinizer) -> bool {
+impl<'a> TokenParser<'a> for NumberParser<'a> {
+    fn check(&self, tokinizer: &mut Tokinizer<'a>) -> bool {
         let ch = tokinizer.get_char();
         let ch_next = tokinizer.get_next_char();
         (ch == '.' && (ch_next >= '0' && ch_next <= '9')) || (ch >= '0' && ch <= '9')
     }
 
-    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<(), KaramelErrorType> {
+    fn parse(&self, tokinizer: &mut Tokinizer<'a>) -> Result<(), KaramelErrorType> {
         let start_column = tokinizer.column;
         let number_system = self.detect_number_system(tokinizer);
 

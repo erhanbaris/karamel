@@ -157,12 +157,12 @@ pub enum KaramelOperatorType {
 #[derive(Clone)]
 #[derive(Debug)]
 #[derive(PartialEq)]
-pub enum KaramelTokenType {
+pub enum KaramelTokenType<'a> {
     Integer(i64),
     Double(f64),
-    Symbol(Rc<String>),
+    Symbol(&'a str),
     Operator(KaramelOperatorType),
-    Text(Rc<String>),
+    Text(&'a str),
     Keyword(KaramelKeywordType),
     WhiteSpace(u8),
     NewLine(u8)
@@ -180,25 +180,25 @@ pub enum KaramelNumberSystem {
 }
 
 #[derive(Debug, Clone)]
-pub struct Token {
+pub struct Token<'a> {
     pub line      : u32,
     pub start    : u32,
     pub end    : u32,
-    pub token_type: KaramelTokenType
+    pub token_type: KaramelTokenType<'a>
 }
 
 pub struct Tokinizer<'a> {
     pub line  : u32,
     pub column: u32,
-    pub tokens: Vec<Token>,
+    pub tokens: Vec<Token<'a>>,
     pub iter: Peekable<Chars<'a>>,
     pub iter_second: Peekable<Chars<'a>>,
     pub iter_third: Peekable<Chars<'a>>,
-    pub data: String,
+    pub data: &'a str,
     pub index: u32
 }
 
-impl Tokinizer<'_> {
+impl<'a> Tokinizer<'a> {
     pub fn is_end(&mut self) -> bool {
         return match self.iter.peek() {
             Some(_) => false,
@@ -220,7 +220,7 @@ impl Tokinizer<'_> {
         };
     }
 
-    pub fn add_token(&mut self, start: u32, token_type: KaramelTokenType) {
+    pub fn add_token(&mut self, start: u32, token_type: KaramelTokenType<'a>) {
         let token = Token {
             line: self.line,
             start,
@@ -248,9 +248,9 @@ impl Tokinizer<'_> {
     }
 }
 
-pub trait TokenParser {
-    fn check(&self, tokinizer: &mut Tokinizer) -> bool;
-    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<(), KaramelErrorType>;
+pub trait TokenParser<'a> {
+    fn check(&self, tokinizer: &mut Tokinizer<'a>) -> bool;
+    fn parse(&self, tokinizer: &mut Tokinizer<'a>) -> Result<(), KaramelErrorType>;
 }
 
 pub trait CharTraits {
@@ -284,7 +284,7 @@ impl CharTraits for char {
     }
 }
 
-impl KaramelTokenType {
+impl<'a> KaramelTokenType<'a> {
 
     pub fn is_symbol(&self) -> bool {
         match self {

@@ -6,13 +6,13 @@ pub struct TextParser {
     pub tag: char
 }
 
-impl TokenParser for TextParser {
-    fn check(&self, tokinizer: &mut Tokinizer) -> bool {
+impl<'a> TokenParser<'a> for TextParser {
+    fn check(&self, tokinizer: &mut Tokinizer<'a>) -> bool {
         let ch = tokinizer.get_char();
         return ch == self.tag;
     }
 
-    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<(), KaramelErrorType> {
+    fn parse(&self, tokinizer: &mut Tokinizer<'a>) -> Result<(), KaramelErrorType> {
         tokinizer.increase_index();
 
         let mut ch: char      = '\0';
@@ -45,7 +45,7 @@ impl TokenParser for TextParser {
             return Err(KaramelErrorType::MissingStringDeliminator);
         }
 
-        tokinizer.add_token(start_column - 1, KaramelTokenType::Text(Rc::new(tokinizer.data[start..end].to_string())));
+        tokinizer.add_token(start_column - 1, KaramelTokenType::Text(&tokinizer.data[start..end]));
         return Ok(());
     }
 }
@@ -64,7 +64,7 @@ fn text_parse_test_1() {
         iter: data.chars().peekable(),
         iter_second: data.chars().peekable(),
         iter_third: data.chars().peekable(),
-        data: data.to_string(),
+        data: data,
         index: 0
     };
 
@@ -96,7 +96,7 @@ fn text_parse_test_2() {
         iter: data.chars().peekable(),
         iter_second: data.chars().peekable(),
         iter_third: data.chars().peekable(),
-        data: data.to_string(),
+        data: data,
         index: 0
     };
 

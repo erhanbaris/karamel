@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::rc::Rc;
 use crate::types::*;
 use crate::error::KaramelErrorType;
 
@@ -15,8 +14,8 @@ impl SymbolParser {
     }
 }
 
-impl TokenParser for SymbolParser {
-    fn check(&self, tokinizer: &mut Tokinizer) -> bool {
+impl<'a> TokenParser<'a> for SymbolParser {
+    fn check(&self, tokinizer: &mut Tokinizer<'a>) -> bool {
         let ch = tokinizer.get_char();
         return ch.is_symbol();
     }
@@ -54,7 +53,7 @@ impl TokenParser for SymbolParser {
             return Ok(());
         }
 
-        tokinizer.add_token(start_column as u32, KaramelTokenType::Symbol(Rc::new(tokinizer.data[start..end].to_string())));
+        tokinizer.add_token(start_column as u32, KaramelTokenType::Symbol(&tokinizer.data[start..end]));
         return Ok(());
     }
 }

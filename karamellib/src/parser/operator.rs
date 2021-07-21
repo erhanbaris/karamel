@@ -3,12 +3,12 @@ use crate::error::KaramelErrorType;
 
 pub struct OperatorParser;
 
-impl TokenParser for OperatorParser {
-    fn check(&self, _tokinizer: &mut Tokinizer) -> bool {
+impl<'a> TokenParser<'a> for OperatorParser {
+    fn check(&self, _tokinizer: &mut Tokinizer<'a>) -> bool {
         true
     }
 
-    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<(), KaramelErrorType> {
+    fn parse(&self, tokinizer: &mut Tokinizer<'a>) -> Result<(), KaramelErrorType> {
         let ch       = tokinizer.get_char();
         let ch_next  = tokinizer.get_next_char();
         let start= tokinizer.column;

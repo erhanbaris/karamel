@@ -3,14 +3,14 @@ use crate::error::KaramelErrorType;
 
 pub struct CommentParser;
 
-impl TokenParser for CommentParser {
-    fn check(&self, tokinizer: &mut Tokinizer) -> bool {
+impl<'a> TokenParser<'a> for CommentParser {
+    fn check(&self, tokinizer: &mut Tokinizer<'a>) -> bool {
         let ch      = tokinizer.get_char();
         let ch_next = tokinizer.get_next_char();
         return (ch == '/' && ch_next == '*') || (ch == '/' && ch_next == '/');
     }
 
-    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<(), KaramelErrorType> {
+    fn parse(&self, tokinizer: &mut Tokinizer<'a>) -> Result<(), KaramelErrorType> {
         let mut ch                   = tokinizer.get_char();
         let mut ch_next              = tokinizer.get_next_char();
 

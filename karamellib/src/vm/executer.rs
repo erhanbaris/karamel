@@ -21,18 +21,30 @@ pub enum ExecutionSource {
 
 pub struct ExecutionParameters {
     pub source: ExecutionSource,
-    pub return_opcode: bool,
     pub return_output: bool
 }
 
-#[derive(Default)]
-pub struct ExecutionStatus {
+
+pub struct ExecutionStatus<'a> {
     pub compiled: bool,
     pub executed: bool,
     pub memory_output: Option<Vec<VmObject>>,
     pub stdout: Option<RefCell<String>>,
     pub stderr: Option<RefCell<String>>,
-    pub opcodes: Option<Vec<Token>>
+    pub context: KaramelCompilerContext<'a>
+}
+
+impl<'a> Default for ExecutionStatus<'a> {
+    fn default() -> Self {
+        ExecutionStatus {
+            compiled: false,
+            executed: false,
+            memory_output: None,
+            stderr: None,
+            stdout: None,
+            context: KaramelCompilerContext::new()
+        }
+    }
 }
 
 pub fn get_execution_path<T: Borrow<ExecutionSource>>(source: T) -> ExecutionPathInfo {
@@ -51,8 +63,7 @@ pub fn get_execution_path<T: Borrow<ExecutionSource>>(source: T) -> ExecutionPat
     }
 }
 
-pub fn code_executer(parameters: ExecutionParameters) -> ExecutionStatus {
-    let mut status = ExecutionStatus::default();
+pub fn code_executer<'a>(parameters: ExecutionParameters) -> ExecutionStatus<'a> {
     match log::set_logger(&CONSOLE_LOGGER) {
         Ok(_) => {
             if cfg!(debug_assertions) {
@@ -64,19 +75,18 @@ pub fn code_executer(parameters: ExecutionParameters) -> ExecutionStatus {
         _ => ()
     };
 
-    let mut context: KaramelCompilerContext = KaramelCompilerContext::new();
-    context.execution_path = get_execution_path(&parameters.source);
-    log::debug!("Execution path: {}", context.execution_path.path);
+    let mut status = ExecutionStatus::default();
+    status.context.execution_path = get_execution_path(&parameters.source);
+    log::debug!("Execution path: {}", status.context.execution_path.path);
 
     let data = match parameters.source {
         ExecutionSource::Code(code) => code,
         ExecutionSource::File(filename) => {
-            match read_module_or_script(filename, &context) {
+            match read_module_or_script(filename, &status.context) {
                 Ok(content) => content,
                 Err(error) => {
                     log::error!("Program hata ile sonlandırıldı: {}", error);
-                    status.executed = false;
-                    return status
+                    return ExecutionStatus::default();
                 }
             }
         }
@@ -86,7 +96,7 @@ pub fn code_executer(parameters: ExecutionParameters) -> ExecutionStatus {
     match parser.parse() {
         Err(error) => {
             log::error!("{}", generate_error_message(&data, &error));
-            return status;
+            return ExecutionStatus::default();
         },
         _ => ()
     };
@@ -96,21 +106,21 @@ pub fn code_executer(parameters: ExecutionParameters) -> ExecutionStatus {
         Ok(ast) => ast,
         Err(error) => {
             log::error!("{}", generate_error_message(&data, &error));
-            return status;
+            return ExecutionStatus::default();
         }
     };
 
     let opcode_compiler = InterpreterCompiler::new();
     if parameters.return_output {
-        context.stdout = Some(RefCell::new(String::new()));
-        context.stderr = Some(RefCell::new(String::new()));
+        status.context.stdout = Some(RefCell::new(String::new()));
+        status.context.stderr = Some(RefCell::new(String::new()));
     }
 
-    let execution_status = match opcode_compiler.compile(ast.clone(), &mut context) {
-        Ok(_) => unsafe { run_vm(&mut context) },
+    let execution_status = match opcode_compiler.compile(ast.clone(), &mut status.context) {
+        Ok(_) => unsafe { run_vm(&mut status.context) },
         Err(message) => {
             log::error!("Program hata ile sonlandırıldı: {}", message);
-            return status;
+            return ExecutionStatus::default();
         }
     };
 
@@ -122,17 +132,11 @@ pub fn code_executer(parameters: ExecutionParameters) -> ExecutionStatus {
         },
         Err(error) => {
             log::error!("Program hata ile sonlandırıldı: {}", error);
-            return status;
+            return ExecutionStatus::default();
         }
     };
 
     log::info!("Program başarıyla çalıştırıldı");
-    if parameters.return_opcode {
-        status.opcodes = Some(parser.tokens());
-    }
-
-    status.stdout = context.stdout;
-    status.stderr = context.stderr;
 
     status
 }

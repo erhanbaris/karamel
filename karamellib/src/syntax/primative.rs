@@ -25,7 +25,7 @@ impl PrimativeParser {
         let result = match &token.unwrap().token_type {
             KaramelTokenType::Integer(int)      => Ok(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(*int as f64)))),
             KaramelTokenType::Double(double)    => Ok(KaramelAstType::Primative(Rc::new(KaramelPrimative::Number(*double)))),
-            KaramelTokenType::Text(text)        => Ok(KaramelAstType::Primative(Rc::new(KaramelPrimative::Text(Rc::clone(text))))),
+            KaramelTokenType::Text(text)        => Ok(KaramelAstType::Primative(Rc::new(KaramelPrimative::Text(Rc::new(text.to_string()))))),
             KaramelTokenType::Keyword(keyword)  => {
                 match keyword {
                     KaramelKeywordType::True  => Ok(KaramelAstType::Primative(Rc::new(KaramelPrimative::Bool(true)))),

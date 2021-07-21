@@ -3,13 +3,13 @@ use crate::error::KaramelErrorType;
 
 pub struct WhitespaceParser;
 
-impl TokenParser for WhitespaceParser {
-    fn check(&self, tokinizer: &mut Tokinizer) -> bool {
+impl<'a> TokenParser<'a> for WhitespaceParser {
+    fn check(&self, tokinizer: &mut Tokinizer<'a>) -> bool {
         let ch = tokinizer.get_char();
         return ch == ' ';
     }
 
-    fn parse(&self, tokinizer: &mut Tokinizer) -> Result<(), KaramelErrorType> {
+    fn parse(&self, tokinizer: &mut Tokinizer<'a>) -> Result<(), KaramelErrorType> {
         let mut whitespace_count: u8 = 0;
         let mut ch                   = tokinizer.get_char();
         let start_column = tokinizer.column;
