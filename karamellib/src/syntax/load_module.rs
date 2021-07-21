@@ -1,6 +1,7 @@
 use crate::types::*;
 use crate::syntax::{SyntaxParser, SyntaxParserTrait};
 use crate::compiler::ast::KaramelAstType;
+use super::ParseType;
 use super::primative::PrimativeParser;
 use super::util::map_parser;
 
@@ -12,7 +13,7 @@ impl<'a> SyntaxParserTrait<'a> for LoadModuleParser {
         parser.indentation_check()?;
 
         if parser.peek_token().is_ok() {
-            let module_path = map_parser(parser, &[PrimativeParser::parse_module_path, PrimativeParser::parse_symbol])?;
+            let module_path = map_parser(parser, &[PrimativeParser::parse_module_path as ParseType::<'a>, PrimativeParser::parse_symbol as ParseType::<'a>])?;
             match module_path {
 
                 /* module1::module2::module3 */

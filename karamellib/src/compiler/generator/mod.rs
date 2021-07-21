@@ -20,14 +20,14 @@ pub mod init_dict;
 
 pub trait OpcodeGeneratorTrait<'a> {
     fn generate(&self, opcodes: &mut Vec<u8>);
-    fn dump(&self, builder: &'a DumpBuilder, index: Rc<AtomicUsize>, opcodes: &Vec<u8>);
+    fn dump(&self, builder: &DumpBuilder, index: Rc<AtomicUsize>, opcodes: &Vec<u8>);
 }
 
-pub fn dump_single_opcode<'a, T: Borrow<String>>(builder: &'a DumpBuilder, index: usize, opcode: T, buffer: &mut String) {
+pub fn dump_single_opcode<'a, T: Borrow<String>>(builder: &DumpBuilder, index: usize, opcode: T, buffer: &mut String) {
     dump_default(builder, index, opcode, buffer, "".to_string(), "".to_string(), "".to_string());
 }
 
-pub fn dump_default<'a, T: Borrow<String>, S1: Borrow<String>, S2: Borrow<String>, S3: Borrow<String>>(builder: &'a DumpBuilder, index: usize, opcode: T, buffer: &mut String, c1: S1, c2: S2, c3: S3) {
+pub fn dump_default<'a, T: Borrow<String>, S1: Borrow<String>, S2: Borrow<String>, S3: Borrow<String>>(builder: &DumpBuilder, index: usize, opcode: T, buffer: &mut String, c1: S1, c2: S2, c3: S3) {
     buffer.push_str(&format!("║ {:DUMP_INDEX_WIDTH$} ║ {:DUMP_OPCODE_WIDTH$} ║ {:^DUMP_OPCODE_COLUMN_1$} ║ {:^DUMP_OPCODE_COLUMN_2$} ║ {:^DUMP_OPCODE_COLUMN_3$} ║\n", index, opcode.borrow(), c1.borrow(), c2.borrow(), c3.borrow(), DUMP_INDEX_WIDTH=builder.max_index_width.get(), DUMP_OPCODE_WIDTH=builder.max_opcode_width.get(), DUMP_OPCODE_COLUMN_1=builder.max_column1_width.get(), DUMP_OPCODE_COLUMN_2=builder.max_column2_width.get(), DUMP_OPCODE_COLUMN_3=builder.max_column3_width.get())[..]);
 }
 

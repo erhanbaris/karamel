@@ -13,11 +13,13 @@ use crate::syntax::SyntaxFlag;
 use std::cell::Cell;
 use std::rc::Rc;
 
+use super::ParseType;
+
 pub struct UnaryParser;
 
 impl<'a> SyntaxParserTrait<'a> for UnaryParser {
     fn parse(parser: &SyntaxParser<'a>) -> AstResult<'a> {
-        let ast = map_parser(parser, &[Self::parse_prefix_unary, Self::parse_suffix_unary, FuncCallParser::parse, PrimativeParser::parse])?;
+        let ast = map_parser(parser, &[Self::parse_prefix_unary as ParseType::<'a>, Self::parse_suffix_unary as ParseType::<'a>, FuncCallParser::parse as ParseType::<'a>, PrimativeParser::parse as ParseType::<'a>])?;
         
         let index_backup = parser.get_index();
         parser.cleanup_whitespaces();

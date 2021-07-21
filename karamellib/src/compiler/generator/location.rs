@@ -91,7 +91,7 @@ impl<'a> OpcodeGeneratorTrait<'a> for CurrentLocationUpdateGenerator {
         self.location.set(opcodes.len(), opcodes);
     }
 
-    fn dump(&self, _: &'a DumpBuilder, _: Rc<AtomicUsize>, _: &Vec<u8>) {
+    fn dump(&self, _: &DumpBuilder, _: Rc<AtomicUsize>, _: &Vec<u8>) {
         // Dynamically location calculator
     }
 }
@@ -107,7 +107,7 @@ impl<'a> OpcodeGeneratorTrait<'a> for DynamicLocationUpdateGenerator {
         self.target.set(self.source.get(), opcodes);
     }
 
-    fn dump(&self, _: &'a DumpBuilder, _: Rc<AtomicUsize>, _: &Vec<u8>) {
+    fn dump(&self, _: &DumpBuilder, _: Rc<AtomicUsize>, _: &Vec<u8>) {
         // Dynamically location calculator
     }
 }
@@ -127,7 +127,7 @@ impl<'a> OpcodeGeneratorTrait<'a> for SubtractionGenerator {
         self.target.set(left - right, opcodes);
     }
 
-    fn dump(&self, _: &'a DumpBuilder, _: Rc<AtomicUsize>, _: &Vec<u8>) {
+    fn dump(&self, _: &DumpBuilder, _: Rc<AtomicUsize>, _: &Vec<u8>) {
         // Dynamically location calculator
     }
 }

@@ -17,7 +17,7 @@ impl<'a> OpcodeGeneratorTrait<'a> for OpcodeItem {
         opcodes.push(self.opcode.into());
     }
 
-    fn dump(&self, builder: &'a DumpBuilder, index: Rc<AtomicUsize>, _: &Vec<u8>) {
+    fn dump(&self, builder: &DumpBuilder, index: Rc<AtomicUsize>, _: &Vec<u8>) {
         let opcode_index = index.fetch_add(1, Ordering::SeqCst);
         builder.add(opcode_index, self.opcode, "".to_string(), "".to_string(), "".to_string());
     }

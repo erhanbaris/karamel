@@ -14,7 +14,7 @@ impl<'a> OpcodeGeneratorTrait<'a> for CompareGenerator {
         self.location.apply(opcodes);
     }
 
-    fn dump(&self, builder: &'a DumpBuilder, index: Rc<AtomicUsize>, opcodes: &Vec<u8>) {
+    fn dump(&self, builder: &DumpBuilder, index: Rc<AtomicUsize>, opcodes: &Vec<u8>) {
         let opcode_index = index.fetch_add(1, Ordering::SeqCst);
         let location = opcode_to_location(index, opcodes);
         builder.add(opcode_index, VmOpCode::Compare, location.to_string(), "".to_string(), "".to_string());

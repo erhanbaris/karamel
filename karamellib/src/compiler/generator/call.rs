@@ -44,7 +44,7 @@ impl<'a> OpcodeGeneratorTrait<'a> for CallGenerator {
         opcodes.push(self.assign_to_temp.into());
     }
 
-    fn dump(&self, builder: &'a DumpBuilder, index: Rc<AtomicUsize>, _: &Vec<u8>) {
+    fn dump(&self, builder: &DumpBuilder, index: Rc<AtomicUsize>, _: &Vec<u8>) {
         let opcode_index = index.fetch_add(3, Ordering::SeqCst);
 
         match self.call_type {

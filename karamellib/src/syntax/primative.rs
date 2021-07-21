@@ -8,6 +8,8 @@ use crate::compiler::value::KaramelPrimative;
 use crate::compiler::ast::{KaramelAstType, KaramelDictItem};
 use crate::error::KaramelErrorType;
 
+use super::ParseType;
+
 pub struct PrimativeParser;
 
 impl PrimativeParser {
@@ -232,6 +234,6 @@ impl PrimativeParser {
 
 impl<'a> SyntaxParserTrait<'a> for PrimativeParser {
     fn parse(parser: &SyntaxParser<'a>) -> AstResult<'a> {
-        return map_parser(parser, &[Self::parse_dict, Self::parse_list, Self::parse_parenthesis, Self::parse_module_path, Self::parse_symbol, Self::parse_basic_primatives]);
+        return map_parser(parser, &[Self::parse_dict as ParseType::<'a>, Self::parse_list as ParseType::<'a>, Self::parse_parenthesis as ParseType::<'a>, Self::parse_module_path as ParseType::<'a>, Self::parse_symbol as ParseType::<'a>, Self::parse_basic_primatives as ParseType::<'a>]);
     }
 }

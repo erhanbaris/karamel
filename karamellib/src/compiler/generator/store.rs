@@ -40,7 +40,7 @@ impl<'a> OpcodeGeneratorTrait<'a> for StoreGenerator {
         };
     }
 
-    fn dump(&self, builder: &'a DumpBuilder, index: Rc<AtomicUsize>, _: &Vec<u8>) {
+    fn dump(&self, builder: &DumpBuilder, index: Rc<AtomicUsize>, _: &Vec<u8>) {
         let opcode_index = index.fetch_add(2, Ordering::SeqCst);
         
         match self.store_type {

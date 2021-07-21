@@ -10,6 +10,8 @@ use crate::compiler::ast::KaramelAstType;
 use crate::syntax::util::map_parser;
 use crate::error::KaramelErrorType;
 
+use super::ParseType;
+
 pub struct FuncCallParser;
 
 impl<'a> SyntaxParserTrait<'a> for FuncCallParser {
@@ -23,7 +25,7 @@ impl<'a> SyntaxParserTrait<'a> for FuncCallParser {
         let token = parser.peek_token();
 
         if token.is_ok() {
-            let mut function_name = map_parser(parser, &[PrimativeParser::parse_module_path, PrimativeParser::parse_symbol])?;
+            let mut function_name = map_parser(parser, &[PrimativeParser::parse_module_path as ParseType::<'a>, PrimativeParser::parse_symbol as ParseType::<'a>])?;
 
             match &function_name {
                 KaramelAstType::None => (),
