@@ -17,6 +17,7 @@ pub mod expression;
 pub mod load_module;
 
 use std::borrow::Borrow;
+use std::marker::PhantomData;
 use std::rc::Rc;
 use std::vec::Vec;
 use std::cell::Cell;
@@ -28,13 +29,14 @@ use crate::error::*;
 
 use bitflags::bitflags;
 
-pub type ParseType = fn(parser: &SyntaxParser) -> AstResult;
+pub type ParseType<'a> = fn(parser: &SyntaxParser<'a>) -> AstResult<'a>;
 
-pub struct SyntaxParser {
+pub struct SyntaxParser<'a> {
     pub tokens: Vec<Token>,
     pub index: Cell<usize>,
     pub indentation: Cell<usize>,
-    pub flags: Cell<SyntaxFlag>
+    pub flags: Cell<SyntaxFlag>,
+    _marker: PhantomData<&'a bool>
 }
 
 bitflags! {
@@ -50,26 +52,27 @@ bitflags! {
     }
 }
 
-pub trait SyntaxParserTrait {
-    fn parse(parser: &SyntaxParser) -> AstResult;
+pub trait SyntaxParserTrait<'a> {
+    fn parse(parser: &SyntaxParser<'a>) -> AstResult<'a>;
 }
 
-pub trait ExtensionSyntaxParser: Sized {
-    fn parsable    (parser: &SyntaxParser) -> bool;
-    fn parse_suffix(ast: &mut KaramelAstType, parser: &SyntaxParser) -> AstResult;
+pub trait ExtensionSyntaxParser<'a>: Sized {
+    fn parsable    (parser: &SyntaxParser<'a>) -> bool;
+    fn parse_suffix(ast: &mut KaramelAstType<'a>, parser: &SyntaxParser<'a>) -> AstResult<'a>;
 }
 
-impl SyntaxParser {
-    pub fn new(tokens: Vec<Token>) -> SyntaxParser {
+impl<'a> SyntaxParser<'a> {
+    pub fn new(tokens: Vec<Token>) -> Self {
         SyntaxParser {
             tokens,
             index: Cell::new(0),
             indentation: Cell::new(0),
-            flags: Cell::new(SyntaxFlag::NONE)
+            flags: Cell::new(SyntaxFlag::NONE),
+            _marker: PhantomData
         }
     }
 
-    pub fn parse(&self) -> Result<Rc<KaramelAstType>, KaramelError> {
+    pub fn parse(&self) -> Result<Rc<KaramelAstType<'a>>, KaramelError> {
         return match MultiLineBlockParser::parse(&self) {
             Ok(ast) => {
                 self.cleanup();
@@ -279,7 +282,7 @@ impl SyntaxParser {
         }
     }
 
-    fn indentation_check(&self) -> AstResult {
+    fn indentation_check(&self) -> AstResult<'a> {
         if self.next_token().is_err() {
             return Ok(KaramelAstType::None);
         }
@@ -314,7 +317,7 @@ impl SyntaxParser {
         Ok(KaramelAstType::None)
     }
 
-    fn in_indication(&self) -> AstResult {
+    fn in_indication(&self) -> AstResult<'a> {
         if self.next_token().is_err() {
             return Ok(KaramelAstType::None);
         }

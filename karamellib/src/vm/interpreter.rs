@@ -40,7 +40,7 @@ pub unsafe fn dump_opcode<W: Write>(index: usize, context: &mut KaramelCompilerC
     }
 }
 
-pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObject>, KaramelErrorType>
+pub unsafe fn run_vm<'a>(context: &mut KaramelCompilerContext<'a>) -> Result<Vec<VmObject>, KaramelErrorType>
 {
     #[cfg(any(feature = "liveOpcodeView", feature = "dumpOpcodes"))]
     let mut log_update = LogUpdate::new(stdout()).unwrap();
@@ -243,7 +243,7 @@ pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObjec
                         reference.execute(context, None)?;
                     }
                     else {
-                        return Err(KaramelErrorType::NotCallable(value.clone()));
+                        return Err(KaramelErrorType::NotCallable(VmObject::convert(value.clone())));
                     }
                 },
 
@@ -254,7 +254,7 @@ pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObjec
                         KaramelPrimative::Function(reference, base) => reference.execute(context, *base)?,
                         _ => {
                             log::debug!("{:?} not callable", &*function.deref());
-                        return Err(KaramelErrorType::NotCallable(value.clone()));
+                        return Err(KaramelErrorType::NotCallable(VmObject::convert(value.clone())));
                         }
                     };
                 },
@@ -361,7 +361,7 @@ pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObjec
                         KaramelPrimative::List(value) => {
                             let indexer_value = match &*indexer {
                                 KaramelPrimative::Number(number) => *number as usize,
-                                _ => return Err(KaramelErrorType::IndexerMustBeNumber(indexer.clone()))
+                                _ => return Err(KaramelErrorType::IndexerMustBeNumber(VmObject::convert(indexer.clone())))
                             };
 
                             value.borrow_mut()[indexer_value] = assign_item;
@@ -369,7 +369,7 @@ pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObjec
                         KaramelPrimative::Dict(value) => {
                             let indexer_value = match &*indexer {
                                 KaramelPrimative::Text(text) => &*text,
-                                _ => return Err(KaramelErrorType::IndexerMustBeString(indexer.clone()))
+                                _ => return Err(KaramelErrorType::IndexerMustBeString(VmObject::convert(indexer.clone())))
                             };
 
                             value.borrow_mut().insert(indexer_value.to_string(), assign_item);
@@ -377,7 +377,7 @@ pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObjec
                         KaramelPrimative::Text(_) => {
                             let indexer_value = match &*indexer {
                                 KaramelPrimative::Number(number) => *number,
-                                _ => return Err(KaramelErrorType::IndexerMustBeNumber(indexer.clone()))
+                                _ => return Err(KaramelErrorType::IndexerMustBeNumber(VmObject::convert(indexer.clone())))
                             };
 
                             match context.get_class(&object).get_setter() {

@@ -10,8 +10,8 @@ use crate::syntax::loops::WhileLoopParser;
 
 pub struct StatementParser;
 
-impl SyntaxParserTrait for StatementParser {
-    fn parse(parser: &SyntaxParser) -> AstResult {
+impl<'a> SyntaxParserTrait<'a> for StatementParser {
+    fn parse(parser: &SyntaxParser<'a>) -> AstResult<'a> {
         return map_parser(parser, &[LoadModuleParser::parse, LoopItemParser::parse, WhileLoopParser::parse, FunctionReturnParser::parse, AssignmentParser::parse, IfConditiontParser::parse]);
     }
 }

@@ -5,8 +5,8 @@ use crate::error::KaramelErrorType;
 
 pub struct LoopItemParser;
 
-impl SyntaxParserTrait for LoopItemParser {
-    fn parse(parser: &SyntaxParser) -> AstResult {
+impl<'a> SyntaxParserTrait<'a> for LoopItemParser {
+    fn parse(parser: &SyntaxParser<'a>) -> AstResult<'a> {
         let index_backup = parser.get_index();
         parser.cleanup_whitespaces();
 

@@ -12,20 +12,20 @@ use super::util::{map_parser_with_flag, with_flag};
 #[derive(Debug)]
 #[derive(Clone)]
 #[derive(PartialEq)]
-pub enum LoopType {
-    Simple(Rc<KaramelAstType>),
+pub enum LoopType<'a> {
+    Simple(Rc<KaramelAstType<'a>>),
     Scalar { 
-        variable: Rc<KaramelAstType>, 
-        control: Rc<KaramelAstType>,
-        increment: Rc<KaramelAstType>
+        variable: Rc<KaramelAstType<'a>>, 
+        control: Rc<KaramelAstType<'a>>,
+        increment: Rc<KaramelAstType<'a>>
     },
     Endless
 }
 
 pub struct WhileLoopParser;
 
-impl SyntaxParserTrait for WhileLoopParser {
-    fn parse(parser: &SyntaxParser) -> AstResult {
+impl<'a> SyntaxParserTrait<'a> for WhileLoopParser {
+    fn parse(parser: &SyntaxParser<'a>) -> AstResult<'a> {
         parser.indentation_check()?;
 
         let indentation = parser.get_indentation();

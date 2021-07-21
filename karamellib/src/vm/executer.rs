@@ -100,7 +100,7 @@ pub fn code_executer(parameters: ExecutionParameters) -> ExecutionStatus {
         }
     };
 
-    let opcode_compiler = InterpreterCompiler {};
+    let opcode_compiler = InterpreterCompiler::new();
     if parameters.return_output {
         context.stdout = Some(RefCell::new(String::new()));
         context.stderr = Some(RefCell::new(String::new()));

@@ -4,8 +4,8 @@ use crate::compiler::ast::KaramelAstType;
 
 pub struct NewlineParser;
 
-impl SyntaxParserTrait for NewlineParser {
-    fn parse(parser: &SyntaxParser) -> AstResult {
+impl<'a> SyntaxParserTrait<'a> for NewlineParser {
+    fn parse(parser: &SyntaxParser<'a>) -> AstResult<'a> {
         let mut result = KaramelAstType::None;
         loop {
             if let Ok(token) = parser.peek_token() {

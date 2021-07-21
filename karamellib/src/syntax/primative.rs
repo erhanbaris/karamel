@@ -11,7 +11,7 @@ use crate::error::KaramelErrorType;
 pub struct PrimativeParser;
 
 impl PrimativeParser {
-    pub fn parse_basic_primatives(parser: &SyntaxParser) -> AstResult {
+    pub fn parse_basic_primatives<'a>(parser: &SyntaxParser<'a>) -> AstResult<'a> {
         let index_backup = parser.get_index();
         parser.cleanup_whitespaces();
 
@@ -48,7 +48,7 @@ impl PrimativeParser {
         }
     }
 
-    pub fn parse_list(parser: &SyntaxParser) -> AstResult {
+    pub fn parse_list<'a>(parser: &SyntaxParser<'a>) -> AstResult<'a> {
         let index_backup = parser.get_index();
         if parser.match_operator(&[KaramelOperatorType::SquareBracketStart]).is_some() {
             let mut ast_vec   = Vec::new();
@@ -85,7 +85,7 @@ impl PrimativeParser {
         return Ok(KaramelAstType::None);
     }
 
-    pub fn parse_dict(parser: &SyntaxParser) -> AstResult {
+    pub fn parse_dict<'a>(parser: &SyntaxParser<'a>) -> AstResult<'a> {
         let index_backup = parser.get_index();
         if parser.match_operator(&[KaramelOperatorType::CurveBracketStart]).is_some() {
             let mut dict_items   = Vec::new();
@@ -150,7 +150,7 @@ impl PrimativeParser {
         return Ok(KaramelAstType::None);
     }
 
-    pub fn parse_symbol(parser: &SyntaxParser) -> AstResult {
+    pub fn parse_symbol<'a>(parser: &SyntaxParser<'a>) -> AstResult<'a> {
         let index_backup = parser.get_index();
         parser.cleanup_whitespaces();
         let token = parser.peek_token();
@@ -166,7 +166,7 @@ impl PrimativeParser {
         return Ok(KaramelAstType::None);
     }
 
-    pub fn parse_module_path(parser: &SyntaxParser) -> AstResult {
+    pub fn parse_module_path<'a>(parser: &SyntaxParser<'a>) -> AstResult<'a> {
         let index_backup = parser.get_index();
         parser.cleanup_whitespaces();
         let token = parser.peek_token();
@@ -209,7 +209,7 @@ impl PrimativeParser {
         return Ok(KaramelAstType::None);
     }
 
-    pub fn parse_parenthesis(parser: &SyntaxParser) -> AstResult {
+    pub fn parse_parenthesis<'a>(parser: &SyntaxParser<'a>) -> AstResult<'a> {
         let index_backup = parser.get_index();
         if parser.match_operator(&[KaramelOperatorType::LeftParentheses]).is_some() {
             
@@ -230,8 +230,8 @@ impl PrimativeParser {
     }
 }
 
-impl SyntaxParserTrait for PrimativeParser {
-    fn parse(parser: &SyntaxParser) -> AstResult {
+impl<'a> SyntaxParserTrait<'a> for PrimativeParser {
+    fn parse(parser: &SyntaxParser<'a>) -> AstResult<'a> {
         return map_parser(parser, &[Self::parse_dict, Self::parse_list, Self::parse_parenthesis, Self::parse_module_path, Self::parse_symbol, Self::parse_basic_primatives]);
     }
 }

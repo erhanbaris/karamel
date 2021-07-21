@@ -7,7 +7,7 @@ use crate::syntax::SyntaxFlag;
 
 // https://github.com/rust-lang/rust/issues/75429
 
-pub fn map_parser(parser: &SyntaxParser, parser_funcs: &[ParseType]) -> AstResult {
+pub fn map_parser<'a>(parser: &SyntaxParser<'a>, parser_funcs: &[ParseType::<'a>]) -> AstResult<'a> {
     for parser_func in parser_funcs {
         match parser_func(parser) {
             Ok(KaramelAstType::None) => (),
@@ -19,7 +19,7 @@ pub fn map_parser(parser: &SyntaxParser, parser_funcs: &[ParseType]) -> AstResul
     Ok(KaramelAstType::None)
 }
 
-pub fn map_parser_with_flag(flag: SyntaxFlag, parser: &SyntaxParser, parser_funcs: &[ParseType]) -> AstResult {
+pub fn map_parser_with_flag<'a>(flag: SyntaxFlag, parser: &SyntaxParser<'a>, parser_funcs: &[ParseType::<'a>]) -> AstResult<'a> {
     for parser_func in parser_funcs {
         match with_flag(flag, parser, || parser_func(parser)) {
             Ok(KaramelAstType::None) => (),
@@ -31,7 +31,7 @@ pub fn map_parser_with_flag(flag: SyntaxFlag, parser: &SyntaxParser, parser_func
     Ok(KaramelAstType::None)
 }
 
-pub fn is_ast_empty(ast: &AstResult) -> bool {
+pub fn is_ast_empty<'a>(ast: &AstResult<'a>) -> bool {
     match ast {
         Ok(KaramelAstType::None) => true,
         Ok(_) => false,
@@ -39,7 +39,7 @@ pub fn is_ast_empty(ast: &AstResult) -> bool {
     }
 }
 
-pub fn err_or_message(ast: AstResult, none_error: KaramelErrorType) -> AstResult {
+pub fn err_or_message<'a>(ast: AstResult<'a>, none_error: KaramelErrorType) -> AstResult<'a> {
     match ast {
         Ok(KaramelAstType::None) => Err(none_error),
         Ok(_) => Ok(KaramelAstType::None),
@@ -47,7 +47,7 @@ pub fn err_or_message(ast: AstResult, none_error: KaramelErrorType) -> AstResult
     }
 }
 
-pub fn update_functions_for_temp_return(ast: &KaramelAstType) {
+pub fn update_functions_for_temp_return<'a>(ast: &KaramelAstType<'a>) {
     match ast {
         KaramelAstType::FuncCall { func_name_expression: _, arguments: _, assign_to_temp } => {
             assign_to_temp.set(true);
@@ -70,7 +70,7 @@ pub fn update_functions_for_temp_return(ast: &KaramelAstType) {
     };
 }
 
-pub fn with_flag<F: Fn() -> AstResult>(flag: SyntaxFlag, parser: &SyntaxParser, func: F) -> AstResult {
+pub fn with_flag<'a, F: Fn() -> AstResult<'a>>(flag: SyntaxFlag, parser: &SyntaxParser<'a>, func: F) -> AstResult<'a> {
     let parser_flags  = parser.flags.get();
     parser.flags.set(parser_flags | flag);
     let loop_control = func()?;
@@ -78,7 +78,7 @@ pub fn with_flag<F: Fn() -> AstResult>(flag: SyntaxFlag, parser: &SyntaxParser, 
     Ok(loop_control)
 }
 
-pub fn mut_with_flag<F: FnMut() -> AstResult>(flag: SyntaxFlag, parser: &SyntaxParser, mut func: F) -> AstResult {
+pub fn mut_with_flag<'a, F: FnMut() -> AstResult<'a>>(flag: SyntaxFlag, parser: &SyntaxParser<'a>, mut func: F) -> AstResult<'a> {
     let parser_flags  = parser.flags.get();
     parser.flags.set(parser_flags | flag);
     let loop_control = func()?;

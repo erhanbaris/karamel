@@ -15,8 +15,8 @@ use std::rc::Rc;
 
 pub struct UnaryParser;
 
-impl SyntaxParserTrait for UnaryParser {
-    fn parse(parser: &SyntaxParser) -> AstResult {
+impl<'a> SyntaxParserTrait<'a> for UnaryParser {
+    fn parse(parser: &SyntaxParser<'a>) -> AstResult<'a> {
         let ast = map_parser(parser, &[Self::parse_prefix_unary, Self::parse_suffix_unary, FuncCallParser::parse, PrimativeParser::parse])?;
         
         let index_backup = parser.get_index();
@@ -39,7 +39,7 @@ impl SyntaxParserTrait for UnaryParser {
 }
 
 impl UnaryParser {
-    fn parse_suffix_unary(parser: &SyntaxParser) -> AstResult {
+    fn parse_suffix_unary<'a>(parser: &SyntaxParser<'a>) -> AstResult<'a> {
         let index_backup = parser.get_index();
         match &parser.peek_token() {
             Ok(token) => {
@@ -61,7 +61,7 @@ impl UnaryParser {
         return Ok(KaramelAstType::None);
     }
 
-    pub fn parse_indexer(ast: Rc<KaramelAstType>, parser: &SyntaxParser) -> AstResult {
+    pub fn parse_indexer<'a>(ast: Rc<KaramelAstType<'a>>, parser: &SyntaxParser<'a>) -> AstResult<'a> {
         let index_backup = parser.get_index();
         if parser.match_operator(&[KaramelOperatorType::SquareBracketStart]).is_some() {
             parser.cleanup_whitespaces();
@@ -78,7 +78,7 @@ impl UnaryParser {
         return Ok(KaramelAstType::None);
     }
 
-    fn parse_prefix_unary(parser: &SyntaxParser) -> AstResult {
+    fn parse_prefix_unary<'a>(parser: &SyntaxParser<'a>) -> AstResult<'a> {
         let index_backup = parser.get_index();
 
         if let Some(operator) = parser.match_operator(&[KaramelOperatorType::Addition,
