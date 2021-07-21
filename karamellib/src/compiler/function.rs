@@ -1,4 +1,5 @@
 use std::borrow::Borrow;
+use std::marker::PhantomData;
 use std::{iter::Skip, rc::Rc, vec::Vec};
 use std::cell::RefCell;
 use std::cell::Cell;
@@ -91,7 +92,7 @@ bitflags! {
 }
 
 #[derive(Clone)]
-pub struct FunctionReference {
+pub struct FunctionReference<'a> {
     pub callback: FunctionType,
     pub flags: FunctionFlag,
     pub name: String,
@@ -100,12 +101,13 @@ pub struct FunctionReference {
     pub storage_index: usize,
     pub opcode_location: Cell<usize>,
     pub used_locations: RefCell<Vec<u16>>,
-    pub opcode_body: Option<Rc<KaramelAstType>>,
-    pub module: Rc<dyn Module>
+    pub opcode_body: Option<Rc<KaramelAstType<'a>>>,
+    pub module: Rc<dyn Module<'a> + 'a>,
+    _marker: PhantomData<&'a bool>
 }
 
-unsafe impl Send for FunctionReference {}
-unsafe impl Sync for FunctionReference {}
+unsafe impl<'a> Send for FunctionReference<'a> {}
+unsafe impl<'a> Sync for FunctionReference<'a> {}
 
 #[derive(Clone)]
 pub enum FunctionType {
@@ -117,8 +119,8 @@ impl Default for FunctionType {
     fn default() -> Self { FunctionType::Opcode }
 }
 
-impl FunctionReference {
-    pub fn execute(&self, compiler: &mut KaramelCompilerContext, base: Option<VmObject>) -> Result<(), KaramelErrorType>{
+impl<'a> FunctionReference<'a> {
+    pub fn execute(&self, compiler: &mut KaramelCompilerContext<'a>, base: Option<VmObject>) -> Result<(), KaramelErrorType>{
         unsafe {
             match self.callback {
                 FunctionType::Native(func) => FunctionReference::native_function_call(&self, func, compiler, base),
@@ -127,7 +129,7 @@ impl FunctionReference {
         }
     }
 
-    pub fn buildin_function(func: NativeCall, name: String, flags: FunctionFlag) -> Rc<FunctionReference> {
+    pub fn buildin_function(func: NativeCall, name: String, flags: FunctionFlag) -> Rc<FunctionReference<'a>> {
         let reference = FunctionReference {
             callback: FunctionType::Native(func),
             flags: flags,
@@ -138,12 +140,13 @@ impl FunctionReference {
             used_locations: RefCell::new(Vec::new()),
             defined_storage_index: 0,
             opcode_body: None,
-            module: Rc::new(DummyModule::new())
+            module: Rc::new(DummyModule::new()),
+            _marker: PhantomData
         };
         Rc::new(reference)
     }
 
-    pub fn native_function(func: NativeCall, name: String, module: Rc<dyn Module>) -> Rc<FunctionReference> {
+    pub fn native_function(func: NativeCall, name: String, module: Rc<dyn Module<'a> + 'a>) -> Rc<FunctionReference<'a>> {
         let reference = FunctionReference {
             callback: FunctionType::Native(func),
             flags: FunctionFlag::STATIC,
@@ -154,12 +157,13 @@ impl FunctionReference {
             used_locations: RefCell::new(Vec::new()),
             defined_storage_index: 0,
             opcode_body: None,
-            module
+            module,
+            _marker: PhantomData
         };
         Rc::new(reference)
     }
 
-    pub fn opcode_function(name: String, arguments: Vec<String>, body: Rc<KaramelAstType>, module: Rc<dyn Module>, storage_index: usize, defined_storage_index: usize, module_level: bool) -> Rc<FunctionReference> {
+    pub fn opcode_function(name: String, arguments: Vec<String>, body: Rc<KaramelAstType<'a>>, module: Rc<dyn Module<'a> + 'a>, storage_index: usize, defined_storage_index: usize, module_level: bool) -> Rc<FunctionReference<'a>> {
         let mut reference = FunctionReference {
             callback: FunctionType::Opcode,
             flags: FunctionFlag::STATIC,
@@ -170,7 +174,8 @@ impl FunctionReference {
             defined_storage_index,
             opcode_location: Cell::new(0),
             used_locations: RefCell::new(Vec::new()),
-            opcode_body: Some(body.clone())
+            opcode_body: Some(body.clone()),
+            _marker: PhantomData
         };
 
         if module_level {
@@ -180,7 +185,7 @@ impl FunctionReference {
         Rc::new(reference)
     }
 
-    unsafe fn native_function_call(reference: &FunctionReference, func: NativeCall, compiler: &mut KaramelCompilerContext, source: Option<VmObject>) -> Result<(), KaramelErrorType> {            
+    unsafe fn native_function_call(reference: &FunctionReference<'a>, func: NativeCall, compiler: &mut KaramelCompilerContext<'a>, source: Option<VmObject>) -> Result<(), KaramelErrorType> {            
         let total_args                 = *compiler.opcodes_ptr.offset(1);
         let call_return_assign_to_temp = *compiler.opcodes_ptr.offset(2) != 0;
         let parameter = match reference.flags {
@@ -274,7 +279,7 @@ impl FunctionReference {
     }
 }
 
-pub fn find_function_definition_type(module: Rc<OpcodeModule>, ast: Rc<KaramelAstType>, options: &mut KaramelCompilerContext, current_storage_index: usize, module_level: bool) -> CompilerResult {
+pub fn find_function_definition_type<'a>(module: Rc<OpcodeModule<'a>>, ast: Rc<KaramelAstType<'a>>, options: &mut KaramelCompilerContext<'a>, current_storage_index: usize, module_level: bool) -> CompilerResult {
     match ast.borrow() {
         KaramelAstType::FunctionDefination { name, arguments, body  } => {
             /* Create new storage for new function */

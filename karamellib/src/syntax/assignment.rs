@@ -9,8 +9,8 @@ use super::util::with_flag;
 
 pub struct AssignmentParser;
 
-impl SyntaxParserTrait for AssignmentParser {
-    fn parse(parser: &SyntaxParser) -> AstResult {
+impl<'a> SyntaxParserTrait<'a> for AssignmentParser {
+    fn parse(parser: &SyntaxParser<'a>) -> AstResult<'a> {
         let index_backup = parser.get_index();
         parser.indentation_check()?;
 

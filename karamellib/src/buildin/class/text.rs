@@ -12,7 +12,7 @@ use unicode_width::UnicodeWidthStr;
 use std::{cell::RefCell, rc::Rc};
 
 
-pub fn get_primative_class() -> Rc<dyn Class> {
+pub fn get_primative_class<'a>() -> Rc<dyn Class<'a> + 'a> {
     let mut opcode = BasicInnerClass::default();
     opcode.set_name("yazı");
     

@@ -1,5 +1,6 @@
 use std::borrow::Borrow;
 use std::cell::Cell;
+use std::marker::PhantomData;
 use std::vec::Vec;
 use std::rc::Rc;
 use std::path::PathBuf;
@@ -29,9 +30,20 @@ use super::module::{OpcodeModule, get_modules};
 use super::storage_builder::StorageBuilderOption;
 
 
-pub struct InterpreterCompiler;
-impl InterpreterCompiler {   
-    pub fn compile(&self, main_ast: Rc<KaramelAstType>, context: &mut KaramelCompilerContext) -> CompilerResult {
+pub struct InterpreterCompiler<'a> {
+    marker: PhantomData<&'a bool>
+}
+
+impl<'a> InterpreterCompiler<'a> {
+    pub fn new() -> Self {
+        InterpreterCompiler {
+            marker: PhantomData
+        }
+    }
+}
+
+impl<'a> InterpreterCompiler<'a> {   
+    pub fn compile(&self, main_ast: Rc<KaramelAstType<'a>>, context: &mut KaramelCompilerContext<'a>) -> CompilerResult {
         let storage_builder: StorageBuilder = StorageBuilder::new();
         let mut compiler_options = StorageBuilderOption { max_stack: 0 };
 
@@ -70,11 +82,11 @@ impl InterpreterCompiler {
         Ok(())
     }
 
-    pub fn detect_modules(&self, main_ast: Rc<KaramelAstType>, context: &mut KaramelCompilerContext) -> Result<Vec<Rc<OpcodeModule>>, KaramelErrorType> {
+    pub fn detect_modules(&self, main_ast: Rc<KaramelAstType<'a>>, context: &mut KaramelCompilerContext<'a>) -> Result<Vec<Rc<OpcodeModule<'a>>>, KaramelErrorType> {
         Ok(get_modules(main_ast.clone(), context)?)
     }
 
-    pub fn prepare_main_module(&self, main_ast: Rc<KaramelAstType>, context: &mut KaramelCompilerContext) -> Result<Rc<OpcodeModule>, KaramelErrorType> {
+    pub fn prepare_main_module(&self, main_ast: Rc<KaramelAstType<'a>>, context: &mut KaramelCompilerContext<'a>) -> Result<Rc<OpcodeModule<'a>>, KaramelErrorType> {
         let module = OpcodeModule::new("!baz".to_string(), String::new(), main_ast.clone());
         let module = Rc::new(module);
         context.main_module = module.as_ref() as *const OpcodeModule as *mut OpcodeModule;
@@ -96,7 +108,7 @@ impl InterpreterCompiler {
         Ok(())   
     }
 
-    pub fn prepare_modules(&self, context: &mut KaramelCompilerContext) -> CompilerResult {
+    pub fn prepare_modules(&self, context: &mut KaramelCompilerContext<'a>) -> CompilerResult {
         let mut functions = Vec::new();
 
         for (_, module) in context.modules.iter() {
@@ -111,7 +123,7 @@ impl InterpreterCompiler {
         Ok(())
     }
 
-    fn get_function_definations(&self, module: Rc<OpcodeModule>, ast: Rc<KaramelAstType>, functions: &mut Vec<Rc<FunctionReference>>, context: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult{
+    fn get_function_definations(&self, module: Rc<OpcodeModule<'a>>, ast: Rc<KaramelAstType<'a>>, functions: &mut Vec<Rc<FunctionReference<'a>>>, context: &mut KaramelCompilerContext<'a>, storage_index: usize) -> CompilerResult{
         match &*ast {
             KaramelAstType::FunctionDefination { name, arguments: _, body  } => {
                 let search = context.get_function(name.to_string(), module.get_path(), storage_index);
@@ -135,7 +147,7 @@ impl InterpreterCompiler {
         Ok(())
     }
 
-    fn generate_functions(&self, module: Rc<OpcodeModule>, functions: &mut Vec<Rc<FunctionReference>>, context: &mut KaramelCompilerContext) -> CompilerResult {
+    fn generate_functions(&self, module: Rc<OpcodeModule<'a>>, functions: &mut Vec<Rc<FunctionReference<'a>>>, context: &mut KaramelCompilerContext<'a>) -> CompilerResult {
         for function in functions {
 
             /* Validate function name and parameters */
@@ -152,7 +164,7 @@ impl InterpreterCompiler {
         Ok(())
     }
 
-    fn generate_opcode(&self, module: Rc<OpcodeModule>, ast: &KaramelAstType, upper_ast: &KaramelAstType, context: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult {
+    fn generate_opcode(&self, module: Rc<OpcodeModule<'a>>, ast: &KaramelAstType<'a>, upper_ast: &KaramelAstType<'a>, context: &mut KaramelCompilerContext<'a>, storage_index: usize) -> CompilerResult {
         match ast {
             KaramelAstType::Assignment { variable, operator, expression } => self.generate_assignment(module.clone(), variable, operator, expression, context, storage_index),
             KaramelAstType::Symbol(variable) => self.generate_symbol(module.clone(), variable, upper_ast, context, storage_index),
@@ -180,7 +192,7 @@ impl InterpreterCompiler {
         }
     }
 
-    fn generate_primative(&self, primative: Rc<KaramelPrimative>, _: &KaramelAstType, context: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult {
+    fn generate_primative(&self, primative: Rc<KaramelPrimative<'a>>, _: &KaramelAstType<'a>, context: &mut KaramelCompilerContext<'a>, storage_index: usize) -> CompilerResult {
         let storage = &context.storages[storage_index];
 
         let result = storage.get_constant_location(primative);
@@ -193,7 +205,7 @@ impl InterpreterCompiler {
         }
     }
 
-    fn generate_load_module(&self, params: &[String], context: &mut KaramelCompilerContext) -> CompilerResult {
+    fn generate_load_module(&self, params: &[String], context: &mut KaramelCompilerContext<'a>) -> CompilerResult {
         let mut path = PathBuf::from(&context.execution_path.path[..]);
         let module = &params[(params.len() - 1)];
 
@@ -224,7 +236,7 @@ impl InterpreterCompiler {
         }
     }
 
-    fn generate_function_map(&self, params: &[String], context: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult {
+    fn generate_function_map(&self, params: &[String], context: &mut KaramelCompilerContext<'a>, storage_index: usize) -> CompilerResult {
         let storage = &context.storages[storage_index];
 
         let name = params[params.len() - 1].to_string();
@@ -246,7 +258,7 @@ impl InterpreterCompiler {
         }
     }
 
-    fn generate_none(&self, context: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult {
+    fn generate_none(&self, context: &mut KaramelCompilerContext<'a>, storage_index: usize) -> CompilerResult {
         let storage = &context.storages[storage_index];
 
         let result = storage.get_constant_location(Rc::new(KaramelPrimative::Empty));
@@ -259,7 +271,7 @@ impl InterpreterCompiler {
         }
     }
 
-    fn generate_list(&self, module: Rc<OpcodeModule>, list: &Vec<Rc<KaramelAstType>>, upper_ast: &KaramelAstType, context: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult {
+    fn generate_list(&self, module: Rc<OpcodeModule<'a>>, list: &Vec<Rc<KaramelAstType<'a>>>, upper_ast: &KaramelAstType<'a>, context: &mut KaramelCompilerContext<'a>, storage_index: usize) -> CompilerResult {
         for item in list.iter().rev() {
             self.generate_opcode(module.clone(), item, upper_ast, context, storage_index)?;
         }
@@ -267,7 +279,7 @@ impl InterpreterCompiler {
         Ok(())
     }
 
-    fn generate_dict(&self, module: Rc<OpcodeModule>, dict: &Vec<Rc<KaramelDictItem>>, upper_ast: &KaramelAstType, context: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult {
+    fn generate_dict(&self, module: Rc<OpcodeModule<'a>>, dict: &Vec<Rc<KaramelDictItem<'a>>>, upper_ast: &KaramelAstType<'a>, context: &mut KaramelCompilerContext<'a>, storage_index: usize) -> CompilerResult {
         for item in dict.iter().rev() {
             self.generate_primative(item.key.clone(), upper_ast, context, storage_index)?;
             self.generate_opcode(module.clone(), &item.value, upper_ast, context, storage_index)?;
@@ -276,7 +288,7 @@ impl InterpreterCompiler {
         Ok(())
     }
 
-    fn generate_func_call_by_name(&self, name :&String, module_path: &Vec<String>, arguments: &Vec<Rc<KaramelAstType>>, assign_to_temp: bool, context: &mut KaramelCompilerContext, storage_index: usize) -> Result<bool, KaramelErrorType> {
+    fn generate_func_call_by_name(&self, name :&String, module_path: &Vec<String>, arguments: &Vec<Rc<KaramelAstType<'a>>>, assign_to_temp: bool, context: &mut KaramelCompilerContext<'a>, storage_index: usize) -> Result<bool, KaramelErrorType> {
         let function_search = context.get_function(name.to_string(), module_path, storage_index);
 
         match function_search {
@@ -307,7 +319,7 @@ impl InterpreterCompiler {
         Ok(false)
     }
 
-    fn generate_accessor_func_call(&self, module: Rc<OpcodeModule>, source: &KaramelAstType, indexer: &KaramelAstType, assign_to_temp: bool,  upper_ast: &KaramelAstType, context: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult {
+    fn generate_accessor_func_call(&self, module: Rc<OpcodeModule<'a>>, source: &KaramelAstType<'a>, indexer: &KaramelAstType<'a>, assign_to_temp: bool,  upper_ast: &KaramelAstType<'a>, context: &mut KaramelCompilerContext<'a>, storage_index: usize) -> CompilerResult {
 
         if let KaramelAstType::FuncCall { func_name_expression, arguments, assign_to_temp: _ } = indexer {
             match &**func_name_expression {
@@ -349,7 +361,7 @@ impl InterpreterCompiler {
         }
     }
 
-    fn generate_func_call(&self, module: Rc<OpcodeModule>, func_name_expression: &KaramelAstType, arguments: &Vec<Rc<KaramelAstType>>, assign_to_temp: bool,  upper_ast: &KaramelAstType, context: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult {
+    fn generate_func_call(&self, module: Rc<OpcodeModule<'a>>, func_name_expression: &KaramelAstType<'a>, arguments: &Vec<Rc<KaramelAstType<'a>>>, assign_to_temp: bool,  upper_ast: &KaramelAstType<'a>, context: &mut KaramelCompilerContext<'a>, storage_index: usize) -> CompilerResult {
         /* Build arguments */
         for argument in arguments {
             self.generate_opcode(module.clone(), argument, upper_ast, context, storage_index)?;
@@ -388,27 +400,27 @@ impl InterpreterCompiler {
         }
     }
 
-    fn generate_break(&self, _: &KaramelAstType, context: &mut KaramelCompilerContext, _: usize) -> CompilerResult {       
+    fn generate_break(&self, _: &KaramelAstType<'a>, context: &mut KaramelCompilerContext<'a>, _: usize) -> CompilerResult {       
         let location = context.opcode_generator.current_location();
         context.opcode_generator.add_break_location(location.clone());
         context.opcode_generator.create_jump(location.clone());
         Ok(())
     }
 
-    fn generate_continue(&self, _: &KaramelAstType, context: &mut KaramelCompilerContext, _: usize) -> CompilerResult {       
+    fn generate_continue(&self, _: &KaramelAstType<'a>, context: &mut KaramelCompilerContext<'a>, _: usize) -> CompilerResult {       
         let location = context.opcode_generator.current_location();
         context.opcode_generator.add_continue_location(location.clone());
         context.opcode_generator.create_jump(location.clone());
         Ok(())
     }
 
-    fn generate_return(&self, module: Rc<OpcodeModule>, expression: &KaramelAstType, upper_ast: &KaramelAstType, context: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult {
+    fn generate_return(&self, module: Rc<OpcodeModule<'a>>, expression: &KaramelAstType<'a>, upper_ast: &KaramelAstType<'a>, context: &mut KaramelCompilerContext<'a>, storage_index: usize) -> CompilerResult {
         self.generate_opcode(module.clone(), expression, upper_ast, context, storage_index)?;
         context.opcode_generator.add_opcode(VmOpCode::Return);
         Ok(())
     }
 
-    fn generate_loop(&self, module: Rc<OpcodeModule>, loop_type: &LoopType, body: &KaramelAstType, upper_ast: &KaramelAstType, context: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult {
+    fn generate_loop(&self, module: Rc<OpcodeModule<'a>>, loop_type: &LoopType<'a>, body: &KaramelAstType<'a>, upper_ast: &KaramelAstType<'a>, context: &mut KaramelCompilerContext<'a>, storage_index: usize) -> CompilerResult {
         /* Backup loop informations */
         context.opcode_generator.loop_started();
         let mut compare_location: Option<Rc<OpcodeLocation>> = None;
@@ -467,7 +479,7 @@ impl InterpreterCompiler {
         Ok(())
     }
 
-    fn generate_symbol(&self, module: Rc<OpcodeModule>, variable: &String, _: &KaramelAstType, context: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult {
+    fn generate_symbol(&self, module: Rc<OpcodeModule<'a>>, variable: &String, _: &KaramelAstType<'a>, context: &mut KaramelCompilerContext<'a>, storage_index: usize) -> CompilerResult {
         let storage = &context.storages[storage_index];                
         let result = storage.get_function_constant(variable.to_string(), module.clone());
         match result {
@@ -498,7 +510,7 @@ impl InterpreterCompiler {
         }
     }
 
-    fn generate_control(&self, module: Rc<OpcodeModule>, left_ast: &KaramelAstType, operator: &KaramelOperatorType, right_ast: &KaramelAstType, _: &KaramelAstType, context: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult {
+    fn generate_control(&self, module: Rc<OpcodeModule<'a>>, left_ast: &KaramelAstType<'a>, operator: &KaramelOperatorType, right_ast: &KaramelAstType<'a>, _: &KaramelAstType<'a>, context: &mut KaramelCompilerContext<'a>, storage_index: usize) -> CompilerResult {
         self.generate_opcode(module.clone(), left_ast, &KaramelAstType::None, context, storage_index)?;
         self.generate_opcode(module.clone(), right_ast, &KaramelAstType::None, context, storage_index)?;
 
@@ -516,7 +528,7 @@ impl InterpreterCompiler {
         Ok(())
     }
 
-    fn generate_assignment(&self, module: Rc<OpcodeModule>, variable: &KaramelAstType, operator: &KaramelOperatorType, expression_ast: &KaramelAstType, context: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult {
+    fn generate_assignment(&self, module: Rc<OpcodeModule<'a>>, variable: &KaramelAstType<'a>, operator: &KaramelOperatorType, expression_ast: &KaramelAstType<'a>, context: &mut KaramelCompilerContext<'a>, storage_index: usize) -> CompilerResult {
         match variable {
             KaramelAstType::Symbol(symbol) => {
                 
@@ -578,7 +590,7 @@ impl InterpreterCompiler {
         }
     }
 
-    fn generate_binary(&self, module: Rc<OpcodeModule>, left_ast: &KaramelAstType, operator: &KaramelOperatorType, right_ast: &KaramelAstType, _: &KaramelAstType, context: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult { 
+    fn generate_binary(&self, module: Rc<OpcodeModule<'a>>, left_ast: &KaramelAstType<'a>, operator: &KaramelOperatorType, right_ast: &KaramelAstType<'a>, _: &KaramelAstType<'a>, context: &mut KaramelCompilerContext<'a>, storage_index: usize) -> CompilerResult { 
         self.generate_opcode(module.clone(), left_ast, &KaramelAstType::None, context, storage_index)?;
         self.generate_opcode(module.clone(), right_ast, &KaramelAstType::None, context, storage_index)?;
         let opcode = match operator {
@@ -594,7 +606,7 @@ impl InterpreterCompiler {
         Ok(())
     }
 
-    fn generate_prefix_unary(&self, module: Rc<OpcodeModule>, operator: &KaramelOperatorType, expression: &KaramelAstType, assign_to_temp: &Cell<bool>, _: &KaramelAstType, context: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult { 
+    fn generate_prefix_unary(&self, module: Rc<OpcodeModule<'a>>, operator: &KaramelOperatorType, expression: &KaramelAstType<'a>, assign_to_temp: &Cell<bool>, _: &KaramelAstType<'a>, context: &mut KaramelCompilerContext<'a>, storage_index: usize) -> CompilerResult { 
         
         if *operator == KaramelOperatorType::Not { 
             return self.generate_not(module.clone(), expression, context, storage_index);
@@ -629,25 +641,25 @@ impl InterpreterCompiler {
         Err(KaramelErrorType::UnaryExpressionNotValid)
     }
 
-    fn generate_not(&self, module: Rc<OpcodeModule>, expression: &KaramelAstType, context: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult { 
+    fn generate_not(&self, module: Rc<OpcodeModule<'a>>, expression: &KaramelAstType<'a>, context: &mut KaramelCompilerContext<'a>, storage_index: usize) -> CompilerResult { 
         self.generate_opcode(module.clone(), expression, &KaramelAstType::None, context, storage_index)?;
         context.opcode_generator.add_opcode(VmOpCode::Not);
         Ok(())
     }
 
-    fn create_exit_jump(&self, context: &mut KaramelCompilerContext, exit_locations: &mut Vec<Rc<OpcodeLocation>>) {
+    fn create_exit_jump(&self, context: &mut KaramelCompilerContext<'a>, exit_locations: &mut Vec<Rc<OpcodeLocation>>) {
         let location = context.opcode_generator.current_location();
         context.opcode_generator.create_jump(location.clone());
         exit_locations.push(location.clone())
     }
 
-    fn create_compare(&self, context: &mut KaramelCompilerContext) -> Rc<OpcodeLocation> {
+    fn create_compare(&self, context: &mut KaramelCompilerContext<'a>) -> Rc<OpcodeLocation> {
         let location = context.opcode_generator.current_location();
         context.opcode_generator.create_compare(location.clone());
         location.clone()
     }
 
-    fn generate_if_condition(&self, module: Rc<OpcodeModule>, condition: &KaramelAstType, body: &KaramelAstType, else_body: &Option<Rc<KaramelAstType>>, else_if: &Vec<Rc<KaramelIfStatementElseItem>>, upper_ast: &KaramelAstType, context: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult {
+    fn generate_if_condition(&self, module: Rc<OpcodeModule<'a>>, condition: &KaramelAstType<'a>, body: &KaramelAstType<'a>, else_body: &Option<Rc<KaramelAstType<'a>>>, else_if: &Vec<Rc<KaramelIfStatementElseItem<'a>>>, upper_ast: &KaramelAstType<'a>, context: &mut KaramelCompilerContext<'a>, storage_index: usize) -> CompilerResult {
         /*
         ╔════════════════════╗
         ║   IF CONDITION     ║
@@ -705,7 +717,7 @@ impl InterpreterCompiler {
         Ok(())
     }
 
-    fn generate_indexer(&self, module: Rc<OpcodeModule>, body: &KaramelAstType, indexer: &KaramelAstType, upper_ast: &KaramelAstType, context: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult {
+    fn generate_indexer(&self, module: Rc<OpcodeModule<'a>>, body: &KaramelAstType<'a>, indexer: &KaramelAstType<'a>, upper_ast: &KaramelAstType<'a>, context: &mut KaramelCompilerContext<'a>, storage_index: usize) -> CompilerResult {
         self.generate_opcode(module.clone(), body, upper_ast, context, storage_index)?;
         self.generate_opcode(module.clone(), indexer, upper_ast, context, storage_index)?;
         context.opcode_generator.add_opcode(VmOpCode::GetItem);
@@ -713,7 +725,7 @@ impl InterpreterCompiler {
         Ok(())
     }
 
-    fn generate_suffix_unary(&self, operator: &KaramelOperatorType, expression: &KaramelAstType, _: &KaramelAstType, context: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult { 
+    fn generate_suffix_unary(&self, operator: &KaramelOperatorType, expression: &KaramelAstType<'a>, _: &KaramelAstType<'a>, context: &mut KaramelCompilerContext<'a>, storage_index: usize) -> CompilerResult { 
         if let KaramelAstType::Symbol(variable) = expression {
             let location = match context.storages.get_mut(storage_index).unwrap().get_variable_location(variable) {
                 Some(location) => location,
@@ -738,7 +750,7 @@ impl InterpreterCompiler {
         Err(KaramelErrorType::UnaryExpressionNotValid)
     }
 
-    fn generate_block(&self, module: Rc<OpcodeModule>, asts: &[Rc<KaramelAstType>], upper_ast: &KaramelAstType, context: &mut KaramelCompilerContext, storage_index: usize) -> CompilerResult {
+    fn generate_block(&self, module: Rc<OpcodeModule<'a>>, asts: &[Rc<KaramelAstType<'a>>], upper_ast: &KaramelAstType<'a>, context: &mut KaramelCompilerContext<'a>, storage_index: usize) -> CompilerResult {
         for ast in asts {
             self.generate_opcode(module.clone(), &ast, upper_ast, context, storage_index)?;
         }
@@ -764,7 +776,7 @@ mod tests {
     #[test]
     fn test_1() -> Result<(), KaramelErrorType> {
         let mut context = KaramelCompilerContext::new();
-        let compiler = InterpreterCompiler {};
+        let compiler = InterpreterCompiler::new();
         let storage_builder: StorageBuilder = StorageBuilder::new();
         let mut compiler_options = StorageBuilderOption { max_stack: 0 };
 
@@ -782,7 +794,7 @@ mod tests {
     #[test]
     fn test_2() -> Result<(), KaramelErrorType> {
         let mut context = KaramelCompilerContext::new();
-        let compiler = InterpreterCompiler {};
+        let compiler = InterpreterCompiler::new();
         let storage_builder: StorageBuilder = StorageBuilder::new();
         let mut compiler_options = StorageBuilderOption { max_stack: 0 };
 
@@ -804,7 +816,7 @@ mod tests {
     #[test]
     fn test_3() -> Result<(), KaramelErrorType> {
         let mut context = KaramelCompilerContext::new();
-        let compiler = InterpreterCompiler {};
+        let compiler = InterpreterCompiler::new();
         let storage_builder: StorageBuilder = StorageBuilder::new();
         let mut compiler_options = StorageBuilderOption { max_stack: 0 };
 
@@ -826,7 +838,7 @@ mod tests {
     #[test]
     fn test_4() -> Result<(), KaramelErrorType> {
         let mut context = KaramelCompilerContext::new();
-        let compiler = InterpreterCompiler {};
+        let compiler = InterpreterCompiler::new();
         let storage_builder: StorageBuilder = StorageBuilder::new();
         let mut compiler_options = StorageBuilderOption { max_stack: 0 };
 
@@ -849,7 +861,7 @@ mod tests {
     fn test_5() -> Result<(), KaramelErrorType> {
         
         let mut context = KaramelCompilerContext::new();
-        let compiler = InterpreterCompiler {};
+        let compiler = InterpreterCompiler::new();
         let storage_builder: StorageBuilder = StorageBuilder::new();
         let mut compiler_options = StorageBuilderOption { max_stack: 0 };
 
@@ -867,7 +879,7 @@ mod tests {
     #[test]
     fn test_6() -> Result<(), KaramelErrorType> {
         let mut context = KaramelCompilerContext::new();
-        let compiler = InterpreterCompiler {};
+        let compiler = InterpreterCompiler::new();
         let storage_builder: StorageBuilder = StorageBuilder::new();
         let mut compiler_options = StorageBuilderOption { max_stack: 0 };
 
@@ -889,7 +901,7 @@ mod tests {
     #[test]
     fn test_7() -> Result<(), KaramelErrorType> {
         let mut context = KaramelCompilerContext::new();
-        let compiler = InterpreterCompiler {};
+        let compiler = InterpreterCompiler::new();
         let storage_builder: StorageBuilder = StorageBuilder::new();
         let mut compiler_options = StorageBuilderOption { max_stack: 0 };
 
@@ -910,21 +922,21 @@ mod tests {
 
     #[test]
     fn test_8() -> Result<(), KaramelErrorType> {
-        let compiler = InterpreterCompiler {};
+        let compiler = InterpreterCompiler::new();
         KaramelCompilerContext::new();
         compiler.check_prohibited_names("test".to_string())
     }
 
     #[test]
     fn test_9() -> Result<(), KaramelErrorType> {
-        let compiler = InterpreterCompiler {};
+        let compiler = InterpreterCompiler::new();
         KaramelCompilerContext::new();
         compiler.check_prohibited_names("abc".to_string())
     }
 
     #[test]
     fn test_10() -> Result<(), KaramelErrorType> {
-        let compiler = InterpreterCompiler {};
+        let compiler = InterpreterCompiler::new();
         KaramelCompilerContext::new();
         match compiler.check_prohibited_names("sayı".to_string()) {
             Ok(_) => Err(KaramelErrorType::GeneralError("sayı tipi kullanılamaz".to_string())),
@@ -934,7 +946,7 @@ mod tests {
 
     #[test]
     fn test_11() -> Result<(), KaramelErrorType> {
-        let compiler = InterpreterCompiler {};
+        let compiler = InterpreterCompiler::new();
         KaramelCompilerContext::new();
         match compiler.check_prohibited_names("döndür".to_string()) {
             Ok(_) => Err(KaramelErrorType::GeneralError("sayı tipi kullanılamaz".to_string())),

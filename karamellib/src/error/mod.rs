@@ -6,8 +6,7 @@ use strum_macros::EnumIter;
 use strum_macros::EnumMessage;
 use strum_macros::EnumDiscriminants;
 use thiserror::Error;
-
-use crate::compiler::KaramelPrimative;
+use crate::types::VmObject;
 
 
 pub enum KaramelErrorSeverity {
@@ -201,8 +200,8 @@ pub enum KaramelErrorType {
     #[error("Doğrulama başarısız (Sol: {left:?}, sağ: {right:?})")]
     #[strum(message = "141")]
     AssertFailedWithArgument {
-        left: Rc<KaramelPrimative>,
-        right: Rc<KaramelPrimative>
+        left: VmObject,
+        right: VmObject
     },
 
     #[error("Tekli ifade geçerli değil")]
@@ -234,15 +233,15 @@ pub enum KaramelErrorType {
 
     #[error("'{0:?}' fonksiyon olarak çağrılabilir değil")]
     #[strum(message = "148")]
-    NotCallable(Rc<KaramelPrimative>),
+    NotCallable(VmObject),
 
     #[error("'{0:?}' geçerli bir sıralayıcı değil, sayı olması gerekiyor")]
     #[strum(message = "149")]
-    IndexerMustBeNumber(Rc<KaramelPrimative>),
+    IndexerMustBeNumber(VmObject),
 
     #[error("'{0:?}' geçerli bir sıralayıcı değil, yazı olması gerekiyor")]
     #[strum(message = "150")]
-    IndexerMustBeString(Rc<KaramelPrimative>),
+    IndexerMustBeString(VmObject),
 
     #[error("Döngü ile sadece atama öperatörü kullanılabilir")]
     #[strum(message = "151")]

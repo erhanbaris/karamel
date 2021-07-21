@@ -10,12 +10,12 @@ use crate::compiler::GetType;
 use std::rc::Rc;
 
 #[derive(Default)]
-pub struct ProxyClass {
-    config: ClassConfig
+pub struct ProxyClass<'a> {
+    config: ClassConfig<'a>
 }
 
-impl Class for ProxyClass {
-    fn set_class_config(&mut self, _: ClassConfig) {}
+impl<'a> Class<'a> for ProxyClass<'a> {
+    fn set_class_config(&mut self, _: ClassConfig<'a>) {}
 
     fn get_class_name(&self) -> String {
         "".to_string()
@@ -31,11 +31,11 @@ impl Class for ProxyClass {
         }
     }
 
-    fn properties(&self) -> std::collections::hash_map::Iter<'_, String, ClassProperty> {
+    fn properties(&self) -> std::collections::hash_map::Iter<'_, String, ClassProperty<'a>> {
         self.config.properties.iter()
     }
 
-fn get_element(&self, source: Option<VmObject>, field: Rc<String>) -> Option<ClassProperty> {
+    fn get_element(&self, source: Option<VmObject>, field: Rc<String>) -> Option<ClassProperty<'a>> {
         match source {
             Some(source_object) => match &*source_object.deref() {
                 KaramelPrimative::Class(class) => class.get_element(source, field),
@@ -51,7 +51,7 @@ fn get_element(&self, source: Option<VmObject>, field: Rc<String>) -> Option<Cla
 
     fn add_method(&mut self, _: &str, _: NativeCall, _: FunctionFlag) {}
 
-    fn add_property(&mut self, _: &str, _: Rc<KaramelPrimative>) {}
+    fn add_property(&mut self, _: &str, _: Rc<KaramelPrimative<'a>>) {}
 
     fn set_getter(&mut self, _: IndexerGetCall) {}
 
@@ -66,17 +66,18 @@ fn get_element(&self, source: Option<VmObject>, field: Rc<String>) -> Option<Cla
     }
 }
 
-pub fn get_primative_class() -> Rc<dyn Class> {
-    Rc::new(ProxyClass { 
-        config: ClassConfig::default()
-    })
+pub fn get_primative_class<'a>() -> Rc<dyn Class<'a> + 'a> {
+    let class_data = ProxyClass { 
+        config: ClassConfig::empty()
+    };
+    Rc::new(class_data)
 }
 
-impl ProxyClass {
+impl<'a> ProxyClass<'a> {
     pub fn set_name(&mut self, _: &str) {}
 }
 
-impl GetType for ProxyClass {
+impl<'a> GetType<'a> for ProxyClass<'a> {
     fn get_type(&self) -> String {
         "".to_string()
     }

@@ -10,8 +10,8 @@ use crate::syntax::control::OrParser;
 
 pub struct IfConditiontParser;
 
-impl SyntaxParserTrait for IfConditiontParser {
-    fn parse(parser: &SyntaxParser) -> AstResult {
+impl<'a> SyntaxParserTrait<'a> for IfConditiontParser {
+    fn parse(parser: &SyntaxParser<'a>) -> AstResult<'a> {
         let index_backup = parser.get_index();
         parser.indentation_check()?;
 

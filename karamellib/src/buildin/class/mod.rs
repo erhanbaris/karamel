@@ -17,7 +17,7 @@ lazy_static! {
     pub static ref PRIMATIVE_CLASS_NAMES: Mutex<HashSet<String>> = Mutex::new(HashSet::new());
 }
 
-pub fn get_empty_class() -> Rc<dyn Class> {
+pub fn get_empty_class<'a>() -> Rc<dyn Class<'a> + 'a> {
     let mut opcode = BasicInnerClass::default();
     opcode.set_name("__NO__CLASS__");
     Rc::new(opcode)

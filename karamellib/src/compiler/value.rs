@@ -17,28 +17,28 @@ pub static EMPTY_PRIMATIVE: KaramelPrimative = KaramelPrimative::Empty;
 
 #[repr(C)]
 #[derive(Clone)]
-pub enum KaramelPrimative {
+pub enum KaramelPrimative<'a> {
     Empty,
     Number(f64),
     Bool(bool),
     List(RefCell<Vec<VmObject>>),
     Dict(RefCell<HashMap<String, VmObject>>),
     Text(Rc<String>),
-    Function(Rc<FunctionReference>, Option<VmObject>),
-    Class(Rc<dyn Class>)
+    Function(Rc<FunctionReference<'a>>, Option<VmObject>),
+    Class(Rc<dyn Class<'a> + 'a>)
 }
 
-unsafe impl Send for KaramelPrimative {}
-unsafe impl Sync for KaramelPrimative {}
+unsafe impl<'a> Send for KaramelPrimative<'a> {}
+unsafe impl<'a> Sync for KaramelPrimative<'a> {}
 
 unsafe impl Send for VmObject {}
 unsafe impl Sync for VmObject {}
 
-impl Default for KaramelPrimative {
+impl<'a> Default for KaramelPrimative<'a> {
     fn default() -> Self { KaramelPrimative::Empty }
 }
 
-impl KaramelPrimative {
+impl<'a> KaramelPrimative<'a> {
 
     pub fn format(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -97,7 +97,7 @@ impl KaramelPrimative {
     }
 }
 
-impl GetType for KaramelPrimative {
+impl<'a> GetType<'a> for KaramelPrimative<'a> {
     fn get_type(&self) -> String {
         match self {
             KaramelPrimative::Text(_)     => "yazı".to_string(),
@@ -157,8 +157,8 @@ impl From<Vec<VmObject>> for VmObject {
     }
 }
 
-impl From<Rc<KaramelPrimative>> for VmObject {
-    fn from(source: Rc<KaramelPrimative>) -> Self {
+impl<'a> From<Rc<KaramelPrimative<'a>>> for VmObject {
+    fn from(source: Rc<KaramelPrimative<'a>>) -> Self {
         VmObject::convert(source)
     }
 }
@@ -169,13 +169,13 @@ impl From<HashMap<String, VmObject>> for VmObject {
     }
 }
 
-impl fmt::Debug for KaramelPrimative {
+impl<'a> fmt::Debug for KaramelPrimative<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.format(f)
     }
 }
 
-impl fmt::Display for KaramelPrimative {
+impl<'a> fmt::Display for KaramelPrimative<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.format(f)
     }
@@ -193,13 +193,13 @@ impl fmt::Display for VmObject {
     }
 }
 
-impl Drop for KaramelPrimative {
+impl<'a> Drop for KaramelPrimative<'a> {
     fn drop(&mut self) {
         //println!("> {:?}", self);
     }
 }
 
-impl PartialEq for KaramelPrimative {
+impl<'a> PartialEq for KaramelPrimative<'a> {
     fn eq(&self, other: &Self) -> bool {
         match (self, &other) {
             (KaramelPrimative::Bool(lvalue),            KaramelPrimative::Bool(rvalue)) => lvalue == rvalue,
@@ -255,7 +255,7 @@ impl PartialEq for KaramelPrimative {
 }
 
 impl VmObject {
-    pub fn convert(primative: Rc<KaramelPrimative>) -> VmObject {
+    pub fn convert<'a>(primative: Rc<KaramelPrimative<'a>>) -> VmObject {
         match *primative {
             KaramelPrimative::Empty            => VmObject(QNAN | EMPTY_FLAG),
             KaramelPrimative::Number(number)   => VmObject(number.to_bits()),
@@ -267,7 +267,7 @@ impl VmObject {
         }
     }
 
-    pub fn native_convert(primative: KaramelPrimative) -> VmObject {
+    pub fn native_convert<'a>(primative: KaramelPrimative<'a>) -> VmObject {
         match primative {
             KaramelPrimative::Empty            => VmObject(QNAN | EMPTY_FLAG),
             KaramelPrimative::Number(number)   => VmObject(number.to_bits()),
@@ -279,7 +279,7 @@ impl VmObject {
         }
     }
 
-    pub fn native_convert_by_ref(primative: Rc<KaramelPrimative>) -> VmObject {
+    pub fn native_convert_by_ref<'a>(primative: Rc<KaramelPrimative<'a>>) -> VmObject {
         match &*primative {
             KaramelPrimative::Empty            => VmObject(QNAN | EMPTY_FLAG),
             KaramelPrimative::Number(number)   => VmObject(number.to_bits()),
@@ -291,7 +291,7 @@ impl VmObject {
         }
     }
 
-    pub fn deref(&self) -> Rc<KaramelPrimative> {
+    pub fn deref<'a>(&self) -> Rc<KaramelPrimative<'a>> {
         match self.0 {
             n if (n & QNAN) != QNAN       => Rc::new(KaramelPrimative::Number(f64::from_bits(n))),
             e if e == (QNAN | EMPTY_FLAG) => Rc::new(KaramelPrimative::Empty),
@@ -306,7 +306,7 @@ impl VmObject {
         }
     }
 
-    pub fn deref_clean(&self) -> KaramelPrimative {
+    pub fn deref_clean<'a>(&self) -> KaramelPrimative<'a> {
         match self.0 {
             n if (n & QNAN) != QNAN       => KaramelPrimative::Number(f64::from_bits(n)),
             e if e == (QNAN | EMPTY_FLAG) => KaramelPrimative::Empty,

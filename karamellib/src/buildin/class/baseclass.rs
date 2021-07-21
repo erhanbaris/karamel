@@ -6,12 +6,18 @@ use crate::compiler::GetType;
 use crate::buildin::ClassConfig;
 
 #[derive(Default)]
-pub struct BasicInnerClass {
-    config: ClassConfig
+pub struct BasicInnerClass<'a> {
+    config: ClassConfig<'a>
  }
 
- impl Class for BasicInnerClass {
-    fn set_class_config(&mut self, config: ClassConfig) {
+ impl<'a> GetType<'a> for BasicInnerClass<'a> {
+     fn get_type(&self) -> String {
+         self.config.name.clone()
+     }
+ }
+
+ impl<'a> Class<'a> for BasicInnerClass<'a> {
+    fn set_class_config(&mut self, config: ClassConfig<'a>) {
         self.config = config;
     }
 
@@ -23,11 +29,11 @@ pub struct BasicInnerClass {
         self.config.properties.get(&*field).is_some()
     }
     
-    fn properties(&self) -> std::collections::hash_map::Iter<'_, String, ClassProperty> {
+    fn properties(&self) -> std::collections::hash_map::Iter<'_, String, ClassProperty<'a>> {
         self.config.properties.iter()
     }
 
-    fn get_element(&self, _: Option<VmObject>, field: Rc<String>) -> Option<ClassProperty> {
+    fn get_element(&self, _: Option<VmObject>, field: Rc<String>) -> Option<ClassProperty<'a>> {
         match self.config.properties.get(&*field) {
             Some(data) => Some((*data).clone()),
             None => None
@@ -42,7 +48,7 @@ pub struct BasicInnerClass {
         self.config.properties.insert(name.to_string(), ClassProperty::Function(FunctionReference::buildin_function(function, name.to_string(), flags)));
     }
 
-    fn add_property(&mut self, name: &str, property: Rc<KaramelPrimative>) {
+    fn add_property(&mut self, name: &str, property: Rc<KaramelPrimative<'a>>) {
         self.config.properties.insert(name.to_string(), ClassProperty::Field(property));
     }
 
@@ -69,7 +75,7 @@ pub struct BasicInnerClass {
     }
  }
 
-impl BasicInnerClass {
+impl<'a> BasicInnerClass<'a> {
     pub fn set_name(&mut self, name: &str) {
         if self.config.name.len() == 0 {
             self.config.name = name.to_string();
@@ -82,12 +88,6 @@ impl BasicInnerClass {
 
     pub fn add_class_method(&mut self, name: &str, function: NativeCall) {
         self.add_method(name, function, FunctionFlag::IN_CLASS);
-    }
-}
-
-impl GetType for BasicInnerClass {
-    fn get_type(&self) -> String {
-        self.config.name.clone()
     }
 }
 

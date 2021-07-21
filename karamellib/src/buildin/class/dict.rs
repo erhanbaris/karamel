@@ -12,17 +12,17 @@ use crate::{n_parameter_expected, expected_parameter_type, arc_bool, primative_l
 use crate::buildin::class::PRIMATIVE_CLASS_NAMES;
 
 #[derive(Default)]
-pub struct DictClass {
-    base: BasicInnerClass
+pub struct DictClass<'a> {
+    base: BasicInnerClass<'a>
  }
 
- impl GetType for DictClass {
+ impl<'a> GetType<'a> for DictClass<'a> {
     fn get_type(&self) -> String {
         "sözlük".to_string()
     }
 }
 
-impl DictClass {
+impl<'a> DictClass<'a> {
     pub fn new() -> Self {
         let mut dict = DictClass::default();
         dict.add_class_method("getir", get);
@@ -42,8 +42,8 @@ impl DictClass {
     }
 }
 
- impl Class for DictClass {
-    fn set_class_config(&mut self, config: ClassConfig) {
+ impl<'a> Class<'a> for DictClass<'a> {
+    fn set_class_config(&mut self, config: ClassConfig<'a>) {
         self.base.set_class_config(config);
     }
 
@@ -55,11 +55,11 @@ impl DictClass {
         self.base.has_element(source, field)
     }
     
-    fn properties(&self) -> std::collections::hash_map::Iter<'_, String, ClassProperty> {
+    fn properties(&self) -> std::collections::hash_map::Iter<'_, String, ClassProperty<'a>> {
         self.base.properties()
     }
 
-    fn get_element(&self, source: Option<VmObject>, field: Rc<String>) -> Option<ClassProperty> {
+    fn get_element(&self, source: Option<VmObject>, field: Rc<String>) -> Option<ClassProperty<'a>> {
         match self.base.get_element(source, field.clone()) {
             Some(property) => Some(property),
             None => match source {
@@ -85,7 +85,7 @@ impl DictClass {
         self.base.add_method(name, function, flags);
     }
 
-    fn add_property(&mut self, name: &str, property: Rc<KaramelPrimative>) {
+    fn add_property(&mut self, name: &str, property: Rc<KaramelPrimative<'a>>) {
         self.base.add_property(name, property);
     }
 
@@ -107,7 +107,7 @@ impl DictClass {
  }
 
 
-pub fn get_primative_class() -> Rc<dyn Class> {
+pub fn get_primative_class<'a>() -> Rc<dyn Class<'a> + 'a> {
     Rc::new(DictClass::new())
 }
 
@@ -226,7 +226,7 @@ fn contains(parameter: FunctionParameter) -> NativeCallResult {
     Ok(EMPTY_OBJECT)
 }
 
-impl DictClass {
+impl<'a> DictClass<'a> {
     pub fn add_static_method(&mut self, name: &str, function: NativeCall) {
         self.base.add_method(name, function, FunctionFlag::IN_CLASS & FunctionFlag::STATIC);
     }

@@ -7,7 +7,7 @@ use crate::buildin::class::PRIMATIVE_CLASS_NAMES;
 
 use std::{mem, rc::Rc};
 
-pub fn get_primative_class() -> Rc<dyn Class> {
+pub fn get_primative_class<'a>() -> Rc<dyn Class<'a> + 'a> {
     let mut opcode = BasicInnerClass::default();
     opcode.set_name("sayı");
     

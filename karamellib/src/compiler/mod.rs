@@ -19,7 +19,7 @@ use std::vec::Vec;
 use std::mem;
 use std::fmt;
 
-pub trait GetType {
+pub trait GetType<'a> {
     fn get_type(&self) -> String;
 }
 

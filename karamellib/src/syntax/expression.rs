@@ -14,8 +14,8 @@ use super::util::{mut_with_flag, with_flag};
 
 pub struct ExpressionParser;
 
-impl SyntaxParserTrait for ExpressionParser {
-    fn parse(parser: &SyntaxParser) -> AstResult {
+impl<'a> SyntaxParserTrait<'a> for ExpressionParser {
+    fn parse(parser: &SyntaxParser<'a>) -> AstResult<'a> {
         let mut ast = OrParser::parse(parser)?;
     
         loop {

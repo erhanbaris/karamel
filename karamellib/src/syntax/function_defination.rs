@@ -8,8 +8,8 @@ use std::rc::Rc;
 
 pub struct FunctionDefinationParser;
 
-impl SyntaxParserTrait for FunctionDefinationParser {
-    fn parse(parser: &SyntaxParser) -> AstResult {
+impl<'a> SyntaxParserTrait<'a> for FunctionDefinationParser {
+    fn parse(parser: &SyntaxParser<'a>) -> AstResult<'a> {
         let index_backup = parser.get_index();
         parser.indentation_check()?;
 

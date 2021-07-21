@@ -12,8 +12,8 @@ use crate::error::KaramelErrorType;
 
 pub struct FuncCallParser;
 
-impl SyntaxParserTrait for FuncCallParser {
-    fn parse(parser: &SyntaxParser) -> AstResult {
+impl<'a> SyntaxParserTrait<'a> for FuncCallParser {
+    fn parse(parser: &SyntaxParser<'a>) -> AstResult<'a> {
         if parser.flags.get().contains(SyntaxFlag::IN_DICT_INDEXER) {
             return Ok(KaramelAstType::None);
         }
@@ -42,8 +42,8 @@ impl SyntaxParserTrait for FuncCallParser {
     }
 }
 
-impl ExtensionSyntaxParser for FuncCallParser {
-    fn parsable(parser: &SyntaxParser) -> bool {
+impl<'a> ExtensionSyntaxParser<'a> for FuncCallParser {
+    fn parsable(parser: &SyntaxParser<'a>) -> bool {
         if parser.flags.get().contains(SyntaxFlag::IN_DICT_INDEXER) {
             return false;
         }
@@ -51,7 +51,7 @@ impl ExtensionSyntaxParser for FuncCallParser {
         parser.check_operator(&KaramelOperatorType::LeftParentheses)
     }
 
-    fn parse_suffix(ast: &mut KaramelAstType, parser: &SyntaxParser) -> AstResult {
+    fn parse_suffix(ast: &mut KaramelAstType<'a>, parser: &SyntaxParser<'a>) -> AstResult<'a> {
 
         let index_backup = parser.get_index();
         let parser_flags  = parser.flags.get();

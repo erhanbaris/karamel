@@ -31,7 +31,7 @@ pub struct CallGenerator {
 }
 
 /// Generate function call opcodes based on givin parameters
-impl OpcodeGeneratorTrait for CallGenerator {
+impl<'a> OpcodeGeneratorTrait<'a> for CallGenerator {
     fn generate(&self, opcodes: &mut Vec<u8>) {
         match self.call_type {
             CallType::Call { location } => {
@@ -44,7 +44,7 @@ impl OpcodeGeneratorTrait for CallGenerator {
         opcodes.push(self.assign_to_temp.into());
     }
 
-    fn dump<'a>(&self, builder: &'a DumpBuilder, index: Rc<AtomicUsize>, _: &Vec<u8>) {
+    fn dump(&self, builder: &'a DumpBuilder, index: Rc<AtomicUsize>, _: &Vec<u8>) {
         let opcode_index = index.fetch_add(3, Ordering::SeqCst);
 
         match self.call_type {

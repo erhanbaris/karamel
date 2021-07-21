@@ -8,12 +8,12 @@ use crate::{n_parameter_expected, expected_parameter_type};
 use std::{cell::RefCell, collections::HashMap};
 use std::rc::Rc;
 
-pub struct NumModule {
-    methods: RefCell<HashMap<String, Rc<FunctionReference>>>,
+pub struct NumModule<'a> {
+    methods: RefCell<HashMap<String, Rc<FunctionReference<'a>>>>,
     path: Vec<String>
 }
 
-impl Module for NumModule {
+impl<'a> Module<'a> for NumModule<'a> {
     fn get_module_name(&self) -> String {
         "sayı".to_string()
     }
@@ -22,34 +22,34 @@ impl Module for NumModule {
         &self.path
     }
 
-    fn get_method(&self, name: &str) -> Option<Rc<FunctionReference>> {
+    fn get_method(&self, name: &str) -> Option<Rc<FunctionReference<'a>>> {
         match self.methods.borrow().get(name) {
             Some(method) => Some(method.clone()),
             None => None
         }
     }
 
-    fn get_module(&self, _: &str) -> Option<Rc<dyn Module>> {
+    fn get_module(&self, _: &str) -> Option<Rc<dyn Module<'a> + 'a>> {
         None
     }
 
-    fn get_methods(&self) -> Vec<Rc<FunctionReference>> {
+    fn get_methods(&self) -> Vec<Rc<FunctionReference<'a>>> {
         let mut response = Vec::new();
         self.methods.borrow().iter().for_each(|(_, reference)| response.push(reference.clone()));
         response
     }
 
-    fn get_modules(&self) -> HashMap<String, Rc<dyn Module>> {
+    fn get_modules(&self) -> HashMap<String, Rc<dyn Module<'a> + 'a>> {
         HashMap::new()
     }
     
-    fn get_classes(&self) -> Vec<Rc<dyn Class>> {
+    fn get_classes(&self) -> Vec<Rc<dyn Class<'a> + 'a>> {
         Vec::new()
     }
 }
 
-impl NumModule {
-    pub fn new() -> Rc<NumModule> {
+impl<'a> NumModule<'a> {
+    pub fn new() -> Rc<NumModule<'a>> {
         let module = NumModule {
             methods: RefCell::new(HashMap::new()),
             path: vec!["sayı".to_string()]

@@ -14,31 +14,31 @@ pub struct AndParser;
 pub struct EqualityParser;
 pub struct ControlParser;
 
-impl SyntaxParserTrait for OrParser {
-    fn parse(parser: &SyntaxParser) -> AstResult {
+impl<'a> SyntaxParserTrait<'a> for OrParser {
+    fn parse(parser: &SyntaxParser<'a>) -> AstResult<'a> {
         parse_control::<AndParser>(parser, &[KaramelOperatorType::Or])
     }
 }
 
-impl SyntaxParserTrait for AndParser {
-    fn parse(parser: &SyntaxParser) -> AstResult {
+impl<'a> SyntaxParserTrait<'a> for AndParser {
+    fn parse(parser: &SyntaxParser<'a>) -> AstResult<'a> {
         parse_control::<EqualityParser>(parser, &[KaramelOperatorType::And])
     }
 }
 
-impl SyntaxParserTrait for EqualityParser {
-    fn parse(parser: &SyntaxParser) -> AstResult {
+impl<'a> SyntaxParserTrait<'a> for EqualityParser {
+    fn parse(parser: &SyntaxParser<'a>) -> AstResult<'a> {
         parse_control::<ControlParser>(parser, &[KaramelOperatorType::Equal, KaramelOperatorType::NotEqual])
     }
 }
 
-impl SyntaxParserTrait for ControlParser {
-    fn parse(parser: &SyntaxParser) -> AstResult {
+impl<'a> SyntaxParserTrait<'a> for ControlParser {
+    fn parse(parser: &SyntaxParser<'a>) -> AstResult<'a> {
         special_control(parser)
     }
 }
 
-pub fn special_control(parser: &SyntaxParser) -> AstResult {
+pub fn special_control<'a>(parser: &SyntaxParser<'a>) -> AstResult<'a> {
     let mut functions_updated_for_temp = false;
     let mut left_expr = AddSubtractParser::parse(parser)?;
     let operators = [KaramelOperatorType::GreaterEqualThan, 
@@ -94,7 +94,7 @@ pub fn special_control(parser: &SyntaxParser) -> AstResult {
     Ok(left_expr)
 }
 
-pub fn parse_control<T: SyntaxParserTrait>(parser: &SyntaxParser, operators: &[KaramelOperatorType]) -> AstResult {
+pub fn parse_control<'a, T: SyntaxParserTrait<'a>>(parser: &SyntaxParser<'a>, operators: &[KaramelOperatorType]) -> AstResult<'a> {
     let mut functions_updated_for_temp = false;
     let mut left_expr = T::parse(parser)?;
     match left_expr {

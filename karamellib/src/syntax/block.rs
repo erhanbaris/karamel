@@ -13,22 +13,22 @@ struct BlockParser;
 pub struct SingleLineBlockParser;
 pub struct MultiLineBlockParser;
 
-impl SyntaxParserTrait for SingleLineBlockParser {
-    fn parse(parser: &SyntaxParser) -> AstResult {
+impl<'a> SyntaxParserTrait<'a> for SingleLineBlockParser {
+    fn parse(parser: &SyntaxParser<'a>) -> AstResult<'a> {
         BlockParser::parse(parser, false)
     }
 }
 
 
-impl SyntaxParserTrait for MultiLineBlockParser {
-    fn parse(parser: &SyntaxParser) -> AstResult {
+impl<'a> SyntaxParserTrait<'a> for MultiLineBlockParser {
+    fn parse(parser: &SyntaxParser<'a>) -> AstResult<'a> {
         BlockParser::parse(parser, true)
     }
 }
 
 
 impl BlockParser {
-    fn parse(parser: &SyntaxParser, multiline: bool) -> AstResult {
+    fn parse<'a>(parser: &SyntaxParser<'a>, multiline: bool) -> AstResult<'a> {
         let mut block_asts: Vec<Rc<KaramelAstType>> = Vec::new();
         let current_indentation = parser.get_indentation();
 

@@ -86,12 +86,12 @@ impl OpcodeLocation {
 
 #[derive(Clone)]
 pub struct CurrentLocationUpdateGenerator { pub location:  Rc<OpcodeLocation> }
-impl OpcodeGeneratorTrait for CurrentLocationUpdateGenerator {
+impl<'a> OpcodeGeneratorTrait<'a> for CurrentLocationUpdateGenerator {
     fn generate(&self, opcodes: &mut Vec<u8>) {
         self.location.set(opcodes.len(), opcodes);
     }
 
-    fn dump<'a>(&self, _: &'a DumpBuilder, _: Rc<AtomicUsize>, _: &Vec<u8>) {
+    fn dump(&self, _: &'a DumpBuilder, _: Rc<AtomicUsize>, _: &Vec<u8>) {
         // Dynamically location calculator
     }
 }
@@ -102,12 +102,12 @@ pub struct DynamicLocationUpdateGenerator {
     pub source:  Rc<OpcodeLocation>
 }
 
-impl OpcodeGeneratorTrait for DynamicLocationUpdateGenerator {
+impl<'a> OpcodeGeneratorTrait<'a> for DynamicLocationUpdateGenerator {
     fn generate(&self, opcodes: &mut Vec<u8>) {
         self.target.set(self.source.get(), opcodes);
     }
 
-    fn dump<'a>(&self, _: &'a DumpBuilder, _: Rc<AtomicUsize>, _: &Vec<u8>) {
+    fn dump(&self, _: &'a DumpBuilder, _: Rc<AtomicUsize>, _: &Vec<u8>) {
         // Dynamically location calculator
     }
 }
@@ -119,7 +119,7 @@ pub struct SubtractionGenerator {
     pub right_hand:  Rc<OpcodeLocation>
 }
 
-impl OpcodeGeneratorTrait for SubtractionGenerator {
+impl<'a> OpcodeGeneratorTrait<'a> for SubtractionGenerator {
     fn generate(&self, opcodes: &mut Vec<u8>) {
         let left = self.left_hand.get();
         let right = self.right_hand.get();
@@ -127,7 +127,7 @@ impl OpcodeGeneratorTrait for SubtractionGenerator {
         self.target.set(left - right, opcodes);
     }
 
-    fn dump<'a>(&self, _: &'a DumpBuilder, _: Rc<AtomicUsize>, _: &Vec<u8>) {
+    fn dump(&self, _: &'a DumpBuilder, _: Rc<AtomicUsize>, _: &Vec<u8>) {
         // Dynamically location calculator
     }
 }

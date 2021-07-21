@@ -1,6 +1,7 @@
 use crate::buildin::Module;
 use crate::types::*;
 use crate::compiler::*;
+use std::marker::PhantomData;
 use std::rc::Rc;
 
 #[cfg(not(feature = "unittest"))]
@@ -21,7 +22,7 @@ unsafe fn from_buf_raw<T>(ptr: *const T, elts: usize) -> Vec<T> {
     dst
 }
 
-pub struct StaticStorage {
+pub struct StaticStorage<'a> {
     pub index                 : usize,
     pub constants             : Vec<VmObject>,
     pub constant_size         : u8,
@@ -31,7 +32,8 @@ pub struct StaticStorage {
     pub memory                : Vec<VmObject>,
     pub stack                 : Vec<VmObject>,
     pub total_const_variables : u8,
-    pub parent_location       : Option<usize>
+    pub parent_location       : Option<usize>,
+    _marker                   : PhantomData<&'a bool>
 }
 
 /*
@@ -44,8 +46,8 @@ pub struct StaticStorage {
   TEMP VALUES
 -------------------------
 */
-impl StaticStorage {
-    pub fn new(index: usize) -> StaticStorage {
+impl<'a> StaticStorage<'a> {
+    pub fn new(index: usize) -> Self {
         StaticStorage {
             index: index,
             constants: Vec::new(),
@@ -56,7 +58,8 @@ impl StaticStorage {
             memory: Vec::new(),
             stack: Vec::new(),
             variables: Vec::new(),
-            parent_location: None
+            parent_location: None,
+            _marker: PhantomData
         }
     }
 
@@ -119,14 +122,14 @@ impl StaticStorage {
 
     /// add variable and constant data same time. Assign constant location to variable reference.
     /// If variable or constant data already assigned before, it will try to update variable value with constant.
-    pub fn add_static_data(&mut self, name: &str, value: Rc<KaramelPrimative>) {
+    pub fn add_static_data(&mut self, name: &str, value: Rc<KaramelPrimative<'a>>) {
         let variable_location = self.add_variable(name);
         let constant_location = self.add_constant(value.clone());
         
         self.variables[variable_location as usize].1 = constant_location as u8;
     }
 
-    pub fn add_constant(&mut self, value: Rc<KaramelPrimative>) -> usize {
+    pub fn add_constant(&mut self, value: Rc<KaramelPrimative<'a>>) -> usize {
         let constant_position = self.constants.iter().position(|x| {
             *x.deref() == *value
         });
@@ -160,21 +163,21 @@ impl StaticStorage {
     }
 
     #[allow(dead_code)]
-    pub fn get_variable_value(&self, name: &str) -> Option<Rc<KaramelPrimative>> {
+    pub fn get_variable_value(&self, name: &str) -> Option<Rc<KaramelPrimative<'a>>> {
         match self.get_variable_location(name) {
             Some(loc) => Some(self.memory[loc as usize].deref()),
             _ => None
         }
     }
 
-    pub fn get_constant_location(&self, value: Rc<KaramelPrimative>) -> Option<u8> {
+    pub fn get_constant_location(&self, value: Rc<KaramelPrimative<'a>>) -> Option<u8> {
         return match self.memory.iter().position(|x| { *x.deref() == *value }) {
             Some(number) => Some(number as u8),
             _ => None
         };
     }
 
-    pub fn get_function_constant(&self, name: String, module: Rc<dyn Module>) -> Option<u8> {
+    pub fn get_function_constant(&self, name: String, module: Rc<dyn Module<'a> + 'a>) -> Option<u8> {
         
         for (index, item) in self.memory.iter().enumerate() {
             if let KaramelPrimative::Function(reference, _) = &*item.deref() {
@@ -188,7 +191,7 @@ impl StaticStorage {
         None
     }
 
-    pub fn get_class_constant(&self, name: String, _module_path: Rc<dyn Module>) -> Option<u8> {
+    pub fn get_class_constant(&self, name: String, _module_path: Rc<dyn Module<'a> + 'a>) -> Option<u8> {
         
         for (index, item) in self.memory.iter().enumerate() {
             if let KaramelPrimative::Class(reference) = &*item.deref() {

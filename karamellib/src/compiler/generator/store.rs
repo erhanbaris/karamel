@@ -21,7 +21,7 @@ pub struct StoreGenerator {
     pub store_type: StoreType 
 }
 
-impl OpcodeGeneratorTrait for StoreGenerator {
+impl<'a> OpcodeGeneratorTrait<'a> for StoreGenerator {
     fn generate(&self, opcodes: &mut Vec<u8>) {
         match self.store_type {
             StoreType::Store(destination) => {
@@ -40,7 +40,7 @@ impl OpcodeGeneratorTrait for StoreGenerator {
         };
     }
 
-    fn dump<'a>(&self, builder: &'a DumpBuilder, index: Rc<AtomicUsize>, _: &Vec<u8>) {
+    fn dump(&self, builder: &'a DumpBuilder, index: Rc<AtomicUsize>, _: &Vec<u8>) {
         let opcode_index = index.fetch_add(2, Ordering::SeqCst);
         
         match self.store_type {

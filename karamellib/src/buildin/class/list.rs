@@ -9,7 +9,7 @@ use crate::types::VmObject;
 use crate::{n_parameter_expected, expected_parameter_type, arc_bool, arc_empty};
 use crate::buildin::class::PRIMATIVE_CLASS_NAMES;
 
-pub fn get_primative_class() -> Rc<dyn Class> {
+pub fn get_primative_class<'a>() -> Rc<dyn Class<'a> + 'a> {
     let mut opcode = BasicInnerClass::default();
     opcode.set_name("liste");
     

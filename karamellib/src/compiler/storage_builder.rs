@@ -1,3 +1,4 @@
+use std::marker::PhantomData;
 use std::rc::Rc;
 use std::cmp::max;
 
@@ -9,25 +10,28 @@ use crate::types::KaramelOperatorType;
 use crate::syntax::loops::LoopType;
 
 use super::module::OpcodeModule;
-pub struct StorageBuilder;
+pub struct StorageBuilder<'a> {
+    _marker: PhantomData<&'a bool>
+}
 pub struct StorageBuilderOption {
     pub max_stack: u8
 }
 
-impl StorageBuilder {
-    pub fn new() -> StorageBuilder {
+impl<'a> StorageBuilder<'a> {
+    pub fn new() -> Self {
         StorageBuilder {
+            _marker: PhantomData
         }
     }
 
-    pub fn prepare(&self, module: Rc<OpcodeModule>, ast: &KaramelAstType, storage_index: usize, options: &mut KaramelCompilerContext, compiler_options: &mut StorageBuilderOption) -> Result<(), KaramelErrorType> {
+    pub fn prepare(&self, module: Rc<OpcodeModule<'a>>, ast: &KaramelAstType<'a>, storage_index: usize, options: &mut KaramelCompilerContext<'a>, compiler_options: &mut StorageBuilderOption) -> Result<(), KaramelErrorType> {
         self.get_temp_count_from_ast(module.clone(),ast, &KaramelAstType::None, options, storage_index, compiler_options)?;
         options.storages[storage_index].set_temp_size(compiler_options.max_stack);
         options.storages[storage_index].build();
         Ok(())
     }
 
-    fn get_temp_count_from_ast(&self, module: Rc<OpcodeModule>, ast: &KaramelAstType, _: &KaramelAstType, options: &mut KaramelCompilerContext, storage_index: usize, compiler_option: &mut StorageBuilderOption) -> Result<u8, KaramelErrorType> {
+    fn get_temp_count_from_ast(&self, module: Rc<OpcodeModule<'a>>, ast: &KaramelAstType<'a>, _: &KaramelAstType<'a>, options: &mut KaramelCompilerContext<'a>, storage_index: usize, compiler_option: &mut StorageBuilderOption) -> Result<u8, KaramelErrorType> {
         use crate::buildin::Module;
         
         let temp_count = match ast {

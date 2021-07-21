@@ -10,7 +10,7 @@ use crate::{compiler::ast::KaramelAstType, error::KaramelError};
 use crate::error::KaramelErrorType;
 
 pub type ParseResult        = Result<(), KaramelError>;
-pub type AstResult          = Result<KaramelAstType, KaramelErrorType>;
+pub type AstResult<'a>      = Result<KaramelAstType<'a>, KaramelErrorType>;
 pub type CompilerResult     = Result<(), KaramelErrorType>;
 
 pub const TAG_NULL        : u64 = 0;
@@ -25,6 +25,7 @@ pub const TRUE_FLAG:    u64 = QNAN | TAG_TRUE;
 pub const EMPTY_FLAG:   u64 = QNAN | TAG_NULL;
 
 #[derive(PartialEq, Hash, Clone, Copy)]
+#[derive(Default)]
 #[repr(transparent)]
 pub struct VmObject(pub u64);
 

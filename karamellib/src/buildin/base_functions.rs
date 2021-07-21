@@ -9,12 +9,12 @@ use std::rc::Rc;
 
 
 #[derive(Clone)]
-pub struct BaseFunctionsModule {
-    methods: RefCell<HashMap<String, Rc<FunctionReference>>>,
+pub struct BaseFunctionsModule<'a> {
+    methods: RefCell<HashMap<String, Rc<FunctionReference<'a>>>>,
     path: Vec<String>
 }
 
-impl Module for BaseFunctionsModule {
+impl<'a> Module<'a> for BaseFunctionsModule<'a> {
     fn get_module_name(&self) -> String {
         "baz".to_string()
     }
@@ -23,34 +23,34 @@ impl Module for BaseFunctionsModule {
         &self.path
     }
 
-    fn get_method(&self, name: &str) -> Option<Rc<FunctionReference>> {
+    fn get_method(&self, name: &str) -> Option<Rc<FunctionReference<'a>>> {
         match self.methods.borrow().get(name) {
             Some(method) => Some(method.clone()),
             None => None
         }
     }
 
-    fn get_module(&self, _: &str) -> Option<Rc<dyn Module>> {
+    fn get_module(&self, _: &str) -> Option<Rc<dyn Module<'a> + 'a>> {
         None
     }
 
-    fn get_methods(&self) -> Vec<Rc<FunctionReference>> {
+    fn get_methods(&self) -> Vec<Rc<FunctionReference<'a>>> {
         let mut response = Vec::new();
         self.methods.borrow().iter().for_each(|(_, reference)| response.push(reference.clone()));
         response
     }
 
-    fn get_modules(&self) -> HashMap<String, Rc<dyn Module>> {
+    fn get_modules(&self) -> HashMap<String, Rc<dyn Module<'a> + 'a>> {
         HashMap::new()
     }
 
-    fn get_classes(&self) -> Vec<Rc<dyn Class>> {
+    fn get_classes(&self) -> Vec<Rc<dyn Class<'a>>> {
         Vec::new()
     }
 }
 
-impl BaseFunctionsModule  {
-    pub fn new() -> Rc<BaseFunctionsModule> {
+impl<'a> BaseFunctionsModule<'a>  {
+    pub fn new() -> Rc<BaseFunctionsModule<'a>> {
         let module = BaseFunctionsModule {
             methods: RefCell::new(HashMap::new()),
             path: vec!["baz".to_string()]

@@ -19,18 +19,18 @@ use super::function::FunctionReference;
 
 use crate::error::*;
 
-pub struct OpcodeModule {
+pub struct OpcodeModule<'a> {
     pub name: String,
     pub storage_index: usize,
     pub file_path: String,
-    pub main_ast: Rc<KaramelAstType>,
-    pub functions: RefCell<HashMap<String, Rc<FunctionReference>>>,
-    pub modules: RefCell<HashMap<String, Rc<dyn Module>>>,
+    pub main_ast: Rc<KaramelAstType<'a>>,
+    pub functions: RefCell<HashMap<String, Rc<FunctionReference<'a>>>>,
+    pub modules: RefCell<HashMap<String, Rc<dyn Module<'a> + 'a>>>,
     pub path: Vec<String>
 }
 
-impl OpcodeModule {
-    pub fn new(name: String, file_path: String, main_ast: Rc<KaramelAstType>) -> OpcodeModule {
+impl<'a> OpcodeModule<'a> {
+    pub fn new(name: String, file_path: String, main_ast: Rc<KaramelAstType<'a>>) -> OpcodeModule<'a> {
         OpcodeModule {
             name, 
             file_path, 
@@ -43,7 +43,7 @@ impl OpcodeModule {
     }
 }
 
-impl Module for OpcodeModule {
+impl<'a> Module<'a> for OpcodeModule<'a> {
     fn get_module_name(&self) -> String {
         self.name.to_string()
     }
@@ -52,30 +52,30 @@ impl Module for OpcodeModule {
         &self.path
     }
 
-    fn get_method(&self, name: &str) -> Option<Rc<FunctionReference>> {
+    fn get_method(&self, name: &str) -> Option<Rc<FunctionReference<'a>>> {
         self.functions.borrow().get(name).map(|method| method.clone())
     }
 
-    fn get_module(&self, _: &str) -> Option<Rc<dyn Module>> {
+    fn get_module(&self, _: &str) -> Option<Rc<dyn Module<'a> + 'a>> {
         None
     }
 
-    fn get_methods(&self) -> Vec<Rc<FunctionReference>> {
+    fn get_methods(&self) -> Vec<Rc<FunctionReference<'a>>> {
         let mut response = Vec::new();
         self.functions.borrow().iter().for_each(|(_, reference)| response.push(reference.clone()));
         response
     }
 
-    fn get_modules(&self) -> HashMap<String, Rc<dyn Module>> {
+    fn get_modules(&self) -> HashMap<String, Rc<dyn Module<'a> + 'a>> {
         HashMap::new()
     }
 
-    fn get_classes(&self) -> Vec<Rc<dyn Class>> {
+    fn get_classes(&self) -> Vec<Rc<dyn Class<'a> + 'a>> {
         Vec::new()
     }
 }
 
-fn get_module_path(options: &KaramelCompilerContext, module_path: &PathBuf) -> Vec<String> {
+fn get_module_path<'a>(options: &KaramelCompilerContext<'a>, module_path: &PathBuf) -> Vec<String> {
     let mut path = Vec::new();
     let script_path = PathBuf::from(&options.execution_path.path[..]);
     let mut script_path_iter = script_path.iter();
@@ -91,7 +91,7 @@ fn get_module_path(options: &KaramelCompilerContext, module_path: &PathBuf) -> V
     path
 }
 
-pub fn load_module(params: &[String], modules: &mut Vec<Rc<OpcodeModule>>, options: &mut KaramelCompilerContext, upper_storage_index: usize) -> Result<Rc<OpcodeModule>, KaramelError> {
+pub fn load_module<'a>(params: &[String], modules: &mut Vec<Rc<OpcodeModule<'a>>>, options: &mut KaramelCompilerContext<'a>, upper_storage_index: usize) -> Result<Rc<OpcodeModule<'a>>, KaramelError> {
     let mut path = PathBuf::from(&options.execution_path.path[..]);
     let module = params[(params.len() - 1)].to_string();
 
@@ -129,7 +129,7 @@ pub fn load_module(params: &[String], modules: &mut Vec<Rc<OpcodeModule>>, optio
     };
 }
 
-fn find_load_type(ast: Rc<KaramelAstType>, options: &mut KaramelCompilerContext, modules: &mut Vec<Rc<OpcodeModule>>, upper_storage_index: usize) -> CompilerResult {
+fn find_load_type<'a>(ast: Rc<KaramelAstType>, options: &mut KaramelCompilerContext<'a>, modules: &mut Vec<Rc<OpcodeModule<'a>>>, upper_storage_index: usize) -> CompilerResult {
     match &*ast {
         KaramelAstType::Load(module_name) => {
             if !options.has_module(&module_name) {
@@ -149,8 +149,8 @@ fn find_load_type(ast: Rc<KaramelAstType>, options: &mut KaramelCompilerContext,
     Ok(())
 }
 
-pub fn get_modules(main_ast: Rc<KaramelAstType>, options: &mut KaramelCompilerContext) -> Result<Vec<Rc<OpcodeModule>>, KaramelError> {
-    let mut modules: Vec<Rc<OpcodeModule>> = Vec::new();
+pub fn get_modules<'a>(main_ast: Rc<KaramelAstType>, options: &mut KaramelCompilerContext<'a>) -> Result<Vec<Rc<OpcodeModule<'a>>>, KaramelError> {
+    let mut modules: Vec<Rc<OpcodeModule<'a>>> = Vec::new();
     match find_load_type(main_ast, options, &mut modules, 0) {
         Ok(()) => Ok(modules),
         Err(error) => Err(KaramelError::new(0, 0, error))

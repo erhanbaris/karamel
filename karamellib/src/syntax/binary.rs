@@ -13,25 +13,25 @@ pub struct ModuloParser;
 pub struct MultiplyDivideParser;
 pub struct AddSubtractParser;
 
-impl SyntaxParserTrait for ModuloParser {
-    fn parse(parser: &SyntaxParser) -> AstResult {
+impl<'a> SyntaxParserTrait<'a> for ModuloParser {
+    fn parse(parser: &SyntaxParser<'a>) -> AstResult<'a> {
         return parse_binary::<MultiplyDivideParser>(parser, &[KaramelOperatorType::Modulo]);
     }
 }
 
-impl SyntaxParserTrait for MultiplyDivideParser {
-    fn parse(parser: &SyntaxParser) -> AstResult {
+impl<'a> SyntaxParserTrait<'a> for MultiplyDivideParser {
+    fn parse(parser: &SyntaxParser<'a>) -> AstResult<'a> {
         return parse_binary::<UnaryParser>(parser, &[KaramelOperatorType::Multiplication, KaramelOperatorType::Division]);
     }
 }
 
-impl SyntaxParserTrait for AddSubtractParser {
-    fn parse(parser: &SyntaxParser) -> AstResult {
+impl<'a> SyntaxParserTrait<'a> for AddSubtractParser {
+    fn parse(parser: &SyntaxParser<'a>) -> AstResult<'a> {
         parse_binary::<ModuloParser>(parser, &[KaramelOperatorType::Addition, KaramelOperatorType::Subtraction])
     }
 }
 
-pub fn parse_binary<T: SyntaxParserTrait>(parser: &SyntaxParser, operators: &[KaramelOperatorType]) -> AstResult {
+pub fn parse_binary<'a, T: SyntaxParserTrait<'a>>(parser: &SyntaxParser<'a>, operators: &[KaramelOperatorType]) -> AstResult<'a> {
     let mut functions_updated_for_temp = false;
     let mut left_expr = T::parse(parser)?;
     match left_expr {

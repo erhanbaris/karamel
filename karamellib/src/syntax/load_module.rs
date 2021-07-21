@@ -6,8 +6,8 @@ use super::util::map_parser;
 
 pub struct LoadModuleParser;
 
-impl SyntaxParserTrait for LoadModuleParser {
-    fn parse(parser: &SyntaxParser) -> AstResult {
+impl<'a> SyntaxParserTrait<'a> for LoadModuleParser {
+    fn parse(parser: &SyntaxParser<'a>) -> AstResult<'a> {
         let index_backup = parser.get_index();
         parser.indentation_check()?;
 

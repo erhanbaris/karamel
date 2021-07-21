@@ -13,26 +13,26 @@ pub struct ExecutionPathInfo {
     pub script: Option<String>
 }
 
-pub struct KaramelCompilerContext {
+pub struct KaramelCompilerContext<'a> {
     pub execution_path: ExecutionPathInfo,
     pub opcodes : Vec<u8>,
-    pub storages: Vec<StaticStorage>,
-    pub main_module: *mut OpcodeModule,
-    pub modules: ModuleCollection,
+    pub storages: Vec<StaticStorage<'a>>,
+    pub main_module: *mut OpcodeModule<'a>,
+    pub modules: ModuleCollection<'a>,
     pub scopes: Vec<Scope>,
     pub current_scope: *mut Scope,
     pub scope_index: usize,
-    pub functions : Vec<Rc<FunctionReference>>,
-    pub classes : Vec<Rc<dyn Class >>,
+    pub functions : Vec<Rc<FunctionReference<'a>>>,
+    pub classes : Vec<Rc<dyn Class<'a> + 'a>>,
     pub stdout: Option<RefCell<String>>,
     pub stderr: Option<RefCell<String>>,
     pub opcodes_ptr: *mut u8,
-    pub primative_classes: Vec<Rc<dyn Class>>,
-    pub opcode_generator: OpcodeGenerator
+    pub primative_classes: Vec<Rc<dyn Class<'a> + 'a>>,
+    pub opcode_generator: OpcodeGenerator<'a>
 }
 
-impl  KaramelCompilerContext {
-    pub fn new() -> KaramelCompilerContext {
+impl<'a> KaramelCompilerContext<'a> {
+    pub fn new() -> KaramelCompilerContext<'a> {
         let mut compiler = KaramelCompilerContext {
             execution_path: ExecutionPathInfo::default(),
             opcodes: Vec::new(),
@@ -79,7 +79,7 @@ impl  KaramelCompilerContext {
         self.modules.has_module(module_path)
     }
 
-    pub fn add_module(&mut self, module: Rc<dyn Module>) {
+    pub fn add_module(&mut self, module: Rc<dyn Module<'a> + 'a>) {
         self.modules.add_module(module.clone());
 
         for reference in module.clone().get_methods().iter() {
@@ -87,15 +87,15 @@ impl  KaramelCompilerContext {
         }
     }
 
-    pub fn add_function(&mut self, information: Rc<FunctionReference>) {
+    pub fn add_function(&mut self, information: Rc<FunctionReference<'a>>) {
         self.functions.push(information);
     }
 
-    pub fn add_class(&mut self, class_info: Rc<dyn Class + Sync + Send>) {
+    pub fn add_class(&mut self, class_info: Rc<dyn Class<'a> + 'a + Sync + Send>) {
         self.classes.push(class_info.clone());
     }
 
-    pub fn get_function<T: Borrow<String>>(&self, name: T, module_path: &Vec<String>, start_storage_index: usize) -> Option<Rc<FunctionReference>> {
+    pub fn get_function<T: Borrow<String>>(&self, name: T, module_path: &Vec<String>, start_storage_index: usize) -> Option<Rc<FunctionReference<'a>>> {
         let mut search_storage = start_storage_index;
         loop {
             /* Search function with storage */
@@ -127,13 +127,13 @@ impl  KaramelCompilerContext {
         }
     }
 
-    pub fn get_class(&self, value: &KaramelPrimative) -> Rc<dyn Class > {
+    pub fn get_class(&self, value: &KaramelPrimative<'a>) -> Rc<dyn Class<'a> + 'a> {
         unsafe {
             self.primative_classes.get_unchecked(value.discriminant()).clone()
         }
     }
 
-    pub fn find_class(&self, name: String, _module_path: &Vec<String>, _start_storage_index: usize) -> Option<Rc<dyn Class >> {
+    pub fn find_class(&self, name: String, _module_path: &Vec<String>, _start_storage_index: usize) -> Option<Rc<dyn Class<'a> + 'a>> {
         let primative_search = self.primative_classes.iter().find(|&item| item.get_class_name() == name);
         match primative_search {
             Some(class) => Some(class.clone()),

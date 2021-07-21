@@ -8,13 +8,13 @@ use super::{DumpBuilder, OpcodeGeneratorTrait, OpcodeLocation, opcode_to_locatio
 #[derive(Clone)]
 /// Generate compare opcodes
 pub struct CompareGenerator { pub location: Rc<OpcodeLocation> }
-impl OpcodeGeneratorTrait for CompareGenerator {
+impl<'a> OpcodeGeneratorTrait<'a> for CompareGenerator {
     fn generate(&self, opcodes: &mut Vec<u8>) {
         opcodes.push(VmOpCode::Compare.into());
         self.location.apply(opcodes);
     }
 
-    fn dump<'a>(&self, builder: &'a DumpBuilder, index: Rc<AtomicUsize>, opcodes: &Vec<u8>) {
+    fn dump(&self, builder: &'a DumpBuilder, index: Rc<AtomicUsize>, opcodes: &Vec<u8>) {
         let opcode_index = index.fetch_add(1, Ordering::SeqCst);
         let location = opcode_to_location(index, opcodes);
         builder.add(opcode_index, VmOpCode::Compare, location.to_string(), "".to_string(), "".to_string());

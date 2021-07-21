@@ -18,9 +18,9 @@ pub mod location_group;
 pub mod init_list;
 pub mod init_dict;
 
-pub trait OpcodeGeneratorTrait {
+pub trait OpcodeGeneratorTrait<'a> {
     fn generate(&self, opcodes: &mut Vec<u8>);
-    fn dump<'a>(&self, builder: &'a DumpBuilder, index: Rc<AtomicUsize>, opcodes: &Vec<u8>);
+    fn dump(&self, builder: &'a DumpBuilder, index: Rc<AtomicUsize>, opcodes: &Vec<u8>);
 }
 
 pub fn dump_single_opcode<'a, T: Borrow<String>>(builder: &'a DumpBuilder, index: usize, opcode: T, buffer: &mut String) {
@@ -118,12 +118,12 @@ impl DumpBuilder {
     }
 }
 
-pub struct OpcodeGenerator {
-    generators: RefCell<Vec<Rc<dyn OpcodeGeneratorTrait>>>,
+pub struct OpcodeGenerator<'a> {
+    generators: RefCell<Vec<Rc<dyn OpcodeGeneratorTrait<'a> + 'a>>>,
     loop_groups: RefCell<VecDeque<LoopItem>>
 }
 
-impl OpcodeGenerator {
+impl<'a> OpcodeGenerator<'a> {
     pub fn new() -> Self {
         OpcodeGenerator {
             generators: RefCell::new(Vec::new()),
@@ -286,7 +286,7 @@ impl OpcodeGenerator {
         generator
     }
 
-    pub fn create_function_definition(&self, function: Rc<FunctionReference>) -> Rc<FunctionGenerator> {
+    pub fn create_function_definition(&self, function: Rc<FunctionReference<'a>>) -> Rc<FunctionGenerator<'a>> {
         let generator = Rc::new(FunctionGenerator { function: function.clone() });
         self.generators.borrow_mut().push(generator.clone());
         generator
@@ -305,7 +305,7 @@ impl OpcodeGenerator {
     }
 }
 
-impl OpcodeGenerator {
+impl<'a> OpcodeGenerator<'a> {
     pub fn generate(&self, opcodes: &mut Vec<u8>) {
         for generator in self.generators.borrow().iter() {
             generator.generate(opcodes);

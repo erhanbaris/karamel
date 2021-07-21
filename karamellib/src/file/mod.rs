@@ -21,7 +21,7 @@ pub fn read_file<T: Borrow<str>>(file_name: T) -> Result<String, KaramelErrorTyp
     }
 }
 
-fn read_script<T: Borrow<str>>(file_name: T, context: &KaramelCompilerContext) -> Result<String, KaramelErrorType> {
+fn read_script<'a, T: Borrow<str>>(file_name: T, context: &KaramelCompilerContext<'a>) -> Result<String, KaramelErrorType> {
     let path = Path::new(file_name.borrow());
 
     if path.exists() && path.is_file() {
@@ -43,7 +43,7 @@ fn read_script<T: Borrow<str>>(file_name: T, context: &KaramelCompilerContext) -
     }
 }
 
-pub fn read_module_or_script<T: Borrow<str>>(file_name: T, context: &KaramelCompilerContext) -> Result<String, KaramelErrorType> {
+pub fn read_module_or_script<'a, T: Borrow<str>>(file_name: T, context: &KaramelCompilerContext<'a>) -> Result<String, KaramelErrorType> {
     let computed_file_name = match file_name.borrow().ends_with(KARAMEL_FILE_EXTENSION) {
         true => file_name.borrow().to_string(),
         false => format!("{}{}", file_name.borrow(), KARAMEL_FILE_EXTENSION)

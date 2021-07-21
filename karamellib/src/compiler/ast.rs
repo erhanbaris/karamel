@@ -10,22 +10,22 @@ use crate::types::KaramelOperatorType;
 #[derive(Clone)]
 #[derive(Debug)]
 #[derive(PartialEq)]
-pub struct KaramelIfStatementElseItem {
-    pub condition: Rc<KaramelAstType>,
-    pub body: Rc<KaramelAstType>
+pub struct KaramelIfStatementElseItem<'a> {
+    pub condition: Rc<KaramelAstType<'a>>,
+    pub body: Rc<KaramelAstType<'a>>
 }
 
 #[repr(C)]
 #[derive(Clone)]
 #[derive(Debug)]
 #[derive(PartialEq)]
-pub struct KaramelDictItem {
-    pub key: Rc<KaramelPrimative>,
-    pub value: Rc<KaramelAstType>
+pub struct KaramelDictItem<'a> {
+    pub key: Rc<KaramelPrimative<'a>>,
+    pub value: Rc<KaramelAstType<'a>>
 }
 
-impl KaramelIfStatementElseItem {
-    pub fn new(condition: Rc<KaramelAstType>, body: Rc<KaramelAstType>) -> KaramelIfStatementElseItem {
+impl<'a> KaramelIfStatementElseItem<'a> {
+    pub fn new(condition: Rc<KaramelAstType<'a>>, body: Rc<KaramelAstType<'a>>) -> KaramelIfStatementElseItem<'a> {
         KaramelIfStatementElseItem {
             condition,
             body,
@@ -37,65 +37,65 @@ impl KaramelIfStatementElseItem {
 #[derive(Clone)]
 #[derive(Debug)]
 #[derive(PartialEq)]
-pub enum KaramelAstType {
+pub enum KaramelAstType<'a> {
     None,
     NewLine,
-    Block(Vec<Rc<KaramelAstType>>),
+    Block(Vec<Rc<KaramelAstType<'a>>>),
     FuncCall {
-        func_name_expression: Rc<KaramelAstType>,
-        arguments: Vec<Rc<KaramelAstType>>,
+        func_name_expression: Rc<KaramelAstType<'a>>,
+        arguments: Vec<Rc<KaramelAstType<'a>>>,
         assign_to_temp: Cell<bool>
     },
     AccessorFuncCall {
-        source: Rc<KaramelAstType>,
-        indexer: Rc<KaramelAstType>,
+        source: Rc<KaramelAstType<'a>>,
+        indexer: Rc<KaramelAstType<'a>>,
         assign_to_temp: Cell<bool>
     },
-    Primative(Rc<KaramelPrimative>),
+    Primative(Rc<KaramelPrimative<'a>>),
     Binary {
-        left: Rc<KaramelAstType>, 
+        left: Rc<KaramelAstType<'a>>, 
         operator: KaramelOperatorType, 
-        right: Rc<KaramelAstType>
+        right: Rc<KaramelAstType<'a>>
     },
     Control {
-        left: Rc<KaramelAstType>, 
+        left: Rc<KaramelAstType<'a>>, 
         operator: KaramelOperatorType, 
-        right: Rc<KaramelAstType>
+        right: Rc<KaramelAstType<'a>>
     },
     /*Control,*/
     PrefixUnary { 
         operator: KaramelOperatorType, 
-        expression: Rc<KaramelAstType>, 
+        expression: Rc<KaramelAstType<'a>>, 
         assign_to_temp: Cell<bool>
     },
-    SuffixUnary(KaramelOperatorType, Rc<KaramelAstType>),
+    SuffixUnary(KaramelOperatorType, Rc<KaramelAstType<'a>>),
     Assignment {
-        variable: Rc<KaramelAstType>,
+        variable: Rc<KaramelAstType<'a>>,
         operator: KaramelOperatorType,
-        expression: Rc<KaramelAstType>
+        expression: Rc<KaramelAstType<'a>>
     },
     IfStatement {
-        condition: Rc<KaramelAstType>,
-        body: Rc<KaramelAstType>,
-        else_body: Option<Rc<KaramelAstType>>,
-        else_if: Vec<Rc<KaramelIfStatementElseItem>>
+        condition: Rc<KaramelAstType<'a>>,
+        body: Rc<KaramelAstType<'a>>,
+        else_body: Option<Rc<KaramelAstType<'a>>>,
+        else_if: Vec<Rc<KaramelIfStatementElseItem<'a>>>
     },
     FunctionDefination {
         name: String,
         arguments: Vec<String>,
-        body: Rc<KaramelAstType>
+        body: Rc<KaramelAstType<'a>>
     },
     Symbol(String),
     ModulePath(Vec<String>),
     Load(Vec<String>),
-    List(Vec<Rc<KaramelAstType>>),
-    Dict(Vec<Rc<KaramelDictItem>>),
-    Indexer { body: Rc<KaramelAstType>, indexer: Rc<KaramelAstType> },
-    Return(Rc<KaramelAstType>),
+    List(Vec<Rc<KaramelAstType<'a>>>),
+    Dict(Vec<Rc<KaramelDictItem<'a>>>),
+    Indexer { body: Rc<KaramelAstType<'a>>, indexer: Rc<KaramelAstType<'a>> },
+    Return(Rc<KaramelAstType<'a>>),
     Break,
     Continue,
     Loop {
-        loop_type: LoopType,
-        body: Rc<KaramelAstType>
+        loop_type: LoopType<'a>,
+        body: Rc<KaramelAstType<'a>>
     }
 }
