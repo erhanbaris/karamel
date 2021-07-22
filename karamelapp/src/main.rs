@@ -23,7 +23,7 @@ fn main() {
 
     let parameters = match matches.value_of("file") {
         Some(file) => ExecutionParameters {
-            source: ExecutionSource::File(file.to_string()),
+            source: ExecutionSource::File(file),
             return_opcode: true,
             return_output: true
         },
@@ -31,14 +31,14 @@ fn main() {
             source: ExecutionSource::Code(r#"
 gç::satıryaz(123)
         
-"#.to_string()),
+"#),
             return_opcode: true,
             return_output: true
         }
     };
 
     
-    let result = karamellib::vm::executer::code_executer(parameters);
+    let result = karamellib::vm::executer::code_executer(&parameters);
     match result.executed {
         true => println!("Success"),
         false => println!("Fail")

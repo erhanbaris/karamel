@@ -14,13 +14,13 @@ use log;
 use crate::types::VmObject;
 
 
-pub enum ExecutionSource {
-    Code(String),
-    File(String)
+pub enum ExecutionSource<'a> {
+    Code(&'a str),
+    File(&'a str)
 }
 
-pub struct ExecutionParameters {
-    pub source: ExecutionSource,
+pub struct ExecutionParameters<'a> {
+    pub source: ExecutionSource<'a>,
     pub return_output: bool
 }
 
@@ -47,7 +47,7 @@ impl<'a> Default for ExecutionStatus<'a> {
     }
 }
 
-pub fn get_execution_path<T: Borrow<ExecutionSource>>(source: T) -> ExecutionPathInfo {
+pub fn get_execution_path<'a, T: Borrow<ExecutionSource<'a>>>(source: T) -> ExecutionPathInfo {
     ExecutionPathInfo {
         path: match source.borrow() {
             ExecutionSource::Code(_) => match std::env::current_exe() {
@@ -63,7 +63,7 @@ pub fn get_execution_path<T: Borrow<ExecutionSource>>(source: T) -> ExecutionPat
     }
 }
 
-pub fn code_executer<'a>(parameters: ExecutionParameters) -> ExecutionStatus<'a> {
+pub fn code_executer<'a>(parameters: &'a ExecutionParameters<'a>) -> ExecutionStatus<'a> {
     match log::set_logger(&CONSOLE_LOGGER) {
         Ok(_) => {
             if cfg!(debug_assertions) {
@@ -79,10 +79,10 @@ pub fn code_executer<'a>(parameters: ExecutionParameters) -> ExecutionStatus<'a>
     status.context.execution_path = get_execution_path(&parameters.source);
     log::debug!("Execution path: {}", status.context.execution_path.path);
 
-    let data = match parameters.source {
-        ExecutionSource::Code(code) => code,
+    let data = match &parameters.source {
+        ExecutionSource::Code(code) => *code,
         ExecutionSource::File(filename) => {
-            match read_module_or_script(filename, &status.context) {
+            match read_module_or_script(&filename[..], &status.context) {
                 Ok(content) => content,
                 Err(error) => {
                     log::error!("Program hata ile sonlandırıldı: {}", error);
