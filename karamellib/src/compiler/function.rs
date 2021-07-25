@@ -17,7 +17,7 @@ use crate::compiler::context::KaramelCompilerContext;
 use super::module::OpcodeModule;
 use super::{KaramelPrimative, StaticStorage};
 use super::ast::KaramelAstType;
-use super::storage_builder::{StorageBuilder, StorageBuilderOption};
+use super::storage_builder::StorageBuilder;
 
 pub type NativeCallResult = Result<VmObject, KaramelErrorType>;
 pub type NativeCall       = fn(FunctionParameter) -> NativeCallResult;
@@ -26,7 +26,7 @@ pub type IndexerSetCall   = fn (VmObject, f64, VmObject) -> NativeCallResult ;
 
 #[derive(Debug)]
 pub struct FunctionParameter<'a> {
-    stack: &'a Vec<VmObject>, 
+    stack: &'a [VmObject], 
     source: Option<VmObject>, 
     last_position: usize, 
     arg_size: u8,
@@ -39,7 +39,7 @@ pub struct FunctionParameterIterator<'a> {
 }
 
 impl<'a> FunctionParameter<'a> {
-    pub fn new(stack: &'a Vec<VmObject>, source: Option<VmObject>, last_position: usize, arg_size: u8, stdout: &'a Option<RefCell<String>>, stderr: &'a Option<RefCell<String>>) -> Self {
+    pub fn new(stack: &'a [VmObject], source: Option<VmObject>, last_position: usize, arg_size: u8, stdout: &'a Option<RefCell<String>>, stderr: &'a Option<RefCell<String>>) -> Self {
         FunctionParameter { stack, source, last_position, arg_size, stdout, stderr }
     }
 
@@ -184,8 +184,8 @@ impl FunctionReference {
         let total_args                 = *compiler.opcodes_ptr.offset(1);
         let call_return_assign_to_temp = *compiler.opcodes_ptr.offset(2) != 0;
         let parameter = match reference.flags {
-            FunctionFlag::IN_CLASS => FunctionParameter::new(&(*compiler.current_scope).stack, source, get_memory_index!(compiler) as usize, karamel_dbg!(total_args), &compiler.stdout, &compiler.stderr),
-            _ => FunctionParameter::new(&(*compiler.current_scope).stack, source, get_memory_index!(compiler) as usize, karamel_dbg!(total_args), &compiler.stdout, &compiler.stderr)
+            FunctionFlag::IN_CLASS => FunctionParameter::new(&compiler.stack, source, get_memory_index!(compiler) as usize, karamel_dbg!(total_args), &compiler.stdout, &compiler.stderr),
+            _ => FunctionParameter::new(&compiler.stack, source, get_memory_index!(compiler) as usize, karamel_dbg!(total_args), &compiler.stdout, &compiler.stderr)
         };
         
         match func(parameter) {
@@ -193,7 +193,7 @@ impl FunctionReference {
                 dec_memory_index!(compiler, total_args as usize);
 
                 if call_return_assign_to_temp {
-                    *(*compiler.current_scope).stack_ptr = result;
+                    *compiler.stack_ptr = result;
                     inc_memory_index!(compiler, 1);
                 }
 
@@ -225,7 +225,7 @@ impl FunctionReference {
             }
 
             let memory_index = get_memory_index!(options) as usize;
-            let arguments = &(*options.current_scope).stack[memory_index - argument_size as usize..memory_index];
+            let arguments = &options.stack[memory_index - argument_size as usize..memory_index];
             dec_memory_index!(options, argument_size.into());
 
             if options.scopes.len() <= options.scope_index {
@@ -244,14 +244,12 @@ impl FunctionReference {
             }*/
 
             scope.memory = storage.get_memory();
-            scope.stack.resize(storage.get_temp_size() as usize, EMPTY_OBJECT);
             scope.storage_index = reference.storage_index as isize;
+            scope.constant_ptr = storage.constants.as_ptr();
 
-            scope.stack_ptr = scope.stack.as_mut_ptr();
             scope.memory_ptr = scope.memory.as_mut_ptr();
 
             scope.location                   = old_index;
-            scope.const_size                 = storage.get_constant_size();
             scope.call_return_assign_to_temp = call_return_assign_to_temp;
 
             options.current_scope = scope;
@@ -259,14 +257,13 @@ impl FunctionReference {
 
             if argument_size > 0 {
                 for index in 0..argument_size {
-                    *scope.stack_ptr = arguments[argument_size as usize-index as usize - 1];
+                    *options.stack_ptr = arguments[argument_size as usize-index as usize - 1];
                     inc_memory_index!(options, 1);
                 }
 
-                let const_size = (*options.current_scope).const_size as usize;
                 for i in 0..argument_size as usize {
                     dec_memory_index!(options, 1);
-                    *(*options.current_scope).memory_ptr.offset((i + const_size) as isize) = *(*options.current_scope).stack_ptr;
+                    *(*options.current_scope).memory_ptr.offset(i as isize) = *options.stack_ptr;
                 }
             }
         }
@@ -292,8 +289,7 @@ pub fn find_function_definition_type(module: Rc<OpcodeModule>, ast: Rc<KaramelAs
             find_function_definition_type(module.clone(), body.clone(), options, new_storage_index, false)?;
 
             let storage_builder = StorageBuilder::new();
-            let mut builder_option = StorageBuilderOption { max_stack: 0 };
-            storage_builder.prepare(module.clone(), ast.borrow(), new_storage_index, options, &mut builder_option)?;
+            storage_builder.prepare(module.clone(), ast.borrow(), new_storage_index, options)?;
 
             //options.storages[current_storage_index].add_static_data(name, Rc::new(KaramelPrimative::Function(function.clone(), None)));
             options.storages[current_storage_index].add_constant(Rc::new(KaramelPrimative::Function(function.clone(), None)));

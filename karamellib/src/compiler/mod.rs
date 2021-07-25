@@ -104,7 +104,8 @@ pub enum VmOpCode {
     Dublicate = 30,
     GetItem = 31,
     SetItem = 32,
-    Halt = 33
+    Constant = 33,
+    Halt = 34
 }
 
 impl From<VmOpCode> for u8 {

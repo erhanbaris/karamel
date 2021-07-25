@@ -2,6 +2,7 @@ use std::borrow::Borrow;
 use std::{cell::RefCell, ptr, rc::Rc};
 use crate::buildin::num::{NumModule};
 
+use crate::types::VmObject;
 use crate::{buildin::{Class, Module, ModuleCollection, base_functions, class::{dict, get_empty_class, list, number, proxy, text}, debug, io}, compiler::scope::Scope};
 
 use super::generator::OpcodeGenerator;
@@ -12,6 +13,8 @@ pub struct ExecutionPathInfo {
     pub path: String,
     pub script: Option<String>
 }
+
+const MAX_STACK: usize = 64 * 1024 + 1;
 
 pub struct KaramelCompilerContext {
     pub execution_path: ExecutionPathInfo,
@@ -28,7 +31,9 @@ pub struct KaramelCompilerContext {
     pub stderr: Option<RefCell<String>>,
     pub opcodes_ptr: *mut u8,
     pub primative_classes: Vec<Rc<dyn Class>>,
-    pub opcode_generator: OpcodeGenerator
+    pub opcode_generator: OpcodeGenerator,
+    pub stack: [VmObject; MAX_STACK],
+    pub stack_ptr: *mut VmObject
 }
 
 impl  KaramelCompilerContext {
@@ -48,9 +53,11 @@ impl  KaramelCompilerContext {
             opcodes_ptr: ptr::null_mut(),
             primative_classes: Vec::new(),
             main_module: ptr::null_mut(),
-            opcode_generator: OpcodeGenerator::new()
+            opcode_generator: OpcodeGenerator::new(),
+            stack: [VmObject(0); MAX_STACK],
+            stack_ptr: ptr::null_mut()
         };
-
+        
         compiler.primative_classes.push(number::get_primative_class());
         compiler.primative_classes.push(text::get_primative_class());
         compiler.primative_classes.push(list::get_primative_class());
@@ -67,7 +74,7 @@ impl  KaramelCompilerContext {
         compiler.add_module(NumModule::new());
         compiler.add_module(debug::DebugModule::new());
 
-        for _ in 0..32{
+        for _ in 0..32 {
             compiler.scopes.push(Scope::empty());
         }
         

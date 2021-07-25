@@ -2,7 +2,7 @@ use std::{borrow::Borrow, cell::{Cell, RefCell}, cmp, collections::VecDeque, rc:
 
 use crate::{compiler::generator::location::DynamicLocationUpdateGenerator, constants::{DUMP_INDEX_WIDTH, DUMP_OPCODE_COLUMN_1, DUMP_OPCODE_COLUMN_2, DUMP_OPCODE_COLUMN_3, DUMP_OPCODE_TITLE, DUMP_OPCODE_WIDTH}};
 
-use self::{call::{CallGenerator, CallType}, compare::CompareGenerator, function::FunctionGenerator, init_dict::InitDictGenerator, init_list::InitListGenerator, jump::JumpGenerator, load::LoadGenerator, location::{CurrentLocationUpdateGenerator, OpcodeLocation, SubtractionGenerator}, location_group::OpcodeLocationGroup, opcode_item::OpcodeItem, store::{StoreGenerator, StoreType}};
+use self::{call::{CallGenerator, CallType}, compare::CompareGenerator, constant::ConstantGenerator, function::FunctionGenerator, init_dict::InitDictGenerator, init_list::InitListGenerator, jump::JumpGenerator, load::LoadGenerator, location::{CurrentLocationUpdateGenerator, OpcodeLocation, SubtractionGenerator}, location_group::OpcodeLocationGroup, opcode_item::OpcodeItem, store::{StoreGenerator, StoreType}};
 
 use super::{VmOpCode, function::FunctionReference};
 
@@ -13,6 +13,7 @@ pub mod jump;
 pub mod store;
 pub mod compare;
 pub mod load;
+pub mod constant;
 pub mod call;
 pub mod location_group;
 pub mod init_list;
@@ -137,6 +138,12 @@ impl OpcodeGenerator {
 
     pub fn create_load(&self, location: u8) -> Rc<LoadGenerator> {
         let generator = Rc::new(LoadGenerator { location: location });
+        self.generators.borrow_mut().push(generator.clone());
+        generator
+    }
+
+    pub fn create_constant(&self, location: u8) -> Rc<ConstantGenerator> {
+        let generator = Rc::new(ConstantGenerator { location: location });
         self.generators.borrow_mut().push(generator.clone());
         generator
     }
@@ -268,7 +275,7 @@ impl OpcodeGenerator {
 
     pub fn create_call(&self, function_location: u8, argument_size: u8, assign_to_temp: bool) -> Rc<CallGenerator> {
         let generator = Rc::new(CallGenerator { 
-                call_type: CallType::Call { location: function_location },
+                call_type: CallType::Call { constant_location: function_location },
                 argument_size,
                 assign_to_temp
              });

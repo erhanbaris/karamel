@@ -24,89 +24,31 @@ unsafe fn from_buf_raw<T>(ptr: *const T, elts: usize) -> Vec<T> {
 pub struct StaticStorage {
     pub index                 : usize,
     pub constants             : Vec<VmObject>,
-    pub constant_size         : u8,
-    pub temp_size             : u8,
-    pub temp_counter          : u8,
-    pub variables             : Vec<(String, u8)>,
+    pub variables             : Vec<String>,
     pub memory                : Vec<VmObject>,
-    pub stack                 : Vec<VmObject>,
-    pub total_const_variables : u8,
     pub parent_location       : Option<usize>
 }
 
-/*
-### STORAGE STRUCTURE ###
--------------------------
-  CONSTANT VALUES
--------------------------
-  VARIABLE VALUES
--------------------------
-  TEMP VALUES
--------------------------
-*/
 impl StaticStorage {
-    pub fn new(index: usize) -> StaticStorage {
+    pub fn new(index: usize) -> Self {
         StaticStorage {
             index: index,
             constants: Vec::new(),
-            constant_size: 0,
-            temp_size: 0,
-            temp_counter: 0,
-            total_const_variables: 0,
             memory: Vec::new(),
-            stack: Vec::new(),
             variables: Vec::new(),
             parent_location: None
         }
     }
 
-    pub fn build(&mut self) {
-        self.constant_size = self.constants.len() as u8;
-
-        /* Allocate memory */
-        let memory_size = self.get_constant_size() 
-                        + self.get_variable_size() 
-                        + self.get_temp_size();
-        
-        self.memory.clear();
-        self.stack.clear();
-
-        self.memory.reserve(memory_size.into());
-
-        /* Move all constants informations to memory location */
-        self.memory.append(&mut self.constants);
-
-        /*  Allocate variable memory and update references */
-        let mut index = self.get_constant_size();
-        for (_, value) in self.variables.iter_mut() {
-            self.memory.push(EMPTY_OBJECT);
-            *value = index;
-            index += 1;
-        }
-
-        for _ in 0..self.temp_size {
-            self.stack.push(EMPTY_OBJECT);
-        }
-    }
     pub fn get_mut_memory(&mut self) -> &mut Vec<VmObject> { 
         self.memory.as_mut()
-    }
-    pub fn get_mut_stack(&mut self) -> &mut Vec<VmObject> { 
-        self.stack.as_mut()
     }
     pub fn get_memory(&mut self) -> Vec<VmObject> { 
         unsafe {
             from_buf_raw(self.memory.as_mut_ptr(), self.memory.len())
         }
     }
-    pub fn get_stack(&mut self) -> Vec<VmObject> { 
-        unsafe {
-            from_buf_raw(self.stack.as_mut_ptr(), self.stack.len())
-        }
-    }
-    pub fn get_constant_size(&self) -> u8 { self.constant_size }
     pub fn get_variable_size(&self) -> u8 { self.variables.len() as u8 }
-    pub fn get_temp_size(&self) -> u8     { self.temp_size }
     
     pub fn set_parent_location(&mut self, parent_location: usize) {
         self.parent_location = Some(parent_location);
@@ -114,16 +56,18 @@ impl StaticStorage {
     pub fn get_parent_location(&self) -> Option<usize> {
         self.parent_location
     }
-    
-    pub fn set_temp_size(&mut self, value: u8) { self.temp_size = value; }
 
     /// add variable and constant data same time. Assign constant location to variable reference.
     /// If variable or constant data already assigned before, it will try to update variable value with constant.
     pub fn add_static_data(&mut self, name: &str, value: Rc<KaramelPrimative>) {
-        let variable_location = self.add_variable(name);
-        let constant_location = self.add_constant(value.clone());
-        
-        self.variables[variable_location as usize].1 = constant_location as u8;
+        let result = self.variables.iter().position(|key| key == name);
+        match result {
+            Some(location) => self.memory[location] = VmObject::convert(value),
+            _ => {
+                self.variables.push(name.to_string());
+                self.memory.push(VmObject::convert(value));
+            }
+        }
     }
 
     pub fn add_constant(&mut self, value: Rc<KaramelPrimative>) -> usize {
@@ -141,20 +85,21 @@ impl StaticStorage {
     }
 
     pub fn add_variable(&mut self, name: &str) -> u8 {
-        let result = self.variables.iter().position(|(key, _)| key == name);
+        let result = self.variables.iter().position(|key| key == name);
         match result {
-            Some(location) => self.variables[location].1,
+            Some(location) => location as u8,
             _ => {
-                self.variables.push((name.to_string(), 0));
-                0
+                self.variables.push(name.to_string());
+                self.memory.push(VmObject::convert(Rc::new(KaramelPrimative::Empty)));
+                (self.variables.len()-1) as u8
             }
         }
     }
 
     pub fn get_variable_location(&self, name: &str) -> Option<u8> {
-        let result = self.variables.iter().position(|(key, _)| key == name);
+        let result = self.variables.iter().position(|key| key == name);
         match result {
-            Some(location) => Some(self.variables[location].1),
+            Some(location) => Some(location as u8),
             _ => None
         }
     }
@@ -168,7 +113,7 @@ impl StaticStorage {
     }
 
     pub fn get_constant_location(&self, value: Rc<KaramelPrimative>) -> Option<u8> {
-        return match self.memory.iter().position(|x| { *x.deref() == *value }) {
+        return match self.constants.iter().position(|x| { *x.deref() == *value }) {
             Some(number) => Some(number as u8),
             _ => None
         };
@@ -211,17 +156,10 @@ impl StaticStorage {
         debug_println!("║               MEMORY DUMP {:10}   ║", format!("#{}", self.index));
         debug_println!("╠═══╦═════╦══════════════════════════════╣");
 
-        let consts    = self.constant_size;
-        let variables = self.constant_size as usize + self.variables.len();
+        let variables = self.variables.len();
 
         for (index, item) in self.memory.iter().enumerate() {
-            let last_type = if consts as usize == index {
-                "V"
-            } else if variables as usize == index {
-                "T"
-            } else {
-                "C"
-            };
+            let last_type = "V";
 
             debug_println!("║ {} ║ {:3?} ║ {:28} ║", last_type, index, format!("{:?}", *item.deref()));
         }
@@ -230,18 +168,8 @@ impl StaticStorage {
         debug_println!("╔════════════════════════════════════════╗");
         debug_println!("║             VARIABLE DUMP              ║");
         debug_println!("╠════════════════════════════════════════╣");
-        for (variable, value) in &self.variables {
-            debug_println!("║ {:38} ║", format!("{} [{}]", variable, value));
-        }
-        debug_println!("╚════════════════════════════════════════╝");
-
-        debug_println!("╔════════════════════════════════════════╗");
-        debug_println!("║                  STACK                 ║");
-        debug_println!("╠════════════════════════════════════════╣");
-        debug_println!("║ Stack size: {:<10}                 ║", self.stack.len());
-        debug_println!("╠════════════════════════════════════════╣");
-        for item in self.stack.iter() {
-            debug_println!("║ {:38} ║", format!("{:?}", item.deref()));
+        for variable in &self.variables {
+            debug_println!("║ {:38} ║", format!("{}", variable));
         }
         debug_println!("╚════════════════════════════════════════╝");
     }
