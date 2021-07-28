@@ -60,10 +60,9 @@ pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObjec
         let memory_ptr = memory.as_mut_ptr();
         
         context.scopes[context.scope_index] = Scope {
-            memory: memory,
             location: ptr::null_mut(),
             call_return_assign_to_temp: false,
-            memory_ptr: memory_ptr,
+            stack_ptr: context.stack_ptr,
             storage_index: 0,
             constant_ptr: context.storages[0].constants.as_ptr()
         };
@@ -74,10 +73,11 @@ pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObjec
                 dump_opcode(context.opcode_index, context, &mut log_update);
             }
             
-            match karamel_dbg!(opcode) {
+            match karamel_dbg_any!(opcode) {
                 VmOpCode::Subraction => {
-                    let right = pop_raw!(context);
-                    let left  = pop_raw!(context);
+                    let right = pop_raw!(context, "right");
+                    let left = pop_raw!(context, "left");
+
                     karamel_print_level2!("Subraction: {:?} - {:?}", left, right);
 
                     *context.stack_ptr = match (left.as_number(), right.as_number()) {
@@ -85,11 +85,12 @@ pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObjec
                         _ => EMPTY_OBJECT
                     };
                     inc_memory_index!(context, 1);
+                    dump_data!(context, "result");
                 },
 
                 VmOpCode::Addition => {
-                    let right = pop_raw!(context);
-                    let left  = pop_raw!(context);
+                    let right = pop_raw!(context, "right");
+                    let left = pop_raw!(context, "left");
                     karamel_print_level2!("Addition: {:?} + {:?}", left, right);
 
                     *context.stack_ptr = match (&left.deref_clean(), &right.deref_clean()) {
@@ -97,15 +98,17 @@ pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObjec
                         (KaramelPrimative::Text(l_value),    KaramelPrimative::Text(r_value))   => VmObject::from(Rc::new((&**l_value).to_owned() + &**r_value)),
                         _ => EMPTY_OBJECT
                     };
+                    dump_data!(context, "result");
                     inc_memory_index!(context, 1);
                 },
 
                 VmOpCode::Load => {
                     let tmp   = *context.opcodes_ptr.offset(1) as usize;
                     let scope = &mut *context.current_scope;                    
-                    *context.stack_ptr = karamel_dbg!(*scope.memory_ptr.offset(tmp as isize));
+                    *context.stack_ptr = karamel_dbg!(*scope.stack_ptr.offset(tmp as isize));
                     context.opcodes_ptr = context.opcodes_ptr.offset(1);
                     karamel_print_level2!("Load: [{:?}]: {:?}", tmp, *context.stack_ptr);
+                    dump_data!(context, "loaded");
                     inc_memory_index!(context, 1);
                 },
 
@@ -114,20 +117,21 @@ pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObjec
                     *context.stack_ptr = karamel_dbg!(*(*context.current_scope).constant_ptr.offset(tmp as isize));
                     context.opcodes_ptr = context.opcodes_ptr.offset(1);
                     karamel_print_level2!("Constant: [{:?}]: {:?}", tmp, *context.stack_ptr);
+                    dump_data!(context, "loaded");
                     inc_memory_index!(context, 1);
                 },
 
                 VmOpCode::Store => {
                     let tmp = *context.opcodes_ptr.offset(1) as usize;
                     dec_memory_index!(context, 1);
-                    *(*context.current_scope).memory_ptr.offset(tmp as isize) = karamel_dbg!(*context.stack_ptr);
+                    *(*context.current_scope).stack_ptr.offset(tmp as isize) = karamel_dbg!(*context.stack_ptr);
                     context.opcodes_ptr = context.opcodes_ptr.offset(1);
                     karamel_print_level2!("Store: [{:?}]: {:?}", tmp, *context.stack_ptr);
                 },
 
                 VmOpCode::CopyToStore => {
                     let tmp = *context.opcodes_ptr.offset(1) as usize;
-                    *(*context.current_scope).memory_ptr.offset(tmp as isize) = karamel_dbg!(*context.stack_ptr.sub(1));
+                    *(*context.current_scope).stack_ptr.offset(tmp as isize) = karamel_dbg!(*context.stack_ptr.sub(1));
                     context.opcodes_ptr = context.opcodes_ptr.offset(1);
                     karamel_print_level2!("CopyToStore: [{:?}]: {:?}", tmp, *context.stack_ptr);
                 },
@@ -135,13 +139,14 @@ pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObjec
                 VmOpCode::FastStore => {
                     let destination = *context.opcodes_ptr.offset(1) as usize;
                     let source      = *context.opcodes_ptr.offset(2) as usize;
-                    *(*context.current_scope).memory_ptr.offset(destination as isize) = karamel_dbg!(*(*context.current_scope).memory_ptr.offset(source as isize));
+                    *(*context.current_scope).stack_ptr.offset(destination as isize) = karamel_dbg!(*(*context.current_scope).stack_ptr.offset(source as isize));
                     context.opcodes_ptr = context.opcodes_ptr.offset(2);
                     karamel_print_level2!("FastStore: {:?}: {:?} => {:?}", *context.stack_ptr, source, destination);
                 },
 
                 VmOpCode::Not => {
                     *context.stack_ptr.sub(1) = VmObject::from(!(*context.stack_ptr.sub(1)).deref().is_true());
+                    dump_data!(context, "result");
                     karamel_print_level2!("Not: {:?}", *context.stack_ptr.sub(1));
                 },
 
@@ -152,26 +157,28 @@ pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObjec
                 },
 
                 VmOpCode::And => {
-                    let left = pop!(context);
-                    let right = pop!(context);
+                    let left  = pop!(context, "left");
+                    let right = pop!(context, "right");
                     karamel_print_level2!("And: {:?} && {:?}", left, right);
 
                     *context.stack_ptr = VmObject::from(karamel_dbg!(left.is_true()) && karamel_dbg!(right.is_true()));
+                    dump_data!(context, "result");
                     inc_memory_index!(context, 1);
                 },
 
                 VmOpCode::Or => {
-                    let left = pop!(context);
-                    let right = pop!(context);
+                    let left  = pop!(context, "left");
+                    let right = pop!(context, "right");
                     karamel_print_level2!("Or: {:?} || {:?}", left, right);
 
                     *context.stack_ptr = VmObject::from(karamel_dbg!(left.is_true()) || karamel_dbg!(right.is_true()));
+                    dump_data!(context, "result");
                     inc_memory_index!(context, 1);
                 },
 
                 VmOpCode::Multiply => {
-                    let right = pop!(context);
-                    let left  = pop!(context);
+                    let right = pop!(context, "right");
+                    let left  = pop!(context, "left");
                     karamel_print_level2!("Multiply: {:?} * {:?}", left, right);
 
                     *context.stack_ptr = match (&*left, &*right) {
@@ -179,12 +186,13 @@ pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObjec
                         (KaramelPrimative::Text(l_value),    KaramelPrimative::Number(r_value))   => VmObject::from((*l_value).repeat((*r_value) as usize)),
                         _ => EMPTY_OBJECT
                     };
+                    dump_data!(context, "result");
                     inc_memory_index!(context, 1);
                 },
 
                 VmOpCode::Division => {
-                    let right = pop_raw!(context);
-                    let left  = pop_raw!(context);
+                    let right = pop_raw!(context, "right");
+                    let left = pop_raw!(context, "left");
                     karamel_print_level2!("Multiply: {:?} / {:?}", left, right);
 
                     let calculation = match (left.as_number(), right.as_number()) {
@@ -203,58 +211,62 @@ pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObjec
                 },
 
                 VmOpCode::Module => {
-                    let right = pop_raw!(context);
-                    let left  = pop_raw!(context);
+                    let right = pop_raw!(context, "right");
+                    let left = pop_raw!(context, "left");
                     karamel_print_level2!("Multiply: {:?} / {:?}", left, right);
 
                     *context.stack_ptr = match (left.as_number(), right.as_number()) {
                         (Some(l_value),  Some(r_value))   => VmObject::from(karamel_dbg!(l_value) % karamel_dbg!(r_value)),
                         _ => EMPTY_OBJECT
                     };
-
+                    dump_data!(context, "result");
                     inc_memory_index!(context, 1);
                 },
 
-                VmOpCode::Equal => {                    
-                    let right = pop!(context);
-                    let left  = pop!(context);
+                VmOpCode::Equal => {
+                    let right = pop!(context, "right");
+                    let left  = pop!(context, "left");
                     karamel_print_level2!("Multiply: {:?} == {:?}", left, right);
                     
                     *context.stack_ptr = VmObject::from(karamel_dbg!(left) == karamel_dbg!(right));
+                    dump_data!(context, "result");
                     inc_memory_index!(context, 1);
                 },
 
 
                 VmOpCode::NotEqual => {
-                    let right = pop!(context);
-                    let left  = pop!(context);
+                    let right = pop!(context, "right");
+                    let left  = pop!(context, "left");
                     karamel_print_level2!("Multiply: {:?} != {:?}", left, right);
                     
                     *context.stack_ptr = VmObject::from(karamel_dbg!(left) != karamel_dbg!(right));
+                    dump_data!(context, "result");
                     inc_memory_index!(context, 1);
                 },
 
                 VmOpCode::GreaterThan => {
-                    let right = pop_raw!(context);
-                    let left  = pop_raw!(context);
+                    let right = pop_raw!(context, "right");
+                    let left = pop_raw!(context, "left");
                     karamel_print_level2!("Multiply: {:?} > {:?}", left, right);
                     
                     *context.stack_ptr = match (left.as_number(), right.as_number()) {
                         (Some(l_value),  Some(r_value))   => VmObject::from(karamel_dbg!(l_value) > karamel_dbg!(r_value)),
                         _ => EMPTY_OBJECT
                     };
+                    dump_data!(context, "result");
                     inc_memory_index!(context, 1);
                 },
 
                 VmOpCode::GreaterEqualThan => {
-                    let right = pop_raw!(context);
-                    let left  = pop_raw!(context);
+                    let right = pop_raw!(context, "right");
+                    let left = pop_raw!(context, "left");
                     karamel_print_level2!("GreaterEqualThan {:?} >= {:?}", left, right);
                     
                     *context.stack_ptr = match (left.as_number(), right.as_number()) {
                         (Some(l_value),  Some(r_value))   => VmObject::from(karamel_dbg!(l_value) >= karamel_dbg!(r_value)),
                         _ => EMPTY_OBJECT
                     };
+                    dump_data!(context, "result");
                     inc_memory_index!(context, 1);
                 },
 
@@ -274,7 +286,7 @@ pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObjec
                 },
 
                 VmOpCode::CallStack => {
-                    let function = pop_raw!(context);
+                    let function = pop_raw!(context, "function");
                     let value =  function.deref();
                     karamel_print_level2!("CallStack {:?}", value);
                     
@@ -288,16 +300,19 @@ pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObjec
                 },
 
                 VmOpCode::Return => {
-                    //let return_value               = *(*context.current_scope).stack_ptr.sub(1);
+                    let return_value               = *context.stack_ptr.sub(1);
                     context.opcodes_ptr            = (*context.current_scope).location;
                     let call_return_assign_to_temp = (*context.current_scope).call_return_assign_to_temp;
                     context.scope_index           -= 1;
-                    context.current_scope          = &mut context.scopes[context.scope_index] as *mut Scope;
+
+                    let argument_size = *context.opcodes_ptr.sub(1);
+                    context.stack_ptr = (*context.current_scope).stack_ptr;
+                    context.current_scope          = &mut context.scopes[context.scope_index] as *mut Scope;                    
 
                     if call_return_assign_to_temp {
-                        //*(*context.current_scope).stack_ptr = return_value;
+                        *context.stack_ptr = return_value;
                         karamel_print_level2!("Return [{:?}] {:?}", get_memory_index!(context), *context.stack_ptr);
-                        //inc_memory_index!(context, 1);
+                        inc_memory_index!(context, 1);
                     } else {
                         karamel_print_level2!("Return");
                     }
@@ -330,8 +345,8 @@ pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObjec
                             let mut dict   = HashMap::new();
         
                             for _ in 0..total_item {
-                                let value = pop_raw!(context);
-                                let key   = pop!(context);
+                                let value = pop_raw!(context, "value");
+                                let key   = pop!(context, "key");
                                 
                                 dict.insert(key.get_text(), value);
                             }
@@ -343,8 +358,8 @@ pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObjec
                         1 => {
                             let mut list = Vec::with_capacity(total_item.into());
 
-                            for _ in 0..total_item {
-                                list.push(pop_raw!(context));
+                            for i in 0..total_item {
+                                list.push(pop_raw!(context, i));
                             }
                             
                             VmObject::from(list)
@@ -357,7 +372,7 @@ pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObjec
                 },
 
                 VmOpCode::Compare => {
-                    let condition = pop_raw!(context);
+                    let condition = pop_raw!(context, "condition");
                     karamel_print_level2!("Compare: {:?}", condition);
 
                     let status = match &condition.deref_clean() {
@@ -386,9 +401,9 @@ pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObjec
                 },
                 
                 VmOpCode::SetItem => {
-                    let assign_item  = pop_raw!(context);
-                    let indexer = pop!(context);
-                    let raw_object = pop_raw!(context);
+                    let assign_item  = pop_raw!(context, "assign_item");
+                    let indexer = pop!(context, "indexer");
+                    let raw_object = pop_raw!(context, "raw_object");
                     let object  = raw_object.deref();
                     karamel_print_level2!("SetItem: {:?}[{:?}] = {:?}", object, indexer, assign_item);
 
@@ -428,8 +443,8 @@ pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObjec
                 },
 
                 VmOpCode::GetItem => {
-                    let indexer = pop!(context);
-                    let raw_object  = pop_raw!(context);
+                    let indexer = pop!(context, "indexer");
+                    let raw_object  = pop_raw!(context, "raw_object");
                     let object = &*raw_object.deref();
                     karamel_print_level2!("GetItem: {:?}[{:?}]", object, indexer);
 
@@ -467,9 +482,9 @@ pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObjec
             context.storages[0].get_mut_stack()[index] = *item;
         }*/
 
-        for (index, item) in context.scopes[0].memory.iter().enumerate() {
+        /*for (index, item) in context.scopes[0].memory.iter().enumerate() {
             context.storages[0].get_mut_memory()[index] = *item;
-        }
+        }*/
         
         #[cfg(feature = "dumpMemory")] {
             context.storages[0].dump();

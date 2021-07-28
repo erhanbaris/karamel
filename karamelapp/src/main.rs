@@ -29,7 +29,11 @@ fn main() {
         },
         None => ExecutionParameters {
             source: ExecutionSource::Code(r#"
-gç::satıryaz(123)
+fonk Fibonacci(n):
+    n <= 1 ise:
+        döndür n
+    döndür Fibonacci(n-1) + Fibonacci(n-2)
+gç::satıryaz(Fibonacci(35))
         
 "#.to_string()),
             return_opcode: true,

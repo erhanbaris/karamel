@@ -183,10 +183,9 @@ impl FunctionReference {
     unsafe fn native_function_call(reference: &FunctionReference, func: NativeCall, compiler: &mut KaramelCompilerContext, source: Option<VmObject>) -> Result<(), KaramelErrorType> {            
         let total_args                 = *compiler.opcodes_ptr.offset(1);
         let call_return_assign_to_temp = *compiler.opcodes_ptr.offset(2) != 0;
-        let parameter = match reference.flags {
-            FunctionFlag::IN_CLASS => FunctionParameter::new(&compiler.stack, source, get_memory_index!(compiler) as usize, karamel_dbg!(total_args), &compiler.stdout, &compiler.stderr),
-            _ => FunctionParameter::new(&compiler.stack, source, get_memory_index!(compiler) as usize, karamel_dbg!(total_args), &compiler.stdout, &compiler.stderr)
-        };
+        let parameter = FunctionParameter::new(&compiler.stack, source, get_memory_index!(compiler) as usize, karamel_dbg!(total_args), &compiler.stdout, &compiler.stderr);
+
+        dump_data!(compiler, "native_function_call");
         
         match func(parameter) {
             Ok(result) => {
@@ -225,8 +224,8 @@ impl FunctionReference {
             }
 
             let memory_index = get_memory_index!(options) as usize;
-            let arguments = &options.stack[memory_index - argument_size as usize..memory_index];
             dec_memory_index!(options, argument_size.into());
+            dump_data!(options, "Current");
 
             if options.scopes.len() <= options.scope_index {
                 options.scopes.resize(options.scopes.len() * 2, Scope::empty());
@@ -234,38 +233,16 @@ impl FunctionReference {
 
             let mut scope = &mut options.scopes[options.scope_index];
             let storage = &mut options.storages[reference.storage_index];
-            
-            /*
-            TODO: fast but has bug
-            if scope.storage_index == -1 {
-                scope.memory = storage.get_memory();
-                scope.stack.resize(storage.get_temp_size() as usize, EMPTY_OBJECT);
-                scope.storage_index = reference.storage_index as isize;
-            }*/
 
-            scope.memory = storage.get_memory();
             scope.storage_index = reference.storage_index as isize;
             scope.constant_ptr = storage.constants.as_ptr();
-
-            scope.memory_ptr = scope.memory.as_mut_ptr();
+            scope.stack_ptr = options.stack_ptr;
 
             scope.location                   = old_index;
             scope.call_return_assign_to_temp = call_return_assign_to_temp;
 
             options.current_scope = scope;
-            
-
-            if argument_size > 0 {
-                for index in 0..argument_size {
-                    *options.stack_ptr = arguments[argument_size as usize-index as usize - 1];
-                    inc_memory_index!(options, 1);
-                }
-
-                for i in 0..argument_size as usize {
-                    dec_memory_index!(options, 1);
-                    *(*options.current_scope).memory_ptr.offset(i as isize) = *options.stack_ptr;
-                }
-            }
+            inc_memory_index!(options, argument_size.into());
         }
         Ok(())
     }
