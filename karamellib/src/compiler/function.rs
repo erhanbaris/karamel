@@ -223,23 +223,22 @@ impl FunctionReference {
                 });
             }
 
-            let memory_index = get_memory_index!(options) as usize;
             dec_memory_index!(options, argument_size.into());
             dump_data!(options, "Current");
 
             if options.scopes.len() <= options.scope_index {
                 options.scopes.resize(options.scopes.len() * 2, Scope::empty());
+                options.scopes_ptr = options.scopes.as_mut_ptr();
             }
 
-            let mut scope = &mut options.scopes[options.scope_index];
+            let mut scope = options.scopes_ptr.add(options.scope_index);
             let storage = &mut options.storages[reference.storage_index];
 
-            scope.storage_index = reference.storage_index as isize;
-            scope.constant_ptr = storage.constants.as_ptr();
-            scope.stack_ptr = options.stack_ptr;
+            (*scope).constant_ptr = storage.constants.as_ptr();
+            (*scope).stack_ptr = options.stack_ptr;
 
-            scope.location                   = old_index;
-            scope.call_return_assign_to_temp = call_return_assign_to_temp;
+            (*scope).location                   = old_index;
+            (*scope).call_return_assign_to_temp = call_return_assign_to_temp;
 
             options.current_scope = scope;
             inc_memory_index!(options, argument_size.into());

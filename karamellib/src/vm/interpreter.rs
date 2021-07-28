@@ -56,14 +56,10 @@ pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObjec
     }
     context.stack_ptr = context.stack.as_mut_ptr();
     {
-        let mut memory = context.storages[0].get_memory();
-        let memory_ptr = memory.as_mut_ptr();
-        
         context.scopes[context.scope_index] = Scope {
             location: ptr::null_mut(),
             call_return_assign_to_temp: false,
             stack_ptr: context.stack_ptr,
-            storage_index: 0,
             constant_ptr: context.storages[0].constants.as_ptr()
         };
 
@@ -307,7 +303,7 @@ pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObjec
 
                     let argument_size = *context.opcodes_ptr.sub(1);
                     context.stack_ptr = (*context.current_scope).stack_ptr;
-                    context.current_scope          = &mut context.scopes[context.scope_index] as *mut Scope;                    
+                    context.current_scope          = context.scopes_ptr.add(context.scope_index);              
 
                     if call_return_assign_to_temp {
                         *context.stack_ptr = return_value;
