@@ -61,7 +61,8 @@ impl InterpreterCompiler {
         context.opcode_generator.add_opcode(VmOpCode::Halt);
         context.opcode_generator.generate(&mut context.opcodes);
 
-        context.opcodes_ptr = context.opcodes.as_mut_ptr();
+        context.opcodes_ptr     = context.opcodes.as_mut_ptr();
+        context.opcodes_top_ptr = context.opcodes_ptr;
 
         Ok(())
     }

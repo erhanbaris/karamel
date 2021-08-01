@@ -212,7 +212,8 @@ impl FunctionReference {
             let argument_size              = *options.opcodes_ptr.offset(1);
             let call_return_assign_to_temp = *options.opcodes_ptr.offset(2) != 0;
             let old_index                  = options.opcodes_ptr.offset(2);
-            options.opcodes_ptr            = options.opcodes.as_mut_ptr().offset(reference.opcode_location.get() as isize);
+            let location = reference.opcode_location.get() as isize;
+            options.opcodes_ptr            = options.opcodes_top_ptr.offset(location);
             options.scope_index           += 1;
 
             if argument_size != *options.opcodes_ptr {
@@ -232,9 +233,9 @@ impl FunctionReference {
             }
 
             let mut scope = options.scopes_ptr.add(options.scope_index);
-            let storage = &mut options.storages[reference.storage_index];
+            let storage = options.storages_ptr.add(reference.storage_index);
 
-            (*scope).constant_ptr = storage.constants.as_ptr();
+            (*scope).constant_ptr = (*storage).constants.as_ptr();
             (*scope).stack_ptr = options.stack_ptr;
 
             (*scope).location                   = old_index;

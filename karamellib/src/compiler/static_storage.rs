@@ -24,6 +24,7 @@ unsafe fn from_buf_raw<T>(ptr: *const T, elts: usize) -> Vec<T> {
 pub struct StaticStorage {
     pub index                 : usize,
     pub constants             : Vec<VmObject>,
+    pub constants_ptr         : *const VmObject,
     pub variables             : Vec<String>,
     pub memory                : Vec<VmObject>,
     pub parent_location       : Option<usize>
@@ -31,13 +32,16 @@ pub struct StaticStorage {
 
 impl StaticStorage {
     pub fn new(index: usize) -> Self {
-        StaticStorage {
+        let mut storage = StaticStorage {
             index: index,
-            constants: Vec::new(),
+            constants: Vec::with_capacity(128),
+            constants_ptr: ptr::null(),
             memory: Vec::new(),
             variables: Vec::new(),
             parent_location: None
-        }
+        };
+        storage.constants_ptr = storage.constants.as_ptr();
+        storage
     }
 
     pub fn get_mut_memory(&mut self) -> &mut Vec<VmObject> { 

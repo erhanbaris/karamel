@@ -55,6 +55,7 @@ pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObjec
         return Ok(Vec::new());
     }
     context.stack_ptr = context.stack.as_mut_ptr();
+    context.storages_ptr = context.storages.as_mut_ptr();
     {
         context.scopes[context.scope_index] = Scope {
             location: ptr::null_mut(),
@@ -141,7 +142,7 @@ pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObjec
                 },
 
                 VmOpCode::Not => {
-                    *context.stack_ptr.sub(1) = VmObject::from(!(*context.stack_ptr.sub(1)).deref().is_true());
+                    *context.stack_ptr.sub(1) = VmObject::from(!(*context.stack_ptr.sub(1)).deref_clean().is_true());
                     dump_data!(context, "result");
                     karamel_print_level2!("Not: {:?}", *context.stack_ptr.sub(1));
                 },
