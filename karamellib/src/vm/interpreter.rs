@@ -473,15 +473,6 @@ pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObjec
 
             context.opcodes_ptr = context.opcodes_ptr.offset(1);
         }
-
-        
-        /*for (index, item) in context.scopes[0].stack.iter().enumerate() {
-            context.storages[0].get_mut_stack()[index] = *item;
-        }*/
-
-        /*for (index, item) in context.scopes[0].memory.iter().enumerate() {
-            context.storages[0].get_mut_memory()[index] = *item;
-        }*/
         
         #[cfg(feature = "dumpMemory")] {
             context.storages[0].dump();

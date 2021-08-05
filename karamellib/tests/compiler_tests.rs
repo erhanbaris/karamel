@@ -30,8 +30,7 @@ mod tests {
                 let mut compiler_options: KaramelCompilerContext = KaramelCompilerContext::new();
 
                 if let Ok(_) = opcode_compiler.compile(syntax_result.unwrap().clone(), &mut compiler_options) {
-                    let memory = compiler_options.storages[0].get_memory();
-                    for object in &*memory {
+                    for object in compiler_options.storages[0].constants.iter() {
                         converted_memory.push((*object.deref()).clone());
                     }
                     assert_eq!(converted_memory, $result);

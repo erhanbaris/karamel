@@ -69,7 +69,7 @@ mod tests {
     fn test_1() {
         let mut opcodes = Vec::new();
         let generator = CallGenerator {
-            call_type: CallType::Call { location: 100 },
+            call_type: CallType::Call { constant_location: 100 },
             argument_size: 1,
             assign_to_temp: false
         };
@@ -104,7 +104,7 @@ mod tests {
     fn test_3() {
         let mut opcodes = Vec::new();
         let generator = CallGenerator {
-            call_type: CallType::Call { location: 100 },
+            call_type: CallType::Call { constant_location: 100 },
             argument_size: 5,
             assign_to_temp: true
         };

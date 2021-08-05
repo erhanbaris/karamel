@@ -6,6 +6,7 @@ mod tests {
     use crate::karamellib::compiler::*;
     use crate::karamellib::vm::*;
     use crate::karamellib::syntax::*;
+    use crate::karamellib::*;
 
     use std::rc::Rc;
 
@@ -33,8 +34,10 @@ mod tests {
 
                 if let Ok(_) = opcode_compiler.compile(ast.clone(), &mut compiler_options) {
                     if unsafe { interpreter::run_vm(&mut compiler_options).is_ok() } {
-                        let memory = compiler_options.storages[0].get_stack().first().unwrap().deref_clean();
-                        assert_eq!(memory, $result);
+                        unsafe { 
+                            let memory = pop!(compiler_options, "memory");
+                            assert_eq!(*memory, $result);
+                        }
                     } else {
                         assert!(false);
                     }
