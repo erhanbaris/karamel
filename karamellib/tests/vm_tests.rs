@@ -165,8 +165,8 @@ mod tests {
     test_last_memory!(vm_49, "1_024 * 1_024 == 1_048_576", KaramelPrimative::Bool(true));
     test_last_memory!(vm_50, "empty == empty", KaramelPrimative::Bool(true));
     test_last_memory!(vm_51, "empty != empty", KaramelPrimative::Bool(false));
-    test_last_memory!(vm_52, "yok == yok", KaramelPrimative::Bool(true));
-    test_last_memory!(vm_53, "yok != yok", KaramelPrimative::Bool(false));
+    test_last_memory!(vm_52, "boş == boş", KaramelPrimative::Bool(true));
+    test_last_memory!(vm_53, "boş != boş", KaramelPrimative::Bool(false));
     test_last_memory!(vm_55, "test_1 == test_2", KaramelPrimative::Bool(true));
     test_variable_value!(vm_56, "text", "text = 1024", KaramelPrimative::Number(1024.0));
     test_variable_value!(vm_57, "result", r#"text = 1024
@@ -317,12 +317,12 @@ hataayıklama::doğrula(test() + test(), 20)
 execute!(vm_97, r#"
 fonk test:
     döndür
-hataayıklama::doğrula(test(), yok)
+hataayıklama::doğrula(test(), boş)
 "#);
 execute!(vm_98, r#"
 fonk test:
-    döndür yok
-hataayıklama::doğrula(test(), yok)
+    döndür boş
+hataayıklama::doğrula(test(), boş)
 "#);
 execute!(vm_99, r#"
 fonk test_1:

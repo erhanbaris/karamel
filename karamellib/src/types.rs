@@ -88,7 +88,7 @@ pub static KEYWORDS: &[(&str, KaramelKeywordType)] = &[
     ("yoksa",   KaramelKeywordType::Else),
     ("ve",     KaramelKeywordType::And),
     ("veya",   KaramelKeywordType::Or),
-    ("yok",    KaramelKeywordType::Empty),
+    ("boş",    KaramelKeywordType::Empty),
     ("mod",    KaramelKeywordType::Modulo),
     ("değil",         KaramelKeywordType::Not),
     ("degil",         KaramelKeywordType::Not),

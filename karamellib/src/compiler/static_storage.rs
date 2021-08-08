@@ -125,7 +125,7 @@ impl StaticStorage {
 
     pub fn get_function_constant(&self, name: String, module: Rc<dyn Module>) -> Option<u8> {
         
-        for (index, item) in self.memory.iter().enumerate() {
+        for (index, item) in self.constants.iter().enumerate() {
             if let KaramelPrimative::Function(reference, _) = &*item.deref() {
                 if reference.name        == name && 
                    reference.module.get_path() == module.get_path() {
@@ -139,7 +139,7 @@ impl StaticStorage {
 
     pub fn get_class_constant(&self, name: String, _module_path: Rc<dyn Module>) -> Option<u8> {
         
-        for (index, item) in self.memory.iter().enumerate() {
+        for (index, item) in self.constants.iter().enumerate() {
             if let KaramelPrimative::Class(reference) = &*item.deref() {
                 if reference.get_class_name() == name {
                     return Some(index as u8);
@@ -160,7 +160,6 @@ impl StaticStorage {
         debug_println!("║               MEMORY DUMP {:10}   ║", format!("#{}", self.index));
         debug_println!("╠═══╦═════╦══════════════════════════════╣");
 
-        let variables = self.variables.len();
 
         for (index, item) in self.memory.iter().enumerate() {
             let last_type = "V";
@@ -174,6 +173,13 @@ impl StaticStorage {
         debug_println!("╠════════════════════════════════════════╣");
         for variable in &self.variables {
             debug_println!("║ {:38} ║", format!("{}", variable));
+        }
+        debug_println!("╚════════════════════════════════════════╝");
+        debug_println!("╔════════════════════════════════════════╗");
+        debug_println!("║             CONSTANT DUMP              ║");
+        debug_println!("╠════════════════════════════════════════╣");
+        for constant in &self.constants {
+            debug_println!("║ {:38} ║", format!("{}", constant));
         }
         debug_println!("╚════════════════════════════════════════╝");
     }

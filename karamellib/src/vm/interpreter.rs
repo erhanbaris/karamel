@@ -54,13 +54,18 @@ pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObjec
         log_update.render(&generated[..]);
         return Ok(Vec::new());
     }
-    context.stack_ptr = context.stack.as_mut_ptr();
+
+    // Save top stack for main storage
+    let top_stack = context.stack.as_mut_ptr();
+
+    // Move stack pointer to forward. First slots are reserved for variable memories.
+    context.stack_ptr = top_stack.add(context.storages[0].variables.len());
     context.storages_ptr = context.storages.as_mut_ptr();
     {
         context.scopes[context.scope_index] = Scope {
             location: ptr::null_mut(),
             call_return_assign_to_temp: false,
-            stack_ptr: context.stack_ptr,
+            top_stack: top_stack,
             constant_ptr: context.storages[0].constants.as_ptr()
         };
 
@@ -102,7 +107,7 @@ pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObjec
                 VmOpCode::Load => {
                     let tmp   = *context.opcodes_ptr.offset(1) as usize;
                     let scope = &mut *context.current_scope;                    
-                    *context.stack_ptr = karamel_dbg!(*scope.stack_ptr.offset(tmp as isize));
+                    *context.stack_ptr = karamel_dbg!(*scope.top_stack.offset(tmp as isize));
                     context.opcodes_ptr = context.opcodes_ptr.offset(1);
                     karamel_print_level2!("Load: [{:?}]: {:?}", tmp, *context.stack_ptr);
                     dump_data!(context, "loaded");
@@ -111,24 +116,25 @@ pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObjec
 
                 VmOpCode::Constant => {
                     let tmp   = *context.opcodes_ptr.offset(1) as usize;
-                    *context.stack_ptr = karamel_dbg!(*(*context.current_scope).constant_ptr.offset(tmp as isize));
+                    let scope = &mut *context.current_scope;        
+                    *context.stack_ptr = karamel_dbg!(*scope.constant_ptr.offset(tmp as isize));        
                     context.opcodes_ptr = context.opcodes_ptr.offset(1);
                     karamel_print_level2!("Constant: [{:?}]: {:?}", tmp, *context.stack_ptr);
-                    dump_data!(context, "loaded");
+                    dump_data!(context, "constant loaded");
                     inc_memory_index!(context, 1);
                 },
 
                 VmOpCode::Store => {
                     let tmp = *context.opcodes_ptr.offset(1) as usize;
                     dec_memory_index!(context, 1);
-                    *(*context.current_scope).stack_ptr.offset(tmp as isize) = karamel_dbg!(*context.stack_ptr);
+                    *(*context.current_scope).top_stack.offset(tmp as isize) = karamel_dbg!(*context.stack_ptr);
                     context.opcodes_ptr = context.opcodes_ptr.offset(1);
                     karamel_print_level2!("Store: [{:?}]: {:?}", tmp, *context.stack_ptr);
                 },
 
                 VmOpCode::CopyToStore => {
                     let tmp = *context.opcodes_ptr.offset(1) as usize;
-                    *(*context.current_scope).stack_ptr.offset(tmp as isize) = karamel_dbg!(*context.stack_ptr.sub(1));
+                    *(*context.current_scope).top_stack.offset(tmp as isize) = karamel_dbg!(*context.stack_ptr.sub(1));
                     context.opcodes_ptr = context.opcodes_ptr.offset(1);
                     karamel_print_level2!("CopyToStore: [{:?}]: {:?}", tmp, *context.stack_ptr);
                 },
@@ -136,7 +142,7 @@ pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObjec
                 VmOpCode::FastStore => {
                     let destination = *context.opcodes_ptr.offset(1) as usize;
                     let source      = *context.opcodes_ptr.offset(2) as usize;
-                    *(*context.current_scope).stack_ptr.offset(destination as isize) = karamel_dbg!(*(*context.current_scope).stack_ptr.offset(source as isize));
+                    *(*context.current_scope).top_stack.offset(destination as isize) = karamel_dbg!(*(*context.current_scope).top_stack.offset(source as isize));
                     context.opcodes_ptr = context.opcodes_ptr.offset(2);
                     karamel_print_level2!("FastStore: {:?}: {:?} => {:?}", *context.stack_ptr, source, destination);
                 },
@@ -302,8 +308,7 @@ pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObjec
                     let call_return_assign_to_temp = (*context.current_scope).call_return_assign_to_temp;
                     context.scope_index           -= 1;
 
-                    let argument_size = *context.opcodes_ptr.sub(1);
-                    context.stack_ptr = (*context.current_scope).stack_ptr;
+                    context.stack_ptr = (*context.current_scope).top_stack;
                     context.current_scope          = context.scopes_ptr.add(context.scope_index);              
 
                     if call_return_assign_to_temp {
@@ -402,10 +407,9 @@ pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObjec
                     let indexer = pop!(context, "indexer");
                     let raw_object = pop_raw!(context, "raw_object");
                     let object  = raw_object.deref();
-                    karamel_print_level2!("SetItem: {:?}[{:?}] = {:?}", object, indexer, assign_item);
+                    karamel_print_level2!("GetItem: object={:?}, indexer={:?}, item={:?}", object, indexer, assign_item);
 
                     // todo: change all those codes with setter implementation
-
                     match &*object {
                         KaramelPrimative::List(value) => {
                             let indexer_value = match &*indexer {
@@ -443,7 +447,7 @@ pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObjec
                     let indexer = pop!(context, "indexer");
                     let raw_object  = pop_raw!(context, "raw_object");
                     let object = &*raw_object.deref();
-                    karamel_print_level2!("GetItem: {:?}[{:?}]", object, indexer);
+                    karamel_print_level2!("GetItem: object={:?}, indexer={:?}", object, indexer);
 
                     *context.stack_ptr = match &*indexer {
                         KaramelPrimative::Text(text) => {

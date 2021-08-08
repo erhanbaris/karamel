@@ -19,8 +19,8 @@ hataayıklama::doğrula(soyisim, "Baris")
 
 hataayıklama::doğrula("1024".sayi(), 1024)
 hataayıklama::doğrula("1024.1".sayi(), 1024.1)
-hataayıklama::doğrula("a1024.1".sayi(), yok)
-hataayıklama::doğrula("erhan".sayi(), yok)
+hataayıklama::doğrula("a1024.1".sayi(), boş)
+hataayıklama::doğrula("erhan".sayi(), boş)
 hataayıklama::doğrula("+123".sayi(), 123)
 hataayıklama::doğrula("-123".sayi(), -123)
 

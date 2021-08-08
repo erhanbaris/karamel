@@ -4,7 +4,6 @@ use crate::error::KaramelErrorType;
 use crate::compiler::ast::KaramelAstType;
 use crate::compiler::value::KaramelPrimative;
 use crate::compiler::context::KaramelCompilerContext;
-use crate::types::KaramelOperatorType;
 use crate::syntax::loops::LoopType;
 
 use super::module::OpcodeModule;
@@ -16,11 +15,11 @@ impl StorageBuilder {
     }
 
     pub fn prepare(&self, module: Rc<OpcodeModule>, ast: &KaramelAstType, storage_index: usize, options: &mut KaramelCompilerContext) -> Result<(), KaramelErrorType> {
-        self.get_temp_count_from_ast(module.clone(),ast, &KaramelAstType::None, options, storage_index)?;
+        self.build(module.clone(),ast, &KaramelAstType::None, options, storage_index)?;
         Ok(())
     }
 
-    fn get_temp_count_from_ast(&self, module: Rc<OpcodeModule>, ast: &KaramelAstType, _: &KaramelAstType, options: &mut KaramelCompilerContext, storage_index: usize) -> Result<(), KaramelErrorType> {
+    fn build(&self, module: Rc<OpcodeModule>, ast: &KaramelAstType, _: &KaramelAstType, options: &mut KaramelCompilerContext, storage_index: usize) -> Result<(), KaramelErrorType> {
         use crate::buildin::Module;
         
         match ast {
@@ -28,24 +27,24 @@ impl StorageBuilder {
                 left,
                 operator: _,
                 right} => {
-                    self.get_temp_count_from_ast(module.clone(),left, ast, options, storage_index)?;
-                    self.get_temp_count_from_ast(module.clone(),right, ast, options, storage_index)?;
+                    self.build(module.clone(),left, ast, options, storage_index)?;
+                    self.build(module.clone(),right, ast, options, storage_index)?;
                 },
             
             KaramelAstType::Control {
                 left,
                 operator: _,
                 right} => {
-                    self.get_temp_count_from_ast(module.clone(),left, ast, options, storage_index)?;
-                    self.get_temp_count_from_ast(module.clone(),right, ast, options, storage_index)?;
+                    self.build(module.clone(),left, ast, options, storage_index)?;
+                    self.build(module.clone(),right, ast, options, storage_index)?;
                 },
             
-            KaramelAstType::PrefixUnary { operator: _, expression, assign_to_temp } => {
-                self.get_temp_count_from_ast(module.clone(),expression, ast, options, storage_index)?;
+            KaramelAstType::PrefixUnary { operator: _, expression, assign_to_temp: _ } => {
+                self.build(module.clone(),expression, ast, options, storage_index)?;
             },
 
             KaramelAstType::SuffixUnary(_, expression) => {
-                self.get_temp_count_from_ast(module.clone(),expression, ast, options, storage_index)?;
+                self.build(module.clone(),expression, ast, options, storage_index)?;
             },
             
             KaramelAstType::Symbol(string) => {
@@ -88,20 +87,15 @@ impl StorageBuilder {
             
             KaramelAstType::Assignment {
                 variable,
-                operator,
+                operator: _,
                 expression} =>  {
-                let var_stack_size = self.get_temp_count_from_ast(module.clone(),variable, ast, options, storage_index)?;                
-                let stack_size = self.get_temp_count_from_ast(module.clone(),expression, ast, options, storage_index)?;
-                
-                let size = match *operator {
-                    KaramelOperatorType::Assign => 0,
-                    _ => 2
-                };
+                self.build(module.clone(),variable, ast, options, storage_index)?;                
+                self.build(module.clone(),expression, ast, options, storage_index)?;
             },
             
             KaramelAstType::Block(asts) => {
                 for array_item in asts {
-                    self.get_temp_count_from_ast(module.clone(),array_item, ast, options, storage_index)?;
+                    self.build(module.clone(),array_item, ast, options, storage_index)?;
                 }
             },
             
@@ -110,8 +104,8 @@ impl StorageBuilder {
                 indexer,
                 assign_to_temp: _
             } => {
-                self.get_temp_count_from_ast(module.clone(),source, ast, options, storage_index)?;
-                self.get_temp_count_from_ast(module.clone(),indexer, ast, options, storage_index)?;
+                self.build(module.clone(),source, ast, options, storage_index)?;
+                self.build(module.clone(),indexer, ast, options, storage_index)?;
             },
 
 /*
@@ -128,10 +122,10 @@ impl StorageBuilder {
 ║   Function Pointer   ║
 ╚══════════════════════╝
  */
-            KaramelAstType::FuncCall { func_name_expression, arguments, assign_to_temp } => {
+            KaramelAstType::FuncCall { func_name_expression, arguments, assign_to_temp: _ } => {
                 /* Build arguments */
                 for arg in arguments {
-                    self.get_temp_count_from_ast(module.clone(),arg, ast, options, storage_index)?;
+                    self.build(module.clone(),arg, ast, options, storage_index)?;
                 }
 
                 //compiler_option.max_stack = max(max_temp.max_stack);
@@ -154,13 +148,13 @@ impl StorageBuilder {
                         };
                     },
                     _ => {
-                        self.get_temp_count_from_ast(module.clone(),func_name_expression, ast, options, storage_index)?;
+                        self.build(module.clone(),func_name_expression, ast, options, storage_index)?;
                     }
                 };
             },
 
             KaramelAstType::Return(expression) => {
-                self.get_temp_count_from_ast(module.clone(),expression, ast, options, storage_index)?;
+                self.build(module.clone(),expression, ast, options, storage_index)?;
             },
 
             KaramelAstType::Loop {
@@ -169,16 +163,16 @@ impl StorageBuilder {
             } => {
                 match loop_type {
                     LoopType::Scalar { variable, control, increment } => {
-                        self.get_temp_count_from_ast(module.clone(),&*variable, ast, options, storage_index)?;
-                        self.get_temp_count_from_ast(module.clone(),&*control, ast, options, storage_index)?;
-                        self.get_temp_count_from_ast(module.clone(),&*increment, ast, options, storage_index)?;
+                        self.build(module.clone(),&*variable, ast, options, storage_index)?;
+                        self.build(module.clone(),&*control, ast, options, storage_index)?;
+                        self.build(module.clone(),&*increment, ast, options, storage_index)?;
                     },
                     LoopType::Simple(control) => {
-                        self.get_temp_count_from_ast(module.clone(),&*control, ast, options, storage_index)?
+                        self.build(module.clone(),&*control, ast, options, storage_index)?
                     },
                     LoopType::Endless => {}
                 };
-                self.get_temp_count_from_ast(module.clone(),&*body, ast, options, storage_index)?;
+                self.build(module.clone(),&*body, ast, options, storage_index)?;
             },
 
             KaramelAstType::Primative(primative) => {
@@ -187,7 +181,7 @@ impl StorageBuilder {
 
             KaramelAstType::List(list) => {
                 for array_item in list {
-                    self.get_temp_count_from_ast(module.clone(),&*array_item, ast, options, storage_index)?;
+                    self.build(module.clone(),&*array_item, ast, options, storage_index)?;
                 }
                 return Ok(())
             },
@@ -195,32 +189,32 @@ impl StorageBuilder {
             KaramelAstType::Dict(dict) => {
                 for dict_item in dict {
                     options.storages.get_mut(storage_index).unwrap().add_constant(dict_item.key.clone());
-                    self.get_temp_count_from_ast(module.clone(),&dict_item.value, ast, options, storage_index)?;
+                    self.build(module.clone(),&dict_item.value, ast, options, storage_index)?;
                 }
                 return Ok(())
             },
 
             KaramelAstType::Indexer { body, indexer } => {
-                self.get_temp_count_from_ast(module.clone(),body, ast, options, storage_index)?;
-                self.get_temp_count_from_ast(module.clone(),indexer, ast, options, storage_index)?;
+                self.build(module.clone(),body, ast, options, storage_index)?;
+                self.build(module.clone(),indexer, ast, options, storage_index)?;
             },
 
-            KaramelAstType::FunctionDefination { name: _, arguments, body } => {
-                self.get_temp_count_from_ast(module.clone(),body, ast, options, storage_index)?;
+            KaramelAstType::FunctionDefination { name: _, arguments: _, body } => {
+                self.build(module.clone(),body, ast, options, storage_index)?;
             },
 
             KaramelAstType::IfStatement {
                 condition, body, else_body, else_if} => {
-                    self.get_temp_count_from_ast(module.clone(),condition, ast, options, storage_index)?;
-                    self.get_temp_count_from_ast(module.clone(),body, ast, options, storage_index)?;
+                    self.build(module.clone(),condition, ast, options, storage_index)?;
+                    self.build(module.clone(),body, ast, options, storage_index)?;
 
                     if let Some(else_) = else_body {
-                        self.get_temp_count_from_ast(module.clone(),else_, ast, options, storage_index)?;
+                        self.build(module.clone(),else_, ast, options, storage_index)?;
                     }
 
                     for else_if_item in else_if {
-                        self.get_temp_count_from_ast(module.clone(),&else_if_item.condition, ast, options, storage_index)?;
-                        self.get_temp_count_from_ast(module.clone(),&else_if_item.body, ast, options, storage_index)?;
+                        self.build(module.clone(),&else_if_item.condition, ast, options, storage_index)?;
+                        self.build(module.clone(),&else_if_item.body, ast, options, storage_index)?;
                     }
                 },
 

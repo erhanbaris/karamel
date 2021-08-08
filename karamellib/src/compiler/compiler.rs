@@ -469,7 +469,7 @@ impl InterpreterCompiler {
         let result = storage.get_function_constant(variable.to_string(), module.clone());
         match result {
             Some(index) => {
-                context.opcode_generator.create_load(index);
+                context.opcode_generator.create_constant(index);
                 return Ok(())
             },
             _ => ()
@@ -478,7 +478,7 @@ impl InterpreterCompiler {
         let result = storage.get_class_constant(variable.to_string(), module.clone());
         match result {
             Some(index) => {
-                context.opcode_generator.create_load(index);
+                context.opcode_generator.create_constant(index);
                 return Ok(())
             },
             _ => ()

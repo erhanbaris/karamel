@@ -11,7 +11,6 @@ use crate::compiler::scope::Scope;
 use crate::error::KaramelErrorType;
 use crate::{inc_memory_index, dec_memory_index, get_memory_index};
 use crate::types::*;
-use crate::compiler::value::EMPTY_OBJECT;
 use crate::compiler::context::KaramelCompilerContext;
 
 use super::module::OpcodeModule;
@@ -236,7 +235,7 @@ impl FunctionReference {
             let storage = options.storages_ptr.add(reference.storage_index);
 
             (*scope).constant_ptr = (*storage).constants.as_ptr();
-            (*scope).stack_ptr = options.stack_ptr;
+            (*scope).top_stack = options.stack_ptr;
 
             (*scope).location                   = old_index;
             (*scope).call_return_assign_to_temp = call_return_assign_to_temp;
