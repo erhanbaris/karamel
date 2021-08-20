@@ -132,9 +132,8 @@ impl InterpreterCompiler {
         Ok(())
     }
 
-    fn generate_functions(&self, module: Rc<OpcodeModule>, functions: &mut Vec<Rc<FunctionReference>>, context: &mut KaramelCompilerContext) -> CompilerResult {
-        for function in functions {
-
+    fn generate_functions(&self, module: Rc<OpcodeModule>, functions: & Vec<Rc<FunctionReference>>, context: &mut KaramelCompilerContext) -> CompilerResult {
+        for function in functions.iter() {
             /* Validate function name and parameters */
             self.check_prohibited_names(&function.name)?;
             for argument in &function.arguments {
@@ -144,6 +143,14 @@ impl InterpreterCompiler {
             self.check_prohibited_names(&function.name)?;
             context.opcode_generator.create_function_definition(function.clone());
             self.generate_opcode(module.clone(), &function.opcode_body.as_ref().unwrap(), &function.opcode_body.as_ref().unwrap(), context, function.storage_index as usize)?;
+        }
+        
+        for function in functions.iter() {
+
+            let function_location = context.storages[function.defined_storage_index].get_constant_location(Rc::new(KaramelPrimative::Function(function.clone(), None))).unwrap();
+            let variable_location = context.storages[function.defined_storage_index].get_variable_location(&function.name[..]).unwrap();
+            
+            context.opcode_generator.create_fast_store(function_location, variable_location);
         }
 
         Ok(())

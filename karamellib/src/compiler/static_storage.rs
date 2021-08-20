@@ -160,7 +160,6 @@ impl StaticStorage {
         debug_println!("║               MEMORY DUMP {:10}   ║", format!("#{}", self.index));
         debug_println!("╠═══╦═════╦══════════════════════════════╣");
 
-
         for (index, item) in self.memory.iter().enumerate() {
             let last_type = "V";
 

@@ -29,12 +29,14 @@ fn main() {
         },
         None => ExecutionParameters {
             source: ExecutionSource::Code(r#"
-fonk Fibonacci(n):
-    n <= 1 ise:
-        döndür n
-    döndür Fibonacci(n-1) + Fibonacci(n-2)
-gç::satıryaz(Fibonacci(35))
+fonk test_1:
+    döndür 'erhan'
+erhan = test_1
+barış = erhan
+hataayıklama::doğrula(barış(), erhan())
+hataayıklama::doğrula(barış() + " barış", 'erhan barış')
         
+
 "#.to_string()),
             return_opcode: true,
             return_output: true

@@ -269,6 +269,7 @@ pub fn find_function_definition_type(module: Rc<OpcodeModule>, ast: Rc<KaramelAs
 
             //options.storages[current_storage_index].add_static_data(name, Rc::new(KaramelPrimative::Function(function.clone(), None)));
             options.storages[current_storage_index].add_constant(Rc::new(KaramelPrimative::Function(function.clone(), None)));
+            options.storages[current_storage_index].add_variable(&name[..]);
 
             for argument in arguments {
                 options.storages[new_storage_index].add_variable(argument);

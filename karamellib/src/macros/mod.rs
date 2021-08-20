@@ -6,7 +6,7 @@ macro_rules! current_memory_index {
 }
 
 #[macro_export]
-#[cfg(feature = "dbg_level3")]
+#[cfg(any(feature = "dbg", feature = "dbg_level3"))]
 macro_rules! dump_data {
     ($context: expr, $message: expr) => {{
         let location = current_memory_index!($context);
@@ -27,7 +27,7 @@ macro_rules! karamel_dbg_any {
 }
 
 #[macro_export]
-#[cfg(not(feature = "dbg_level3"))]
+#[cfg(all(not(feature = "dbg"), not(feature = "dbg_level3")))]
 macro_rules! dump_data {
     ($context: expr, $message: expr) => { }
 }
@@ -153,38 +153,38 @@ macro_rules! karamel_dbg_level3 {
 }
 
 #[macro_export] 
-#[cfg(feature = "dbg_level1")]
+#[cfg(any(feature = "dbg", feature = "dbg_level1"))]
 macro_rules! karamel_print_level1 {
     ($($arg:tt)*) => (println!("DEBUG1: {}", std::format_args!($($arg)*)));
 }
 
 #[macro_export] 
-#[cfg(not(feature = "dbg_level1"))]
+#[cfg(all(not(feature = "dbg"), not(feature = "dbg_level1")))]
 macro_rules! karamel_print_level1 {
     ($($arg:tt)*) => { }
 }
 
 #[macro_export] 
-#[cfg(feature = "dbg_level2")]
+#[cfg(any(feature = "dbg", feature = "dbg_level2"))]
 macro_rules! karamel_print_level2 {
     ($($arg:tt)*) => (println!("DEBUG2: {}", std::format_args!($($arg)*)));
 }
 
 #[macro_export] 
-#[cfg(not(feature = "dbg_level2"))]
+#[cfg(all(not(feature = "dbg"), not(feature = "dbg_level2")))]
 macro_rules! karamel_print_level2 {
     ($($arg:tt)*) => { }
 }
 
 
 #[macro_export] 
-#[cfg(feature = "dbg_level3")]
+#[cfg(any(feature = "dbg", feature = "dbg_level3"))]
 macro_rules! karamel_print_level3 {
     ($($arg:tt)*) => (println!("DEBUG3: {}", std::format_args!($($arg)*)));
 }
 
 #[macro_export] 
-#[cfg(not(feature = "dbg_level3"))]
+#[cfg(all(not(feature = "dbg"), not(feature = "dbg_level3")))]
 macro_rules! karamel_print_level3 {
     ($($arg:tt)*) => { }
 }

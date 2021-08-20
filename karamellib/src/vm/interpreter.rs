@@ -106,7 +106,7 @@ pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObjec
 
                 VmOpCode::Load => {
                     let tmp   = *context.opcodes_ptr.offset(1) as usize;
-                    let scope = &mut *context.current_scope;                    
+                    let scope = &mut *context.current_scope;
                     *context.stack_ptr = karamel_dbg!(*scope.top_stack.offset(tmp as isize));
                     context.opcodes_ptr = context.opcodes_ptr.offset(1);
                     karamel_print_level2!("Load: [{:?}]: {:?}", tmp, *context.stack_ptr);
@@ -196,7 +196,7 @@ pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObjec
                 VmOpCode::Division => {
                     let right = pop_raw!(context, "right");
                     let left = pop_raw!(context, "left");
-                    karamel_print_level2!("Multiply: {:?} / {:?}", left, right);
+                    karamel_print_level2!("Division: {:?} / {:?}", left, right);
 
                     let calculation = match (left.as_number(), right.as_number()) {
                         (Some(l_value),  Some(r_value))   => (l_value / r_value),
@@ -216,7 +216,7 @@ pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObjec
                 VmOpCode::Module => {
                     let right = pop_raw!(context, "right");
                     let left = pop_raw!(context, "left");
-                    karamel_print_level2!("Multiply: {:?} / {:?}", left, right);
+                    karamel_print_level2!("Module: {:?} / {:?}", left, right);
 
                     *context.stack_ptr = match (left.as_number(), right.as_number()) {
                         (Some(l_value),  Some(r_value))   => VmObject::from(karamel_dbg!(l_value) % karamel_dbg!(r_value)),
@@ -229,7 +229,7 @@ pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObjec
                 VmOpCode::Equal => {
                     let right = pop!(context, "right");
                     let left  = pop!(context, "left");
-                    karamel_print_level2!("Multiply: {:?} == {:?}", left, right);
+                    karamel_print_level2!("Equal: {:?} == {:?}", left, right);
                     
                     *context.stack_ptr = VmObject::from(karamel_dbg!(left) == karamel_dbg!(right));
                     dump_data!(context, "result");
@@ -240,7 +240,7 @@ pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObjec
                 VmOpCode::NotEqual => {
                     let right = pop!(context, "right");
                     let left  = pop!(context, "left");
-                    karamel_print_level2!("Multiply: {:?} != {:?}", left, right);
+                    karamel_print_level2!("NotEqual: {:?} != {:?}", left, right);
                     
                     *context.stack_ptr = VmObject::from(karamel_dbg!(left) != karamel_dbg!(right));
                     dump_data!(context, "result");
@@ -250,7 +250,7 @@ pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObjec
                 VmOpCode::GreaterThan => {
                     let right = pop_raw!(context, "right");
                     let left = pop_raw!(context, "left");
-                    karamel_print_level2!("Multiply: {:?} > {:?}", left, right);
+                    karamel_print_level2!("GreaterThan: {:?} > {:?}", left, right);
                     
                     *context.stack_ptr = match (left.as_number(), right.as_number()) {
                         (Some(l_value),  Some(r_value))   => VmObject::from(karamel_dbg!(l_value) > karamel_dbg!(r_value)),

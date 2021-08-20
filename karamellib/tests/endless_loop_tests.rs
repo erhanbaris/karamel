@@ -4,7 +4,6 @@ extern crate karamellib;
 mod tests {
     use karamellib::error::{KaramelError, KaramelErrorType};
 
-    use crate::karamellib::types::*;
     use crate::karamellib::parser::*;
     use crate::karamellib::syntax::*;
     #[warn(unused_macros)]
