@@ -267,9 +267,7 @@ pub fn find_function_definition_type(module: Rc<OpcodeModule>, ast: Rc<KaramelAs
             let storage_builder = StorageBuilder::new();
             storage_builder.prepare(module.clone(), ast.borrow(), new_storage_index, options)?;
 
-            //options.storages[current_storage_index].add_static_data(name, Rc::new(KaramelPrimative::Function(function.clone(), None)));
             options.storages[current_storage_index].add_constant(Rc::new(KaramelPrimative::Function(function.clone(), None)));
-            options.storages[current_storage_index].add_variable(&name[..]);
 
             for argument in arguments {
                 options.storages[new_storage_index].add_variable(argument);

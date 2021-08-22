@@ -142,9 +142,9 @@ pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObjec
                 VmOpCode::FastStore => {
                     let destination = *context.opcodes_ptr.offset(1) as usize;
                     let source      = *context.opcodes_ptr.offset(2) as usize;
-                    *(*context.current_scope).top_stack.offset(destination as isize) = karamel_dbg!(*(*context.current_scope).top_stack.offset(source as isize));
+                    *(*context.current_scope).top_stack.offset(destination as isize) = karamel_dbg!(*(*context.current_scope).constant_ptr.offset(source as isize));
                     context.opcodes_ptr = context.opcodes_ptr.offset(2);
-                    karamel_print_level2!("FastStore: {:?}: {:?} => {:?}", *context.stack_ptr, source, destination);
+                    karamel_print_level2!("FastStore: {:?}: {:?} => {:?}", *(*context.current_scope).top_stack.offset(destination as isize), source, destination);
                 },
 
                 VmOpCode::Not => {
@@ -485,7 +485,7 @@ pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObjec
     
     let mut result = Vec::with_capacity(get_memory_index!(context) as usize);
     for index in 0..get_memory_index!(context) {
-        result.push(*context.stack_ptr.add(index as usize));
+        result.push(*top_stack.add(context.storages[0].variables.len() + index as usize));
     }
 
     Ok(result)

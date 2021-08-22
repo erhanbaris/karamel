@@ -72,8 +72,8 @@ mod tests {
 
                 if let Ok(_) = opcode_compiler.compile(ast.clone(), &mut compiler_options) {
                     if unsafe { interpreter::run_vm(&mut compiler_options).is_ok() } {
-                        match compiler_options.storages[0].get_variable_value(&$variable.to_string()) {
-                            Some(ast) => assert_eq!(*ast, $result),
+                        match compiler_options.storages[0].get_variable_location(&$variable.to_string()) {
+                            Some(location) => assert_eq!(*compiler_options.stack[location as usize].deref(), $result),
                             None => assert!(false)
                         }
                     } else {
