@@ -10,7 +10,7 @@ use super::{DumpBuilder, OpcodeGeneratorTrait};
 pub enum CallType {
 
     /// Call function from memory location
-    Call { location: u8 },
+    Call { constant_location: u8 },
 
     /// Call function from last stack value
     CallStack
@@ -34,9 +34,9 @@ pub struct CallGenerator {
 impl OpcodeGeneratorTrait for CallGenerator {
     fn generate(&self, opcodes: &mut Vec<u8>) {
         match self.call_type {
-            CallType::Call { location } => {
+            CallType::Call { constant_location } => {
                 opcodes.push(VmOpCode::Call.into());
-                opcodes.push(location);
+                opcodes.push(constant_location);
             },
             CallType::CallStack => opcodes.push(VmOpCode::CallStack.into())
         };
@@ -48,9 +48,9 @@ impl OpcodeGeneratorTrait for CallGenerator {
         let opcode_index = index.fetch_add(3, Ordering::SeqCst);
 
         match self.call_type {
-            CallType::Call { location } => {
+            CallType::Call { constant_location } => {
                 index.fetch_add(1, Ordering::SeqCst);
-                builder.add(opcode_index, VmOpCode::Call, location.to_string(), self.argument_size.to_string(), (self.assign_to_temp as u8).to_string());
+                builder.add(opcode_index, VmOpCode::Call, constant_location.to_string(), self.argument_size.to_string(), (self.assign_to_temp as u8).to_string());
             },
             CallType::CallStack => {
                 builder.add(opcode_index, VmOpCode::CallStack, self.argument_size.to_string(), (self.assign_to_temp as u8).to_string(), "".to_string());
@@ -69,7 +69,7 @@ mod tests {
     fn test_1() {
         let mut opcodes = Vec::new();
         let generator = CallGenerator {
-            call_type: CallType::Call { location: 100 },
+            call_type: CallType::Call { constant_location: 100 },
             argument_size: 1,
             assign_to_temp: false
         };
@@ -104,7 +104,7 @@ mod tests {
     fn test_3() {
         let mut opcodes = Vec::new();
         let generator = CallGenerator {
-            call_type: CallType::Call { location: 100 },
+            call_type: CallType::Call { constant_location: 100 },
             argument_size: 5,
             assign_to_temp: true
         };

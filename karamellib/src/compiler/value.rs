@@ -1,3 +1,4 @@
+use std::borrow::Borrow;
 use std::vec::Vec;
 use std::rc::Rc;
 use std::cell::RefCell;
@@ -255,6 +256,8 @@ impl PartialEq for KaramelPrimative {
 }
 
 impl VmObject {
+
+    #[inline]
     pub fn convert(primative: Rc<KaramelPrimative>) -> VmObject {
         match *primative {
             KaramelPrimative::Empty            => VmObject(QNAN | EMPTY_FLAG),
@@ -267,8 +270,9 @@ impl VmObject {
         }
     }
 
-    pub fn native_convert(primative: KaramelPrimative) -> VmObject {
-        match primative {
+    #[inline]
+    pub fn native_convert<T: Borrow<KaramelPrimative>>(primative: T) -> VmObject {
+        match primative.borrow() {
             KaramelPrimative::Empty            => VmObject(QNAN | EMPTY_FLAG),
             KaramelPrimative::Number(number)   => VmObject(number.to_bits()),
             KaramelPrimative::Bool(true)       => TRUE_OBJECT,
@@ -279,6 +283,7 @@ impl VmObject {
         }
     }
 
+    #[inline]
     pub fn native_convert_by_ref(primative: Rc<KaramelPrimative>) -> VmObject {
         match &*primative {
             KaramelPrimative::Empty            => VmObject(QNAN | EMPTY_FLAG),
@@ -291,6 +296,7 @@ impl VmObject {
         }
     }
 
+    #[inline]
     pub fn deref(&self) -> Rc<KaramelPrimative> {
         match self.0 {
             n if (n & QNAN) != QNAN       => Rc::new(KaramelPrimative::Number(f64::from_bits(n))),
@@ -306,6 +312,7 @@ impl VmObject {
         }
     }
 
+    #[inline]
     pub fn deref_clean(&self) -> KaramelPrimative {
         match self.0 {
             n if (n & QNAN) != QNAN       => KaramelPrimative::Number(f64::from_bits(n)),
@@ -328,6 +335,7 @@ impl VmObject {
         }
     }
 
+    #[inline]
     pub fn as_number(&self) -> Option<f64> {
         match (self.0 & QNAN) != QNAN {
             true => Some(f64::from_bits(self.0)),

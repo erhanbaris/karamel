@@ -2,6 +2,7 @@ use std::borrow::Borrow;
 use std::{cell::RefCell, ptr, rc::Rc};
 use crate::buildin::num::{NumModule};
 
+use crate::types::VmObject;
 use crate::{buildin::{Class, Module, ModuleCollection, base_functions, class::{dict, get_empty_class, list, number, proxy, text}, debug, io}, compiler::scope::Scope};
 
 use super::generator::OpcodeGenerator;
@@ -13,13 +14,17 @@ pub struct ExecutionPathInfo {
     pub script: Option<String>
 }
 
+const MAX_STACK: usize = 64 * 1024 + 1;
+
 pub struct KaramelCompilerContext {
     pub execution_path: ExecutionPathInfo,
     pub opcodes : Vec<u8>,
     pub storages: Vec<StaticStorage>,
+    pub storages_ptr: * mut StaticStorage,
     pub main_module: *mut OpcodeModule,
     pub modules: ModuleCollection,
     pub scopes: Vec<Scope>,
+    pub scopes_ptr: *mut Scope,
     pub current_scope: *mut Scope,
     pub scope_index: usize,
     pub functions : Vec<Rc<FunctionReference>>,
@@ -27,8 +32,11 @@ pub struct KaramelCompilerContext {
     pub stdout: Option<RefCell<String>>,
     pub stderr: Option<RefCell<String>>,
     pub opcodes_ptr: *mut u8,
+    pub opcodes_top_ptr: *mut u8,
     pub primative_classes: Vec<Rc<dyn Class>>,
-    pub opcode_generator: OpcodeGenerator
+    pub opcode_generator: OpcodeGenerator,
+    pub stack: [VmObject; MAX_STACK],
+    pub stack_ptr: *mut VmObject
 }
 
 impl  KaramelCompilerContext {
@@ -37,8 +45,10 @@ impl  KaramelCompilerContext {
             execution_path: ExecutionPathInfo::default(),
             opcodes: Vec::new(),
             storages: vec![StaticStorage::new(0)],
+            storages_ptr: ptr::null_mut(),
             modules: ModuleCollection::new(),
             scopes: Vec::new(),
+            scopes_ptr: ptr::null_mut(),
             current_scope: ptr::null_mut(),
             scope_index: 0,
             functions: Vec::new(),
@@ -46,11 +56,14 @@ impl  KaramelCompilerContext {
             stdout: None,
             stderr: None,
             opcodes_ptr: ptr::null_mut(),
+            opcodes_top_ptr: ptr::null_mut(),
             primative_classes: Vec::new(),
             main_module: ptr::null_mut(),
-            opcode_generator: OpcodeGenerator::new()
+            opcode_generator: OpcodeGenerator::new(),
+            stack: [VmObject(0); MAX_STACK],
+            stack_ptr: ptr::null_mut()
         };
-
+        
         compiler.primative_classes.push(number::get_primative_class());
         compiler.primative_classes.push(text::get_primative_class());
         compiler.primative_classes.push(list::get_primative_class());
@@ -67,11 +80,13 @@ impl  KaramelCompilerContext {
         compiler.add_module(NumModule::new());
         compiler.add_module(debug::DebugModule::new());
 
-        for _ in 0..32{
+        for _ in 0..32 {
             compiler.scopes.push(Scope::empty());
         }
         
         compiler.current_scope = &mut compiler.scopes[0] as *mut Scope;
+        compiler.scopes_ptr = compiler.scopes.as_mut_ptr();
+        compiler.storages_ptr = compiler.storages.as_mut_ptr();
         compiler
     }
 

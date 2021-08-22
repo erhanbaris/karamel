@@ -122,7 +122,7 @@ mod tests {
     }));
     test_success!(list_8, "[data]", Ok(Rc::new(KaramelAstType::List([Rc::new(KaramelAstType::Symbol("data".to_string()))].to_vec()))));
 
-    test_success!(empty_1, "yok", Ok(Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Empty)))));
+    test_success!(empty_1, "boş", Ok(Rc::new(KaramelAstType::Primative(Rc::new(KaramelPrimative::Empty)))));
 
     test_success!(symbol_1, "data", Ok(Rc::new(KaramelAstType::Symbol("data".to_string()))));
     test_success!(symbol_2, "data_test", Ok(Rc::new(KaramelAstType::Symbol("data_test".to_string()))));

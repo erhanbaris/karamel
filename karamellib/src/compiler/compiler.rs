@@ -26,15 +26,12 @@ use log;
 use super::context::KaramelCompilerContext;
 use super::function::find_function_definition_type;
 use super::module::{OpcodeModule, get_modules};
-use super::storage_builder::StorageBuilderOption;
 
 
 pub struct InterpreterCompiler;
 impl InterpreterCompiler {   
     pub fn compile(&self, main_ast: Rc<KaramelAstType>, context: &mut KaramelCompilerContext) -> CompilerResult {
         let storage_builder: StorageBuilder = StorageBuilder::new();
-        let mut compiler_options = StorageBuilderOption { max_stack: 0 };
-
         let main_location = context.opcode_generator.create_location();
 
         context.opcode_generator.create_jump(main_location.clone());
@@ -44,7 +41,7 @@ impl InterpreterCompiler {
         let main_module = self.prepare_main_module(main_ast.clone(), context)?;
         //self.prepare_modules(context)?;
 
-        storage_builder.prepare(main_module.clone(), &*main_ast, 0, context, &mut compiler_options)?;
+        storage_builder.prepare(main_module.clone(), &*main_ast, 0, context)?;
 
         /* First part of the codes are functions */
         let mut functions = Vec::new();
@@ -64,8 +61,8 @@ impl InterpreterCompiler {
         context.opcode_generator.add_opcode(VmOpCode::Halt);
         context.opcode_generator.generate(&mut context.opcodes);
 
-        println!("{:?}", context.opcodes);
-        context.opcodes_ptr = context.opcodes.as_mut_ptr();
+        context.opcodes_ptr     = context.opcodes.as_mut_ptr();
+        context.opcodes_top_ptr = context.opcodes_ptr;
 
         Ok(())
     }
@@ -135,9 +132,8 @@ impl InterpreterCompiler {
         Ok(())
     }
 
-    fn generate_functions(&self, module: Rc<OpcodeModule>, functions: &mut Vec<Rc<FunctionReference>>, context: &mut KaramelCompilerContext) -> CompilerResult {
-        for function in functions {
-
+    fn generate_functions(&self, module: Rc<OpcodeModule>, functions: & Vec<Rc<FunctionReference>>, context: &mut KaramelCompilerContext) -> CompilerResult {
+        for function in functions.iter() {
             /* Validate function name and parameters */
             self.check_prohibited_names(&function.name)?;
             for argument in &function.arguments {
@@ -186,7 +182,7 @@ impl InterpreterCompiler {
         let result = storage.get_constant_location(primative);
         match result {
             Some(index) => {
-                context.opcode_generator.create_load(index);
+                context.opcode_generator.create_constant(index);
                 Ok(())
             },
             _ => Err(KaramelErrorType::ValueNotFoundInStorage)
@@ -236,7 +232,7 @@ impl InterpreterCompiler {
                 let result = storage.get_constant_location(Rc::new(KaramelPrimative::Function(reference, None)));
                 match result {
                     Some(index) => {
-                        context.opcode_generator.create_load(index);
+                        context.opcode_generator.create_constant(index);
                         Ok(())
                     },
                     _ => Err(KaramelErrorType::FunctionNotFoundInStorage(name.to_string()))
@@ -252,7 +248,7 @@ impl InterpreterCompiler {
         let result = storage.get_constant_location(Rc::new(KaramelPrimative::Empty));
         match result {
             Some(index) => {
-                context.opcode_generator.create_load(index);
+                context.opcode_generator.create_constant(index);
                 Ok(())
             },
             _ => Err(KaramelErrorType::ValueNotFoundInStorage)
@@ -323,7 +319,7 @@ impl InterpreterCompiler {
                     let search_location = context.storages[storage_index].get_constant_location(Rc::new(KaramelPrimative::Text(Rc::new(function_name.to_string()))));
                     match search_location {
                         Some(location) => {
-                            context.opcode_generator.create_load(location);
+                            context.opcode_generator.create_constant(location);
                             context.opcode_generator.add_opcode(VmOpCode::GetItem);
                             context.opcode_generator.create_call_stack(arguments.len() as u8, assign_to_temp);
                             return Ok(());
@@ -472,7 +468,7 @@ impl InterpreterCompiler {
         let result = storage.get_function_constant(variable.to_string(), module.clone());
         match result {
             Some(index) => {
-                context.opcode_generator.create_load(index);
+                context.opcode_generator.create_constant(index);
                 return Ok(())
             },
             _ => ()
@@ -481,7 +477,7 @@ impl InterpreterCompiler {
         let result = storage.get_class_constant(variable.to_string(), module.clone());
         match result {
             Some(index) => {
-                context.opcode_generator.create_load(index);
+                context.opcode_generator.create_constant(index);
                 return Ok(())
             },
             _ => ()
@@ -758,7 +754,6 @@ mod tests {
     use crate::compiler::function::{FunctionReference};
     use super::module::{OpcodeModule};
 
-    use super::storage_builder::StorageBuilderOption;
     use crate::error::KaramelErrorType;
 
     #[test]
@@ -766,7 +761,6 @@ mod tests {
         let mut context = KaramelCompilerContext::new();
         let compiler = InterpreterCompiler {};
         let storage_builder: StorageBuilder = StorageBuilder::new();
-        let mut compiler_options = StorageBuilderOption { max_stack: 0 };
 
         let function_define = FunctionReference::opcode_function("test".to_string(), Vec::new(), Rc::new(KaramelAstType::None), Rc::new(DummyModule::new()), 0, 0, true);
 
@@ -774,7 +768,7 @@ mod tests {
         functions.push(function_define);
 
         let module = Rc::new(OpcodeModule::new("".to_string(), "".to_string(), Rc::new(KaramelAstType::None)));
-        storage_builder.prepare(module.clone(), &KaramelAstType::None, 0, &mut context, &mut compiler_options)?;
+        storage_builder.prepare(module.clone(), &KaramelAstType::None, 0, &mut context)?;
         compiler.generate_functions(module.clone(), &mut functions, &mut context)?;
         Ok(())
     }
@@ -784,7 +778,6 @@ mod tests {
         let mut context = KaramelCompilerContext::new();
         let compiler = InterpreterCompiler {};
         let storage_builder: StorageBuilder = StorageBuilder::new();
-        let mut compiler_options = StorageBuilderOption { max_stack: 0 };
 
         let function_define = FunctionReference::opcode_function("yazı".to_string(), Vec::new(), Rc::new(KaramelAstType::None), Rc::new(DummyModule::new()), 0, 0, true);
 
@@ -792,7 +785,7 @@ mod tests {
         functions.push(function_define);
 
         let module = Rc::new(OpcodeModule::new("".to_string(), "".to_string(), Rc::new(KaramelAstType::None)));
-        storage_builder.prepare(module.clone(), &KaramelAstType::None, 0, &mut context, &mut compiler_options)?;
+        storage_builder.prepare(module.clone(), &KaramelAstType::None, 0, &mut context)?;
         let result = compiler.generate_functions(module.clone(), &mut functions, &mut context);
 
         match result {
@@ -806,7 +799,6 @@ mod tests {
         let mut context = KaramelCompilerContext::new();
         let compiler = InterpreterCompiler {};
         let storage_builder: StorageBuilder = StorageBuilder::new();
-        let mut compiler_options = StorageBuilderOption { max_stack: 0 };
 
         let function_define = FunctionReference::opcode_function("döndür".to_string(), Vec::new(), Rc::new(KaramelAstType::None), Rc::new(DummyModule::new()), 0, 0, true);
 
@@ -814,7 +806,7 @@ mod tests {
         functions.push(function_define);
 
         let module = Rc::new(OpcodeModule::new("".to_string(), "".to_string(), Rc::new(KaramelAstType::None)));
-        storage_builder.prepare(module.clone(), &KaramelAstType::None, 0, &mut context, &mut compiler_options)?;
+        storage_builder.prepare(module.clone(), &KaramelAstType::None, 0, &mut context)?;
         let result = compiler.generate_functions(module.clone(), &mut functions, &mut context);
 
         match result {
@@ -828,7 +820,6 @@ mod tests {
         let mut context = KaramelCompilerContext::new();
         let compiler = InterpreterCompiler {};
         let storage_builder: StorageBuilder = StorageBuilder::new();
-        let mut compiler_options = StorageBuilderOption { max_stack: 0 };
 
         let function_define = FunctionReference::opcode_function("sayı".to_string(), Vec::new(), Rc::new(KaramelAstType::None), Rc::new(DummyModule::new()), 0, 0, true);
 
@@ -836,7 +827,7 @@ mod tests {
         functions.push(function_define);
 
         let module = Rc::new(OpcodeModule::new("".to_string(), "".to_string(), Rc::new(KaramelAstType::None)));
-        storage_builder.prepare(module.clone(), &KaramelAstType::None, 0, &mut context, &mut compiler_options)?;
+        storage_builder.prepare(module.clone(), &KaramelAstType::None, 0, &mut context)?;
         let result = compiler.generate_functions(module.clone(), &mut functions, &mut context);
 
         match result {
@@ -851,7 +842,6 @@ mod tests {
         let mut context = KaramelCompilerContext::new();
         let compiler = InterpreterCompiler {};
         let storage_builder: StorageBuilder = StorageBuilder::new();
-        let mut compiler_options = StorageBuilderOption { max_stack: 0 };
 
         let function_define = FunctionReference::opcode_function("test".to_string(), vec!["test".to_string()], Rc::new(KaramelAstType::None), Rc::new(DummyModule::new()), 0, 0, true);
 
@@ -859,7 +849,7 @@ mod tests {
         functions.push(function_define);
 
         let module = Rc::new(OpcodeModule::new("".to_string(), "".to_string(), Rc::new(KaramelAstType::None)));
-        storage_builder.prepare(module.clone(), &KaramelAstType::None, 0, &mut context, &mut compiler_options)?;
+        storage_builder.prepare(module.clone(), &KaramelAstType::None, 0, &mut context)?;
         compiler.generate_functions(module.clone(), &mut functions, &mut context)?;
         Ok(())
     }
@@ -869,7 +859,6 @@ mod tests {
         let mut context = KaramelCompilerContext::new();
         let compiler = InterpreterCompiler {};
         let storage_builder: StorageBuilder = StorageBuilder::new();
-        let mut compiler_options = StorageBuilderOption { max_stack: 0 };
 
         let function_define = FunctionReference::opcode_function("test".to_string(), vec!["sayı".to_string()], Rc::new(KaramelAstType::None), Rc::new(DummyModule::new()), 0, 0, true);
 
@@ -877,7 +866,7 @@ mod tests {
         functions.push(function_define);
 
         let module = Rc::new(OpcodeModule::new("".to_string(), "".to_string(), Rc::new(KaramelAstType::None)));
-        storage_builder.prepare(module.clone(), &KaramelAstType::None, 0, &mut context, &mut compiler_options)?;
+        storage_builder.prepare(module.clone(), &KaramelAstType::None, 0, &mut context)?;
         let result = compiler.generate_functions(module.clone(), &mut functions, &mut context);
 
         match result {
@@ -891,7 +880,6 @@ mod tests {
         let mut context = KaramelCompilerContext::new();
         let compiler = InterpreterCompiler {};
         let storage_builder: StorageBuilder = StorageBuilder::new();
-        let mut compiler_options = StorageBuilderOption { max_stack: 0 };
 
         let function_define = FunctionReference::opcode_function("döndür".to_string(), vec!["sayı".to_string()], Rc::new(KaramelAstType::None), Rc::new(DummyModule::new()), 0, 0, true);
 
@@ -899,7 +887,7 @@ mod tests {
         functions.push(function_define);
 
         let module = Rc::new(OpcodeModule::new("".to_string(), "".to_string(), Rc::new(KaramelAstType::None)));
-        storage_builder.prepare(module.clone(), &KaramelAstType::None, 0, &mut context, &mut compiler_options)?;
+        storage_builder.prepare(module.clone(), &KaramelAstType::None, 0, &mut context)?;
         let result = compiler.generate_functions(module.clone(), &mut functions, &mut context);
 
         match result {

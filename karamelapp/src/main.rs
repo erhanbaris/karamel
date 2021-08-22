@@ -29,8 +29,14 @@ fn main() {
         },
         None => ExecutionParameters {
             source: ExecutionSource::Code(r#"
-gç::satıryaz(123)
+fonk test_1:
+    döndür 'erhan'
+erhan = test_1
+barış = erhan
+hataayıklama::doğrula(barış(), erhan())
+hataayıklama::doğrula(barış() + " barış", 'erhan barış')
         
+
 "#.to_string()),
             return_opcode: true,
             return_output: true
