@@ -51,6 +51,16 @@ pub fn get_execution_path<T: Borrow<ExecutionSource>>(source: T) -> ExecutionPat
     }
 }
 
+pub fn write_stderr(context: &KaramelCompilerContext, data: String) {
+    match &context.stderr {
+        Some(out) => match out.try_borrow_mut() {
+            Ok(mut out_mut) => { out_mut.push_str(&data[..]) },
+            _ => ()
+        },
+        _ => ()
+    };
+}
+
 pub fn code_executer(parameters: ExecutionParameters) -> ExecutionStatus {
     let mut status = ExecutionStatus::default();
     match log::set_logger(&CONSOLE_LOGGER) {
@@ -68,13 +78,22 @@ pub fn code_executer(parameters: ExecutionParameters) -> ExecutionStatus {
     context.execution_path = get_execution_path(&parameters.source);
     log::debug!("Execution path: {}", context.execution_path.path);
 
+    if parameters.return_output {
+        context.stdout = Some(RefCell::new(String::new()));
+        context.stderr = Some(RefCell::new(String::new()));
+    }
+
     let data = match parameters.source {
         ExecutionSource::Code(code) => code,
         ExecutionSource::File(filename) => {
             match read_module_or_script(filename, &context) {
                 Ok(content) => content,
                 Err(error) => {
+                    write_stderr(&context, format!("Program hata ile sonlandırıldı: {}", error));
                     log::error!("Program hata ile sonlandırıldı: {}", error);
+                    status.stdout = context.stdout;
+                    status.stderr = context.stderr;
+                    
                     status.executed = false;
                     return status
                 }
@@ -85,7 +104,11 @@ pub fn code_executer(parameters: ExecutionParameters) -> ExecutionStatus {
     let mut parser = Parser::new(&data);
     match parser.parse() {
         Err(error) => {
+            write_stderr(&context, generate_error_message(&data, &error));
             log::error!("{}", generate_error_message(&data, &error));
+            status.stdout = context.stdout;
+            status.stderr = context.stderr;
+
             return status;
         },
         _ => ()
@@ -95,21 +118,24 @@ pub fn code_executer(parameters: ExecutionParameters) -> ExecutionStatus {
     let ast = match syntax.parse() {
         Ok(ast) => ast,
         Err(error) => {
+            write_stderr(&context, generate_error_message(&data, &error));
             log::error!("{}", generate_error_message(&data, &error));
+            status.stdout = context.stdout;
+            status.stderr = context.stderr;
+
             return status;
         }
     };
 
     let opcode_compiler = InterpreterCompiler {};
-    if parameters.return_output {
-        context.stdout = Some(RefCell::new(String::new()));
-        context.stderr = Some(RefCell::new(String::new()));
-    }
-
     let execution_status = match opcode_compiler.compile(ast.clone(), &mut context) {
         Ok(_) => unsafe { run_vm(&mut context) },
         Err(message) => {
+            write_stderr(&context, format!("Program hata ile sonlandırıldı: {}", message));
             log::error!("Program hata ile sonlandırıldı: {}", message);
+            status.stdout = context.stdout;
+            status.stderr = context.stderr;
+
             return status;
         }
     };
@@ -121,7 +147,11 @@ pub fn code_executer(parameters: ExecutionParameters) -> ExecutionStatus {
             status.memory_output = Some(memory)
         },
         Err(error) => {
+            write_stderr(&context, format!("Program hata ile sonlandırıldı: {}", error));
             log::error!("Program hata ile sonlandırıldı: {}", error);
+            status.stdout = context.stdout;
+            status.stderr = context.stderr;
+
             return status;
         }
     };
