@@ -33,7 +33,7 @@ mod tests {
                 let ast = syntax_result.unwrap();
 
                 if let Ok(_) = opcode_compiler.compile(ast.clone(), &mut compiler_options) {
-                    if unsafe { interpreter::run_vm(&mut compiler_options).is_ok() } {
+                    if unsafe { interpreter::run_vm(&mut compiler_options, false, false,).is_ok() } {
                         unsafe { 
                             let memory = pop!(compiler_options, "memory");
                             assert_eq!(*memory, $result);
@@ -71,7 +71,7 @@ mod tests {
                 let ast = syntax_result.unwrap();
 
                 if let Ok(_) = opcode_compiler.compile(ast.clone(), &mut compiler_options) {
-                    if unsafe { interpreter::run_vm(&mut compiler_options).is_ok() } {
+                    if unsafe { interpreter::run_vm(&mut compiler_options, false, false).is_ok() } {
                         match compiler_options.storages[0].get_variable_location(&$variable.to_string()) {
                             Some(location) => assert_eq!(*compiler_options.stack[location as usize].deref(), $result),
                             None => assert!(false)
@@ -107,7 +107,7 @@ mod tests {
                 let ast = syntax_result.unwrap();
 
                 if let Ok(_) = opcode_compiler.compile(ast.clone(), &mut compiler_options) {
-                    if unsafe { interpreter::run_vm(&mut compiler_options).is_ok() } {
+                    if unsafe { interpreter::run_vm(&mut compiler_options, false, false).is_ok() } {
                         assert!(true);
                         return;
                     }

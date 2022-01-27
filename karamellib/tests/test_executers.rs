@@ -54,7 +54,9 @@ mod tests {
                             let parameters = ExecutionParameters {
                                 source: ExecutionSource::File(path_str.to_string()),
                                 return_opcode: false,
-                                return_output: false
+                                return_output: false,
+                                dump_opcode: false,
+                                dump_memory: false
                             };
 
                             let result = executer::code_executer(parameters);

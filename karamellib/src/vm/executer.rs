@@ -7,7 +7,7 @@ use crate::{types::Token, vm::interpreter::run_vm};
 use crate::parser::*;
 use crate::compiler::*;
 use crate::syntax::SyntaxParser;
-use crate::logger::{CONSOLE_LOGGER};
+use crate::logger::{CONSOLE_LOGGER, write_stderr};
 use crate::error::generate_error_message;
 
 use log;
@@ -22,7 +22,9 @@ pub enum ExecutionSource {
 pub struct ExecutionParameters {
     pub source: ExecutionSource,
     pub return_opcode: bool,
-    pub return_output: bool
+    pub return_output: bool,
+    pub dump_opcode: bool,
+    pub dump_memory: bool
 }
 
 #[derive(Default)]
@@ -32,7 +34,9 @@ pub struct ExecutionStatus {
     pub memory_output: Option<Vec<VmObject>>,
     pub stdout: Option<RefCell<String>>,
     pub stderr: Option<RefCell<String>>,
-    pub opcodes: Option<Vec<Token>>
+    pub opcodes: Option<Vec<Token>>,
+    pub memory_dump: Option<String>,
+    pub opcode_dump: Option<String>
 }
 
 pub fn get_execution_path<T: Borrow<ExecutionSource>>(source: T) -> ExecutionPathInfo {
@@ -49,16 +53,6 @@ pub fn get_execution_path<T: Borrow<ExecutionSource>>(source: T) -> ExecutionPat
         },
         script: None
     }
-}
-
-pub fn write_stderr(context: &KaramelCompilerContext, data: String) {
-    match &context.stderr {
-        Some(out) => match out.try_borrow_mut() {
-            Ok(mut out_mut) => { out_mut.push_str(&data[..]) },
-            _ => ()
-        },
-        _ => ()
-    };
 }
 
 pub fn code_executer(parameters: ExecutionParameters) -> ExecutionStatus {
@@ -129,7 +123,7 @@ pub fn code_executer(parameters: ExecutionParameters) -> ExecutionStatus {
 
     let opcode_compiler = InterpreterCompiler {};
     let execution_status = match opcode_compiler.compile(ast.clone(), &mut context) {
-        Ok(_) => unsafe { run_vm(&mut context) },
+        Ok(_) => unsafe { run_vm(&mut context, parameters.dump_opcode, parameters.dump_memory) },
         Err(message) => {
             write_stderr(&context, format!("Program hata ile sonlandırıldı: {}", message));
             log::error!("Program hata ile sonlandırıldı: {}", message);

@@ -31,6 +31,8 @@ pub struct KaramelCompilerContext {
     pub classes : Vec<Rc<dyn Class >>,
     pub stdout: Option<RefCell<String>>,
     pub stderr: Option<RefCell<String>>,
+    pub memory_dump: Option<String>,
+    pub opcode_dump: Option<String>,
     pub opcodes_ptr: *mut u8,
     pub opcodes_top_ptr: *mut u8,
     pub primative_classes: Vec<Rc<dyn Class>>,
@@ -61,7 +63,9 @@ impl  KaramelCompilerContext {
             main_module: ptr::null_mut(),
             opcode_generator: OpcodeGenerator::new(),
             stack: [VmObject(0); MAX_STACK],
-            stack_ptr: ptr::null_mut()
+            stack_ptr: ptr::null_mut(),
+            memory_dump: None,
+            opcode_dump: None
         };
         
         compiler.primative_classes.push(number::get_primative_class());

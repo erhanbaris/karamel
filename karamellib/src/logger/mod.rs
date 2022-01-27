@@ -1,5 +1,7 @@
 use log::*;
 
+use crate::compiler::KaramelCompilerContext;
+
 pub struct ConsoleLogger;
 pub struct DummyLogger;
 
@@ -28,4 +30,25 @@ impl Log for ConsoleLogger {
     }
 
     fn flush(&self) {}
+}
+
+pub fn write_stdout(context: &KaramelCompilerContext, data: String) {
+    match &context.stdout {
+        Some(out) => match out.try_borrow_mut() {
+            Ok(mut out_mut) => { out_mut.push_str(&data[..]) },
+            _ => ()
+        },
+        _ => ()
+    };
+}
+
+
+pub fn write_stderr(context: &KaramelCompilerContext, data: String) {
+    match &context.stderr {
+        Some(out) => match out.try_borrow_mut() {
+            Ok(mut out_mut) => { out_mut.push_str(&data[..]) },
+            _ => ()
+        },
+        _ => ()
+    };
 }

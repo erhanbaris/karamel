@@ -13,11 +13,15 @@ pub fn execute_code(name: &str) -> Object {
     let results_ref     = JsValue::from("results");
     let stdout_ref      = JsValue::from("stdout");
     let stderr_ref      = JsValue::from("stderr");
+    let code_dump_ref   = JsValue::from("code_dump");
+    let memory_dump_ref = JsValue::from("memory_dump");
 
     let parameters = ExecutionParameters {
         source: ExecutionSource::Code(name.to_string()),
         return_opcode: true,
-        return_output: true
+        return_output: true,
+        dump_opcode: true,
+        dump_memory: true
     };
 
     let result = karamellib::vm::executer::code_executer(parameters);
@@ -45,12 +49,20 @@ pub fn execute_code(name: &str) -> Object {
                 Some(stdout) => { stdouts.push(&JsValue::from(stdout.borrow().clone()).into()); },
                 _ => ()
             };
-            
+
+            Reflect::set(response.as_ref(), code_dump_ref.as_ref(), result.dump.as_ref()).unwrap();
+            Reflect::set(response.as_ref(), results_ref.as_ref(), results.as_ref()).unwrap();
             Reflect::set(response.as_ref(), results_ref.as_ref(), results.as_ref()).unwrap();
             Reflect::set(response.as_ref(), stdout_ref.as_ref(),  stdouts.as_ref()).unwrap();
         },
         false => {
             let stderrs = Array::new();
+            let stdouts = Array::new();
+
+            match result.stdout {
+                Some(stdout) => { stdouts.push(&JsValue::from(stdout.borrow().clone()).into()); },
+                _ => ()
+            };
 
             match result.stderr {
                 Some(stderr) => { stderrs.push(&JsValue::from(stderr.borrow().clone()).into()); },
@@ -58,6 +70,7 @@ pub fn execute_code(name: &str) -> Object {
             };
 
             Reflect::set(response.as_ref(), status_ref.as_ref(), JsValue::from_bool(false).as_ref()).unwrap();
+            Reflect::set(response.as_ref(), stdout_ref.as_ref(),  stdouts.as_ref()).unwrap();
             Reflect::set(response.as_ref(), stderr_ref.as_ref(),  stderrs.as_ref()).unwrap();
         }
     };

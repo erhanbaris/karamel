@@ -25,21 +25,23 @@ fn main() {
         Some(file) => ExecutionParameters {
             source: ExecutionSource::File(file.to_string()),
             return_opcode: true,
-            return_output: true
+            return_output: true,
+            dump_opcode: false,
+            dump_memory: false
         },
         None => ExecutionParameters {
             source: ExecutionSource::Code(r#"
-fonk test_1:
-    döndür 'erhan'
-erhan = test_1
-barış = erhan
-hataayıklama::doğrula(barış(), erhan())
-hataayıklama::doğrula(barış() + " barış", 'erhan barış')
-        
-
+döngü i = 0, i < 10, i++:
+    i mod 2 ise:
+        gç::satıryaz('Mod 2 ', i.yazi())
+    veya:
+        gç::satıryaz('Mod 1 ', i.yazi())
+           
 "#.to_string()),
             return_opcode: true,
-            return_output: true
+            return_output: true,
+            dump_opcode: false,
+            dump_memory: false
         }
     };
 

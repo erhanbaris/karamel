@@ -107,21 +107,22 @@ impl StaticStorage {
     pub fn dump(&self) {}
 
     #[cfg(not(feature = "unittest"))]
-    pub fn dump(&self) {
-        debug_println!("------------------------------------------");
-        debug_println!("╔════════════════════════════════════════╗");
-        debug_println!("║             VARIABLE DUMP              ║");
-        debug_println!("╠════════════════════════════════════════╣");
+    pub fn dump(&self) -> String {
+        let mut buffer = String::new();
+        buffer.push_str("╔════════════════════════════════════════╗\n");
+        buffer.push_str("║             VARIABLE DUMP              ║\n");
+        buffer.push_str("╠════════════════════════════════════════╣\n");
         for (index, variable) in self.variables.iter().enumerate() {
-            debug_println!("║ {:3?} ║ {:32} ║", index, format!("{}", variable));
+            buffer.push_str(&format!("║ {:3?} ║ {:32} ║\n", index, format!("{}", variable))[..]);
         }
-        debug_println!("╚════════════════════════════════════════╝");
-        debug_println!("╔════════════════════════════════════════╗");
-        debug_println!("║             CONSTANT DUMP              ║");
-        debug_println!("╠═════╦══════════════════════════════════╣");
+        buffer.push_str("╚════════════════════════════════════════╝\n");
+        buffer.push_str("╔════════════════════════════════════════╗\n");
+        buffer.push_str("║             CONSTANT DUMP              ║\n");
+        buffer.push_str("╠═════╦══════════════════════════════════╣\n");
         for (index, constant) in self.constants.iter().enumerate() {
-            debug_println!("║ {:3?} ║ {:32} ║", index, format!("{}", constant));
+            buffer.push_str(&format!("║ {:3?} ║ {:32} ║\n", index, format!("{}", constant))[..]);
         }
-        debug_println!("╚═════╩══════════════════════════════════╝");
+        buffer.push_str("╚═════╩══════════════════════════════════╝\n");
+        buffer
     }
 }

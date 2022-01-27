@@ -1,6 +1,7 @@
 use crate::compiler::context::KaramelCompilerContext;
 use crate::compiler::scope::Scope;
 use crate::error::KaramelErrorType;
+use crate::logger::write_stdout;
 use crate::{pop, inc_memory_index, dec_memory_index, get_memory_index, karamel_dbg};
 use crate::types::{VmObject};
 use crate::compiler::*;
@@ -40,7 +41,7 @@ pub unsafe fn dump_opcode<W: Write>(index: usize, context: &mut KaramelCompilerC
     }
 }
 
-pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObject>, KaramelErrorType>
+pub unsafe fn run_vm(context: &mut KaramelCompilerContext, dump_code: bool, dump_memory: bool) -> Result<Vec<VmObject>, KaramelErrorType>
 {
     #[cfg(any(feature = "liveOpcodeView", feature = "dumpOpcodes"))]
     let mut log_update = LogUpdate::new(stdout()).unwrap();
@@ -49,10 +50,10 @@ pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObjec
         context.storages[0].dump();
     }
     
-    #[cfg(all(feature = "dumpOpcodes"))] {    
+    if dump_code {    
         let generated = context.opcode_generator.dump(&context.opcodes);
-        log_update.render(&generated[..]);
-        return Ok(Vec::new());
+        context.opcode_dump = Some(generated);
+        //log_update.render(&generated[..]);
     }
 
     // Save top stack for main storage
@@ -478,8 +479,9 @@ pub unsafe fn run_vm(context: &mut KaramelCompilerContext) -> Result<Vec<VmObjec
             context.opcodes_ptr = context.opcodes_ptr.offset(1);
         }
         
-        #[cfg(feature = "dumpMemory")] {
-            context.storages[0].dump();
+        if dump_memory {
+            let dump = context.storages[0].dump();
+            context.memory_dump = Some(dump);
         }
     }
     

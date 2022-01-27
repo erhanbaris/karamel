@@ -88,7 +88,7 @@ macro_rules! dec_memory_index {
 #[macro_export]
 #[cfg(not(feature = "unittest"))]
 macro_rules! debug_println {
-    ($( $args:expr ),*) => { println!( $( $args ),* ); }
+    ($( $args:expr ),*) => { log::info!( $( $args ),* ); }
 }
 
 // Non-debug version

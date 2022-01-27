@@ -324,6 +324,7 @@ impl OpcodeGenerator {
         let indexer = Rc::new(AtomicUsize::new(0));
 
         let mut buffer = String::with_capacity(1024);
+        buffer.push_str("\n");
 
         for generator in self.generators.borrow().iter() {
             generator.dump(&builder, indexer.clone(), opcodes);
@@ -404,7 +405,8 @@ mod tests {
         generator.generate(&mut opcodes);
         let generated = generator.dump(&opcodes);
 
-        expected.push_str(r#"╔═════════════════════════════════════════════════╗
+        expected.push_str(r#"
+╔═════════════════════════════════════════════════╗
 ║                   OPCODE DUMP                   ║
 ╠═══════╦═════════════════╦═══════╦═══════╦═══════╣
 ╚═══════╩═════════════════╩═══════╩═══════╩═══════╝"#);
@@ -425,7 +427,8 @@ mod tests {
         let generated = generator.dump(&opcodes);
         println!("{}", generated);
 
-        expected.push_str(r#"╔═════════════════════════════════════════════╗
+        expected.push_str(r#"
+╔═════════════════════════════════════════════╗
 ║                 OPCODE DUMP                 ║
 ╠═══╦═════════════════╦═══════╦═══════╦═══════╣
 ║ 0 ║ Equal           ║       ║       ║       ║
@@ -450,7 +453,8 @@ mod tests {
         let generated = generator.dump(&opcodes);
         println!("{}", generated);
 
-        expected.push_str(r#"╔═════════════════════════════════════════════╗
+        expected.push_str(r#"
+╔═════════════════════════════════════════════╗
 ║                 OPCODE DUMP                 ║
 ╠═══╦═════════════════╦═══════╦═══════╦═══════╣
 ║ 0 ║ Halt            ║       ║       ║       ║
@@ -475,7 +479,8 @@ mod tests {
         let generated = generator.dump(&opcodes);
         println!("{}", generated);
 
-        expected.push_str(r#"╔═══════════════════════════════════════════════════════╗
+        expected.push_str(r#"
+╔═══════════════════════════════════════════════════════╗
 ║                      OPCODE DUMP                      ║
 ╠═══╦═══════════════════════════╦═══════╦═══════╦═══════╣
 ║ 0 ║ Halt                      ║       ║       ║       ║
@@ -499,7 +504,8 @@ mod tests {
         let generated = generator.dump(&opcodes);
         println!("{}", generated);
 
-        expected.push_str(r#"╔═════════════════════════════════════════════╗
+        expected.push_str(r#"
+╔═════════════════════════════════════════════╗
 ║                 OPCODE DUMP                 ║
 ╠═══╦═════════════════╦═══════╦═══════╦═══════╣
 ║ 0 ║ Halt            ║       ║       ║       ║
@@ -522,7 +528,8 @@ mod tests {
         let generated = generator.dump(&opcodes);
         println!("{}", generated);
 
-        expected.push_str(r#"╔═════════════════════════════════════════════╗
+        expected.push_str(r#"
+╔═════════════════════════════════════════════╗
 ║                 OPCODE DUMP                 ║
 ╠═══╦═════════════════╦═══════╦═══════╦═══════╣
 ║ 0 ║ Halt            ║       ║       ║       ║
@@ -545,7 +552,8 @@ mod tests {
         let generated = generator.dump(&opcodes);
         println!("{}", generated);
 
-        expected.push_str(r#"╔═════════════════════════════════════════════╗
+        expected.push_str(r#"
+╔═════════════════════════════════════════════╗
 ║                 OPCODE DUMP                 ║
 ╠═══╦═════════════════╦═══════╦═══════╦═══════╣
 ║ 0 ║ Halt            ║       ║       ║       ║
@@ -568,7 +576,8 @@ mod tests {
         let generated = generator.dump(&opcodes);
         println!("{}", generated);
 
-        expected.push_str(r#"╔═════════════════════════════════════════════╗
+        expected.push_str(r#"
+╔═════════════════════════════════════════════╗
 ║                 OPCODE DUMP                 ║
 ╠═══╦═════════════════╦═══════╦═══════╦═══════╣
 ║ 0 ║ Halt            ║       ║       ║       ║
@@ -591,7 +600,8 @@ mod tests {
         let generated = generator.dump(&opcodes);
         println!("{}", generated);
 
-        expected.push_str(r#"╔═════════════════════════════════════════════╗
+        expected.push_str(r#"
+╔═════════════════════════════════════════════╗
 ║                 OPCODE DUMP                 ║
 ╠═══╦═════════════════╦═══════╦═══════╦═══════╣
 ║ 0 ║ Halt            ║       ║       ║       ║
@@ -614,7 +624,8 @@ mod tests {
         let generated = generator.dump(&opcodes);
         println!("{}", generated);
 
-        expected.push_str(r#"╔═════════════════════════════════════════════╗
+        expected.push_str(r#"
+╔═════════════════════════════════════════════╗
 ║                 OPCODE DUMP                 ║
 ╠═══╦═════════════════╦═══════╦═══════╦═══════╣
 ║ 0 ║ Halt            ║       ║       ║       ║
@@ -637,7 +648,8 @@ mod tests {
         let generated = generator.dump(&opcodes);
         println!("{}", generated);
 
-        expected.push_str(r#"╔═════════════════════════════════════════════╗
+        expected.push_str(r#"
+╔═════════════════════════════════════════════╗
 ║                 OPCODE DUMP                 ║
 ╠═══╦═════════════════╦═══════╦═══════╦═══════╣
 ║ 0 ║ Halt            ║       ║       ║       ║
@@ -660,7 +672,8 @@ mod tests {
         let generated = generator.dump(&opcodes);
         println!("{}", generated);
 
-        expected.push_str(r#"╔═════════════════════════════════════════════╗
+        expected.push_str(r#"
+╔═════════════════════════════════════════════╗
 ║                 OPCODE DUMP                 ║
 ╠═══╦═════════════════╦═══════╦═══════╦═══════╣
 ║ 0 ║ Halt            ║       ║       ║       ║
@@ -683,7 +696,8 @@ mod tests {
         let generated = generator.dump(&opcodes);
         println!("{}", generated);
 
-        expected.push_str(r#"╔═════════════════════════════════════════════╗
+        expected.push_str(r#"
+╔═════════════════════════════════════════════╗
 ║                 OPCODE DUMP                 ║
 ╠═══╦═════════════════╦═══════╦═══════╦═══════╣
 ║ 0 ║ Halt            ║       ║       ║       ║
@@ -706,7 +720,8 @@ mod tests {
         let generated = generator.dump(&opcodes);
         println!("{}", generated);
 
-        expected.push_str(r#"╔═════════════════════════════════════════════╗
+        expected.push_str(r#"
+╔═════════════════════════════════════════════╗
 ║                 OPCODE DUMP                 ║
 ╠═══╦═════════════════╦═══════╦═══════╦═══════╣
 ║ 0 ║ Halt            ║       ║       ║       ║
@@ -729,7 +744,8 @@ mod tests {
         let generated = generator.dump(&opcodes);
         println!("{}", generated);
 
-        expected.push_str(r#"╔═════════════════════════════════════════════╗
+        expected.push_str(r#"
+╔═════════════════════════════════════════════╗
 ║                 OPCODE DUMP                 ║
 ╠═══╦═════════════════╦═══════╦═══════╦═══════╣
 ║ 0 ║ Halt            ║       ║       ║       ║
@@ -752,7 +768,8 @@ mod tests {
         let generated = generator.dump(&opcodes);
         println!("{}", generated);
 
-        expected.push_str(r#"╔═════════════════════════════════════════════╗
+        expected.push_str(r#"
+╔═════════════════════════════════════════════╗
 ║                 OPCODE DUMP                 ║
 ╠═══╦═════════════════╦═══════╦═══════╦═══════╣
 ║ 0 ║ Halt            ║       ║       ║       ║
