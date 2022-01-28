@@ -13,7 +13,7 @@ pub fn execute_code(name: &str) -> Object {
     let results_ref     = JsValue::from("results");
     let stdout_ref      = JsValue::from("stdout");
     let stderr_ref      = JsValue::from("stderr");
-    let code_dump_ref   = JsValue::from("code_dump");
+    let opcode_dump_ref = JsValue::from("code_dump");
     let memory_dump_ref = JsValue::from("memory_dump");
 
     let parameters = ExecutionParameters {
@@ -50,7 +50,14 @@ pub fn execute_code(name: &str) -> Object {
                 _ => ()
             };
 
-            Reflect::set(response.as_ref(), code_dump_ref.as_ref(), result.dump.as_ref()).unwrap();
+            if let Some(memory_dump) = result.memory_dump {
+                Reflect::set(response.as_ref(), memory_dump_ref.as_ref(), JsValue::from_str(&memory_dump).as_ref()).unwrap();
+            }
+
+            if let Some(opcode_dump) = result.opcode_dump {
+                Reflect::set(response.as_ref(), opcode_dump_ref.as_ref(), JsValue::from_str(&opcode_dump).as_ref()).unwrap();
+            }
+
             Reflect::set(response.as_ref(), results_ref.as_ref(), results.as_ref()).unwrap();
             Reflect::set(response.as_ref(), results_ref.as_ref(), results.as_ref()).unwrap();
             Reflect::set(response.as_ref(), stdout_ref.as_ref(),  stdouts.as_ref()).unwrap();

@@ -111,11 +111,11 @@ impl StaticStorage {
         let mut buffer = String::new();
         buffer.push_str("╔════════════════════════════════════════╗\n");
         buffer.push_str("║             VARIABLE DUMP              ║\n");
-        buffer.push_str("╠════════════════════════════════════════╣\n");
+        buffer.push_str("╠═════╦══════════════════════════════════╣\n");
         for (index, variable) in self.variables.iter().enumerate() {
             buffer.push_str(&format!("║ {:3?} ║ {:32} ║\n", index, format!("{}", variable))[..]);
         }
-        buffer.push_str("╚════════════════════════════════════════╝\n");
+        buffer.push_str("╚═════╩══════════════════════════════════╝\n");
         buffer.push_str("╔════════════════════════════════════════╗\n");
         buffer.push_str("║             CONSTANT DUMP              ║\n");
         buffer.push_str("╠═════╦══════════════════════════════════╣\n");

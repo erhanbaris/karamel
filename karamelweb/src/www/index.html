@@ -38,7 +38,7 @@
         <i class="right cog icon"></i>
         Çalıştır
       </button>
-      <button onclick="execute()" class="ui primary right labeled icon button">
+      <button onclick="dump()" class="ui primary right labeled icon button">
         <i class="right microchip icon"></i>
         Döküm
       </button>
@@ -201,10 +201,43 @@ hataayıklama::doğrula(sayaç, 10)`,
     console.log(execution_result);
   }
 
+  window.dump = function () {
+    let code = window.editor.getValue();
+    let execution_result = execute_code(code);
+
+    var buffer = [];
+
+    if (execution_result['status']) {
+      buffer.push("Derleme işlemi başarılı");
+      buffer.push("");
+
+      buffer.push("Hafıza Yığını");
+      buffer.push(execution_result['memory_dump']);
+
+      buffer.push("");
+
+      buffer.push("Komut Yığını");
+      buffer.push(execution_result['code_dump']);
+
+      buffer.push("");
+    }
+    else {
+      buffer.push("Derleme sırasında hata oluştu");
+      for (var i = 0; i < execution_result['stderr'].length; ++i)
+        buffer.push(execution_result['stderr'][i]);
+    }
+
+    window.target.setValue(buffer.join("\r\n"))
+    console.log(execution_result);
+  }
+
 </script>
 
 <script>
   function execute() {
+    window.executer()
+  }
+  function dump() {
     window.executer()
   }
 </script>
@@ -218,13 +251,13 @@ hataayıklama::doğrula(sayaç, 10)`,
     background-color: cornflowerblue;
   }
   .CodeMirror {
-    font-family: 'Roboto Mono', monospace;;
+    font-family: monospace;;
     font-size: 15px;
     line-height: 1.3em;
   }
 
   .CodeMirror * {
-    font-family: 'Roboto Mono', monospace;;
+    font-family: monospace;;
     font-size: 15px;
     line-height: 1.3em;
   }

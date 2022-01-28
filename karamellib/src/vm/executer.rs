@@ -155,8 +155,10 @@ pub fn code_executer(parameters: ExecutionParameters) -> ExecutionStatus {
         status.opcodes = Some(parser.tokens());
     }
 
-    status.stdout = context.stdout;
-    status.stderr = context.stderr;
+    status.stdout      = context.stdout;
+    status.stderr      = context.stderr;
+    status.memory_dump = context.memory_dump;
+    status.opcode_dump = context.opcode_dump;
 
     status
 }
