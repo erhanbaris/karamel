@@ -1,4 +1,4 @@
-use crate::{buildin::Class, compiler::{function::{FunctionParameter, NativeCallResult}}};
+use crate::{buildin::Class, compiler::{function::{FunctionParameter, NativeCallResult}}, n_parameter_expected, expected_parameter_type, error::KaramelErrorType};
 use crate::compiler::value::EMPTY_OBJECT;
 use crate::buildin::class::BasicInnerClass;
 use crate::compiler::value::KaramelPrimative;
@@ -19,6 +19,7 @@ pub fn get_primative_class() -> Rc<dyn Class> {
     opcode.add_class_method("taban", floor);
     opcode.add_class_method("tamsayı", trunc);
     opcode.add_class_method("kesir", fract);
+    opcode.add_class_method("üst", power);
 
     PRIMATIVE_CLASS_NAMES.lock().unwrap().insert(opcode.get_class_name());
     Rc::new(opcode)
@@ -74,6 +75,24 @@ fn trunc(parameter: FunctionParameter) -> NativeCallResult {
 fn fract(parameter: FunctionParameter) -> NativeCallResult {
     if let KaramelPrimative::Number(number) = &*parameter.source().unwrap().deref() {
         return Ok(VmObject::from(number.fract()));
+    }
+    Ok(EMPTY_OBJECT)
+}
+
+fn power(parameter: FunctionParameter) -> NativeCallResult {
+    if let KaramelPrimative::Number(sayi) = &*parameter.source().unwrap().deref() {
+        return match parameter.length() {
+            0 =>  n_parameter_expected!("üst".to_string(), 1),
+            1 => {
+                match &*parameter.iter().next().unwrap().deref() {
+                    KaramelPrimative::Number(pow) =>  {
+                        Ok(VmObject::native_convert(KaramelPrimative::Number(sayi.powf(*pow) as f64)))
+                    },
+                    _ => expected_parameter_type!("üst".to_string(), "Sayı".to_string())
+                }
+            },
+            _ => n_parameter_expected!("üst".to_string(), 1, parameter.length())
+        };
     }
     Ok(EMPTY_OBJECT)
 }

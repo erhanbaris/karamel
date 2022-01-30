@@ -40,6 +40,7 @@ pub fn get_primative_class() -> Rc<dyn Class> {
     opcode.add_class_method("parcagetir", substring);
     opcode.add_class_method("sayı", number);
     opcode.add_class_method("sayi", number);
+    opcode.add_class_method("levenshtein", levenshtein);
     opcode.set_getter(getter);
     opcode.set_setter(setter);
 
@@ -116,6 +117,24 @@ fn setter(source: VmObject, index: f64, item: VmObject) -> NativeCallResult {
 fn length(parameter: FunctionParameter) -> NativeCallResult {
     if let KaramelPrimative::Text(text) = &*parameter.source().unwrap().deref() {
         return Ok(VmObject::native_convert(KaramelPrimative::Number(text.chars().count() as f64)));
+    }
+    Ok(EMPTY_OBJECT)
+}
+
+fn levenshtein(parameter: FunctionParameter) -> NativeCallResult {
+    if let KaramelPrimative::Text(text) = &*parameter.source().unwrap().deref() {
+        return match parameter.length() {
+            0 =>  n_parameter_expected!("levenshtein".to_string(), 1),
+            1 => {
+                match &*parameter.iter().next().unwrap().deref() {
+                    KaramelPrimative::Text(search) =>  {
+                        Ok(VmObject::native_convert(KaramelPrimative::Number(levenshtein::levenshtein(&*text, &**search) as f64)))
+                    },
+                    _ => expected_parameter_type!("levenshtein".to_string(), "Yazı".to_string())
+                }
+            },
+            _ => n_parameter_expected!("levenshtein".to_string(), 1, parameter.length())
+        };
     }
     Ok(EMPTY_OBJECT)
 }
