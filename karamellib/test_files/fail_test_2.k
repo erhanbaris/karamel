@@ -1,1 +1,0 @@
-gç::satıryaz('merhaba dünya')asd

@@ -1,0 +1,34 @@
+// Kwywords
+keyword_public   = _{ "pub" }
+keyword_use      = _{ "use" }
+keyword_const    = _{ "const" }
+keyword_function = _{ "fun" }
+keyword_as       = _{ "as" }
+
+// Definitions
+var_name  = @{ "_"* ~ ASCII_ALPHA+ ~ (ASCII_ALPHA+ | NUMBER+ | "_")* }
+var_type  = @{ "_"* ~ ASCII_ALPHA+ ~ (ASCII_ALPHA+ | NUMBER+ | "_")* }
+comp_sign = _{ "@" }
+
+// Imports
+import_name =  { var_name }
+import_path =  { "_"* ~ ASCII_ALPHA+ ~ (ASCII_ALPHA+ | NUMBER+ | "_")* }
+import_use  = _{ comp_sign ~ keyword_use ~ "(" ~ import_path ~ ")" }
+import      =  { import_use ~ (keyword_as ~ import_name)? ~ ";" }
+
+statement  =  { "test" }
+statements = _{ statement{1, } }
+
+func_name        = @{ "_"* ~ ASCII_ALPHA+ ~ (ASCII_ALPHA+ | NUMBER+ | "_")* }
+func_seperator   = _{ ":" }
+func_return_type =  { func_seperator ~ var_type }
+func_body        =  { ("{" ~ statements? ~ "}") | (func_seperator ~ statement) }
+
+func_arg  =  { var_name ~ ":" ~ var_type }
+func_args = _{ func_arg ~ ("," ~ func_arg)* }
+func_def  =  {
+    keyword_public? ~ keyword_function ~ func_name ~ "(" ~ func_args? ~ ")" ~ func_return_type? ~ func_body
+}
+file      =  { SOI ~ (import)* ~ (func_def)* ~ EOI }
+
+WHITESPACE = _{ " " | "\r\n" | "\n" }

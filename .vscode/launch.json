@@ -7,15 +7,15 @@
                 {
                         "type": "lldb",
                         "request": "launch",
-                        "name": "Debug executable 'karamelapp'",
+                        "name": "Debug executable 'newapp'",
                         "cargo": {
                                 "args": [
                                         "build",
-                                        "--bin=karamelapp",
-                                        "--package=karamelapp"
+                                        "--bin=newapp",
+                                        "--package=newapp"
                                 ],
                                 "filter": {
-                                        "name": "karamelapp",
+                                        "name": "newapp",
                                         "kind": "bin"
                                 }
                         },
@@ -25,24 +25,24 @@
                 {
                         "type": "cppvsdbg",
                         "request": "launch",
-                        "name": "Debug executable 'karamelapp' at Windows",
-                        "program": "${workspaceRoot}/target/debug/karamelapp.exe",
+                        "name": "Debug executable 'newapp' at Windows",
+                        "program": "${workspaceRoot}/target/debug/newapp.exe",
                         "args": [],
                         "cwd": "${workspaceFolder}"
                 },
                 {
                         "type": "lldb",
                         "request": "launch",
-                        "name": "Debug unit tests in executable 'karamelapp'",
+                        "name": "Debug unit tests in executable 'newapp'",
                         "cargo": {
                                 "args": [
                                         "test",
                                         "--no-run",
-                                        "--bin=karamelapp",
-                                        "--package=karamelapp"
+                                        "--bin=newapp",
+                                        "--package=newapp"
                                 ],
                                 "filter": {
-                                        "name": "karamelapp",
+                                        "name": "newapp",
                                         "kind": "bin"
                                 }
                         },

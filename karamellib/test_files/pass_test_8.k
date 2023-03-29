@@ -1,9 +1,0 @@
-fonk a:
-    döndür 1
-hataayıklama::doğrula(baz::tür_bilgisi('erhan'), 'yazı')
-hataayıklama::doğrula(baz::tür_bilgisi(1_204), 'sayı')
-hataayıklama::doğrula(baz::tür_bilgisi(doğru), 'bool')
-hataayıklama::doğrula(baz::tür_bilgisi([]), 'liste')
-hataayıklama::doğrula(baz::tür_bilgisi({}), 'sözlük')
-hataayıklama::doğrula(baz::tür_bilgisi(a), 'fonksiyon')
-hataayıklama::doğrula(baz::tür_bilgisi(boş), 'boş')

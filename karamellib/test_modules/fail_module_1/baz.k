@@ -1,1 +1,0 @@
-hataayıklama::doğrula(doğru, yanlış)
