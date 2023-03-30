@@ -1,21 +1,23 @@
-anything   = _{ import | func_def | assign_stmt }
 file       =  { SOI ~ (anything)* ~ EOI }
+anything   = _{ import | func_def | assign_stmt }
 WHITESPACE = _{ " " | "\t" | NEWLINE }
 
 // Keywords
 keyword_public   = _{ "pub" }
 keyword_use      = _{ "use" }
-keyword_const    = _{ "const" }
 keyword_function = _{ "fun" }
 keyword_as       = _{ "as" }
 keyword_true     = _{ "true" }
 keyword_false    = _{ "false" }
 
 // Symbols
-symbol_none         =  { "_" }
-symbol_compile_time = _{ "@" }
-symbol_assign       = _{ "=" }
-symbol_line_finish  = _{ ";" }
+symbol_none           =  { "_" }
+symbol_compile_time   = _{ "@" }
+symbol_assign         = _{ "=" }
+symbol_line_finish    = _{ ";" }
+symbol_array_start    = _{ "[" }
+symbol_array_end      = _{ "]" }
+symbol_term_seperator = _{ "," }
 
 // Compiler attribute
 compiler_attr = { symbol_compile_time ~ var_name }
@@ -29,8 +31,9 @@ assign_stmt = { compiler_attr* ~ assign_name ~ symbol_assign ~ term ~ symbol_lin
 term_string  = @{ "\"" ~ ("\"\"" | (!"\"" ~ ANY))* ~ "\"" }
 term_integer = @{ "-"? ~ ("0" | ASCII_NONZERO_DIGIT ~ ASCII_DIGIT*) }
 term_float   = @{ term_integer ~ ("." ~ ASCII_DIGIT*) ~ (^"e" ~ ("+" | "-")? ~ ASCII_DIGIT+)? }
-term_bool    = @{ keyword_true | keyword_false }
-term         =  { term_bool | term_float | term_integer | term_string }
+term_bool    =  { keyword_true | keyword_false }
+term_array   =  { symbol_array_start ~ (term ~ ("," ~ term)*)? ~ symbol_array_end }
+term         =  { term_bool | term_float | term_integer | term_string | term_array }
 
 // Comments
 comment_multiline = @{ "/*" ~ (!"*/" ~ ANY)* ~ "*/" }
@@ -44,7 +47,7 @@ comp_sign = _{ "@" }
 
 // Imports
 import_name =  { var_name }
-import_path = @{ "_"* ~ ASCII_ALPHA+ ~ (ASCII_ALPHA+ | NUMBER+ | "_")* }
+import_path = @{ ("_"* ~ ASCII_ALPHA+ ~ (ASCII_ALPHA+ | NUMBER+ | "_")*) | "*" }
 import_use  = _{ comp_sign ~ keyword_use ~ "(" ~ (import_path ~ ("." ~ import_path)*) ~ ")" }
 import      =  { import_use ~ (keyword_as ~ import_name)? ~ ";" }
 

@@ -1,0 +1,33 @@
+@use(std) as s;
+@use(std);
+@use(std.array);
+@use(std.integer);
+@use(std.*);
+
+@mut ada = false;
+
+ada = 1024.1;
+@mut DATA = "erhan";
+DATA = "";
+DATA = "
+";
+
+[1,2,3,4,5]
+[i32; _]
+
+
+struct data {
+    a: i32 = 100,
+
+};
+
+[1,2,3,4,5]
+
+
+@onchange(data, (item: i32) {
+    
+});
+
+@ondrop(data, (item: i32) {
+    
+})
