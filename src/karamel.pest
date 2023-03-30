@@ -1,0 +1,63 @@
+anything   = _{ import | func_def | assign_stmt }
+file       =  { SOI ~ (anything)* ~ EOI }
+WHITESPACE = _{ " " | "\t" | NEWLINE }
+
+// Keywords
+keyword_public   = _{ "pub" }
+keyword_use      = _{ "use" }
+keyword_const    = _{ "const" }
+keyword_function = _{ "fun" }
+keyword_as       = _{ "as" }
+keyword_true     = _{ "true" }
+keyword_false    = _{ "false" }
+
+// Symbols
+symbol_none         =  { "_" }
+symbol_compile_time = _{ "@" }
+symbol_assign       = _{ "=" }
+symbol_line_finish  = _{ ";" }
+
+// Compiler attribute
+compiler_attr = { symbol_compile_time ~ var_name }
+
+// Assignment
+assign_name = { var_name }
+assign_type = { var_type }
+assign_stmt = { compiler_attr* ~ assign_name ~ symbol_assign ~ term ~ symbol_line_finish }
+
+// Terms
+term_string  = @{ "\"" ~ ("\"\"" | (!"\"" ~ ANY))* ~ "\"" }
+term_integer = @{ "-"? ~ ("0" | ASCII_NONZERO_DIGIT ~ ASCII_DIGIT*) }
+term_float   = @{ term_integer ~ ("." ~ ASCII_DIGIT*) ~ (^"e" ~ ("+" | "-")? ~ ASCII_DIGIT+)? }
+term_bool    = @{ keyword_true | keyword_false }
+term         =  { term_bool | term_float | term_integer | term_string }
+
+// Comments
+comment_multiline = @{ "/*" ~ (!"*/" ~ ANY)* ~ "*/" }
+comment_line      = @{ "//" ~ (!NEWLINE ~ ANY)* ~ NEWLINE }
+COMMENT           = _{ comment_multiline }
+
+// Definitions
+var_name  = @{ "_"* ~ ASCII_ALPHA+ ~ (ASCII_ALPHA+ | NUMBER+ | "_")* }
+var_type  = ${ "_"* ~ ASCII_ALPHA+ ~ (ASCII_ALPHA+ | NUMBER+ | "_")* }
+comp_sign = _{ "@" }
+
+// Imports
+import_name =  { var_name }
+import_path = @{ "_"* ~ ASCII_ALPHA+ ~ (ASCII_ALPHA+ | NUMBER+ | "_")* }
+import_use  = _{ comp_sign ~ keyword_use ~ "(" ~ (import_path ~ ("." ~ import_path)*) ~ ")" }
+import      =  { import_use ~ (keyword_as ~ import_name)? ~ ";" }
+
+statement  =  { "test" }
+statements = _{ statement+ }
+
+func_name        = @{ "_"* ~ ASCII_ALPHA+ ~ (ASCII_ALPHA+ | NUMBER+ | "_")* }
+func_seperator   = _{ ":" }
+func_return_type =  { func_seperator ~ var_type }
+func_body        =  { ("{" ~ statements? ~ "}") | (func_seperator ~ statement) }
+
+func_arg  =  { var_name ~ ":" ~ var_type }
+func_args = _{ func_arg ~ ("," ~ func_arg)* }
+func_def  =  {
+    keyword_public? ~ keyword_function ~ func_name ~ "(" ~ func_args? ~ ")" ~ func_return_type? ~ func_body
+}

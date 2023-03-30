@@ -2,8 +2,8 @@ use pest::{Parser, iterators::{Pairs, Pair}};
 use pest_derive::Parser;
 
 #[derive(Parser)]
-#[grammar = "csv.pest"]
-pub struct CSVParser;
+#[grammar = "karamel.pest"]
+pub struct KaramelParser;
 
 
 #[derive(Debug)]
@@ -94,7 +94,7 @@ fn parse_func(pairs: Pair<'_, Rule>, asts: &mut Vec<AST>) {
 fn main() {
     let mut asts: Vec<AST> = Vec::new();
     
-    let successful_parse = CSVParser::parse(Rule::file, "
+    let successful_parse = KaramelParser::parse(Rule::file, "
 
 
     pub fun data(): void {
@@ -117,3 +117,25 @@ fn main() {
     println!("{:#?}", asts);
 }
 
+
+
+/* 
+@use(std) as s;
+@use(std);
+@use(std.array);
+@use(std.integer);
+@use(std.*);
+
+@mut ada = false;
+
+ada = 1024.1;
+@mut DATA = "erhan";
+DATA = "";
+DATA = "
+";
+
+[1,2,3,4,5]
+[i32; _]
+
+array(1,2,3,4,5)
+ */
