@@ -31,3 +31,111 @@ struct data {
 @ondrop(data, (item: i32) {
     
 })
+
+
+// Import library
+
+@use(*); // Supported but not recommended
+@use(std);
+@use(std.math);
+@use(std.*);
+
+@use(std.math) as math; // Alias for library
+
+// Static variable. Al statis variables are immutable
+STRING_DATA = ""; // Type can be detected via compiler
+INTEGER_DATA: i32 = 1024; // Type is assigned as i32
+
+
+// Make atomic static variable. So, developer can change variable if need it
+@atomic BOOL_DATA: bool = false;
+
+
+// Function definition (private)
+fun calculate(data: int32): int32 {
+	// return type is int32
+}
+
+// Function definition (public)
+pub fun calculate(data: int32): int32 {
+	// return type is int32
+}
+
+
+fun datas() {
+	var string_data = "";
+	var multiplinestring_data = "
+";
+	var bool_data = true;
+	var int_data = 1024;
+	var float_data = 1024.0;
+	var array_value = [1,2,3,4,5];
+	
+	var nullable_data: ?bool = none;
+	
+	var nullable_data = @get(nullable_data);
+	var has_value = @is_none(nullable_data);
+	@defer std.console.write("out of scope")
+}
+
+// Integer types
+@clone type i256;
+@clone type u256;
+@clone type i128;
+@clone type u128;
+@clone type i64;
+@clone type u64;
+@clone type i32;
+@clone type u32;
+@clone type i16;
+@clone type u16;
+@clone type i8;
+@clone type u8;
+
+@clone type char;
+
+@clone type bool;
+
+
+type Data {
+	var data: i32 = 
+};
+
+
+@clone // all objects will be default non-clone. Only primative types are cloneable.
+@atomic // set variable to atomic type
+@get // get information from variable
+@is_none // check the variable to none
+@on_change // when the variable changed invoke the function
+@on_delete // when the variable deleted invoke the function
+@defer // when out of scope execute the code
+@error_defer // when throw the exception
+
+@new // allocate memory
+@new_ptr // allocate pointer
+@free // free up the memory
+
+var data = @new(u32); // All types must have default parameters
+var data = @new_ptr(u32; 1);
+
+
+// Checked pointer and unchecked pointer
+All pointers news to be checked agains to null.
+
+@new_ptr will return nullable pointer
+
+
+var new_pointer = @new_ptr(str);
+is equal to 
+
+var new_pointer: !*string = @new_ptr(string); //unchecked pointer
+var new_pointer: *string  = @get_ptr(new_pointer); // checked pointer and if the pointer is none, it will throw exception
+
+
+
+secure_ptr
+unsecure_ptr
+
+
+// Error result
+// Null result
