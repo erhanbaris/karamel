@@ -59,7 +59,7 @@ mod tests {
                                 dump_memory: false
                             };
 
-                            let result = executer::code_executer(parameters);
+                            let result = unsafe { executer::code_executer(parameters) };
                             match result.compiled && result.executed {
                                 true => {
                                     if !is_pass {
