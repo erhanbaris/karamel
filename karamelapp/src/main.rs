@@ -46,7 +46,7 @@ döngü i = 0, i < 10, i++:
     };
 
     
-    let result = karamellib::vm::executer::code_executer(parameters);
+    let result = unsafe { karamellib::vm::executer::code_executer(parameters) };
     match result.executed {
         true => println!("Success"),
         false => println!("Fail")

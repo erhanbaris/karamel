@@ -55,7 +55,7 @@ pub fn get_execution_path<T: Borrow<ExecutionSource>>(source: T) -> ExecutionPat
     }
 }
 
-pub fn code_executer(parameters: ExecutionParameters) -> ExecutionStatus {
+pub unsafe fn code_executer(parameters: ExecutionParameters) -> ExecutionStatus {
     let mut status = ExecutionStatus::default();
     match log::set_logger(&CONSOLE_LOGGER) {
         Ok(_) => {

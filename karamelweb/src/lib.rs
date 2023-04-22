@@ -24,7 +24,7 @@ pub fn execute_code(name: &str) -> Object {
         dump_memory: true
     };
 
-    let result = karamellib::vm::executer::code_executer(parameters);
+    let result = unsafe { karamellib::vm::executer::code_executer(parameters) };
     match result.compiled && result.executed {
         true => {
             Reflect::set(response.as_ref(), status_ref.as_ref(), JsValue::from_bool(true).as_ref()).unwrap();
