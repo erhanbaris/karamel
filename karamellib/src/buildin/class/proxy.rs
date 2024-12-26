@@ -1,7 +1,7 @@
 use crate::compiler::KaramelPrimative;
 use crate::{
     buildin::{Class, ClassProperty},
-    compiler::function::{IndexerGetCall, IndexerSetCall, NativeCall, FunctionFlag},
+    compiler::function::{FunctionFlag, IndexerGetCall, IndexerSetCall, NativeCall},
     types::VmObject,
 };
 
@@ -11,7 +11,7 @@ use std::rc::Rc;
 
 #[derive(Default)]
 pub struct ProxyClass {
-    config: ClassConfig
+    config: ClassConfig,
 }
 
 impl Class for ProxyClass {
@@ -25,7 +25,7 @@ impl Class for ProxyClass {
         match source {
             Some(source_object) => match &*source_object.deref() {
                 KaramelPrimative::Class(class) => class.has_element(source, field),
-                _ => false
+                _ => false,
             },
             None => false,
         }
@@ -35,11 +35,11 @@ impl Class for ProxyClass {
         self.config.properties.iter()
     }
 
-fn get_element(&self, source: Option<VmObject>, field: Rc<String>) -> Option<ClassProperty> {
+    fn get_element(&self, source: Option<VmObject>, field: Rc<String>) -> Option<ClassProperty> {
         match source {
             Some(source_object) => match &*source_object.deref() {
                 KaramelPrimative::Class(class) => class.get_element(source, field),
-                _ => None
+                _ => None,
             },
             None => None,
         }
@@ -67,9 +67,7 @@ fn get_element(&self, source: Option<VmObject>, field: Rc<String>) -> Option<Cla
 }
 
 pub fn get_primative_class() -> Rc<dyn Class> {
-    Rc::new(ProxyClass { 
-        config: ClassConfig::default()
-    })
+    Rc::new(ProxyClass { config: ClassConfig::default() })
 }
 
 impl ProxyClass {
@@ -86,8 +84,8 @@ impl GetType for ProxyClass {
 mod test {
     use crate::buildin::class::baseclass::BasicInnerClass;
     use crate::buildin::Class;
-    use crate::compiler::KaramelPrimative;
     use crate::compiler::GetType;
+    use crate::compiler::KaramelPrimative;
     use std::rc::Rc;
 
     #[test]

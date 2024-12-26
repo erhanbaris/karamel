@@ -2,15 +2,19 @@ use std::{cell::RefCell, rc::Rc};
 
 use super::OpcodeLocation;
 
-
-
 #[derive(Clone)]
-pub struct OpcodeLocationGroup { pub locations: RefCell<Vec<Rc<OpcodeLocation>>> }
+pub struct OpcodeLocationGroup {
+    pub locations: RefCell<Vec<Rc<OpcodeLocation>>>,
+}
+impl Default for OpcodeLocationGroup {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl OpcodeLocationGroup {
     pub fn new() -> Self {
-        OpcodeLocationGroup {
-            locations: RefCell::new(Vec::new())
-        }
+        OpcodeLocationGroup { locations: RefCell::new(Vec::new()) }
     }
 
     pub fn add(&self, location: Rc<OpcodeLocation>) {

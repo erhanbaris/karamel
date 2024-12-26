@@ -10,18 +10,18 @@ mod tests {
         ($name:ident, $type:ident, $text:expr, $result:expr) => {
             // The macro will expand into the contents of this block.
             #[test]
-            fn $name () {
+            fn $name() {
                 let mut parser = Parser::new($text);
                 match parser.parse() {
                     Err(_) => assert_eq!(true, false),
-                    _ => ()
+                    _ => (),
                 };
                 let tokens = parser.tokens();
 
                 assert_eq!(1, tokens.len());
                 match &tokens[0].token_type {
                     KaramelTokenType::$type(num) => assert_eq!(*num, $result),
-                    _ => assert_eq!(true, false)
+                    _ => assert_eq!(true, false),
                 }
             }
         };
@@ -32,17 +32,17 @@ mod tests {
         ($name:ident, $text:expr, $result:expr) => {
             // The macro will expand into the contents of this block.
             #[test]
-            fn $name () {
+            fn $name() {
                 let mut parser = Parser::new($text);
                 match parser.parse() {
                     Err(_) => assert_eq!(true, false),
-                    _ => ()
+                    _ => (),
                 };
                 let tokens = parser.tokens();
                 assert_eq!(1, tokens.len());
                 match &tokens[0].token_type {
                     KaramelTokenType::Keyword(keyword) => assert_eq!(*keyword, $result),
-                    _ => assert_eq!(true, false)
+                    _ => assert_eq!(true, false),
                 }
             }
         };
@@ -53,11 +53,11 @@ mod tests {
         ($name:ident, $text:expr) => {
             // The macro will expand into the contents of this block.
             #[test]
-            fn $name () {
+            fn $name() {
                 let mut parser = Parser::new($text);
                 match parser.parse() {
                     Err(_) => assert_eq!(true, false),
-                    _ => ()
+                    _ => (),
                 };
                 let tokens = parser.tokens();
                 assert_eq!(0, tokens.len());
@@ -70,11 +70,11 @@ mod tests {
         ($name:ident, $text:expr) => {
             // The macro will expand into the contents of this block.
             #[test]
-            fn $name () {
+            fn $name() {
                 let mut parser = Parser::new($text);
                 match parser.parse() {
                     Err(_) => assert_eq!(true, true),
-                    _ => assert_eq!(false, true)
+                    _ => assert_eq!(false, true),
                 }
             }
         };
@@ -83,16 +83,15 @@ mod tests {
     #[test]
     fn get_text_1() {
         let mut parser = Parser::new("\"erhan barış\"");
-        match parser.parse() {
-            Err(_) => assert_eq!(true, false),
-            _ => ()
+        if let Err(_) = parser.parse() {
+            assert_eq!(true, false)
         };
         let tokens = parser.tokens();
         assert_eq!(1, tokens.len());
         for item in tokens.iter() {
             match &item.token_type {
                 KaramelTokenType::Text(text) => assert_eq!(**text, "erhan barış"),
-                _ => assert_eq!(true, false)
+                _ => assert_eq!(true, false),
             }
         }
     }
@@ -100,141 +99,132 @@ mod tests {
     #[test]
     fn get_text_2() {
         let mut parser = Parser::new("\"erhan barış\"\"\"");
-        match parser.parse() {
-            Err(_) => assert_eq!(true, false),
-            _ => ()
+        if let Err(_) = parser.parse() {
+            assert_eq!(true, false)
         };
         let tokens = parser.tokens();
         assert_eq!(2, tokens.len());
         match &tokens[0].token_type {
             KaramelTokenType::Text(text) => assert_eq!(**text, "erhan barış"),
-            _ => assert_eq!(true, false)
+            _ => assert_eq!(true, false),
         }
         match &tokens[1].token_type {
             KaramelTokenType::Text(text) => assert_eq!(**text, ""),
-            _ => assert_eq!(true, false)
+            _ => assert_eq!(true, false),
         }
     }
 
     #[test]
     fn get_text_3() {
         let mut parser = Parser::new("'erhan barış'\"\"");
-        match parser.parse() {
-            Err(_) => assert_eq!(true, false),
-            _ => ()
+        if let Err(_) = parser.parse() {
+            assert_eq!(true, false)
         };
         let tokens = parser.tokens();
         assert_eq!(2, tokens.len());
         match &tokens[0].token_type {
             KaramelTokenType::Text(text) => assert_eq!(**text, "erhan barış"),
-            _ => assert_eq!(true, false)
+            _ => assert_eq!(true, false),
         }
         match &tokens[1].token_type {
             KaramelTokenType::Text(text) => assert_eq!(**text, ""),
-            _ => assert_eq!(true, false)
+            _ => assert_eq!(true, false),
         }
     }
 
     #[test]
     fn keywords() {
         let mut parser = Parser::new("_test_");
-        match parser.parse() {
-            Err(_) => assert_eq!(true, false),
-            _ => ()
+        if let Err(_) = parser.parse() {
+            assert_eq!(true, false)
         };
         let tokens = parser.tokens();
 
         assert_eq!(1, tokens.len());
         match &tokens[0].token_type {
             KaramelTokenType::Symbol(symbol) => assert_eq!("_test_", **symbol),
-            _ => assert_eq!(true, false)
+            _ => assert_eq!(true, false),
         }
 
         let mut parser = Parser::new("$");
-        match parser.parse() {
-            Err(_) => assert_eq!(true, false),
-            _ => ()
+        if let Err(_) = parser.parse() {
+            assert_eq!(true, false)
         };
         let tokens = parser.tokens();
 
         assert_eq!(1, tokens.len());
         match &tokens[0].token_type {
             KaramelTokenType::Symbol(symbol) => assert_eq!("$", **symbol),
-            _ => assert_eq!(true, false)
+            _ => assert_eq!(true, false),
         }
 
         let mut parser = Parser::new("$$erhan$$");
-        match parser.parse() {
-            Err(_) => assert_eq!(true, false),
-            _ => ()
+        if let Err(_) = parser.parse() {
+            assert_eq!(true, false)
         };
         let tokens = parser.tokens();
 
         assert_eq!(1, tokens.len());
         match &tokens[0].token_type {
             KaramelTokenType::Symbol(symbol) => assert_eq!("$$erhan$$", **symbol),
-            _ => assert_eq!(true, false)
+            _ => assert_eq!(true, false),
         }
     }
 
     #[test]
     fn new_line_1() {
         let mut parser = Parser::new("\n");
-        match parser.parse() {
-            Err(_) => assert_eq!(true, false),
-            _ => ()
+        if let Err(_) = parser.parse() {
+            assert_eq!(true, false)
         };
         let tokens = parser.tokens();
 
         assert_eq!(1, tokens.len());
         match &tokens[0].token_type {
-            KaramelTokenType::NewLine(count) => assert_eq!(*count == 0, true),
-            _ => assert_eq!(true, false)
+            KaramelTokenType::NewLine(count) => assert!(*count == 0),
+            _ => assert_eq!(true, false),
         }
     }
 
     #[test]
     fn new_line_2() {
         let mut parser = Parser::new("\n     \n    \n   ");
-        match parser.parse() {
-            Err(_) => assert_eq!(true, false),
-            _ => ()
+        if let Err(_) = parser.parse() {
+            assert_eq!(true, false)
         };
         let tokens = parser.tokens();
 
         assert_eq!(3, tokens.len());
         match &tokens[0].token_type {
-            KaramelTokenType::NewLine(count) => assert_eq!(*count == 5, true),
-            _ => assert_eq!(true, false)
+            KaramelTokenType::NewLine(count) => assert!(*count == 5),
+            _ => assert_eq!(true, false),
         }
 
         match &tokens[1].token_type {
-            KaramelTokenType::NewLine(count) => assert_eq!(*count == 4, true),
-            _ => assert_eq!(true, false)
+            KaramelTokenType::NewLine(count) => assert!(*count == 4),
+            _ => assert_eq!(true, false),
         }
 
         match &tokens[2].token_type {
-            KaramelTokenType::NewLine(count) => assert_eq!(*count == 3, true),
-            _ => assert_eq!(true, false)
+            KaramelTokenType::NewLine(count) => assert!(*count == 3),
+            _ => assert_eq!(true, false),
         }
     }
 
     #[test]
     fn whitespace() {
         let mut parser = Parser::new("     ");
-        match parser.parse() {
-            Err(_) => assert_eq!(true, false),
-            _ => ()
+        if let Err(_) = parser.parse() {
+            assert_eq!(true, false)
         };
         let tokens = parser.tokens();
 
         assert_eq!(1, tokens.len());
         match &tokens[0].token_type {
-            KaramelTokenType::WhiteSpace(count) => assert_eq!(*count == 5, true),
-            _ => assert_eq!(true, false)
+            KaramelTokenType::WhiteSpace(count) => assert!(*count == 5),
+            _ => assert_eq!(true, false),
         }
     }
-
 
     parse_failed!(text_1, "'merhaba dünya");
     parse_failed!(text_2, "\"merhaba dünya");
@@ -270,21 +260,19 @@ mod tests {
     test_number!(binary_3, Integer, "0b01", 1);
     test_number!(binary_4, Integer, "0B00000000011111111111111111111111", 8388607);
 
-
     test_number!(double_1, Double, "1024.0", 1024.0);
     #[test]
     fn double_2() {
         let mut parser = Parser::new(" .1024000 ");
-        match parser.parse() {
-            Err(_) => assert_eq!(true, false),
-            _ => ()
+        if let Err(_) = parser.parse() {
+            assert_eq!(true, false)
         };
         let tokens = parser.tokens();
 
         assert_eq!(3, tokens.len());
         match &tokens[1].token_type {
-            KaramelTokenType::Double(num) => assert_eq!(0.1024 - *num < 1e-10, true),
-            _ => assert_eq!(true, false)
+            KaramelTokenType::Double(num) => assert!(0.1024 - *num < 1e-10),
+            _ => assert_eq!(true, false),
         }
     }
     test_number!(double_3, Double, "099999.9", 99999.9);

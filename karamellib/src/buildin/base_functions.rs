@@ -1,17 +1,20 @@
-use crate::compiler::{EMPTY_OBJECT, function::{FunctionParameter, FunctionReference, NativeCall, NativeCallResult}};
-use crate::types::VmObject;
-use crate::buildin::{Module, Class};
+use crate::buildin::{Class, Module};
 use crate::compiler::GetType;
-use crate::error::KaramelErrorType;
-use crate::{n_parameter_expected};
-use std::{cell::RefCell, collections::HashMap};
+use crate::types::VmObject;
+use crate::{
+    compiler::{
+        function::{FunctionParameter, FunctionReference, NativeCall, NativeCallResult},
+        EMPTY_OBJECT,
+    },
+    n_parameter_expected,
+};
 use std::rc::Rc;
-
+use std::{cell::RefCell, collections::HashMap};
 
 #[derive(Clone)]
 pub struct BaseFunctionsModule {
     methods: RefCell<HashMap<String, Rc<FunctionReference>>>,
-    path: Vec<String>
+    path: Vec<String>,
 }
 
 impl Module for BaseFunctionsModule {
@@ -24,10 +27,7 @@ impl Module for BaseFunctionsModule {
     }
 
     fn get_method(&self, name: &str) -> Option<Rc<FunctionReference>> {
-        match self.methods.borrow().get(name) {
-            Some(method) => Some(method.clone()),
-            None => None
-        }
+        self.methods.borrow().get(name).cloned()
     }
 
     fn get_module(&self, _: &str) -> Option<Rc<dyn Module>> {
@@ -36,7 +36,10 @@ impl Module for BaseFunctionsModule {
 
     fn get_methods(&self) -> Vec<Rc<FunctionReference>> {
         let mut response = Vec::new();
-        self.methods.borrow().iter().for_each(|(_, reference)| response.push(reference.clone()));
+        self.methods
+            .borrow()
+            .iter()
+            .for_each(|(_, reference)| response.push(reference.clone()));
         response
     }
 
@@ -49,26 +52,29 @@ impl Module for BaseFunctionsModule {
     }
 }
 
-impl BaseFunctionsModule  {
+impl BaseFunctionsModule {
     pub fn new() -> Rc<BaseFunctionsModule> {
         let module = BaseFunctionsModule {
             methods: RefCell::new(HashMap::new()),
-            path: vec!["baz".to_string()]
+            path: vec!["baz".to_string()],
         };
 
         let rc_module = Rc::new(module);
-        rc_module.methods.borrow_mut().insert("tür_bilgisi".to_string(), FunctionReference::native_function(Self::type_info as NativeCall, "tür_bilgisi".to_string(), rc_module.clone()));
+        rc_module
+            .methods
+            .borrow_mut()
+            .insert("tür_bilgisi".to_string(), FunctionReference::native_function(Self::type_info as NativeCall, "tür_bilgisi".to_string(), rc_module.clone()));
         rc_module
     }
 
-    pub fn type_info(parameter: FunctionParameter) -> NativeCallResult {        
+    pub fn type_info(parameter: FunctionParameter) -> NativeCallResult {
         if parameter.length() > 1 {
             return n_parameter_expected!("tür_bilgisi".to_string(), 1);
         }
 
         match parameter.iter().next() {
             Some(arg) => Ok(VmObject::from(Rc::new(arg.deref().get_type()))),
-            None => Ok(EMPTY_OBJECT)
+            None => Ok(EMPTY_OBJECT),
         }
     }
 }

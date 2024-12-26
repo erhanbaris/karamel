@@ -1,5 +1,5 @@
-use std::{cell::RefCell, rc::Rc};
 use std::sync::atomic::{AtomicUsize, Ordering};
+use std::{cell::RefCell, rc::Rc};
 
 use super::{DumpBuilder, OpcodeGeneratorTrait};
 
@@ -9,10 +9,7 @@ static OPCODE_LOCATION_INDEXER: AtomicUsize = AtomicUsize::new(0);
 #[derive(Clone)]
 pub enum LocationType {
     Fixed(usize),
-    Subtraction {
-        left_hand: Rc<OpcodeLocation>, 
-        right_hand: Rc<OpcodeLocation>
-    }
+    Subtraction { left_hand: Rc<OpcodeLocation>, right_hand: Rc<OpcodeLocation> },
 }
 
 #[derive(Clone)]
@@ -20,7 +17,7 @@ pub struct OpcodeLocation {
     #[cfg(debug_assertions)]
     index: usize,
     location: RefCell<LocationType>,
-    used_location: RefCell<Vec<usize>>
+    used_location: RefCell<Vec<usize>>,
 }
 
 impl OpcodeLocation {
@@ -29,7 +26,7 @@ impl OpcodeLocation {
             #[cfg(debug_assertions)]
             index: OPCODE_LOCATION_INDEXER.fetch_add(1, Ordering::SeqCst),
             location: RefCell::new(LocationType::Fixed(location)),
-            used_location: RefCell::new(Vec::new())
+            used_location: RefCell::new(Vec::new()),
         }
     }
 
@@ -38,7 +35,7 @@ impl OpcodeLocation {
             #[cfg(debug_assertions)]
             index: OPCODE_LOCATION_INDEXER.fetch_add(1, Ordering::SeqCst),
             location: RefCell::new(LocationType::Fixed(0)),
-            used_location: RefCell::new(Vec::new())
+            used_location: RefCell::new(Vec::new()),
         }
     }
 
@@ -69,11 +66,8 @@ impl OpcodeLocation {
     pub fn subtraction(&self, left_hand: Rc<OpcodeLocation>, right_hand: Rc<OpcodeLocation>) {
         #[cfg(debug_assertions)]
         assert!(left_hand.get_index() != right_hand.get_index());
-        
-        *self.location.borrow_mut() = LocationType::Subtraction {
-            left_hand,
-            right_hand
-        };
+
+        *self.location.borrow_mut() = LocationType::Subtraction { left_hand, right_hand };
     }
 
     pub fn apply(&self, opcodes: &mut Vec<u8>) {
@@ -85,21 +79,23 @@ impl OpcodeLocation {
 }
 
 #[derive(Clone)]
-pub struct CurrentLocationUpdateGenerator { pub location:  Rc<OpcodeLocation> }
+pub struct CurrentLocationUpdateGenerator {
+    pub location: Rc<OpcodeLocation>,
+}
 impl OpcodeGeneratorTrait for CurrentLocationUpdateGenerator {
     fn generate(&self, opcodes: &mut Vec<u8>) {
         self.location.set(opcodes.len(), opcodes);
     }
 
-    fn dump<'a>(&self, _: &'a DumpBuilder, _: Rc<AtomicUsize>, _: &Vec<u8>) {
+    fn dump(&self, _: &DumpBuilder, _: Rc<AtomicUsize>, _: &Vec<u8>) {
         // Dynamically location calculator
     }
 }
 
 #[derive(Clone)]
-pub struct DynamicLocationUpdateGenerator { 
-    pub target:  Rc<OpcodeLocation>,
-    pub source:  Rc<OpcodeLocation>
+pub struct DynamicLocationUpdateGenerator {
+    pub target: Rc<OpcodeLocation>,
+    pub source: Rc<OpcodeLocation>,
 }
 
 impl OpcodeGeneratorTrait for DynamicLocationUpdateGenerator {
@@ -107,16 +103,16 @@ impl OpcodeGeneratorTrait for DynamicLocationUpdateGenerator {
         self.target.set(self.source.get(), opcodes);
     }
 
-    fn dump<'a>(&self, _: &'a DumpBuilder, _: Rc<AtomicUsize>, _: &Vec<u8>) {
+    fn dump(&self, _: &DumpBuilder, _: Rc<AtomicUsize>, _: &Vec<u8>) {
         // Dynamically location calculator
     }
 }
 
 #[derive(Clone)]
-pub struct SubtractionGenerator { 
-    pub target:  Rc<OpcodeLocation>,
-    pub left_hand:  Rc<OpcodeLocation>,
-    pub right_hand:  Rc<OpcodeLocation>
+pub struct SubtractionGenerator {
+    pub target: Rc<OpcodeLocation>,
+    pub left_hand: Rc<OpcodeLocation>,
+    pub right_hand: Rc<OpcodeLocation>,
 }
 
 impl OpcodeGeneratorTrait for SubtractionGenerator {
@@ -127,7 +123,7 @@ impl OpcodeGeneratorTrait for SubtractionGenerator {
         self.target.set(left - right, opcodes);
     }
 
-    fn dump<'a>(&self, _: &'a DumpBuilder, _: Rc<AtomicUsize>, _: &Vec<u8>) {
+    fn dump(&self, _: &DumpBuilder, _: Rc<AtomicUsize>, _: &Vec<u8>) {
         // Dynamically location calculator
     }
 }

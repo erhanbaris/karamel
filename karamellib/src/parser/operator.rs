@@ -1,5 +1,5 @@
-use crate::types::*;
 use crate::error::KaramelErrorType;
+use crate::types::*;
 
 pub struct OperatorParser;
 
@@ -9,10 +9,10 @@ impl TokenParser for OperatorParser {
     }
 
     fn parse(&self, tokinizer: &mut Tokinizer) -> Result<(), KaramelErrorType> {
-        let ch       = tokinizer.get_char();
-        let ch_next  = tokinizer.get_next_char();
-        let start= tokinizer.column;
-        
+        let ch = tokinizer.get_char();
+        let ch_next = tokinizer.get_next_char();
+        let start = tokinizer.column;
+
         tokinizer.increase_index();
 
         let mut operator_type = match (ch, ch_next) {
@@ -29,13 +29,12 @@ impl TokenParser for OperatorParser {
             ('*', '=') => KaramelOperatorType::AssignMultiplication,
             ('*', '/') => KaramelOperatorType::CommentMultilineEnd,
             ('=', '=') => KaramelOperatorType::Equal,
-            _ =>  KaramelOperatorType::None
+            _ => KaramelOperatorType::None,
         };
 
         if operator_type != KaramelOperatorType::None {
             tokinizer.increase_index();
-        }
-        else {
+        } else {
             operator_type = match ch {
                 '=' => KaramelOperatorType::Assign,
                 '*' => KaramelOperatorType::Multiplication,
@@ -56,7 +55,7 @@ impl TokenParser for OperatorParser {
                 ';' => KaramelOperatorType::Semicolon,
                 '.' => KaramelOperatorType::Dot,
                 '!' => KaramelOperatorType::Not,
-                _ => KaramelOperatorType::None
+                _ => KaramelOperatorType::None,
             };
         }
 
@@ -68,8 +67,8 @@ impl TokenParser for OperatorParser {
             log::debug!("'{}' not found", ch as usize);
             return Err(KaramelErrorType::CharNotValid);
         }
-        
+
         tokinizer.add_token(start, KaramelTokenType::Operator(operator_type));
-        return Ok(());
+        Ok(())
     }
 }

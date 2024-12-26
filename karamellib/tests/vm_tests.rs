@@ -2,10 +2,10 @@ extern crate karamellib;
 
 #[cfg(test)]
 mod tests {
-    use crate::karamellib::parser::*;
     use crate::karamellib::compiler::*;
-    use crate::karamellib::vm::*;
+    use crate::karamellib::parser::*;
     use crate::karamellib::syntax::*;
+    use crate::karamellib::vm::*;
     use crate::karamellib::*;
 
     use std::rc::Rc;
@@ -14,27 +14,27 @@ mod tests {
     macro_rules! test_last_memory {
         ($name:ident, $text:expr, $result:expr) => {
             #[test]
-            fn $name () {
+            fn $name() {
                 let mut parser = Parser::new($text);
                 match parser.parse() {
                     Err(_) => assert!(false),
-                    _ => ()
+                    _ => (),
                 };
 
                 let syntax = SyntaxParser::new(parser.tokens().to_vec());
                 let syntax_result = syntax.parse();
                 match syntax_result {
                     Err(_) => assert!(false),
-                    _ => ()
+                    _ => (),
                 };
 
-                let opcode_compiler  = InterpreterCompiler {};
+                let opcode_compiler = InterpreterCompiler {};
                 let mut compiler_options: KaramelCompilerContext = KaramelCompilerContext::new();
                 let ast = syntax_result.unwrap();
 
                 if let Ok(_) = opcode_compiler.compile(ast.clone(), &mut compiler_options) {
-                    if unsafe { interpreter::run_vm(&mut compiler_options, false, false,).is_ok() } {
-                        unsafe { 
+                    if unsafe { interpreter::run_vm(&mut compiler_options, false, false).is_ok() } {
+                        unsafe {
                             let memory = pop!(compiler_options, "memory");
                             assert_eq!(*memory, $result);
                         }
@@ -52,21 +52,21 @@ mod tests {
     macro_rules! test_variable_value {
         ($name:ident, $variable:expr, $text:expr, $result:expr) => {
             #[test]
-            fn $name () {
+            fn $name() {
                 let mut parser = Parser::new($text);
                 match parser.parse() {
                     Err(_) => assert!(false),
-                    _ => ()
+                    _ => (),
                 };
 
                 let syntax = SyntaxParser::new(parser.tokens().to_vec());
                 let syntax_result = syntax.parse();
                 match syntax_result {
                     Err(_) => assert!(false),
-                    _ => ()
+                    _ => (),
                 };
 
-                let opcode_compiler  = InterpreterCompiler {};
+                let opcode_compiler = InterpreterCompiler {};
                 let mut compiler_options: KaramelCompilerContext = KaramelCompilerContext::new();
                 let ast = syntax_result.unwrap();
 
@@ -74,7 +74,7 @@ mod tests {
                     if unsafe { interpreter::run_vm(&mut compiler_options, false, false).is_ok() } {
                         match compiler_options.storages[0].get_variable_location(&$variable.to_string()) {
                             Some(location) => assert_eq!(*compiler_options.stack[location as usize].deref(), $result),
-                            None => assert!(false)
+                            None => assert!(false),
                         }
                     } else {
                         assert!(false)
@@ -88,21 +88,21 @@ mod tests {
     macro_rules! execute {
         ($name:ident, $text:expr) => {
             #[test]
-            fn $name () {
+            fn $name() {
                 let mut parser = Parser::new($text);
                 match parser.parse() {
                     Err(_) => assert!(false),
-                    _ => ()
+                    _ => (),
                 };
 
                 let syntax = SyntaxParser::new(parser.tokens().to_vec());
                 let syntax_result = syntax.parse();
                 match syntax_result {
                     Err(_) => assert!(false),
-                    _ => ()
+                    _ => (),
                 };
 
-                let opcode_compiler  = InterpreterCompiler {};
+                let opcode_compiler = InterpreterCompiler {};
                 let mut compiler_options: KaramelCompilerContext = KaramelCompilerContext::new();
                 let ast = syntax_result.unwrap();
 
@@ -116,7 +116,6 @@ mod tests {
             }
         };
     }
-
 
     test_last_memory!(vm_1, "10 + 10", KaramelPrimative::Number(20.0));
     test_last_memory!(vm_2, "10 + 20 + 30", KaramelPrimative::Number(60.0));
@@ -169,102 +168,206 @@ mod tests {
     test_last_memory!(vm_53, "boş != boş", KaramelPrimative::Bool(false));
     test_last_memory!(vm_55, "test_1 == test_2", KaramelPrimative::Bool(true));
     test_variable_value!(vm_56, "text", "text = 1024", KaramelPrimative::Number(1024.0));
-    test_variable_value!(vm_57, "result", r#"text = 1024
-result = text *2"#, KaramelPrimative::Number(2048.0));
-    test_variable_value!(vm_58, "full_text", r#"text_1 = 'erhan'
+    test_variable_value!(
+        vm_57,
+        "result",
+        r#"text = 1024
+result = text *2"#,
+        KaramelPrimative::Number(2048.0)
+    );
+    test_variable_value!(
+        vm_58,
+        "full_text",
+        r#"text_1 = 'erhan'
 text_2 = 'baris'
-full_text = text_1 + ' ' + text_2"#, KaramelPrimative::Text(Rc::new("erhan baris".to_string())));
-    test_variable_value!(vm_59, "erhan", r#"erhan=100
+full_text = text_1 + ' ' + text_2"#,
+        KaramelPrimative::Text(Rc::new("erhan baris".to_string()))
+    );
+    test_variable_value!(
+        vm_59,
+        "erhan",
+        r#"erhan=100
 ++erhan
 ++erhan
-++erhan"#, KaramelPrimative::Number(103.0));
-    test_variable_value!(vm_60, "erhan", r#"erhan=100
+++erhan"#,
+        KaramelPrimative::Number(103.0)
+    );
+    test_variable_value!(
+        vm_60,
+        "erhan",
+        r#"erhan=100
 --erhan
 --erhan
---erhan"#, KaramelPrimative::Number(97.0));
-    test_variable_value!(vm_61, "erhan", r#"erhan=doğru
-erhan=!erhan"#, KaramelPrimative::Bool(false));
-    test_variable_value!(vm_62, "erhan", r#"erhan=yanlış
-erhan=!erhan"#, KaramelPrimative::Bool(true));
+--erhan"#,
+        KaramelPrimative::Number(97.0)
+    );
+    test_variable_value!(
+        vm_61,
+        "erhan",
+        r#"erhan=doğru
+erhan=!erhan"#,
+        KaramelPrimative::Bool(false)
+    );
+    test_variable_value!(
+        vm_62,
+        "erhan",
+        r#"erhan=yanlış
+erhan=!erhan"#,
+        KaramelPrimative::Bool(true)
+    );
     test_variable_value!(vm_63, "erhan", r#"erhan=!yanlış"#, KaramelPrimative::Bool(true));
     test_variable_value!(vm_64, "erhan", r#"erhan=!doğru"#, KaramelPrimative::Bool(false));
     test_variable_value!(vm_65, "erhan", r#"erhan=!-100"#, KaramelPrimative::Bool(true));
-    test_variable_value!(vm_66, "erhan", r#"erhan=1
-barış=erhan++"#, KaramelPrimative::Number(2.0));
-    test_variable_value!(vm_67, "barış", r#"erhan=1
-barış=erhan++"#, KaramelPrimative::Number(1.0));
-    test_variable_value!(vm_68, "erhan", r#"erhan=1
-erhan+=10"#, KaramelPrimative::Number(11.0));
-    test_variable_value!(vm_69, "erhan", r#"erhan=11
-erhan-=1"#, KaramelPrimative::Number(10.0));
-    test_variable_value!(vm_70, "erhan", r#"erhan=10
-erhan/=2"#, KaramelPrimative::Number(5.0));
-    test_variable_value!(vm_71, "erhan", r#"erhan=5
-erhan*=2"#, KaramelPrimative::Number(10.0));
+    test_variable_value!(
+        vm_66,
+        "erhan",
+        r#"erhan=1
+barış=erhan++"#,
+        KaramelPrimative::Number(2.0)
+    );
+    test_variable_value!(
+        vm_67,
+        "barış",
+        r#"erhan=1
+barış=erhan++"#,
+        KaramelPrimative::Number(1.0)
+    );
+    test_variable_value!(
+        vm_68,
+        "erhan",
+        r#"erhan=1
+erhan+=10"#,
+        KaramelPrimative::Number(11.0)
+    );
+    test_variable_value!(
+        vm_69,
+        "erhan",
+        r#"erhan=11
+erhan-=1"#,
+        KaramelPrimative::Number(10.0)
+    );
+    test_variable_value!(
+        vm_70,
+        "erhan",
+        r#"erhan=10
+erhan/=2"#,
+        KaramelPrimative::Number(5.0)
+    );
+    test_variable_value!(
+        vm_71,
+        "erhan",
+        r#"erhan=5
+erhan*=2"#,
+        KaramelPrimative::Number(10.0)
+    );
     test_variable_value!(vm_72, "erhan", r#"erhan=9-3"#, KaramelPrimative::Number(6.0));
     test_variable_value!(vm_73, "erhan", r#"erhan=9/3"#, KaramelPrimative::Number(3.0));
-    test_variable_value!(vm_74, "erhan", r#"
+    test_variable_value!(
+        vm_74,
+        "erhan",
+        r#"
 erhan=1
 erhan == 1 ise:
-    erhan=2"#, KaramelPrimative::Number(2.0));
-    test_variable_value!(vm_75, "erhan", r#"
+    erhan=2"#,
+        KaramelPrimative::Number(2.0)
+    );
+    test_variable_value!(
+        vm_75,
+        "erhan",
+        r#"
 erhan=1
 erhan != 1 ise:
-    erhan=2"#, KaramelPrimative::Number(1.0));
-    test_variable_value!(vm_76, "baris", r#"
+    erhan=2"#,
+        KaramelPrimative::Number(1.0)
+    );
+    test_variable_value!(
+        vm_76,
+        "baris",
+        r#"
 erhan=1
 baris=2
 erhan > 0 ise:
  erhan=2
- baris=3"#, KaramelPrimative::Number(3.0));
- test_variable_value!(vm_77, "erhan", r#"
+ baris=3"#,
+        KaramelPrimative::Number(3.0)
+    );
+    test_variable_value!(
+        vm_77,
+        "erhan",
+        r#"
 erhan=1
 doğru ise:
-  erhan=2"#, KaramelPrimative::Number(2.0));
-  test_variable_value!(vm_78, "erhan", r#"
+  erhan=2"#,
+        KaramelPrimative::Number(2.0)
+    );
+    test_variable_value!(
+        vm_78,
+        "erhan",
+        r#"
 erhan=1
 yanlış ise:
     erhan=2
 veya:
-   erhan=3"#, KaramelPrimative::Number(3.0));
-   test_variable_value!(vm_79, "erhan", r#"
+   erhan=3"#,
+        KaramelPrimative::Number(3.0)
+    );
+    test_variable_value!(
+        vm_79,
+        "erhan",
+        r#"
 veri = 'erhan'
 veri != 'erhan' ise:
     erhan = "oldu"
     io::printline('Oldu')
 veya veri ise:
     erhan = "olmadi"
-    io::printline('1 == 1')"#, KaramelPrimative::Text(Rc::new("olmadi".to_string())));
+    io::printline('1 == 1')"#,
+        KaramelPrimative::Text(Rc::new("olmadi".to_string()))
+    );
 
-    execute!(vm_80, r#"
+    execute!(
+        vm_80,
+        r#"
 erhan=1
 barış=1
-hataayıklama::doğrula(erhan, barış)"#);
+hataayıklama::doğrula(erhan, barış)"#
+    );
 
-execute!(vm_81, r#"hataayıklama::doğrula([] == [])"#);
-execute!(vm_82, r#"hataayıklama::doğrula([1] != [])"#);
-execute!(vm_83, r#"hataayıklama::doğrula([0] != [1])"#);
-execute!(vm_84, r#"hataayıklama::doğrula([1,2,3] == [1,2,3])"#);
-execute!(vm_85, r#"
+    execute!(vm_81, r#"hataayıklama::doğrula([] == [])"#);
+    execute!(vm_82, r#"hataayıklama::doğrula([1] != [])"#);
+    execute!(vm_83, r#"hataayıklama::doğrula([0] != [1])"#);
+    execute!(vm_84, r#"hataayıklama::doğrula([1,2,3] == [1,2,3])"#);
+    execute!(
+        vm_85,
+        r#"
 a = 10 * 2
 b = 5 * 4
-hataayıklama::doğrula(a, b)"#);
-execute!(vm_86, r#"
+hataayıklama::doğrula(a, b)"#
+    );
+    execute!(
+        vm_86,
+        r#"
 a = 'erhan'
 b = 'barış'
-hataayıklama::doğrula(a != b)"#);
-execute!(vm_87, r#"hataayıklama::doğrula(doğru ve doğru)"#);
-execute!(vm_88, r#"hataayıklama::doğrula(doğru veya yanlış)"#);
-execute!(vm_89, r#"
+hataayıklama::doğrula(a != b)"#
+    );
+    execute!(vm_87, r#"hataayıklama::doğrula(doğru ve doğru)"#);
+    execute!(vm_88, r#"hataayıklama::doğrula(doğru veya yanlış)"#);
+    execute!(
+        vm_89,
+        r#"
 veri = 'erhan'
 veri != 'erhan' ise:
     erhan = "oldu"
 veya veri ise:
     erhan = "olmadi"
 hataayıklama::doğrula(erhan, 'olmadi')
-"#);
-execute!(vm_90, r#"hataayıklama::doğrula([1,2,3,[4,5]], [1,2,3,[4,5]])"#);
-execute!(vm_91, r#"
+"#
+    );
+    execute!(vm_90, r#"hataayıklama::doğrula([1,2,3,[4,5]], [1,2,3,[4,5]])"#);
+    execute!(
+        vm_91,
+        r#"
 veri={
     'veri1' : '1', 
     'veri2' : 2
@@ -272,8 +375,11 @@ veri={
 
 hataayıklama::doğrula(veri['veri1'], '1')
 hataayıklama::doğrula(veri['veri2'], 2)
-"#);
-execute!(vm_92, r#"
+"#
+    );
+    execute!(
+        vm_92,
+        r#"
 veri1 = {
     'veri1' : '1', 
     'veri2' : 2
@@ -285,8 +391,11 @@ veri2 = {
 }
 
 hataayıklama::doğrula(veri1 == veri2)
-"#);
-execute!(vm_93, r#"
+"#
+    );
+    execute!(
+        vm_93,
+        r#"
 veri1 = {
     'veri1' : '1', 
     'veri2' : 2
@@ -298,55 +407,82 @@ veri2 = {
 }
 
 hataayıklama::doğrula(veri1 != veri2)
-"#);
-execute!(vm_94, r#"
+"#
+    );
+    execute!(
+        vm_94,
+        r#"
 fonk test:
     döndür 10
 hataayıklama::doğrula(test() == 10)
-"#);
-execute!(vm_95, r#"
+"#
+    );
+    execute!(
+        vm_95,
+        r#"
 fonk test:
     döndür 10
 hataayıklama::doğrula(test() * 10, 100)
-"#);
-execute!(vm_96, r#"
+"#
+    );
+    execute!(
+        vm_96,
+        r#"
 fonk test:
     döndür 10
 hataayıklama::doğrula(test() + test(), 20)
-"#);
-execute!(vm_97, r#"
+"#
+    );
+    execute!(
+        vm_97,
+        r#"
 fonk test:
     döndür
 hataayıklama::doğrula(test(), boş)
-"#);
-execute!(vm_98, r#"
+"#
+    );
+    execute!(
+        vm_98,
+        r#"
 fonk test:
     döndür boş
 hataayıklama::doğrula(test(), boş)
-"#);
-execute!(vm_99, r#"
+"#
+    );
+    execute!(
+        vm_99,
+        r#"
 fonk test_1:
     döndür 'erhan'
 
 fonk test_2:
     döndür test_1()
 hataayıklama::doğrula(test_2(), 'erhan')
-"#);
-execute!(vm_100, r#"
+"#
+    );
+    execute!(
+        vm_100,
+        r#"
 fonk test_1:
     döndür 'erhan'
 fonk test_2:
     döndür test_1()
 hataayıklama::doğrula(test_2() + " barış", 'erhan barış')
-"#);
-execute!(vm_101, r#"
+"#
+    );
+    execute!(
+        vm_101,
+        r#"
 fonk test_2:
     fonk test_1:
         döndür 'erhan'
     döndür test_1()
 hataayıklama::doğrula(test_2() + " barış", 'erhan barış')
-"#);
-execute!(vm_102, r#"
+"#
+    );
+    execute!(
+        vm_102,
+        r#"
 fonk test:
     fonk test_erhan:
         döndür 'erhan'
@@ -356,14 +492,20 @@ fonk test:
 
     döndür test_erhan() + " " + test_barış()
 hataayıklama::doğrula(test(), 'erhan barış')
-"#);
-execute!(vm_103, r#"
+"#
+    );
+    execute!(
+        vm_103,
+        r#"
 fonk test(a, b):
     döndür a
 data = test(123, 321)
 hataayıklama::doğrula(123, data)
-"#);
-execute!(vm_104, r#"
+"#
+    );
+    execute!(
+        vm_104,
+        r#"
 my_list = {
     'ad': 'erhan',
     'soyad': 'barış',
@@ -380,8 +522,11 @@ doğum_tarihi = read_data(my_list, 'doğum tarihi')
 hataayıklama::doğrula(adı,         'erhan')
 hataayıklama::doğrula(soyadı,      'barış')
 hataayıklama::doğrula(doğum_tarihi, 1985)
-"#);
-execute!(vm_105, r#"
+"#
+    );
+    execute!(
+        vm_105,
+        r#"
 fonk test(list):
     döndür list['ad']
 
@@ -389,8 +534,11 @@ data = test({
     'ad': 'erhan'
 })
 hataayıklama::doğrula("erhan", data)
-"#);
-execute!(vm_106, r#"
+"#
+    );
+    execute!(
+        vm_106,
+        r#"
 fonk test(a):
     fonk __test_1(a):
         fonk __test_2(a):
@@ -398,8 +546,11 @@ fonk test(a):
         döndür __test_2(a)
     döndür __test_1(a)
 hataayıklama::doğrula(test("erhan"), 'erhan')
-"#);
-execute!(vm_107, r#"
+"#
+    );
+    execute!(
+        vm_107,
+        r#"
 fonk Fibonacci(n):
     n <= 1 ise:
         döndür n
@@ -407,5 +558,6 @@ fonk Fibonacci(n):
         döndür(Fibonacci(n-1) + Fibonacci(n-2))
 hataayıklama::doğrula(Fibonacci(10), 55)
 hataayıklama::doğrula(Fibonacci(20), 6765)
-"#);
+"#
+    );
 }

@@ -1,18 +1,21 @@
 extern crate karamellib;
 
-use karamellib::{compiler::KaramelPrimative, vm::executer::{ExecutionParameters, ExecutionSource}};
-use wasm_bindgen::prelude::*;
 use js_sys::*;
+use karamellib::{
+    compiler::KaramelPrimative,
+    vm::executer::{ExecutionParameters, ExecutionSource},
+};
+use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 pub fn execute_code(name: &str) -> Object {
     let response = js_sys::Object::new();
 
     /* JS referance object */
-    let status_ref      = JsValue::from("status");
-    let results_ref     = JsValue::from("results");
-    let stdout_ref      = JsValue::from("stdout");
-    let stderr_ref      = JsValue::from("stderr");
+    let status_ref = JsValue::from("status");
+    let results_ref = JsValue::from("results");
+    let stdout_ref = JsValue::from("stdout");
+    let stderr_ref = JsValue::from("stderr");
     let opcode_dump_ref = JsValue::from("code_dump");
     let memory_dump_ref = JsValue::from("memory_dump");
 
@@ -21,7 +24,7 @@ pub fn execute_code(name: &str) -> Object {
         return_opcode: true,
         return_output: true,
         dump_opcode: true,
-        dump_memory: true
+        dump_memory: true,
     };
 
     let result = karamellib::vm::executer::code_executer(parameters);
@@ -30,24 +33,20 @@ pub fn execute_code(name: &str) -> Object {
             Reflect::set(response.as_ref(), status_ref.as_ref(), JsValue::from_bool(true).as_ref()).unwrap();
             let results = Array::new();
             let stdouts = Array::new();
-            match result.memory_output {
-                Some(opjects) => {
-                    for object in opjects.iter() {
-                        match &*object.deref() {
-                            KaramelPrimative::Text(text) => results.push(&JsValue::from(&**text).into()),
-                            KaramelPrimative::Number(number) => results.push(&JsValue::from_f64(*number).into()),
-                            KaramelPrimative::Bool(bool) => results.push(&JsValue::from_bool(*bool).into()),
-                            KaramelPrimative::Empty => results.push(&JsValue::undefined().into()),
-                            _ => 0
-                        };
-                    }
-                },
-                None=> ()
+            if let Some(opjects) = result.memory_output {
+                for object in opjects.iter() {
+                    match &*object.deref() {
+                        KaramelPrimative::Text(text) => results.push(&JsValue::from(&**text)),
+                        KaramelPrimative::Number(number) => results.push(&JsValue::from_f64(*number)),
+                        KaramelPrimative::Bool(bool) => results.push(&JsValue::from_bool(*bool)),
+                        KaramelPrimative::Empty => results.push(&JsValue::undefined()),
+                        _ => 0,
+                    };
+                }
             };
 
-            match result.stdout {
-                Some(stdout) => { stdouts.push(&JsValue::from(stdout.borrow().clone()).into()); },
-                _ => ()
+            if let Some(stdout) = result.stdout {
+                stdouts.push(&JsValue::from(stdout.borrow().clone()));
             };
 
             if let Some(memory_dump) = result.memory_dump {
@@ -60,25 +59,23 @@ pub fn execute_code(name: &str) -> Object {
 
             Reflect::set(response.as_ref(), results_ref.as_ref(), results.as_ref()).unwrap();
             Reflect::set(response.as_ref(), results_ref.as_ref(), results.as_ref()).unwrap();
-            Reflect::set(response.as_ref(), stdout_ref.as_ref(),  stdouts.as_ref()).unwrap();
-        },
+            Reflect::set(response.as_ref(), stdout_ref.as_ref(), stdouts.as_ref()).unwrap();
+        }
         false => {
             let stderrs = Array::new();
             let stdouts = Array::new();
 
-            match result.stdout {
-                Some(stdout) => { stdouts.push(&JsValue::from(stdout.borrow().clone()).into()); },
-                _ => ()
+            if let Some(stdout) = result.stdout {
+                stdouts.push(&JsValue::from(stdout.borrow().clone()));
             };
 
-            match result.stderr {
-                Some(stderr) => { stderrs.push(&JsValue::from(stderr.borrow().clone()).into()); },
-                _ => ()
+            if let Some(stderr) = result.stderr {
+                stderrs.push(&JsValue::from(stderr.borrow().clone()));
             };
 
             Reflect::set(response.as_ref(), status_ref.as_ref(), JsValue::from_bool(false).as_ref()).unwrap();
-            Reflect::set(response.as_ref(), stdout_ref.as_ref(),  stdouts.as_ref()).unwrap();
-            Reflect::set(response.as_ref(), stderr_ref.as_ref(),  stderrs.as_ref()).unwrap();
+            Reflect::set(response.as_ref(), stdout_ref.as_ref(), stdouts.as_ref()).unwrap();
+            Reflect::set(response.as_ref(), stderr_ref.as_ref(), stderrs.as_ref()).unwrap();
         }
     };
 

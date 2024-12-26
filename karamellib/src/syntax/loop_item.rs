@@ -1,7 +1,7 @@
-use crate::types::*;
-use crate::syntax::{SyntaxParser, SyntaxParserTrait, SyntaxFlag};
 use crate::compiler::ast::KaramelAstType;
 use crate::error::KaramelErrorType;
+use crate::syntax::{SyntaxFlag, SyntaxParser, SyntaxParserTrait};
+use crate::types::*;
 
 pub struct LoopItemParser;
 
@@ -10,24 +10,22 @@ impl SyntaxParserTrait for LoopItemParser {
         let index_backup = parser.get_index();
         parser.cleanup_whitespaces();
 
-        if parser.check_keyword(KaramelKeywordType::Break) ||
-           parser.check_keyword(KaramelKeywordType::Continue) {
+        if parser.check_keyword(KaramelKeywordType::Break) || parser.check_keyword(KaramelKeywordType::Continue) {
             if parser.flags.get().contains(SyntaxFlag::LOOP) {
                 let keyword = parser.peek_token().unwrap().token_type.get_keyword();
                 parser.consume_token();
                 match keyword {
                     KaramelKeywordType::Break => return Ok(KaramelAstType::Break),
                     KaramelKeywordType::Continue => return Ok(KaramelAstType::Continue),
-                    _ => ()
+                    _ => (),
                 };
-            }
-            else {
+            } else {
                 parser.set_index(index_backup);
                 return Err(KaramelErrorType::BreakAndContinueBelongToLoops);
             }
         }
 
         parser.set_index(index_backup);
-        return Ok(KaramelAstType::None);
+        Ok(KaramelAstType::None)
     }
 }

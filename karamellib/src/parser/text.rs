@@ -1,40 +1,38 @@
-use std::rc::Rc;
-use crate::types::*;
 use crate::error::KaramelErrorType;
+use crate::types::*;
+use std::rc::Rc;
 
 pub struct TextParser {
-    pub tag: char
+    pub tag: char,
 }
 
 impl TokenParser for TextParser {
     fn check(&self, tokinizer: &mut Tokinizer) -> bool {
         let ch = tokinizer.get_char();
-        return ch == self.tag;
+        ch == self.tag
     }
 
     fn parse(&self, tokinizer: &mut Tokinizer) -> Result<(), KaramelErrorType> {
         tokinizer.increase_index();
 
-        let mut ch: char      = '\0';
+        let mut ch: char = '\0';
         let mut ch_next: char;
-        let start             = tokinizer.index as usize;
+        let start = tokinizer.index as usize;
         let start_column = tokinizer.column;
-        let mut end           = start;
+        let mut end = start;
 
         while !tokinizer.is_end() {
-            ch      = tokinizer.get_char();
+            ch = tokinizer.get_char();
             ch_next = tokinizer.get_next_char();
 
             if ch == '\\' && ch_next == self.tag {
                 end += ch.len_utf8();
                 end += 1; // for tag char
                 tokinizer.increase_index();
-            }
-            else if ch == self.tag {
+            } else if ch == self.tag {
                 tokinizer.increase_index();
                 break;
-            }
-            else {
+            } else {
                 end += ch.len_utf8();
             }
 
@@ -46,10 +44,9 @@ impl TokenParser for TextParser {
         }
 
         tokinizer.add_token(start_column - 1, KaramelTokenType::Text(Rc::new(tokinizer.data[start..end].to_string())));
-        return Ok(());
+        Ok(())
     }
 }
-
 
 #[cfg(test)]
 #[test]
@@ -65,13 +62,13 @@ fn text_parse_test_1() {
         iter_second: data.chars().peekable(),
         iter_third: data.chars().peekable(),
         data: data.to_string(),
-        index: 0
+        index: 0,
     };
 
     let parser = TextParser { tag: '"' };
     let parse_result = parser.parse(&mut tokinizer);
 
-    assert_eq!(parse_result.is_ok(), true);
+    assert!(parse_result.is_ok());
     assert_eq!(tokinizer.tokens.len(), 1);
     assert_eq!(tokinizer.tokens[0].line, 0);
     assert_eq!(tokinizer.tokens[0].start, 0);
@@ -79,7 +76,7 @@ fn text_parse_test_1() {
 
     match &tokinizer.tokens[0].token_type {
         KaramelTokenType::Text(data) => assert_eq!(&**data, "merhaba dünya"),
-        _ => assert_eq!(true, false)
+        _ => assert_eq!(true, false),
     };
 }
 
@@ -97,13 +94,13 @@ fn text_parse_test_2() {
         iter_second: data.chars().peekable(),
         iter_third: data.chars().peekable(),
         data: data.to_string(),
-        index: 0
+        index: 0,
     };
 
     let parser = TextParser { tag: '\'' };
     let parse_result = parser.parse(&mut tokinizer);
 
-    assert_eq!(parse_result.is_ok(), true);
+    assert!(parse_result.is_ok());
     assert_eq!(tokinizer.tokens.len(), 1);
     assert_eq!(tokinizer.tokens[0].line, 0);
     assert_eq!(tokinizer.tokens[0].start, 0);
@@ -111,6 +108,6 @@ fn text_parse_test_2() {
 
     match &tokinizer.tokens[0].token_type {
         KaramelTokenType::Text(data) => assert_eq!(&**data, "merhaba dünya"),
-        _ => assert_eq!(true, false)
+        _ => assert_eq!(true, false),
     };
 }

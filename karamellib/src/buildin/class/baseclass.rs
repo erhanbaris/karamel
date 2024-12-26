@@ -1,16 +1,20 @@
-use crate::{buildin::{Class, ClassProperty}, compiler::function::{IndexerGetCall, IndexerSetCall, NativeCall, FunctionFlag}, types::VmObject};
-use crate::compiler::{KaramelPrimative, function::{FunctionReference}};
+use crate::compiler::{function::FunctionReference, KaramelPrimative};
+use crate::{
+    buildin::{Class, ClassProperty},
+    compiler::function::{FunctionFlag, IndexerGetCall, IndexerSetCall, NativeCall},
+    types::VmObject,
+};
 
-use std::{rc::Rc};
-use crate::compiler::GetType;
 use crate::buildin::ClassConfig;
+use crate::compiler::GetType;
+use std::rc::Rc;
 
 #[derive(Default)]
 pub struct BasicInnerClass {
-    config: ClassConfig
- }
+    config: ClassConfig,
+}
 
- impl Class for BasicInnerClass {
+impl Class for BasicInnerClass {
     fn set_class_config(&mut self, config: ClassConfig) {
         self.config = config;
     }
@@ -20,30 +24,34 @@ pub struct BasicInnerClass {
     }
 
     fn has_element(&self, _: Option<VmObject>, field: Rc<String>) -> bool {
-        self.config.properties.get(&*field).is_some()
+        self.config.properties.contains_key(&*field)
     }
-    
+
     fn properties(&self) -> std::collections::hash_map::Iter<'_, String, ClassProperty> {
         self.config.properties.iter()
     }
 
     fn get_element(&self, _: Option<VmObject>, field: Rc<String>) -> Option<ClassProperty> {
-        match self.config.properties.get(&*field) {
-            Some(data) => Some((*data).clone()),
-            None => None
-        }
+        self.config
+            .properties
+            .get(&*field)
+            .map(|data| (*data).clone())
     }
-    
+
     fn property_count(&self) -> usize {
         self.config.properties.len()
     }
 
     fn add_method(&mut self, name: &str, function: NativeCall, flags: FunctionFlag) {
-        self.config.properties.insert(name.to_string(), ClassProperty::Function(FunctionReference::buildin_function(function, name.to_string(), flags)));
+        self.config
+            .properties
+            .insert(name.to_string(), ClassProperty::Function(FunctionReference::buildin_function(function, name.to_string(), flags)));
     }
 
     fn add_property(&mut self, name: &str, property: Rc<KaramelPrimative>) {
-        self.config.properties.insert(name.to_string(), ClassProperty::Field(property));
+        self.config
+            .properties
+            .insert(name.to_string(), ClassProperty::Field(property));
     }
 
     fn set_getter(&mut self, indexer: IndexerGetCall) {
@@ -51,10 +59,7 @@ pub struct BasicInnerClass {
     }
 
     fn get_getter(&self) -> Option<IndexerGetCall> {
-        match &self.config.indexer.get {
-            Some(indexer) => Some(*indexer),
-            None => None
-        }
+        self.config.indexer.get.as_ref().map(|indexer| *indexer)
     }
 
     fn set_setter(&mut self, indexer: IndexerSetCall) {
@@ -62,16 +67,13 @@ pub struct BasicInnerClass {
     }
 
     fn get_setter(&self) -> Option<IndexerSetCall> {
-        match &self.config.indexer.set {
-            Some(indexer) => Some(*indexer),
-            None => None
-        }
+        self.config.indexer.set.as_ref().map(|indexer| *indexer)
     }
- }
+}
 
 impl BasicInnerClass {
     pub fn set_name(&mut self, name: &str) {
-        if self.config.name.len() == 0 {
+        if self.config.name.is_empty() {
             self.config.name = name.to_string();
         }
     }
@@ -93,11 +95,11 @@ impl GetType for BasicInnerClass {
 
 #[cfg(test)]
 mod test {
-    use std::rc::Rc;
+    use crate::buildin::class::baseclass::BasicInnerClass;
     use crate::buildin::Class;
     use crate::compiler::GetType;
-    use crate::buildin::class::baseclass::BasicInnerClass;
     use crate::compiler::KaramelPrimative;
+    use std::rc::Rc;
 
     #[test]
     fn test_opcode_class_1() {

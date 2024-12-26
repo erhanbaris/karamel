@@ -1,15 +1,14 @@
-pub mod number;
-pub mod text;
-pub mod list;
-pub mod dict;
 pub mod baseclass;
+pub mod dict;
+pub mod list;
+pub mod number;
 pub mod proxy;
-
-use crate::buildin::class::baseclass::BasicInnerClass;
-use std::{collections::HashSet, rc::Rc};
-use lazy_static::*;
+pub mod text;
 
 use super::Class;
+use crate::buildin::class::baseclass::BasicInnerClass;
+use lazy_static::*;
+use std::{collections::HashSet, rc::Rc};
 
 use std::sync::Mutex;
 
@@ -23,17 +22,16 @@ pub fn get_empty_class() -> Rc<dyn Class> {
     Rc::new(opcode)
 }
 
-
 #[macro_export]
 macro_rules! nativecall_test {
     ($name:ident, $function_name:ident, $query:expr, $result:expr) => {
         #[test]
-        fn $name () {
+        fn $name() {
             use std::cell::RefCell;
             let stack: Vec<VmObject> = Vec::new();
             let stdout = Some(RefCell::new(String::new()));
             let stderr = Some(RefCell::new(String::new()));
-            
+
             let parameter = FunctionParameter::new(&stack, Some(VmObject::native_convert($query)), 0, 0, &stdout, &stderr);
             let result = $function_name(parameter);
             assert!(result.is_ok());
@@ -96,12 +94,12 @@ macro_rules! arc_empty {
 macro_rules! nativecall_test_with_params {
     ($name:ident, $function_name:ident, $query:expr, $params:expr, $result:expr) => {
         #[test]
-        fn $name () {
+        fn $name() {
             use std::cell::RefCell;
             let stack: Vec<VmObject> = $params.to_vec();
             let stdout = Some(RefCell::new(String::new()));
             let stderr = Some(RefCell::new(String::new()));
-            
+
             let parameter = FunctionParameter::new(&stack, Some(VmObject::native_convert($query)), stack.len() as usize, stack.len() as u8, &stdout, &stderr);
             let result = $function_name(parameter);
             assert!(result.is_ok());
@@ -122,22 +120,25 @@ macro_rules! n_parameter_check {
 
 #[macro_export]
 macro_rules! n_parameter_expected {
-    ($function_name:expr, $parameter_size:expr) => { Err(KaramelErrorType::FunctionArgumentNotMatching {
-        function: $function_name,
-        expected: $parameter_size, 
-        found: 0
-    }) };
-    ($function_name:expr, $parameter_size:expr, $parameter_found:expr) => { Err(KaramelErrorType::FunctionArgumentNotMatching {
-        function: $function_name,
-        expected: $parameter_size, 
-        found: $parameter_found
-    }) };
+    ($function_name:expr, $parameter_size:expr) => {
+        Err($crate::error::KaramelErrorType::FunctionArgumentNotMatching {
+            function: $function_name,
+            expected: $parameter_size,
+            found: 0,
+        })
+    };
+    ($function_name:expr, $parameter_size:expr, $parameter_found:expr) => {
+        Err($crate::error::KaramelErrorType::FunctionArgumentNotMatching {
+            function: $function_name,
+            expected: $parameter_size,
+            found: $parameter_found,
+        })
+    };
 }
 
 #[macro_export]
 macro_rules! expected_parameter_type {
-    ($function_name:expr, $expected_type:expr) => { Err(KaramelErrorType::FunctionExpectedThatParameterType {
-        function: $function_name,
-        expected: $expected_type
-    }) };
+    ($function_name:expr, $expected_type:expr) => {
+        Err($crate::error::KaramelErrorType::FunctionExpectedThatParameterType { function: $function_name, expected: $expected_type })
+    };
 }

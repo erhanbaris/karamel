@@ -9,8 +9,8 @@ mod tests {
     macro_rules! test_success {
         ($name:ident, $text:expr) => {
             #[test]
-            fn $name () {
-                let mut parser   = Parser::new($text);
+            fn $name() {
+                let mut parser = Parser::new($text);
                 let _parse_result = parser.parse();
 
                 let syntax = SyntaxParser::new(parser.tokens().to_vec());
@@ -19,7 +19,7 @@ mod tests {
                 match parse_result {
                     Ok(_) => {
                         assert_eq!(true, true);
-                    },
+                    }
                     Err(_) => {
                         assert_eq!(false, true);
                     }
@@ -32,8 +32,8 @@ mod tests {
     macro_rules! test_fail {
         ($name:ident, $text:expr) => {
             #[test]
-            fn $name () {
-                let mut parser   = Parser::new($text);
+            fn $name() {
+                let mut parser = Parser::new($text);
                 let _parse_result = parser.parse();
 
                 let syntax = SyntaxParser::new(parser.tokens().to_vec());
@@ -43,7 +43,7 @@ mod tests {
                     Ok(_) => {
                         println!("'{}'", $text);
                         assert_eq!(false, true);
-                    },
+                    }
                     Err(_) => {
                         assert_eq!(true, true);
                     }
@@ -54,42 +54,71 @@ mod tests {
 
     test_success!(indentation_1, "123");
     test_fail!(indentation_2, " 123");
-    test_fail!(indentation_3, r#"
- 123"#);
-    test_success!(indentation_4, r#"
-123"#);
-    test_fail!(indentation_5, r#" 
-123"#);
-    test_fail!(indentation_6, r#" 
-123"#);
-test_success!(indentation_7, r#"1024 * 123 ise:
+    test_fail!(
+        indentation_3,
+        r#"
+ 123"#
+    );
+    test_success!(
+        indentation_4,
+        r#"
+123"#
+    );
+    test_fail!(
+        indentation_5,
+        r#" 
+123"#
+    );
+    test_fail!(
+        indentation_6,
+        r#" 
+123"#
+    );
+    test_success!(
+        indentation_7,
+        r#"1024 * 123 ise:
     erhan=123
 veya: 
-    erhan=1234"#);
-    test_success!(indentation_8, r#"1024 * 123 ise:
+    erhan=1234"#
+    );
+    test_success!(
+        indentation_8,
+        r#"1024 * 123 ise:
     erhan=123
 veya: 
   erhan=1234
-"#);
-test_success!(indentation_9, r#"1024 * 123 ise:
+"#
+    );
+    test_success!(
+        indentation_9,
+        r#"1024 * 123 ise:
     erhan=123
 veya: 
     erhan=1234
-erhan=22"#);
-test_success!(indentation_10, r#"1024 * 123 ise:
+erhan=22"#
+    );
+    test_success!(
+        indentation_10,
+        r#"1024 * 123 ise:
  erhan=123
 veya: 
  erhan=1234
-erhan=22"#);
-test_success!(indentation_11, r#"1024 * 123 ise:
+erhan=22"#
+    );
+    test_success!(
+        indentation_11,
+        r#"1024 * 123 ise:
     erhan=123
     doğru ise:
         erhan=123
 veya: 
     erhan=1234
-erhan=22"#);
+erhan=22"#
+    );
 
-test_success!(indentation_12, r#"
+    test_success!(
+        indentation_12,
+        r#"
 1024 * 123 ise:
     erhan=123
 
@@ -98,5 +127,6 @@ test_success!(indentation_12, r#"
         erhan=123
 veya:
     erhan=1234
-erhan=22"#);
+erhan=22"#
+    );
 }

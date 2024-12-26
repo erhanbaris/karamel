@@ -1,11 +1,11 @@
 use std::rc::Rc;
 
-use crate::types::*;
-use crate::syntax::{SyntaxParser, SyntaxParserTrait, SyntaxFlag};
-use crate::syntax::binary::AddSubtractParser;
-use crate::syntax::util::update_functions_for_temp_return;
 use crate::compiler::ast::KaramelAstType;
 use crate::error::KaramelErrorType;
+use crate::syntax::binary::AddSubtractParser;
+use crate::syntax::util::update_functions_for_temp_return;
+use crate::syntax::{SyntaxFlag, SyntaxParser, SyntaxParserTrait};
+use crate::types::*;
 
 use super::util::with_flag;
 
@@ -41,15 +41,11 @@ impl SyntaxParserTrait for ControlParser {
 pub fn special_control(parser: &SyntaxParser) -> AstResult {
     let mut functions_updated_for_temp = false;
     let mut left_expr = AddSubtractParser::parse(parser)?;
-    let operators = [KaramelOperatorType::GreaterEqualThan, 
-        KaramelOperatorType::GreaterThan,
-        KaramelOperatorType::LessEqualThan, 
-        KaramelOperatorType::LessThan];
-    match left_expr {
-        KaramelAstType::None => return Ok(left_expr),
-        _ => ()
+    let operators = [KaramelOperatorType::GreaterEqualThan, KaramelOperatorType::GreaterThan, KaramelOperatorType::LessEqualThan, KaramelOperatorType::LessThan];
+    if left_expr == KaramelAstType::None {
+        return Ok(left_expr);
     };
-    
+
     loop {
         let index_backup = parser.get_index();
         parser.cleanup_whitespaces();
@@ -64,28 +60,27 @@ pub fn special_control(parser: &SyntaxParser) -> AstResult {
             match right_expr {
                 Ok(KaramelAstType::None) => return Err(KaramelErrorType::RightSideOfExpressionNotFound),
                 Ok(_) => (),
-                Err(_) => return right_expr
+                Err(_) => return right_expr,
             };
 
             left_expr = match operator {
                 KaramelOperatorType::LessEqualThan => KaramelAstType::Control {
                     left: Rc::new(right_expr.unwrap()),
                     operator: KaramelOperatorType::GreaterEqualThan,
-                    right: Rc::new(left_expr)
+                    right: Rc::new(left_expr),
                 },
                 KaramelOperatorType::LessThan => KaramelAstType::Control {
                     left: Rc::new(right_expr.unwrap()),
                     operator: KaramelOperatorType::GreaterThan,
-                    right: Rc::new(left_expr)
+                    right: Rc::new(left_expr),
                 },
                 _ => KaramelAstType::Control {
                     left: Rc::new(left_expr),
                     operator,
-                    right: Rc::new(right_expr.unwrap())
-                }
+                    right: Rc::new(right_expr.unwrap()),
+                },
             };
-        }        
-        else {
+        } else {
             parser.set_index(index_backup);
             break;
         }
@@ -97,11 +92,10 @@ pub fn special_control(parser: &SyntaxParser) -> AstResult {
 pub fn parse_control<T: SyntaxParserTrait>(parser: &SyntaxParser, operators: &[KaramelOperatorType]) -> AstResult {
     let mut functions_updated_for_temp = false;
     let mut left_expr = T::parse(parser)?;
-    match left_expr {
-        KaramelAstType::None => return Ok(left_expr),
-        _ => ()
+    if left_expr == KaramelAstType::None {
+        return Ok(left_expr);
     };
-    
+
     loop {
         let index_backup = parser.get_index();
         parser.cleanup_whitespaces();
@@ -116,16 +110,15 @@ pub fn parse_control<T: SyntaxParserTrait>(parser: &SyntaxParser, operators: &[K
             match right_expr {
                 Ok(KaramelAstType::None) => return Err(KaramelErrorType::RightSideOfExpressionNotFound),
                 Ok(_) => (),
-                Err(_) => return right_expr
+                Err(_) => return right_expr,
             };
 
             left_expr = KaramelAstType::Control {
                 left: Rc::new(left_expr),
                 operator,
-                right: Rc::new(right_expr.unwrap())
+                right: Rc::new(right_expr.unwrap()),
             };
-        }        
-        else {
+        } else {
             parser.set_index(index_backup);
             break;
         }

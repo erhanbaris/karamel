@@ -1,10 +1,10 @@
 use std::rc::Rc;
 
-use crate::types::*;
-use crate::syntax::{SyntaxParser, SyntaxParserTrait, SyntaxFlag};
 use crate::compiler::ast::KaramelAstType;
-use crate::syntax::expression::ExpressionParser;
 use crate::error::KaramelErrorType;
+use crate::syntax::expression::ExpressionParser;
+use crate::syntax::{SyntaxFlag, SyntaxParser, SyntaxParserTrait};
+use crate::types::*;
 
 pub struct FunctionReturnParser;
 
@@ -21,9 +21,9 @@ impl SyntaxParserTrait for FunctionReturnParser {
 
             parser.cleanup_whitespaces();
 
-            let parser_flags  = parser.flags.get();
+            let parser_flags = parser.flags.get();
             parser.flags.set(parser_flags | SyntaxFlag::IN_RETURN);
-            
+
             let ast = ExpressionParser::parse(parser)?;
             let return_ast = KaramelAstType::Return(Rc::new(ast));
             parser.flags.set(parser_flags);
@@ -32,6 +32,6 @@ impl SyntaxParserTrait for FunctionReturnParser {
         }
 
         parser.set_index(index_backup);
-        return Ok(KaramelAstType::None);
+        Ok(KaramelAstType::None)
     }
 }

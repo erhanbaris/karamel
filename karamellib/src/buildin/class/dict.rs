@@ -1,22 +1,27 @@
-use std::rc::Rc;
 use std::cell::RefCell;
+use std::rc::Rc;
 
-use crate::{buildin::{Class, ClassConfig, ClassProperty}, compiler::{GetType, function::{FunctionParameter, IndexerGetCall, IndexerSetCall, NativeCall, NativeCallResult, FunctionFlag}}};
-use crate::compiler::value::EMPTY_OBJECT;
 use crate::buildin::class::baseclass::BasicInnerClass;
 use crate::compiler::value::KaramelPrimative;
-use crate::error::KaramelErrorType;
+use crate::compiler::value::EMPTY_OBJECT;
 use crate::types::VmObject;
-use crate::{n_parameter_expected, expected_parameter_type, arc_bool, primative_list};
+use crate::{arc_bool, expected_parameter_type, n_parameter_expected, primative_list};
+use crate::{
+    buildin::{Class, ClassConfig, ClassProperty},
+    compiler::{
+        function::{FunctionFlag, FunctionParameter, IndexerGetCall, IndexerSetCall, NativeCall, NativeCallResult},
+        GetType,
+    },
+};
 
 use crate::buildin::class::PRIMATIVE_CLASS_NAMES;
 
 #[derive(Default)]
 pub struct DictClass {
-    base: BasicInnerClass
- }
+    base: BasicInnerClass,
+}
 
- impl GetType for DictClass {
+impl GetType for DictClass {
     fn get_type(&self) -> String {
         "sözlük".to_string()
     }
@@ -36,13 +41,16 @@ impl DictClass {
         dict.add_class_method("sil", remove);
         dict.add_class_method("anahtarlar", keys);
 
-        PRIMATIVE_CLASS_NAMES.lock().unwrap().insert(dict.get_type());
+        PRIMATIVE_CLASS_NAMES
+            .lock()
+            .unwrap()
+            .insert(dict.get_type());
 
         dict
     }
 }
 
- impl Class for DictClass {
+impl Class for DictClass {
     fn set_class_config(&mut self, config: ClassConfig) {
         self.base.set_class_config(config);
     }
@@ -54,7 +62,7 @@ impl DictClass {
     fn has_element(&self, source: Option<VmObject>, field: Rc<String>) -> bool {
         self.base.has_element(source, field)
     }
-    
+
     fn properties(&self) -> std::collections::hash_map::Iter<'_, String, ClassProperty> {
         self.base.properties()
     }
@@ -63,20 +71,18 @@ impl DictClass {
         match self.base.get_element(source, field.clone()) {
             Some(property) => Some(property),
             None => match source {
-                Some(object) => {
-                    match &*object.deref() {
-                        KaramelPrimative::Dict(dict) => match dict.borrow().get(&*field.clone()) {
-                            Some(data) => Some(ClassProperty::Field(data.deref())),
-                            None => None
-                        },
-                        _ => None
-                    }
+                Some(object) => match &*object.deref() {
+                    KaramelPrimative::Dict(dict) => dict
+                        .borrow()
+                        .get(&*field.clone())
+                        .map(|data| ClassProperty::Field(data.deref())),
+                    _ => None,
                 },
-                None => None
-            }
+                None => None,
+            },
         }
     }
-    
+
     fn property_count(&self) -> usize {
         self.base.property_count()
     }
@@ -104,8 +110,7 @@ impl DictClass {
     fn get_setter(&self) -> Option<IndexerSetCall> {
         self.base.get_setter()
     }
- }
-
+}
 
 pub fn get_primative_class() -> Rc<dyn Class> {
     Rc::new(DictClass::new())
@@ -114,19 +119,19 @@ pub fn get_primative_class() -> Rc<dyn Class> {
 fn get(parameter: FunctionParameter) -> NativeCallResult {
     if let KaramelPrimative::Dict(dict) = &*parameter.source().unwrap().deref() {
         return match parameter.length() {
-            0 =>  n_parameter_expected!("getir".to_string(), 1),
+            0 => n_parameter_expected!("getir".to_string(), 1),
             1 => {
                 let key = match &*parameter.iter().next().unwrap().deref() {
                     KaramelPrimative::Text(yazi) => yazi.clone(),
-                    _ => return expected_parameter_type!("anahtar".to_string(), "Yazı".to_string())
+                    _ => return expected_parameter_type!("anahtar".to_string(), "Yazı".to_string()),
                 };
-                
+
                 return match dict.borrow().get(&*key) {
                     Some(item) => Ok(*item),
-                    _ => Ok(EMPTY_OBJECT)
+                    _ => Ok(EMPTY_OBJECT),
                 };
-            },
-            _ => n_parameter_expected!("getir".to_string(), 1, parameter.length())
+            }
+            _ => n_parameter_expected!("getir".to_string(), 1, parameter.length()),
         };
     }
     Ok(EMPTY_OBJECT)
@@ -143,19 +148,22 @@ fn add(parameter: FunctionParameter) -> NativeCallResult {
 fn insert_or_update(parameter: FunctionParameter, function_name: &str) -> NativeCallResult {
     if let KaramelPrimative::Dict(dict) = &*parameter.source().unwrap().deref() {
         return match parameter.length() {
-            0 =>  n_parameter_expected!(function_name.to_string(), 2),
+            0 => n_parameter_expected!(function_name.to_string(), 2),
             2 => {
                 let mut iter = parameter.iter();
-                let (position_object, item) = (&*iter.next().unwrap().deref(), &*iter.next().unwrap());
+                let (position_object, item) = (&*iter.next().unwrap().deref(), iter.next().unwrap());
 
                 let position = match position_object {
                     KaramelPrimative::Text(text) => text.clone(),
-                    _ => return expected_parameter_type!("anahtar".to_string(), "Yazı".to_string())
+                    _ => return expected_parameter_type!("anahtar".to_string(), "Yazı".to_string()),
                 };
-                *dict.borrow_mut().entry((&position).to_string()).or_insert(*item) = *item;
+                *dict
+                    .borrow_mut()
+                    .entry(position.to_string())
+                    .or_insert(*item) = *item;
                 Ok(EMPTY_OBJECT)
-            },
-            _ => n_parameter_expected!(function_name.to_string(), 2, parameter.length())
+            }
+            _ => n_parameter_expected!(function_name.to_string(), 2, parameter.length()),
         };
     }
     Ok(EMPTY_OBJECT)
@@ -183,15 +191,15 @@ fn remove(parameter: FunctionParameter) -> NativeCallResult {
             1 => {
                 let key = match &*parameter.iter().next().unwrap().deref() {
                     KaramelPrimative::Text(text) => text.clone(),
-                    _ => return expected_parameter_type!("anahtar".to_string(), "Yazı".to_string())
+                    _ => return expected_parameter_type!("anahtar".to_string(), "Yazı".to_string()),
                 };
-                
+
                 Ok(match dict.borrow_mut().remove(&key.to_string()) {
                     Some(_) => arc_bool!(true),
-                    None => arc_bool!(false)
+                    None => arc_bool!(false),
                 })
-            },
-            _ => n_parameter_expected!("sil".to_string(), 1, parameter.length())
+            }
+            _ => n_parameter_expected!("sil".to_string(), 1, parameter.length()),
         };
     }
     Ok(EMPTY_OBJECT)
@@ -213,14 +221,12 @@ fn keys(parameter: FunctionParameter) -> NativeCallResult {
 fn contains(parameter: FunctionParameter) -> NativeCallResult {
     if let KaramelPrimative::Dict(dict) = &*parameter.source().unwrap().deref() {
         return match parameter.length() {
-            0 =>  n_parameter_expected!("içeriyormu".to_string(), 1),
-            1 => {
-                match &*parameter.iter().next().unwrap().deref() {
-                    KaramelPrimative::Text(search) =>  Ok(VmObject::from(dict.borrow().contains_key(&**search))),
-                    _ => expected_parameter_type!("içeriyormu".to_string(), "Yazı".to_string())
-                }
+            0 => n_parameter_expected!("içeriyormu".to_string(), 1),
+            1 => match &*parameter.iter().next().unwrap().deref() {
+                KaramelPrimative::Text(search) => Ok(VmObject::from(dict.borrow().contains_key(&**search))),
+                _ => expected_parameter_type!("içeriyormu".to_string(), "Yazı".to_string()),
             },
-            _ => n_parameter_expected!("içeriyormu".to_string(), 1, parameter.length())
+            _ => n_parameter_expected!("içeriyormu".to_string(), 1, parameter.length()),
         };
     }
     Ok(EMPTY_OBJECT)
@@ -228,7 +234,8 @@ fn contains(parameter: FunctionParameter) -> NativeCallResult {
 
 impl DictClass {
     pub fn add_static_method(&mut self, name: &str, function: NativeCall) {
-        self.base.add_method(name, function, FunctionFlag::IN_CLASS & FunctionFlag::STATIC);
+        self.base
+            .add_method(name, function, FunctionFlag::IN_CLASS & FunctionFlag::STATIC);
     }
 
     pub fn add_class_method(&mut self, name: &str, function: NativeCall) {

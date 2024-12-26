@@ -2,21 +2,20 @@ use std::borrow::Borrow;
 use std::cell::RefCell;
 
 use crate::compiler::context::{ExecutionPathInfo, KaramelCompilerContext};
-use crate::file::read_module_or_script;
-use crate::{types::Token, vm::interpreter::run_vm};
-use crate::parser::*;
 use crate::compiler::*;
-use crate::syntax::SyntaxParser;
-use crate::logger::{CONSOLE_LOGGER, write_stderr};
 use crate::error::generate_error_message;
+use crate::file::read_module_or_script;
+use crate::logger::{write_stderr, CONSOLE_LOGGER};
+use crate::parser::*;
+use crate::syntax::SyntaxParser;
+use crate::{types::Token, vm::interpreter::run_vm};
 
-use log;
 use crate::types::VmObject;
-
+use log;
 
 pub enum ExecutionSource {
     Code(String),
-    File(String)
+    File(String),
 }
 
 pub struct ExecutionParameters {
@@ -24,7 +23,7 @@ pub struct ExecutionParameters {
     pub return_opcode: bool,
     pub return_output: bool,
     pub dump_opcode: bool,
-    pub dump_memory: bool
+    pub dump_memory: bool,
 }
 
 #[derive(Default)]
@@ -36,7 +35,7 @@ pub struct ExecutionStatus {
     pub stderr: Option<RefCell<String>>,
     pub opcodes: Option<Vec<Token>>,
     pub memory_dump: Option<String>,
-    pub opcode_dump: Option<String>
+    pub opcode_dump: Option<String>,
 }
 
 pub fn get_execution_path<T: Borrow<ExecutionSource>>(source: T) -> ExecutionPathInfo {
@@ -45,27 +44,24 @@ pub fn get_execution_path<T: Borrow<ExecutionSource>>(source: T) -> ExecutionPat
             ExecutionSource::Code(_) => match std::env::current_exe() {
                 Ok(path) => match path.parent() {
                     Some(parent_path) => parent_path.to_str().unwrap().to_string(),
-                    _ => String::from(".")
+                    _ => String::from("."),
                 },
-                _ => String::from(".")
+                _ => String::from("."),
             },
-            ExecutionSource::File(file_name) => file_name.to_string()
+            ExecutionSource::File(file_name) => file_name.to_string(),
         },
-        script: None
+        script: None,
     }
 }
 
 pub fn code_executer(parameters: ExecutionParameters) -> ExecutionStatus {
     let mut status = ExecutionStatus::default();
-    match log::set_logger(&CONSOLE_LOGGER) {
-        Ok(_) => {
-            if cfg!(debug_assertions) {
-                log::set_max_level(log::LevelFilter::Debug)
-            } else {
-                log::set_max_level(log::LevelFilter::Info)
-            }
-        },
-        _ => ()
+    if log::set_logger(&CONSOLE_LOGGER).is_ok() {
+        if cfg!(debug_assertions) {
+            log::set_max_level(log::LevelFilter::Debug)
+        } else {
+            log::set_max_level(log::LevelFilter::Info)
+        }
     };
 
     let mut context: KaramelCompilerContext = KaramelCompilerContext::new();
@@ -79,33 +75,28 @@ pub fn code_executer(parameters: ExecutionParameters) -> ExecutionStatus {
 
     let data = match parameters.source {
         ExecutionSource::Code(code) => code,
-        ExecutionSource::File(filename) => {
-            match read_module_or_script(filename, &context) {
-                Ok(content) => content,
-                Err(error) => {
-                    write_stderr(&context, format!("Program hata ile sonlandırıldı: {}", error));
-                    log::error!("Program hata ile sonlandırıldı: {}", error);
-                    status.stdout = context.stdout;
-                    status.stderr = context.stderr;
-                    
-                    status.executed = false;
-                    return status
-                }
+        ExecutionSource::File(filename) => match read_module_or_script(filename, &context) {
+            Ok(content) => content,
+            Err(error) => {
+                write_stderr(&context, format!("Program hata ile sonlandırıldı: {}", error));
+                log::error!("Program hata ile sonlandırıldı: {}", error);
+                status.stdout = context.stdout;
+                status.stderr = context.stderr;
+
+                status.executed = false;
+                return status;
             }
-        }
+        },
     };
 
     let mut parser = Parser::new(&data);
-    match parser.parse() {
-        Err(error) => {
-            write_stderr(&context, generate_error_message(&data, &error));
-            log::error!("{}", generate_error_message(&data, &error));
-            status.stdout = context.stdout;
-            status.stderr = context.stderr;
+    if let Err(error) = parser.parse() {
+        write_stderr(&context, generate_error_message(&data, &error));
+        log::error!("{}", generate_error_message(&data, &error));
+        status.stdout = context.stdout;
+        status.stderr = context.stderr;
 
-            return status;
-        },
-        _ => ()
+        return status;
     };
 
     let syntax = SyntaxParser::new(parser.tokens().to_vec());
@@ -139,7 +130,7 @@ pub fn code_executer(parameters: ExecutionParameters) -> ExecutionStatus {
             status.compiled = true;
             status.executed = true;
             status.memory_output = Some(memory)
-        },
+        }
         Err(error) => {
             write_stderr(&context, format!("Program hata ile sonlandırıldı: {}", error));
             log::error!("Program hata ile sonlandırıldı: {}", error);
@@ -155,8 +146,8 @@ pub fn code_executer(parameters: ExecutionParameters) -> ExecutionStatus {
         status.opcodes = Some(parser.tokens());
     }
 
-    status.stdout      = context.stdout;
-    status.stderr      = context.stderr;
+    status.stdout = context.stdout;
+    status.stderr = context.stderr;
     status.memory_dump = context.memory_dump;
     status.opcode_dump = context.opcode_dump;
 

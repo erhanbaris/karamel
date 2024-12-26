@@ -1,12 +1,12 @@
 use std::rc::Rc;
 
-use crate::types::*;
-use crate::syntax::{SyntaxParser, SyntaxParserTrait};
-use crate::syntax::expression::ExpressionParser;
 use crate::compiler::ast::{KaramelAstType, KaramelIfStatementElseItem};
-use crate::syntax::block::{SingleLineBlockParser, MultiLineBlockParser};
 use crate::error::KaramelErrorType;
+use crate::syntax::block::{MultiLineBlockParser, SingleLineBlockParser};
 use crate::syntax::control::OrParser;
+use crate::syntax::expression::ExpressionParser;
+use crate::syntax::{SyntaxParser, SyntaxParserTrait};
+use crate::types::*;
 
 pub struct IfConditiontParser;
 
@@ -21,7 +21,10 @@ impl SyntaxParserTrait for IfConditiontParser {
 
         if parser.match_keyword(KaramelKeywordType::If) {
             parser.cleanup_whitespaces();
-            if let None = parser.match_operator(&[KaramelOperatorType::ColonMark]) {
+            if parser
+                .match_operator(&[KaramelOperatorType::ColonMark])
+                .is_none()
+            {
                 return Err(KaramelErrorType::ColonMarkMissing);
             }
 
@@ -30,8 +33,8 @@ impl SyntaxParserTrait for IfConditiontParser {
                 (true, _) => {
                     parser.in_indication()?;
                     MultiLineBlockParser::parse(parser)
-                },
-                (false, _) => SingleLineBlockParser::parse(parser)
+                }
+                (false, _) => SingleLineBlockParser::parse(parser),
             }?;
             parser.set_indentation(indentation);
 
@@ -45,7 +48,7 @@ impl SyntaxParserTrait for IfConditiontParser {
             let mut else_if: Vec<Rc<KaramelIfStatementElseItem>> = Vec::new();
 
             while parser.is_same_indentation(indentation) {
-                if let Some(_) = parser.match_operator(&[KaramelOperatorType::Or]) {
+                if parser.match_operator(&[KaramelOperatorType::Or]).is_some() {
                     parser.cleanup_whitespaces();
 
                     let else_condition = ExpressionParser::parse(parser)?;
@@ -56,30 +59,31 @@ impl SyntaxParserTrait for IfConditiontParser {
 
                     match else_condition {
                         KaramelAstType::None => (),
-                        _                  => {
+                        _ => {
                             parser.cleanup_whitespaces();
                             if !parser.match_keyword(KaramelKeywordType::If) {
                                 return Err(KaramelErrorType::MissingIf);
                             }
                         }
                     };
-                    
-                    parser.cleanup_whitespaces();
-                    if let None = parser.match_operator(&[KaramelOperatorType::ColonMark]) {
-                        return Err(KaramelErrorType::ColonMarkMissing);
-                    }
 
-                    else if !else_body.is_none() {
+                    parser.cleanup_whitespaces();
+                    if parser
+                        .match_operator(&[KaramelOperatorType::ColonMark])
+                        .is_none()
+                    {
+                        return Err(KaramelErrorType::ColonMarkMissing);
+                    } else if else_body.is_some() {
                         return Err(KaramelErrorType::MultipleElseUsageNotValid);
                     }
                     parser.cleanup_whitespaces();
-                    
+
                     let body = match parser.get_newline() {
-                        (true, _)  => {
+                        (true, _) => {
                             parser.in_indication()?;
                             MultiLineBlockParser::parse(parser)
-                        },
-                        (false, _) => SingleLineBlockParser::parse(parser)
+                        }
+                        (false, _) => SingleLineBlockParser::parse(parser),
                     }?;
 
                     if body == KaramelAstType::None {
@@ -90,14 +94,13 @@ impl SyntaxParserTrait for IfConditiontParser {
 
                     match else_condition {
                         KaramelAstType::None => else_body = Some(Rc::new(body)),
-                        _                  => else_if.push(Rc::new(KaramelIfStatementElseItem::new(Rc::new(else_condition), Rc::new(body))))
+                        _ => else_if.push(Rc::new(KaramelIfStatementElseItem::new(Rc::new(else_condition), Rc::new(body)))),
                     };
-                }
-                else {
+                } else {
                     break;
                 }
 
-                if let Err(_) = parser.indentation_check() {
+                if parser.indentation_check().is_err() {
                     break;
                 }
             }
@@ -106,14 +109,14 @@ impl SyntaxParserTrait for IfConditiontParser {
                 condition: Rc::new(expression),
                 body: Rc::new(true_body),
                 else_body,
-                else_if: else_if.to_vec()
+                else_if: else_if.to_vec(),
             };
 
             parser.set_indentation(indentation);
             return Ok(assignment_ast);
         }
-        
+
         parser.set_index(index_backup);
-        return Ok(KaramelAstType::None);
+        Ok(KaramelAstType::None)
     }
 }

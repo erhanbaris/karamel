@@ -1,0 +1,7 @@
+edition = "2021"
+max_width = 300
+chain_width = 60
+single_line_if_else_max_width = 0
+single_line_let_else_max_width = 0
+use_field_init_shorthand = true
+use_try_shorthand = true
