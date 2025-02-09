@@ -17,8 +17,8 @@ levenshtein = "1.0.5"
 
 
 # For enum
-strum = "0.26.0"
-strum_macros = "0.26.0"
+strum = "0.27.0"
+strum_macros = "0.27.0"
 thiserror = "2.0.0"
 
 [features]
