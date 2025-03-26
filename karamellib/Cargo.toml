@@ -7,7 +7,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bitflags = "1.2"
+bitflags = "2.0"
 log-update = "*"
 colored = "2"
 log = "0.4.14"
